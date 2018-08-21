@@ -1879,7 +1879,7 @@ bool ReadBlockFromDisk(CBlock &block, const CBlockIndex *pindex, const Consensus
 }
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams, int nTime) {
-    bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET);
+    bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET || Params().NetworkIDString() == CBaseChainParams::REGTEST);
     // Just want to make sure no one gets a dime before 28 Sep 2016 12:00 AM UTC
     if (nTime < nStartRewardTime && !fTestNet)
         return 0;
@@ -4181,6 +4181,7 @@ ContextualCheckBlockHeader(const CBlockHeader &block, CValidationState &state, c
     // Check timestamp against prev
     if (block.GetBlockTime() <= pindexPrev->GetMedianTimePast())
         return state.Invalid(false, REJECT_INVALID, "time-too-old", "block's timestamp is too early");
+
 
     // Check timestamp
     if (block.GetBlockTime() > nAdjustedTime + 2 * 60 * 60)

@@ -54,7 +54,7 @@ def enable_mocktime():
     #with previous versions of the cache, set MOCKTIME 
     #to Jan 1, 2014 + (201 * 10 * 60)
     global MOCKTIME
-    MOCKTIME = 1388534400 + (201 * 10 * 60)
+    MOCKTIME = 1414776313 + (201 * 10 * 60)
 
 def disable_mocktime():
     global MOCKTIME
