@@ -131,7 +131,7 @@ testScripts = [
     'decodescript.py',
     'blockchain.py',
     'disablewallet.py',
-    'sendheaders.py',
+#    'sendheaders.py',
     'keypool.py',
     'prioritise_transaction.py',
     'invalidblockrequest.py',
@@ -210,6 +210,8 @@ def runtests():
     results = BOLD[1] + "%s | %s | %s\n\n" % ("TEST".ljust(max_len_name), "PASSED", "DURATION") + BOLD[0]
     all_passed = True
     for _ in range(len(test_list)):
+        if len(test_list) == 0 :
+            break
         (name, stdout, stderr, passed, duration) = job_queue.get_next()
         all_passed = all_passed and passed
         time_sum += duration

@@ -352,7 +352,7 @@ bool CheckMintZcoinTransaction(const CTxOut &txout,
 
 bool CheckZerocoinFoundersInputs(const CTransaction &tx, CValidationState &state, int nHeight, bool fTestNet) {
     // Check for founders inputs
-    if (((nHeight > Params().nCheckBugFixedAtBlock) && (nHeight < 210000)) || (fTestNet && nHeight >= 7200)) {
+    if (((nHeight > Params().nCheckBugFixedAtBlock) && (nHeight < 210000)) || (fTestNet && nHeight >= 7200 && (nHeight < 210000))) {
         bool found_1 = false;
         bool found_2 = false;
         bool found_3 = false;
