@@ -14,11 +14,13 @@
 #define COIN_H_
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
-#include "bitcoin_bignum/bignum.h"
-#include "Params.h"
+//#include "bitcoin_bignum/bignum.h"
+//#include "Params.h"
+#include "Zerocoin.h"
 namespace libzerocoin {
 
 enum  CoinDenomination {
+    ZQ_ERROR = 0,
     ZQ_LOVELACE = 1,
     ZQ_GOLDWASSER = 10,
     ZQ_RACKOFF = 25,

@@ -158,6 +158,7 @@ BITCOIN_CORE_H = \
   policy/rbf.h \
   fixed.h \
   pow.h \
+  primitives/zerocoin.h \
   protocol.h \
   random.h \
   reverselock.h \
@@ -200,6 +201,7 @@ BITCOIN_CORE_H = \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
+  zpivwallet.h \
   zerocoin.h \
   zerocoin_params.h \
   mtpstate.h \
@@ -279,6 +281,9 @@ libbitcoin_wallet_a_SOURCES = \
   znode-sync.cpp \
   znodeconfig.cpp \
   znodeman.cpp \
+  mintpool.cpp \
+  zpivwallet.cpp \
+  primitives/zerocoin.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
   wallet/rpcdump.cpp \
@@ -385,6 +390,7 @@ libbitcoin_common_a_SOURCES = \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
+  primitives/zerocoin.cpp \
   key.cpp \
   keystore.cpp \
   netbase.cpp \
@@ -431,6 +437,8 @@ libbitcoin_util_a_SOURCES = \
   libzerocoin/CoinSpend.cpp \
   libzerocoin/Commitment.h \
   libzerocoin/Commitment.cpp \
+  libzerocoin/Denominations.h \
+  libzerocoin/Denominations.cpp \
   libzerocoin/ParallelTasks.h \
   libzerocoin/ParallelTasks.cpp \
   libzerocoin/ParamGeneration.h \

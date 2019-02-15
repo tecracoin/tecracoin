@@ -13,6 +13,7 @@
 #include "../../arith_uint256.h"
 #include "../../version.h"
 #include "../../clientversion.h"
+#include "serialize.h"
 /** Errors thrown by the bignum class */
 class bignum_error : public std::runtime_error
 {
@@ -51,7 +52,7 @@ public:
 /** C++ wrapper for BIGNUM (OpenSSL bignum) */class CBigNum
 {
 protected:
-    BIGNUM	*bn;
+    BIGNUM  *bn;
 
     void init()
     {
@@ -63,7 +64,7 @@ public:
     {
         init();
     }
-	
+    
     CBigNum(const CBigNum& b)
     {
         init();
@@ -81,12 +82,12 @@ public:
         return (*this);
     }
 
-	CBigNum(const char *hexString)
-	{
-		init();
-		if (!SetHexBool(hexString))
-			throw bignum_error("CBigNum::CBigNum(const char *) : invalid hex string");
-	}
+    CBigNum(const char *hexString)
+    {
+        init();
+        if (!SetHexBool(hexString))
+            throw bignum_error("CBigNum::CBigNum(const char *) : invalid hex string");
+    }
 
     ~CBigNum()
     {
@@ -597,7 +598,7 @@ public:
     /**
      * Miller-Rabin primality test on this element
      * @param checks: optional, the number of Miller-Rabin tests to run
-     * 			 	default causes error rate of 2^-80.
+     *              default causes error rate of 2^-80.
      * @return true if prime
      */
     bool isPrime(const int checks=BN_prime_checks) const {
@@ -712,8 +713,8 @@ public:
         return ret;
     }
 
-    vector<unsigned char> ToBytes() const {
-        vector<unsigned char> result(BN_num_bytes(bn));
+    std::vector<unsigned char> ToBytes() const {
+        std::vector<unsigned char> result(BN_num_bytes(bn));
         BN_bn2bin(bn, result.data());
         return result;
     }

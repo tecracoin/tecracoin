@@ -192,6 +192,14 @@ public:
     static bool Recover(CDBEnv& dbenv, const std::string& filename, bool fOnlyKeys);
     static bool Recover(CDBEnv& dbenv, const std::string& filename);
 
+    bool ReadCurrentSeedHash(uint256& hashSeed);
+    bool WriteCurrentSeedHash(const uint256& hashSeed);
+    bool ReadZPIVSeed(const uint256& hashSeed, vector<unsigned char>& seed);
+    bool WriteZPIVSeed(const uint256& hashSeed, const vector<unsigned char>& seed);
+
+    bool ReadZPIVCount(uint32_t& nCount);
+    bool WriteZPIVCount(const uint32_t& nCount);
+
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);
 

@@ -7,7 +7,7 @@
 #include "zerocoin.h"
 
 #include "addrman.h"
-#include "arith_uint256.h"
+#include "uint256.h"
 #include "blockencodings.h"
 #include "chainparams.h"
 #include "checkpoints.h"

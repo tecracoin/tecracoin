@@ -1142,3 +1142,36 @@ bool CWalletDB::WriteHDChain(const CHDChain &chain) {
     nWalletDBUpdated++;
     return Write(std::string("hdchain"), chain);
 }
+
+bool CWalletDB::ReadCurrentSeedHash(uint256& hashSeed)
+{
+    return Read(string("seedhash"), hashSeed);
+}
+
+bool CWalletDB::WriteCurrentSeedHash(const uint256& hashSeed)
+{
+    return Write(string("seedhash"), hashSeed);
+}
+
+bool CWalletDB::ReadZPIVSeed(const uint256& hashSeed, vector<unsigned char>& seed)
+{
+    return Read(make_pair(string("dzs"), hashSeed), seed);
+}
+
+bool CWalletDB::WriteZPIVSeed(const uint256& hashSeed, const vector<unsigned char>& seed)
+{
+    if (!WriteCurrentSeedHash(hashSeed))
+        return error("%s: failed to write current seed hash", __func__);
+
+    return Write(make_pair(string("dzs"), hashSeed), seed);
+}
+
+bool CWalletDB::ReadZPIVCount(uint32_t& nCount)
+{
+    return Read(string("dzc"), nCount);
+}
+
+bool CWalletDB::WriteZPIVCount(const uint32_t& nCount)
+{
+    return Write(string("dzc"), nCount);
+}

@@ -11,7 +11,8 @@
 **/
 #ifndef PARAMS_H_
 #define PARAMS_H_
-#include "Zerocoin.h"
+//#include "Zerocoin.h"
+//#include "../serialize.h"
 
 namespace libzerocoin {
 
