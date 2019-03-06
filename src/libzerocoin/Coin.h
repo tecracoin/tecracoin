@@ -17,6 +17,7 @@
 //#include "bitcoin_bignum/bignum.h"
 //#include "Params.h"
 #include "Zerocoin.h"
+
 namespace libzerocoin {
 
 enum  CoinDenomination {
@@ -39,11 +40,11 @@ enum  CoinDenomination {
 class PublicCoin {
 public:
     template<typename Stream>
-    PublicCoin(const Params* p, Stream& strm): params(p) {
+    PublicCoin(const ZerocoinParams* p, Stream& strm): params(p) {
         strm >> *this;
     }
 
-    PublicCoin(const Params* p);
+    PublicCoin(const ZerocoinParams* p);
 
     /**Generates a public coin
      *
@@ -51,7 +52,7 @@ public:
      * @param coin the value of the commitment.
      * @param denomination The denomination of the coin. Defaults to ZQ_LOVELACE
      */
-    PublicCoin(const Params* p, const Bignum& coin, const CoinDenomination d = ZQ_LOVELACE);
+    PublicCoin(const ZerocoinParams* p, const Bignum& coin, const CoinDenomination d = ZQ_LOVELACE);
     const Bignum& getValue() const;
     CoinDenomination getDenomination() const;
     bool operator==(const PublicCoin& rhs) const;
@@ -68,13 +69,13 @@ public:
         READWRITE(value);
         READWRITE(denomination);
     }
-//	IMPLEMENT_SERIALIZE
-//	(
-//	    READWRITE(value);
-//	    READWRITE(denomination);
-//	)
+	// IMPLEMENT_SERIALIZE
+	// (
+	//     READWRITE(value);
+	//     READWRITE(denomination);
+	// )
 private:
-    const Params* params;
+    const ZerocoinParams* params;
     Bignum value;
     // Denomination is stored as an INT because storing
     // and enum raises amigiuities in the serialize code //FIXME if possible
@@ -95,10 +96,10 @@ private:
 class PrivateCoin {
 public:
     template<typename Stream>
-    PrivateCoin(const Params* p, Stream& strm): params(p), publicCoin(p) {
+    PrivateCoin(const ZerocoinParams* p, Stream& strm): params(p), publicCoin(p) {
         strm >> *this;
     }
-    PrivateCoin(const Params* p, CoinDenomination denomination = ZQ_LOVELACE, int version = ZEROCOIN_TX_VERSION_1);
+    PrivateCoin(const ZerocoinParams* p, CoinDenomination denomination = ZQ_LOVELACE, int version = ZEROCOIN_TX_VERSION_1);
     const PublicCoin& getPublicCoin() const;
     const Bignum& getSerialNumber() const;
     const Bignum& getRandomness() const;
@@ -149,7 +150,7 @@ public:
     }
 
 private:
-    const Params* params;
+    const ZerocoinParams* params;
     PublicCoin publicCoin;
     Bignum randomness;
     Bignum serialNumber;

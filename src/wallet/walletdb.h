@@ -9,6 +9,8 @@
 
 #include "amount.h"
 #include "primitives/transaction.h"
+#include "primitives/zerocoin.h"
+#include "primitives/deterministicmint.h"
 #include "wallet/db.h"
 #include "key.h"
 
@@ -199,6 +201,17 @@ public:
 
     bool ReadZPIVCount(uint32_t& nCount);
     bool WriteZPIVCount(const uint32_t& nCount);
+
+    bool ReadZerocoinMint(const CBigNum &bnPubcoinValue, CZerocoinMint& zerocoinMint);
+    bool ReadZerocoinMint(const uint256& hashPubcoin, CZerocoinMint& mint);
+
+    bool ArchiveMintOrphan(const CZerocoinMint& zerocoinMint);
+    bool ArchiveDeterministicOrphan(const CDeterministicMint& dMint);
+    bool UnarchiveZerocoinMint(const uint256& hashPubcoin, CZerocoinMint& mint);
+    bool UnarchiveDeterministicMint(const uint256& hashPubcoin, CDeterministicMint& dMint);
+    
+    std::map<uint256, std::vector<pair<uint256, uint32_t> > > MapMintPool();
+    bool WriteMintPoolPair(const uint256& hashMasterSeed, const uint256& hashPubcoin, const uint32_t& nCount);
 
     //! write the hdchain model (external chain child index counter)
     bool WriteHDChain(const CHDChain& chain);

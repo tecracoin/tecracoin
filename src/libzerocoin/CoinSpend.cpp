@@ -19,7 +19,7 @@
 
 namespace libzerocoin {
 
-CoinSpend::CoinSpend(const Params* p, const PrivateCoin& coin,
+CoinSpend::CoinSpend(const ZerocoinParams* p, const PrivateCoin& coin,
                      Accumulator& a, const AccumulatorWitness& witness, const SpendMetaData& m,
 					uint256 _accumulatorBlockHash):
 	params(p),
@@ -84,10 +84,6 @@ CoinSpend::CoinSpend(const Params* p, const PrivateCoin& coin,
 		secp256k1_ecdsa_sign(ctx, &sig, metahash.begin(), coin.getEcdsaSeckey(), NULL, NULL);
 		secp256k1_ecdsa_signature_serialize_compact(ctx, &this->ecdsaSignature[0], &sig);
 	}
-}
-
-const Bignum&CoinSpend::getCoinSerialNumber() {
-	return this->coinSerialNumber;
 }
 
 CoinDenomination CoinSpend::getDenomination() const {

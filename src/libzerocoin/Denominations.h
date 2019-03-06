@@ -8,17 +8,18 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include <zerocoin.h>
+#include "Zerocoin.h"
+#include <libzerocoin/Coin.h>
 
 namespace libzerocoin {
 
 // enum  CoinDenomination {
 //     ZQ_ERROR = 0,
-//     ZQ_ONE = 1,
-//     ZQ_TEN = 10,
-//     ZQ_TWENTY_FIVE = 25,
-//     ZQ_FIFTY = 50,
-//     ZQ_ONE_HUNDRED = 100
+//     ZQ_LOVELACE = 1,
+//     ZQ_GOLDWASSER = 10,
+//     ZQ_RACKOFF = 25,
+//     ZQ_PEDERSEN = 50,
+//     ZQ_WILLIAMSON = 100
 // };
 
 // Order is with the Smallest Denomination first and is important for a particular routine that this order is maintained

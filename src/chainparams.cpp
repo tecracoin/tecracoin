@@ -7,6 +7,7 @@
 #include "consensus/merkle.h"
 #include "consensus/consensus.h"
 #include "zerocoin_params.h"
+#include "zerocoin.h"
 
 #include "tinyformat.h"
 #include "util.h"

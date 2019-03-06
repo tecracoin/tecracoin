@@ -80,3 +80,11 @@ template std::string base_blob<256>::GetHex() const;
 template std::string base_blob<256>::ToString() const;
 template void base_blob<256>::SetHex(const char*);
 template void base_blob<256>::SetHex(const std::string&);
+
+// Explicit instantiations for base_uint<512>
+template base_blob<512>::base_blob(const std::vector<unsigned char>&);
+//template base_blob<512>& base_blob<512>::operator<<=(unsigned int);
+//template base_blob<512>& base_blob<512>::operator>>=(unsigned int);
+template std::string base_blob<512>::GetHex() const;
+template std::string base_blob<512>::ToString() const;
+//template std::string base_blob<512>::ToStringReverseEndian() const;

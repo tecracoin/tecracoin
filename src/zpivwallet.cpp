@@ -5,10 +5,11 @@
 #include "zpivwallet.h"
 #include "main.h"
 #include "txdb.h"
-#include "wallet/walletdb.h"
 #include "init.h"
+#include "primitives/deterministicmint.h"
+#include "wallet/walletdb.h"
 #include "wallet/wallet.h"
-//#include "primitives/deterministicmint.h"
+#include "zerocoin.h"
 //#include "zpivchain.h"
 
 using namespace libzerocoin;
@@ -75,192 +76,192 @@ bool CzPIVWallet::SetMasterSeed(const uint256& seedMaster, bool fResetCount)
     return true;
 }
 
-// void CzPIVWallet::Lock()
-// {
-//     seedMaster = 0;
-// }
+void CzPIVWallet::Lock()
+{
+    seedMaster.SetNull();
+}
 
-// void CzPIVWallet::AddToMintPool(const std::pair<uint256, uint32_t>& pMint, bool fVerbose)
-// {
-//     mintPool.Add(pMint, fVerbose);
-// }
+void CzPIVWallet::AddToMintPool(const std::pair<uint256, uint32_t>& pMint, bool fVerbose)
+{
+    mintPool.Add(pMint, fVerbose);
+}
 
 // //Add the next 20 mints to the mint pool
-// void CzPIVWallet::GenerateMintPool(uint32_t nCountStart, uint32_t nCountEnd)
-// {
+void CzPIVWallet::GenerateMintPool(uint32_t nCountStart, uint32_t nCountEnd)
+{
 
-//     //Is locked
-//     if (seedMaster == 0)
-//         return;
+    //Is locked
+    if (seedMaster.IsNull())
+        return;
 
-//     uint32_t n = nCountLastUsed + 1;
+    uint32_t n = nCountLastUsed + 1;
 
-//     if (nCountStart > 0)
-//         n = nCountStart;
+    if (nCountStart > 0)
+        n = nCountStart;
 
-//     uint32_t nStop = n + 20;
-//     if (nCountEnd > 0)
-//         nStop = std::max(n, n + nCountEnd);
+    uint32_t nStop = n + 20;
+    if (nCountEnd > 0)
+        nStop = std::max(n, n + nCountEnd);
 
-//     bool fFound;
+    bool fFound;
 
-//     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
-//     LogPrintf("%s : n=%d nStop=%d\n", __func__, n, nStop - 1);
-//     for (uint32_t i = n; i < nStop; ++i) {
-//         if (ShutdownRequested())
-//             return;
+    uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
+    LogPrintf("%s : n=%d nStop=%d\n", __func__, n, nStop - 1);
+    for (uint32_t i = n; i < nStop; ++i) {
+        if (ShutdownRequested())
+            return;
 
-//         fFound = false;
+        fFound = false;
 
-//         // Prevent unnecessary repeated minted
-//         for (auto& pair : mintPool) {
-//             if(pair.second == i) {
-//                 fFound = true;
-//                 break;
-//             }
-//         }
+        // Prevent unnecessary repeated minted
+        for (auto& pair : mintPool) {
+            if(pair.second == i) {
+                fFound = true;
+                break;
+            }
+        }
 
-//         if(fFound)
-//             continue;
+        if(fFound)
+            continue;
 
-//         uint512 seedZerocoin = GetZerocoinSeed(i);
-//         CBigNum bnValue;
-//         CBigNum bnSerial;
-//         CBigNum bnRandomness;
-//         CKey key;
-//         SeedToZPIV(seedZerocoin, bnValue, bnSerial, bnRandomness, key);
+        uint512 seedZerocoin = GetZerocoinSeed(i);
+        CBigNum bnValue;
+        CBigNum bnSerial;
+        CBigNum bnRandomness;
+        CKey key;
+        SeedToZPIV(seedZerocoin, bnValue, bnSerial, bnRandomness, key);
 
-//         mintPool.Add(bnValue, i);
-//         CWalletDB(strWalletFile).WriteMintPoolPair(hashSeed, GetPubCoinHash(bnValue), i);
-//         LogPrintf("%s : %s count=%d\n", __func__, bnValue.GetHex().substr(0, 6), i);
-//     }
-// }
+        mintPool.Add(bnValue, i);
+        CWalletDB(strWalletFile).WriteMintPoolPair(hashSeed, GetPubCoinHash(bnValue), i);
+        LogPrintf("%s : %s count=%d\n", __func__, bnValue.GetHex().substr(0, 6), i);
+    }
+}
 
-// // pubcoin hashes are stored to db so that a full accounting of mints belonging to the seed can be tracked without regenerating
-// bool CzPIVWallet::LoadMintPoolFromDB()
-// {
-//     map<uint256, vector<pair<uint256, uint32_t> > > mapMintPool = CWalletDB(strWalletFile).MapMintPool();
+// pubcoin hashes are stored to db so that a full accounting of mints belonging to the seed can be tracked without regenerating
+bool CzPIVWallet::LoadMintPoolFromDB()
+{
+    map<uint256, vector<pair<uint256, uint32_t> > > mapMintPool = CWalletDB(strWalletFile).MapMintPool();
 
-//     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
-//     for (auto& pair : mapMintPool[hashSeed])
-//         mintPool.Add(pair);
+    uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
+    for (auto& pair : mapMintPool[hashSeed])
+        mintPool.Add(pair);
 
-//     return true;
-// }
+    return true;
+}
 
-// void CzPIVWallet::RemoveMintsFromPool(const std::vector<uint256>& vPubcoinHashes)
-// {
-//     for (const uint256& hash : vPubcoinHashes)
-//         mintPool.Remove(hash);
-// }
+void CzPIVWallet::RemoveMintsFromPool(const std::vector<uint256>& vPubcoinHashes)
+{
+    for (const uint256& hash : vPubcoinHashes)
+        mintPool.Remove(hash);
+}
 
-// void CzPIVWallet::GetState(int& nCount, int& nLastGenerated)
-// {
-//     nCount = this->nCountLastUsed + 1;
-//     nLastGenerated = mintPool.CountOfLastGenerated();
-// }
+void CzPIVWallet::GetState(int& nCount, int& nLastGenerated)
+{
+    nCount = this->nCountLastUsed + 1;
+    nLastGenerated = mintPool.CountOfLastGenerated();
+}
 
-// //Catch the counter up with the chain
-// void CzPIVWallet::SyncWithChain(bool fGenerateMintPool)
-// {
-//     uint32_t nLastCountUsed = 0;
-//     bool found = true;
-//     CWalletDB walletdb(strWalletFile);
+//Catch the counter up with the chain
+void CzPIVWallet::SyncWithChain(bool fGenerateMintPool)
+{
+    uint32_t nLastCountUsed = 0;
+    bool found = true;
+    CWalletDB walletdb(strWalletFile);
 
-//     set<uint256> setAddedTx;
-//     while (found) {
-//         found = false;
-//         if (fGenerateMintPool)
-//             GenerateMintPool();
-//         LogPrintf("%s: Mintpool size=%d\n", __func__, mintPool.size());
+    set<uint256> setAddedTx;
+    while (found) {
+        found = false;
+        if (fGenerateMintPool)
+            GenerateMintPool();
+        LogPrintf("%s: Mintpool size=%d\n", __func__, mintPool.size());
 
-//         std::set<uint256> setChecked;
-//         list<pair<uint256,uint32_t> > listMints = mintPool.List();
-//         for (pair<uint256, uint32_t> pMint : listMints) {
-//             LOCK(cs_main);
-//             if (setChecked.count(pMint.first))
-//                 return;
-//             setChecked.insert(pMint.first);
+        std::set<uint256> setChecked;
+        list<pair<uint256,uint32_t> > listMints = mintPool.List();
+        for (pair<uint256, uint32_t> pMint : listMints) {
+            LOCK(cs_main);
+            if (setChecked.count(pMint.first))
+                return;
+            setChecked.insert(pMint.first);
 
-//             if (ShutdownRequested())
-//                 return;
+            if (ShutdownRequested())
+                return;
 
-//             if (pwalletMain->zpivTracker->HasPubcoinHash(pMint.first)) {
-//                 mintPool.Remove(pMint.first);
-//                 continue;
-//             }
+            if (pwalletMain->zpivTracker->HasPubcoinHash(pMint.first)) {
+                mintPool.Remove(pMint.first);
+                continue;
+            }
 
-//             uint256 txHash;
-//             CZerocoinMint mint;
-//             if (zerocoinDB->ReadCoinMint(pMint.first, txHash)) {
-//                 //this mint has already occurred on the chain, increment counter's state to reflect this
-//                 LogPrintf("%s : Found wallet coin mint=%s count=%d tx=%s\n", __func__, pMint.first.GetHex(), pMint.second, txHash.GetHex());
-//                 found = true;
+            uint256 txHash;
+            CZerocoinMint mint;
+            if (zerocoinDB->ReadCoinMint(pMint.first, txHash)) {
+                //this mint has already occurred on the chain, increment counter's state to reflect this
+                LogPrintf("%s : Found wallet coin mint=%s count=%d tx=%s\n", __func__, pMint.first.GetHex(), pMint.second, txHash.GetHex());
+                found = true;
 
-//                 uint256 hashBlock;
-//                 CTransaction tx;
-//                 if (!GetTransaction(txHash, tx, hashBlock, true)) {
-//                     LogPrintf("%s : failed to get transaction for mint %s!\n", __func__, pMint.first.GetHex());
-//                     found = false;
-//                     nLastCountUsed = std::max(pMint.second, nLastCountUsed);
-//                     continue;
-//                 }
+                uint256 hashBlock;
+                CTransaction tx;
+                if (!GetTransaction(txHash, tx, Params().GetConsensus(), hashBlock, true)) {
+                    LogPrintf("%s : failed to get transaction for mint %s!\n", __func__, pMint.first.GetHex());
+                    found = false;
+                    nLastCountUsed = std::max(pMint.second, nLastCountUsed);
+                    continue;
+                }
 
-//                 //Find the denomination
-//                 CoinDenomination denomination = CoinDenomination::ZQ_ERROR;
-//                 bool fFoundMint = false;
-//                 CBigNum bnValue = 0;
-//                 for (const CTxOut& out : tx.vout) {
-//                     if (!out.scriptPubKey.IsZerocoinMint())
-//                         continue;
+                //Find the denomination
+                CoinDenomination denomination = CoinDenomination::ZQ_ERROR;
+                bool fFoundMint = false;
+                CBigNum bnValue = 0;
+                for (const CTxOut& out : tx.vout) {
+                    if (!out.scriptPubKey.IsZerocoinMint())
+                        continue;
 
-//                     PublicCoin pubcoin(Params().Zerocoin_Params(false));
-//                     CValidationState state;
-//                     if (!TxOutToPublicCoin(out, pubcoin, state)) {
-//                         LogPrintf("%s : failed to get mint from txout for %s!\n", __func__, pMint.first.GetHex());
-//                         continue;
-//                     }
+                    PublicCoin pubcoin(ZCParamsV2);
+                    CValidationState state;
+                    if (!TxOutToPublicCoin(out, pubcoin, state)) {
+                        LogPrintf("%s : failed to get mint from txout for %s!\n", __func__, pMint.first.GetHex());
+                        continue;
+                    }
 
-//                     // See if this is the mint that we are looking for
-//                     uint256 hashPubcoin = GetPubCoinHash(pubcoin.getValue());
-//                     if (pMint.first == hashPubcoin) {
-//                         denomination = pubcoin.getDenomination();
-//                         bnValue = pubcoin.getValue();
-//                         fFoundMint = true;
-//                         break;
-//                     }
-//                 }
+                    // See if this is the mint that we are looking for
+                    uint256 hashPubcoin = GetPubCoinHash(pubcoin.getValue());
+                    if (pMint.first == hashPubcoin) {
+                        denomination = pubcoin.getDenomination();
+                        bnValue = pubcoin.getValue();
+                        fFoundMint = true;
+                        break;
+                    }
+                }
 
-//                 if (!fFoundMint || denomination == ZQ_ERROR) {
-//                     LogPrintf("%s : failed to get mint %s from tx %s!\n", __func__, pMint.first.GetHex(), tx.GetHash().GetHex());
-//                     found = false;
-//                     break;
-//                 }
+                if (!fFoundMint || denomination == ZQ_ERROR) {
+                    LogPrintf("%s : failed to get mint %s from tx %s!\n", __func__, pMint.first.GetHex(), tx.GetHash().GetHex());
+                    found = false;
+                    break;
+                }
 
-//                 CBlockIndex* pindex = nullptr;
-//                 if (mapBlockIndex.count(hashBlock))
-//                     pindex = mapBlockIndex.at(hashBlock);
+                CBlockIndex* pindex = nullptr;
+                if (mapBlockIndex.count(hashBlock))
+                    pindex = mapBlockIndex.at(hashBlock);
 
-//                 if (!setAddedTx.count(txHash)) {
-//                     CBlock block;
-//                     CWalletTx wtx(pwalletMain, tx);
-//                     if (pindex && ReadBlockFromDisk(block, pindex))
-//                         wtx.SetMerkleBranch(block);
+                if (!setAddedTx.count(txHash)) {
+                    CBlock block;
+                    CWalletTx wtx(pwalletMain, tx);
+                    if (pindex && ReadBlockFromDisk(block, pindex))
+                        wtx.SetMerkleBranch(block);
 
-//                     //Fill out wtx so that a transaction record can be created
-//                     wtx.nTimeReceived = pindex->GetBlockTime();
-//                     pwalletMain->AddToWallet(wtx);
-//                     setAddedTx.insert(txHash);
-//                 }
+                    //Fill out wtx so that a transaction record can be created
+                    wtx.nTimeReceived = pindex->GetBlockTime();
+                    pwalletMain->AddToWallet(wtx);
+                    setAddedTx.insert(txHash);
+                }
 
-//                 SetMintSeen(bnValue, pindex->nHeight, txHash, denomination);
-//                 nLastCountUsed = std::max(pMint.second, nLastCountUsed);
-//                 nCountLastUsed = std::max(nLastCountUsed, nCountLastUsed);
-//                 LogPrint("zero", "%s: updated count to %d\n", __func__, nCountLastUsed);
-//             }
-//         }
-//     }
-// }
+                SetMintSeen(bnValue, pindex->nHeight, txHash, denomination);
+                nLastCountUsed = std::max(pMint.second, nLastCountUsed);
+                nCountLastUsed = std::max(nLastCountUsed, nCountLastUsed);
+                LogPrint("zero", "%s: updated count to %d\n", __func__, nCountLastUsed);
+            }
+        }
+    }
+}
 
 // bool CzPIVWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const uint256& txid, const CoinDenomination& denom)
 // {

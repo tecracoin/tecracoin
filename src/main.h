@@ -43,6 +43,7 @@ class CScriptCheck;
 class CTxMemPool;
 class CValidationInterface;
 class CValidationState;
+class CZerocoinDB;
 
 struct PrecomputedTransactionData;
 struct CNodeStateStats;
@@ -587,6 +588,9 @@ extern CCoinsViewCache *pcoinsTip;
 
 /** Global variable that points to the active block tree (protected by cs_main) */
 extern CBlockTreeDB *pblocktree;
+
+/** Global variable that points to the zerocoin database (protected by cs_main) */
+extern CZerocoinDB* zerocoinDB;
 
 /**
  * Return the spend height, which is one more than the inputs.GetBestBlock().

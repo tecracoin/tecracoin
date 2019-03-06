@@ -48,7 +48,7 @@ private:
 
 public:
 	template<typename Stream>
-    CoinSpend(const Params* p,  Stream& strm):
+    CoinSpend(const ZerocoinParams* p,  Stream& strm):
 		params(p),
 		denomination(ZQ_LOVELACE),
 		accumulatorPoK(&p->accumulatorParams),
@@ -80,14 +80,14 @@ public:
 	 * 			(i.e. the transaction hash)
 	 * @throw ZerocoinException if the process fails
 	 */
-	CoinSpend(const Params* p, const PrivateCoin& coin, Accumulator& a, const AccumulatorWitness& witness,
+	CoinSpend(const ZerocoinParams* p, const PrivateCoin& coin, Accumulator& a, const AccumulatorWitness& witness,
 			const SpendMetaData& m, uint256 _accumulatorBlockHash=uint256());
 
-	/** Returns the serial number of the coin spend by this proof.
-	 *
-	 * @return the coin's serial number
-	 */
-	const Bignum& getCoinSerialNumber();
+    /** Returns the serial number of the coin spend by this proof.
+     *
+     * @return the coin's serial number
+     */
+    const CBigNum& getCoinSerialNumber() const { return this->coinSerialNumber; }
 
 	/**Gets the denomination of the coin spent in this proof.
 	 *
@@ -142,7 +142,7 @@ public:
 	}
 
 private:
-	const Params *params;
+	const ZerocoinParams *params;
     const uint256 signatureHash(const SpendMetaData &m) const;
 	// Denomination is stored as an INT because storing
 	// and enum raises amigiuities in the serialize code //FIXME if possible

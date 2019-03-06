@@ -158,6 +158,7 @@ BITCOIN_CORE_H = \
   policy/rbf.h \
   fixed.h \
   pow.h \
+  primitives/deterministicmint.h \
   primitives/zerocoin.h \
   protocol.h \
   random.h \
@@ -201,6 +202,8 @@ BITCOIN_CORE_H = \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
+  zpivchain.h \
+  zpivtracker.h \
   zpivwallet.h \
   zerocoin.h \
   zerocoin_params.h \
@@ -256,6 +259,7 @@ libbitcoin_server_a_SOURCES = \
   versionbits.cpp \
   zerocoin.cpp \
   mtpstate.cpp \
+  zpivchain.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
@@ -275,6 +279,7 @@ libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
   activeznode.cpp \
   darksend.cpp \
+  primitives/deterministicmint.cpp \
   znode.cpp \
   instantx.cpp \
   znode-payments.cpp \
@@ -291,6 +296,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/authhelper.cpp \
+  zpivtracker.cpp \
   policy/rbf.cpp \
   $(BITCOIN_CORE_H)
 
@@ -390,6 +396,7 @@ libbitcoin_common_a_SOURCES = \
   compressor.cpp \
   core_read.cpp \
   core_write.cpp \
+  primitives/deterministicmint.cpp \
   primitives/zerocoin.cpp \
   key.cpp \
   keystore.cpp \

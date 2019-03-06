@@ -5,21 +5,20 @@
 #ifndef PRIMITIVES_ZEROCOIN_H
 #define PRIMITIVES_ZEROCOIN_H
 
-// #include <amount.h>
-// #include <limits.h>
-// #include "libzerocoin/bitcoin_bignum/bignum.h"
-// //#include "libzerocoin/Denominations.h"
-// #include "key.h"
-// #include "libzerocoin/Zerocoin.h"
-
-
-//#include <amount.h>
+#include <amount.h>
 #include <limits.h>
 #include "libzerocoin/bitcoin_bignum/bignum.h"
 #include "libzerocoin/Zerocoin.h"
 #include "key.h"
-#include "../serialize.h"
+#include "serialize.h"
 
+// #include <amount.h>
+// #include <limits.h>
+// #include "libzerocoin/bitcoin_bignum/bignum.h"
+
+// #include "key.h"
+// #include "libzerocoin/Zerocoin.h"
+// #include "../serialize.h"
 //struct that is safe to store essential mint data, without holding any information that allows for actual spending (serial, randomness, private key)
 struct CMintMeta
 {

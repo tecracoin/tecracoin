@@ -28,8 +28,8 @@ static CBigNum bnTrustedModulus(ZEROCOIN_MODULUS), bnTrustedModulusV2(ZEROCOIN_M
 
 // Set up the Zerocoin Params object
 uint32_t securityLevel = 80;
-libzerocoin::Params *ZCParams = new libzerocoin::Params(bnTrustedModulus, bnTrustedModulus);
-libzerocoin::Params *ZCParamsV2 = new libzerocoin::Params(bnTrustedModulusV2, bnTrustedModulus);
+libzerocoin::ZerocoinParams *ZCParams = new libzerocoin::ZerocoinParams(bnTrustedModulus, bnTrustedModulus);
+libzerocoin::ZerocoinParams *ZCParamsV2 = new libzerocoin::ZerocoinParams(bnTrustedModulusV2, bnTrustedModulus);
 
 static CZerocoinState zerocoinState;
 
@@ -92,7 +92,7 @@ bool CheckSpendZcoinTransaction(const CTransaction &tx,
         bool fModulusV2 = pubcoinId >= ZC_MODULUS_V2_BASE_ID, fModulusV2InIndex = false;
         if (fModulusV2)
             pubcoinId -= ZC_MODULUS_V2_BASE_ID;
-        libzerocoin::Params *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
+        libzerocoin::ZerocoinParams *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
 
         if (txin.scriptSig.size() < 4)
             return state.DoS(100,
@@ -563,7 +563,7 @@ bool CheckZerocoinTransaction(const CTransaction &tx,
                  // coin id should be positive integer
                 return false;
             }
-            libzerocoin::Params *zcParams = (pubcoinId >= ZC_MODULUS_V2_BASE_ID) ? ZCParamsV2 : ZCParams;
+            libzerocoin::ZerocoinParams *zcParams = (pubcoinId >= ZC_MODULUS_V2_BASE_ID) ? ZCParamsV2 : ZCParams;
 
             CDataStream serializedCoinSpend((const char *)&*(txin.scriptSig.begin() + 4),
                                     (const char *)&*txin.scriptSig.end(),
@@ -660,7 +660,7 @@ bool ConnectBlockZC(CValidationState &state, const CChainParams &chainParams, CB
             int denomination = mint.first;
             int mintId = zerocoinState.AddMint(pindexNew, denomination, mint.second, oldAccValue);
 
-            libzerocoin::Params *zcParams = IsZerocoinTxV2((libzerocoin::CoinDenomination)denomination, 
+            libzerocoin::ZerocoinParams *zcParams = IsZerocoinTxV2((libzerocoin::CoinDenomination)denomination, 
                                                 chainParams.GetConsensus(), mintId) ? ZCParamsV2 : ZCParams;
 
             if (!oldAccValue)
@@ -962,7 +962,7 @@ libzerocoin::AccumulatorWitness CZerocoinState::GetWitnessForSpend(CChain *chain
 
     assert(coinId == id);
 
-    libzerocoin::Params *zcParams = useModulusV2 ? ZCParamsV2 : ZCParams;
+    libzerocoin::ZerocoinParams *zcParams = useModulusV2 ? ZCParamsV2 : ZCParams;
     bool nativeModulusIsV2 = IsZerocoinTxV2((libzerocoin::CoinDenomination)denomination, Params().GetConsensus(), id);
     decltype(&CBlockIndex::accumulatorChanges) accChangeField;
     if (nativeModulusIsV2 != useModulusV2) {
@@ -1019,7 +1019,7 @@ int CZerocoinState::GetMintedCoinHeightAndId(const CBigNum &pubCoin, int denomin
 void CZerocoinState::CalculateAlternativeModulusAccumulatorValues(CChain *chain, int denomination, int id) {
     libzerocoin::CoinDenomination d = (libzerocoin::CoinDenomination)denomination;
     pair<int, int> denomAndId = pair<int, int>(denomination, id);
-    libzerocoin::Params *altParams = IsZerocoinTxV2(d, Params().GetConsensus(), id) ? ZCParams : ZCParamsV2;
+    libzerocoin::ZerocoinParams *altParams = IsZerocoinTxV2(d, Params().GetConsensus(), id) ? ZCParams : ZCParamsV2;
     libzerocoin::Accumulator accumulator(altParams, d);
 
     if (coinGroups.count(denomAndId) == 0) {
@@ -1058,7 +1058,7 @@ bool CZerocoinState::TestValidity(CChain *chain) {
         fprintf(stderr, "TestValidity[denomination=%d, id=%d]\n", coinGroup.first.first, coinGroup.first.second);
 
         bool fModulusV2 = IsZerocoinTxV2((libzerocoin::CoinDenomination)coinGroup.first.first, Params().GetConsensus(), coinGroup.first.second);
-        libzerocoin::Params *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
+        libzerocoin::ZerocoinParams *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
 
         libzerocoin::Accumulator acc(&zcParams->accumulatorParams, (libzerocoin::CoinDenomination)coinGroup.first.first);
 

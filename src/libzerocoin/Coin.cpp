@@ -30,14 +30,14 @@ secp256k1_context* init_ctx() {
 secp256k1_context* ctx = init_ctx();
 
 //PublicCoin class
-PublicCoin::PublicCoin(const Params* p):
+PublicCoin::PublicCoin(const ZerocoinParams* p):
     params(p), denomination(ZQ_LOVELACE) {
 	if (this->params->initialized == false) {
 		throw ZerocoinException("Params are not initialized");
 	}
 };
 
-PublicCoin::PublicCoin(const Params* p, const Bignum& coin, const CoinDenomination d):
+PublicCoin::PublicCoin(const ZerocoinParams* p, const Bignum& coin, const CoinDenomination d):
 	params(p), value(coin), denomination(d) {
 	if (this->params->initialized == false) {
 		throw ZerocoinException("Params are not initialized");
@@ -65,7 +65,7 @@ bool PublicCoin::validate() const{
 }
 
 //PrivateCoin class
-PrivateCoin::PrivateCoin(const Params* p, CoinDenomination denomination, int version): params(p), publicCoin(p) {
+PrivateCoin::PrivateCoin(const ZerocoinParams* p, CoinDenomination denomination, int version): params(p), publicCoin(p) {
     this->version = version;
 	// Verify that the parameters are valid
 	if(this->params->initialized == false) {

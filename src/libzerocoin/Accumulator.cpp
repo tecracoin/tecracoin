@@ -27,7 +27,7 @@ Accumulator::Accumulator(const AccumulatorAndProofParams* p, const Bignum &v, co
 Accumulator::Accumulator(const AccumulatorAndProofParams* p, const CoinDenomination d): Accumulator(p, p->accumulatorBase, d) {}
 
 
-Accumulator::Accumulator(const Params* p, const Bignum &v, const CoinDenomination d) {
+Accumulator::Accumulator(const ZerocoinParams* p, const Bignum &v, const CoinDenomination d) {
 	this->params = &(p->accumulatorParams);
 	this->denomination = d;
 
@@ -38,7 +38,7 @@ Accumulator::Accumulator(const Params* p, const Bignum &v, const CoinDenominatio
     this->value = v;
 }
 
-Accumulator::Accumulator(const Params* p, const CoinDenomination d) :Accumulator(p, p->accumulatorParams.accumulatorBase, d) {}
+Accumulator::Accumulator(const ZerocoinParams* p, const CoinDenomination d) :Accumulator(p, p->accumulatorParams.accumulatorBase, d) {}
 
 void Accumulator::accumulate(const PublicCoin& coin, bool validateCoin) {
 	// Make sure we're initialized
@@ -82,7 +82,7 @@ bool Accumulator::operator == (const Accumulator rhs) const {
 }
 
 //AccumulatorWitness class
-AccumulatorWitness::AccumulatorWitness(const Params* p,
+AccumulatorWitness::AccumulatorWitness(const ZerocoinParams* p,
                                        const Accumulator& checkpoint, const PublicCoin coin): params(p), witness(checkpoint), element(coin) {
 }
 

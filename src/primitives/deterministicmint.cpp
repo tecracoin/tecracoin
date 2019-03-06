@@ -13,10 +13,9 @@ CDeterministicMint::CDeterministicMint()
     SetNull();
 }
 
-CDeterministicMint::CDeterministicMint(uint8_t nVersion, const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const uint256& hashPubcoin)
+CDeterministicMint::CDeterministicMint(const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const uint256& hashPubcoin)
 {
     SetNull();
-    this->nVersion = nVersion;
     this->nCount = nCount;
     this->hashSeed = hashSeed;
     this->hashSerial = hashSerial;
@@ -25,12 +24,11 @@ CDeterministicMint::CDeterministicMint(uint8_t nVersion, const uint32_t& nCount,
 
 void CDeterministicMint::SetNull()
 {
-    nVersion = PrivateCoin::CURRENT_VERSION;
     nCount = 0;
-    hashSeed = 0;
-    hashSerial = 0;
-    hashPubcoin = 0;
-    txid = 0;
+    hashSeed.SetNull();
+    hashSerial.SetNull();
+    hashPubcoin.SetNull();
+    txid.SetNull();
     nHeight = 0;
     denom = CoinDenomination::ZQ_ERROR;
     isUsed = false;

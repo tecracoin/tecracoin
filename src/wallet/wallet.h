@@ -21,6 +21,9 @@
 #include "zerocoin_params.h"
 #include "univalue.h"
 
+#include "zpivwallet.h"
+#include "zpivtracker.h"
+
 #include <algorithm>
 #include <map>
 #include <set>
@@ -650,6 +653,8 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
+    std::unique_ptr<CzPIVTracker> zpivTracker;
+
     CWallet()
     {
         SetNull();
@@ -839,6 +844,7 @@ public:
      * Add zerocoin Mint and Spend function
      */
     void ListAvailableCoinsMintCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true) const;
+    bool IsMintFromTxOutAvailable(CTxOut txout, bool& fIsAvailable);
     bool CreateZerocoinMintTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CreateZerocoinMintTransaction(CScript pubCoin, int64_t nValue,

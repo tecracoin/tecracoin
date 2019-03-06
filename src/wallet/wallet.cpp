@@ -2342,6 +2342,35 @@ void CWallet::ListAvailableCoinsMintCoins(vector <COutput> &vCoins, bool fOnlyCo
     }
 }
 
+bool CWallet::IsMintFromTxOutAvailable(CTxOut txout, bool& fIsAvailable){
+    LOCK(cs_wallet);
+
+    if(!txout.scriptPubKey.IsZerocoinMint()){
+        throw runtime_error(std::string(__func__) + ": txout is not a ZEROCOIN_MINT\n");
+    }
+
+    list <CZerocoinEntry> listPubCoin = list<CZerocoinEntry>();
+    CWalletDB walletdb(pwalletMain->strWalletFile);
+    walletdb.ListPubCoin(listPubCoin);
+    vector<unsigned char> vchZeroMint;
+    vchZeroMint.insert(vchZeroMint.end(), txout.scriptPubKey.begin() + 6,
+                       txout.scriptPubKey.begin() + txout.scriptPubKey.size());
+
+    CBigNum pubCoin;
+    pubCoin.setvch(vchZeroMint);
+    LogPrintf("Pubcoin=%s\n", pubCoin.GetHex());
+    BOOST_FOREACH(const CZerocoinEntry &pubCoinItem, listPubCoin) {
+        if (pubCoinItem.value == pubCoin){
+            fIsAvailable = !(pubCoinItem.IsUsed ||
+                           (!pubCoinItem.IsUsed &&
+                            (pubCoinItem.randomness == 0 ||
+                             pubCoinItem.serialNumber == 0)));
+            return true;
+        }
+    }
+    return false;
+}
+
 static void ApproximateBestSubset(vector <pair<CAmount, pair<const CWalletTx *, unsigned int> >> vValue,
                                   const CAmount &nTotalLower,
                                   const CAmount &nTargetValue,
@@ -3209,7 +3238,7 @@ bool CWallet::EraseFromWallet(uint256 hash) {
 bool CWallet::CreateZerocoinMintModel(string &stringError, std::vector<std::pair<int,int>> denominationPairs) {
     libzerocoin::CoinDenomination denomination;
     // Always use modulus v2
-    libzerocoin::Params *zcParams = ZCParamsV2;
+    libzerocoin::ZerocoinParams *zcParams = ZCParamsV2;
 
     vector<CRecipient> vecSend;
     vector<libzerocoin::PrivateCoin> privCoins;
@@ -3318,7 +3347,7 @@ bool CWallet::CreateZerocoinMintModel(string &stringError, string denomAmount) {
     }
 
     // Set up the Zerocoin Params object
-    libzerocoin::Params *zcParams = ZCParamsV2;
+    libzerocoin::ZerocoinParams *zcParams = ZCParamsV2;
 	
 	int mintVersion = ZEROCOIN_TX_VERSION_1;
 	
@@ -3847,7 +3876,7 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
 
             // Set up the Zerocoin Params object
             bool fModulusV2 = chainActive.Height() >= Params().GetConsensus().nModulusV2StartBlock;
-            libzerocoin::Params *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
+            libzerocoin::ZerocoinParams *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
 
             // Select not yet used coin from the wallet with minimal possible id
 
@@ -4084,7 +4113,7 @@ bool CWallet::CreateMultipleZerocoinSpendTransaction(std::string &thirdPartyaddr
 
             // Set up the Zerocoin Params object
             bool fModulusV2 = chainActive.Height() >= Params().GetConsensus().nModulusV2StartBlock;
-            libzerocoin::Params *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
+            libzerocoin::ZerocoinParams *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
             // objects holding spend inputs & storage values while tx is formed
             struct TempStorage {
                 libzerocoin::PrivateCoin privateCoin;
@@ -4448,7 +4477,7 @@ string CWallet::MintAndStoreZerocoin(vector<CRecipient> vecSend,
     }
 
     CWalletDB walletdb(pwalletMain->strWalletFile);
-    libzerocoin::Params *zcParams = ZCParamsV2;
+    libzerocoin::ZerocoinParams *zcParams = ZCParamsV2;
 
     BOOST_FOREACH(libzerocoin::PrivateCoin privCoin, privCoins){
         CZerocoinEntry zerocoinTx;

@@ -89,10 +89,9 @@ class CDBIterator
 {
 private:
     const CDBWrapper &parent;
-    leveldb::Iterator *piter;
 
 public:
-
+    leveldb::Iterator *piter;
     /**
      * @param[in] parent           Parent CDBWrapper instance.
      * @param[in] piterIn          The original leveldb iterator.

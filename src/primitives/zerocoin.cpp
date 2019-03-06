@@ -2,11 +2,12 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <streams.h>
 #include "primitives/zerocoin.h"
 #include "hash.h"
 #include "util.h"
 #include "utilstrencodings.h"
-//#include <streams.h>
+
 
 bool CMintMeta::operator <(const CMintMeta& a) const
 {
