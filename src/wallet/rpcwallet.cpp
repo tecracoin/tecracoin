@@ -2755,8 +2755,7 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
         }
         zerocoinTx.randomness = newCoin.getRandomness();
         zerocoinTx.serialNumber = newCoin.getSerialNumber();
-        const unsigned char *ecdsaSecretKey = newCoin.getEcdsaSeckey();
-        zerocoinTx.ecdsaSecretKey = std::vector<unsigned char>(ecdsaSecretKey, ecdsaSecretKey+32);
+        zerocoinTx.ecdsaSecretKey = newCoin.getPrivKey();
         pwalletMain->NotifyZerocoinChanged(pwalletMain, zerocoinTx.value.GetHex(), "New (" + std::to_string(zerocoinTx.denomination) + " mint)", CT_NEW);
         walletdb.WriteZerocoinEntry(zerocoinTx);
 

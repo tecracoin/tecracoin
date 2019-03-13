@@ -36,9 +36,8 @@ public:
     bool IsNull() const { return (hash.IsNull() && n == (uint32_t) -1); }
 
     friend bool operator<(const COutPoint& a, const COutPoint& b)
-    {
-        int cmp = a.hash.Compare(b.hash);
-        return cmp < 0 || (cmp == 0 && a.n < b.n);
+    {  
+        return (a.hash < b.hash || (a.hash == b.hash && a.n < b.n));
     }
 
     friend bool operator==(const COutPoint& a, const COutPoint& b)
@@ -457,6 +456,7 @@ public:
 
     bool IsZerocoinMint() const;
 
+    bool ContainsZerocoins() const;
 
     friend bool operator==(const CTransaction& a, const CTransaction& b)
     {

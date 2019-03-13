@@ -5137,6 +5137,6 @@ const char *precomputedHash[20501] = {
 
 void buildMapPoWHash() {
     for (int i=1; i<20500; i++) {
-        mapPoWHash.insert(make_pair(i, uint256S(precomputedHash[i])));
+        mapPoWHash.insert(make_pair(i, uint256(precomputedHash[i])));
     }
 };

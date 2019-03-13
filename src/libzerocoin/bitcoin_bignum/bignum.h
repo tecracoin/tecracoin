@@ -10,7 +10,7 @@
 #include <openssl/bn.h>
 
 #include "../../uint256.h" // for uint64
-#include "../../arith_uint256.h"
+#include "../../uint256.h"
 #include "../../version.h"
 #include "../../clientversion.h"
 #include "serialize.h"
@@ -110,8 +110,8 @@ public:
     CBigNum(unsigned int n)     { init(); setulong(n); }
 //    CBigNum(unsigned long n)    { init(); setulong(n); }
     CBigNum(uint64_t n)           { init(); setuint64(n); }
-    explicit CBigNum(arith_uint256 n) { init(); setuint256(n); }
-    explicit CBigNum(uint256 n) { arith_uint256 m = UintToArith256(n); init(); setuint256(m); }
+    explicit CBigNum(uint256 n) { init(); setuint256(n); }
+    //explicit CBigNum(uint256 n) { uint256 m = UintToArith256(n); init(); setuint256(m); }
 
     explicit CBigNum(const std::vector<unsigned char>& vch)
     {
@@ -249,7 +249,7 @@ public:
         BN_mpi2bn(pch, p - pch, bn);
     }
 
-    void setuint256(arith_uint256 n)
+    void setuint256(uint256 n)
     {
         unsigned char pch[sizeof(n) + 6];
         unsigned char* p = pch + 4;
@@ -277,21 +277,21 @@ public:
         BN_mpi2bn(pch, p - pch, bn);
     }
 
-//    uint256 getuint256() const
-//    {
-//        uint64_t x = 0;
-//        uint256 n = x;
-//        unsigned int nSize = BN_bn2mpi(bn, NULL);
-//        if (nSize < 4)
-//            return n;
-//        std::vector<unsigned char> vch(nSize);
-//        BN_bn2mpi(bn, &vch[0]);
-//        if (vch.size() > 4)
-//            vch[4] &= 0x7f;
-//        for (unsigned int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
-//            ((unsigned char*)&n)[i] = vch[j];
-//        return n;
-//    }
+    uint256 getuint256() const
+    {
+        uint256 n;
+        n.SetNull();
+        unsigned int nSize = BN_bn2mpi(bn, NULL);
+        if (nSize < 4)
+            return n;
+        std::vector<unsigned char> vch(nSize);
+        BN_bn2mpi(bn, &vch[0]);
+        if (vch.size() > 4)
+            vch[4] &= 0x7f;
+        for (unsigned int i = 0, j = vch.size()-1; i < sizeof(n) && j >= 4; i++, j--)
+            ((unsigned char*)&n)[i] = vch[j];
+        return n;
+    }
 
     void setvch(const std::vector<unsigned char>& vch)
     {

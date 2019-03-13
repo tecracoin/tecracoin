@@ -108,7 +108,7 @@ std::map<std::string, uint256> FetchWalletExodusTransactions(unsigned int count,
         }
         int blockHeight = atoi(svstr[1]);
         if (blockHeight < startBlock || blockHeight > endBlock) continue;
-        uint256 txHash = uint256S(svstr[0]);
+        uint256 txHash = uint256(svstr[0]);
         if (seenHashes.find(txHash) != seenHashes.end()) continue; // an STO may already be in the wallet if we sent it
         int blockPosition = GetTransactionByteOffset(txHash);
         std::string sortKey = strprintf("%06d%010d", blockHeight, blockPosition);

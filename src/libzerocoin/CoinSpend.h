@@ -22,6 +22,7 @@
 #include "SerialNumberSignatureOfKnowledge.h"
 #include "SpendMetaData.h"
 #include "serialize.h"
+#include "pubkey.h"
 
 namespace libzerocoin {
 
@@ -102,10 +103,18 @@ public:
     int getVersion() const {
         return version;
     }
+
+    CPubKey getPubKey() const { 
+        return pubkey; 
+    }
 	
 	uint256 getAccumulatorBlockHash() const {
 		return accumulatorBlockHash;
 	}
+
+    std::vector<unsigned char> getSignature() const { 
+        return vchSig; 
+    }
 
 	bool HasValidSerial() const;
 	bool Verify(const Accumulator& a, const SpendMetaData &metaData) const;
@@ -134,7 +143,9 @@ public:
 
         if (version == ZEROCOIN_TX_VERSION_2) {
 		    READWRITE(ecdsaPubkey);
-		    READWRITE(ecdsaSignature);
+		    READWRITE(ecdsaSignature); // TODO remove
+            READWRITE(pubkey);
+            READWRITE(vchSig);
 		}
         if (version > ZEROCOIN_TX_VERSION_1 && !(ser_action.ForRead() && is_eof(s)))
             READWRITE(accumulatorBlockHash);
@@ -157,6 +168,9 @@ private:
 	SerialNumberSignatureOfKnowledge serialNumberSoK;
 	CommitmentProofOfKnowledge commitmentPoK;
 	uint256 accumulatorBlockHash;
+
+    CPubKey pubkey;
+    std::vector<unsigned char> vchSig;
 };
 
 } /* namespace libzerocoin */

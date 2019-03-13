@@ -276,7 +276,7 @@ UniValue gettxoutproof(const UniValue& params, bool fHelp)
         const UniValue& txid = txids[idx];
         if (txid.get_str().length() != 64 || !IsHex(txid.get_str()))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid txid ")+txid.get_str());
-        uint256 hash(uint256S(txid.get_str()));
+        uint256 hash(txid.get_str());
         if (setTxids.count(hash))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated txid: ")+txid.get_str());
        setTxids.insert(hash);
@@ -290,7 +290,7 @@ UniValue gettxoutproof(const UniValue& params, bool fHelp)
     uint256 hashBlock;
     if (params.size() > 1)
     {
-        hashBlock = uint256S(params[1].get_str());
+        hashBlock = uint256(params[1].get_str());
         if (!mapBlockIndex.count(hashBlock))
             throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Block not found");
         pblockindex = mapBlockIndex[hashBlock];

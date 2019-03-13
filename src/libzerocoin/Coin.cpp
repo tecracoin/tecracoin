@@ -96,8 +96,8 @@ const Bignum& PrivateCoin::getRandomness() const {
 	return this->randomness;
 }
 
-const unsigned char* PrivateCoin::getEcdsaSeckey() const {
-     return this->ecdsaSeckey;
+const CPrivKey& PrivateCoin::getPrivKey() const { 
+    return this->privkey; 
 }
 
 unsigned int PrivateCoin::getVersion() const {
@@ -106,25 +106,16 @@ unsigned int PrivateCoin::getVersion() const {
 
 void PrivateCoin::mintCoin(const CoinDenomination denomination) {
 
-	Bignum s;
-
+	CBigNum s;
+    CKey key;
 	// Repeat this process up to MAX_COINMINT_ATTEMPTS times until
 	// we obtain a prime number
 	for (uint32_t attempt = 0; attempt < MAX_COINMINT_ATTEMPTS; attempt++) {
-		if (this->version == 2) {
-
-			// Create a key pair
-			secp256k1_pubkey pubkey;
-			do {
-				if (RAND_bytes(this->ecdsaSeckey, sizeof(this->ecdsaSeckey))
-						!= 1) {
-					throw ZerocoinException("Unable to generate randomness");
-				}
-			} while (!secp256k1_ec_pubkey_create(ctx, &pubkey,
-					this->ecdsaSeckey));
-
-			// Hash the public key in the group to obtain a serial number
-            s = serialNumberFromSerializedPublicKey(ctx, &pubkey);
+		if (this->version == 2) {        
+            bool isValid = false;
+            while (!isValid) {
+                isValid = GenerateKeyPair(this->params->coinCommitmentGroup.groupOrder, uint256(0), key, s);
+            }
 		} else {
 			// Generate a random serial number in the range 0...{q-1} where
 			// "q" is the order of the commitment group.
@@ -151,6 +142,7 @@ void PrivateCoin::mintCoin(const CoinDenomination denomination) {
 			this->randomness = coin.getRandomness();
 			this->publicCoin = PublicCoin(params, coin.getCommitmentValue(),
 					denomination);
+            this->privkey = key.GetPrivKey();
 
 			// Success! We're done.
 			return;
@@ -164,20 +156,17 @@ void PrivateCoin::mintCoin(const CoinDenomination denomination) {
 }
 
 void PrivateCoin::mintCoinFast(const CoinDenomination denomination) {
-	Bignum s;
 
-	if(this->version == 2) {
-
-		// Create a key pair
-		secp256k1_pubkey pubkey;
-		do {
-			if (RAND_bytes(this->ecdsaSeckey, sizeof(this->ecdsaSeckey)) != 1) {
-				throw ZerocoinException("Unable to generate randomness");
-			}
-		}while (!secp256k1_ec_pubkey_create(ctx, &pubkey, this->ecdsaSeckey));
-
-		// Hash the public key in the group to obtain a serial number
-        s = serialNumberFromSerializedPublicKey(ctx, &pubkey);
+    // Generate a random serial number in the range 0...{q-1} where
+    // "q" is the order of the commitment group.
+    // And where the serial also doubles as a public key
+	CBigNum s;
+    CKey key;
+	if(this->version == 2) {    
+        bool isValid = false;
+        while (!isValid) {
+            isValid = GenerateKeyPair(this->params->coinCommitmentGroup.groupOrder, uint256(0), key, s);
+        }
 	} else {
 		// Generate a random serial number in the range 0...{q-1} where
 		// "q" is the order of the commitment group.
@@ -207,7 +196,7 @@ void PrivateCoin::mintCoinFast(const CoinDenomination denomination) {
 			this->serialNumber = s;
 			this->randomness = r;
 			this->publicCoin = PublicCoin(params, commitmentValue, denomination);
-
+            this->privkey = key.GetPrivKey();
 			// Success! We're done.
 			return;
 		}
@@ -257,6 +246,52 @@ const Bignum PrivateCoin::serialNumberFromSerializedPublicKey(secp256k1_context 
     std::vector<unsigned char> hash_vch(hash.begin(), hash.end());
     hash_vch.push_back(0);
     return Bignum(hash_vch);
+}
+
+bool GenerateKeyPair(const CBigNum& bnGroupOrder, const uint256& nPrivkey, CKey& key, CBigNum& bnSerial)
+{
+    // Generate a new key pair, which also has a 256-bit pubkey hash that qualifies as a serial #
+    // This builds off of Tim Ruffing's work on libzerocoin, but has a different implementation
+    CKey keyPair;
+    if (nPrivkey == 0)
+        keyPair.MakeNewKey(true);
+    else
+        keyPair.Set(nPrivkey.begin(), nPrivkey.end(), true);
+
+    CPubKey pubKey = keyPair.GetPubKey();
+    uint256 hashPubKey = Hash(pubKey.begin(), pubKey.end());
+
+    // Make the first half byte 0 which will distinctly mark v2 serials
+    hashPubKey >>= libzerocoin::PrivateCoin::V2_BITSHIFT;
+
+    CBigNum s(hashPubKey);
+    uint256 nBits = hashPubKey >> 248; // must be less than 0x0D to be valid serial range
+    if (nBits > 12)
+        return false;
+
+    //Mark this as v2 by starting with 0xF
+    uint256 nMark = 0xF;
+    nMark <<= 252;
+    hashPubKey |= nMark;
+    s = CBigNum(hashPubKey);
+
+    key = keyPair;
+    bnSerial = s;
+    return true;
+}
+
+const CPubKey PrivateCoin::getPubKey() const
+{
+    CKey key;
+    key.SetPrivKey(privkey, true);
+    return key.GetPubKey();
+}
+
+bool PrivateCoin::sign(const uint256& hash, vector<unsigned char>& vchSig) const
+{
+    CKey key;
+    key.SetPrivKey(privkey, true);
+    return key.Sign(hash, vchSig);
 }
 
 } /* namespace libzerocoin */

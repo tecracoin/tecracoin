@@ -160,7 +160,7 @@ public:
         READWRITE(randomness);
         READWRITE(serialNumber);
         READWRITE(value);
-        READWRITE((int)denomination);
+        READWRITE(denomination);
         READWRITE(nHeight);
         READWRITE(txid);
 
@@ -231,7 +231,7 @@ public:
         READWRITE(coinSerial);
         READWRITE(hashTx);
         READWRITE(pubCoin);
-        READWRITE((int)denomination);
+        READWRITE(denomination);
         READWRITE(nAccumulatorChecksum);
     };
 };

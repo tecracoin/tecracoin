@@ -34,7 +34,6 @@ public:
     void Init();
     CMintMeta Get(const uint256& hashSerial);
     CMintMeta GetMetaFromPubcoin(const uint256& hashPubcoin);
-    bool GetMetaFromStakeHash(const uint256& hashStake, CMintMeta& meta) const;
     CAmount GetBalance(bool fConfirmedOnly, bool fUnconfirmedOnly) const;
     std::vector<uint256> GetSerialHashes();
     std::vector<CMintMeta> GetMints(bool fConfirmedOnly) const;

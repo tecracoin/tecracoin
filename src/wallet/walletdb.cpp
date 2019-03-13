@@ -401,6 +401,36 @@ DBErrors CWalletDB::ReorderTransactions(CWallet *pwallet) {
     return DB_LOAD_OK;
 }
 
+bool CWalletDB::WriteDeterministicMint(const CDeterministicMint& dMint)
+{
+    uint256 hash = dMint.GetPubcoinHash();
+    return Write(make_pair(string("dzpiv"), hash), dMint, true);
+}
+
+bool CWalletDB::ReadDeterministicMint(const uint256& hashPubcoin, CDeterministicMint& dMint)
+{
+    return Read(make_pair(string("dzpiv"), hashPubcoin), dMint);
+}
+
+bool CWalletDB::WriteZerocoinMint(const CZerocoinMint& zerocoinMint)
+{
+    CDataStream ss(SER_GETHASH, 0);
+    ss << zerocoinMint.GetValue();
+    uint256 hash = Hash(ss.begin(), ss.end());
+
+    Erase(make_pair(string("zerocoin"), hash));
+    return Write(make_pair(string("zerocoin"), hash), zerocoinMint, true);
+}
+
+bool CWalletDB::ReadZerocoinMint(const CBigNum &bnPubCoinValue, CZerocoinMint& zerocoinMint)
+{
+    CDataStream ss(SER_GETHASH, 0);
+    ss << bnPubCoinValue;
+    uint256 hash = Hash(ss.begin(), ss.end());
+
+    return ReadZerocoinMint(hash, zerocoinMint);
+}
+
 class CWalletScanState {
 public:
     unsigned int nKeys;
@@ -1194,7 +1224,7 @@ std::map<uint256, std::vector<pair<uint256, uint32_t> > > CWalletDB::MapMintPool
         // Read next record
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         if (fFlags == DB_SET_RANGE)
-            ssKey << make_pair(string("mintpool"), arith_uint256(0));
+            ssKey << make_pair(string("mintpool"), uint256(0));
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
         fFlags = DB_NEXT;
@@ -1238,13 +1268,92 @@ std::map<uint256, std::vector<pair<uint256, uint32_t> > > CWalletDB::MapMintPool
     return mapPool;
 }
 
-bool CWalletDB::ReadZerocoinMint(const CBigNum &bnPubCoinValue, CZerocoinMint& zerocoinMint)
+std::list<CDeterministicMint> CWalletDB::ListDeterministicMints()
 {
-    CDataStream ss(SER_GETHASH, 0);
-    ss << bnPubCoinValue;
-    uint256 hash = Hash(ss.begin(), ss.end());
+    std::list<CDeterministicMint> listMints;
+    Dbc* pcursor = GetCursor();
+    if (!pcursor)
+        throw runtime_error(std::string(__func__)+" : cannot create DB cursor");
+    unsigned int fFlags = DB_SET_RANGE;
+    for (;;)
+    {
+        // Read next record
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        if (fFlags == DB_SET_RANGE)
+            ssKey << make_pair(string("dzpiv"), uint256(0));
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
+        fFlags = DB_NEXT;
+        if (ret == DB_NOTFOUND)
+            break;
+        else if (ret != 0)
+        {
+            pcursor->close();
+            throw runtime_error(std::string(__func__)+" : error scanning DB");
+        }
 
-    return ReadZerocoinMint(hash, zerocoinMint);
+        // Unserialize
+        string strType;
+        ssKey >> strType;
+        if (strType != "dzpiv")
+            break;
+
+        uint256 hashPubcoin;
+        ssKey >> hashPubcoin;
+
+        CDeterministicMint mint;
+        ssValue >> mint;
+
+        listMints.emplace_back(mint);
+    }
+
+    pcursor->close();
+    return listMints;
+}
+
+std::list<CZerocoinMint> CWalletDB::ListMintedCoins()
+{
+    std::list<CZerocoinMint> listPubCoin;
+    Dbc* pcursor = GetCursor();
+    if (!pcursor)
+        throw runtime_error(std::string(__func__)+" : cannot create DB cursor");
+    unsigned int fFlags = DB_SET_RANGE;
+    vector<CZerocoinMint> vOverWrite;
+    vector<CZerocoinMint> vArchive;
+    for (;;)
+    {
+        // Read next record
+        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
+        if (fFlags == DB_SET_RANGE)
+            ssKey << make_pair(string("zerocoin"), uint256(0));
+        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
+        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
+        fFlags = DB_NEXT;
+        if (ret == DB_NOTFOUND)
+            break;
+        else if (ret != 0)
+        {
+            pcursor->close();
+            throw runtime_error(std::string(__func__)+" : error scanning DB");
+        }
+
+        // Unserialize
+        string strType;
+        ssKey >> strType;
+        if (strType != "zerocoin")
+            break;
+
+        uint256 hashPubcoin;
+        ssKey >> hashPubcoin;
+
+        CZerocoinMint mint;
+        ssValue >> mint;
+
+        listPubCoin.emplace_back(mint);
+    }
+
+    pcursor->close();
+    return listPubCoin;
 }
 
 bool CWalletDB::ReadZerocoinMint(const uint256& hashPubcoin, CZerocoinMint& mint)

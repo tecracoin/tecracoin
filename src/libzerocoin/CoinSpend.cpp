@@ -68,21 +68,11 @@ CoinSpend::CoinSpend(const ZerocoinParams* p, const PrivateCoin& coin,
 	uint256 metahash = signatureHash(m);
     this->serialNumberSoK = SerialNumberSignatureOfKnowledge(p, coin, fullCommitmentToCoinUnderSerialParams, coin.getVersion()==ZEROCOIN_TX_VERSION_1_5 ? metahash : uint256());
 
+    // 5. Sign the transaction under the public key associate with the serial number.
 	if(coin.getVersion() == 2){
-		// 5. Sign the transaction under the public key associate with the serial number.
-		secp256k1_pubkey pubkey;
-		size_t len = 33;
-		secp256k1_ecdsa_signature sig;
-
-		// TODO timing channel, since secp256k1_ec_pubkey_serialize does not expect its output to be secret.
-		// See main_impl.h of ecdh module on secp256k1
-		if (!secp256k1_ec_pubkey_create(ctx, &pubkey, coin.getEcdsaSeckey())) {
-			throw ZerocoinException("Invalid secret key");
-		}
-		secp256k1_ec_pubkey_serialize(ctx, &this->ecdsaPubkey[0], &len, &pubkey, SECP256K1_EC_COMPRESSED);
-
-		secp256k1_ecdsa_sign(ctx, &sig, metahash.begin(), coin.getEcdsaSeckey(), NULL, NULL);
-		secp256k1_ecdsa_signature_serialize_compact(ctx, &this->ecdsaSignature[0], &sig);
+        this->pubkey = coin.getPubKey();
+        if (!coin.sign(metahash, this->vchSig))
+            throw std::runtime_error("Coinspend failed to sign signature hash");
 	}
 }
 

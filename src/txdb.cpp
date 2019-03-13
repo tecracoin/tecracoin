@@ -696,7 +696,7 @@ bool CZerocoinDB::WipeCoins(std::string strType)
 
     char type = (strType == "spends" ? 's' : 'm');
     CDataStream ssKeySet(SER_DISK, CLIENT_VERSION);
-    ssKeySet << make_pair(type, arith_uint256(0));
+    ssKeySet << make_pair(type, uint256(0));
     pcursor->Seek(ssKeySet.str());
     // Load mapBlockIndex
     std::set<uint256> setDelete;

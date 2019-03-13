@@ -32,15 +32,15 @@ void calculateGroupParamLengths(uint32_t maxPLen, uint32_t securityLevel,
 
 // Prototypes
 bool primalityTestByTrialDivision(uint32_t candidate);
-arith_uint256 calculateSeed(Bignum modulus, std::string auxString, uint32_t securityLevel, std::string groupName);
-arith_uint256 calculateGeneratorSeed(arith_uint256 seed, arith_uint256 pSeed, arith_uint256 qSeed, std::string label, uint32_t index, uint32_t count);
-arith_uint256 calculateHash(arith_uint256 input);
-IntegerGroupParams  deriveIntegerGroupParams(arith_uint256 seed, uint32_t pLen, uint32_t qLen);
+uint256 calculateSeed(Bignum modulus, std::string auxString, uint32_t securityLevel, std::string groupName);
+uint256 calculateGeneratorSeed(uint256 seed, uint256 pSeed, uint256 qSeed, std::string label, uint32_t index, uint32_t count);
+uint256 calculateHash(uint256 input);
+IntegerGroupParams  deriveIntegerGroupParams(uint256 seed, uint32_t pLen, uint32_t qLen);
 IntegerGroupParams  deriveIntegerGroupFromOrder(Bignum &groupOrder);
-void calculateGroupModulusAndOrder(arith_uint256 seed, uint32_t pLen, uint32_t qLen, Bignum &resultModulus, Bignum &resultGroupOrder, arith_uint256 *resultPseed, arith_uint256 *resultQseed);
-Bignum calculateGroupGenerator(arith_uint256 seed, arith_uint256 pSeed, arith_uint256 qSeed, Bignum modulus, Bignum groupOrder, uint32_t index);
-Bignum generateRandomPrime(uint32_t primeBitLen, arith_uint256 in_seed, arith_uint256 *out_seed, uint32_t *prime_gen_counter);
-Bignum generateIntegerFromSeed(uint32_t numBits, arith_uint256 seed, uint32_t *numIterations);
+void calculateGroupModulusAndOrder(uint256 seed, uint32_t pLen, uint32_t qLen, Bignum &resultModulus, Bignum &resultGroupOrder, uint256 *resultPseed, uint256 *resultQseed);
+Bignum calculateGroupGenerator(uint256 seed, uint256 pSeed, uint256 qSeed, Bignum modulus, Bignum groupOrder, uint32_t index);
+Bignum generateRandomPrime(uint32_t primeBitLen, uint256 in_seed, uint256 *out_seed, uint32_t *prime_gen_counter);
+Bignum generateIntegerFromSeed(uint32_t numBits, uint256 seed, uint32_t *numIterations);
 bool primalityTestByTrialDivision(uint32_t candidate);
 
 }/* namespace libzerocoin */

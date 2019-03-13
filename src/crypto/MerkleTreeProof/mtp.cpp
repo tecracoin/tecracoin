@@ -1,6 +1,6 @@
 #include "mtp.h"
 #include "util.h"
-#include "arith_uint256.h"
+#include "uint256.h"
 
 extern "C" {
 #include "blake2/blake2.h"
@@ -193,7 +193,7 @@ struct TargetHelper
 {
     bool m_negative;
     bool m_overflow;
-    arith_uint256 m_target;
+    uint256 m_target;
 
     TargetHelper(uint32_t target)
     {
@@ -413,7 +413,7 @@ bool mtp_verify(const char* input, const uint32_t target,
     // step 9
     bool negative;
     bool overflow;
-    arith_uint256 bn_target;
+    uint256 bn_target;
     bn_target.SetCompact(target, &negative, &overflow); // diff = 1
 
     for (int i = 0; i < (L * 2); ++i) {
@@ -424,8 +424,8 @@ bool mtp_verify(const char* input, const uint32_t target,
         *mtpHashValue = y[L];
 
     if (negative || (bn_target == 0) || overflow
-            || (bn_target > UintToArith256(pow_limit))
-            || (UintToArith256(y[L]) > bn_target)) {
+            || (bn_target > pow_limit)
+            || (y[L] > bn_target)) {
         return false;
     }
     return true;
@@ -606,8 +606,8 @@ bool mtp_hash1(const char* input, uint32_t target, uint8_t hash_root_mtp[16],
 
         // step 6
         if (bn_target.m_negative || (bn_target.m_target == 0) || bn_target.m_overflow
-                || (bn_target.m_target > UintToArith256(pow_limit))
-                || (UintToArith256(y[L]) > bn_target.m_target)) {
+                || (bn_target.m_target > pow_limit)
+                || (y[L] > bn_target.m_target)) {
             n_nonce_internal++;
             continue;
         }

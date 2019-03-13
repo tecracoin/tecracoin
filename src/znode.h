@@ -242,7 +242,7 @@ public:
     }
 
     // CALCULATE A RANK AGAINST OF GIVEN BLOCK
-    arith_uint256 CalculateScore(const uint256& blockHash);
+    uint256 CalculateScore(const uint256& blockHash);
 
     bool UpdateFromNewBroadcast(CZnodeBroadcast& mnb);
 

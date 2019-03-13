@@ -1109,7 +1109,7 @@ public:
     //private
     Bignum randomness;
     Bignum serialNumber;
-    vector<unsigned char> ecdsaSecretKey;
+    CPrivKey ecdsaSecretKey;
 
     bool IsUsed;
     int nHeight;

@@ -31,6 +31,7 @@
 #include <utility>
 #include <vector>
 #include "libzerocoin/Zerocoin.h"
+#include "txmempool.h"
 
 #include <boost/unordered_map.hpp>
 
@@ -40,7 +41,7 @@ class CBloomFilter;
 class CChainParams;
 class CInv;
 class CScriptCheck;
-class CTxMemPool;
+//class CTxMemPool;
 class CValidationInterface;
 class CValidationState;
 class CZerocoinDB;
@@ -177,7 +178,7 @@ static const bool DEFAULT_PEERBLOOMFILTERS = true;
 
 struct BlockHasher
 {
-    size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }
+    size_t operator()(const uint256& hash) const { return hash.GetLow64(); }
 };
 
 extern CScript COINBASE_FLAGS;
@@ -516,6 +517,10 @@ bool ReadBlockFromDisk(CBlock& block, const CBlockIndex* pindex, const Consensus
 /** Context-independent validity checks */
 bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true);
 bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true, bool fCheckMerkleRoot = true, int nHeight = INT_MAX, bool isVerifyDB = false);
+
+bool IsTransactionInChain(const uint256& txId, int& nHeightTx, CTransaction& tx);
+bool IsTransactionInChain(const uint256& txId, int& nHeightTx);
+bool IsBlockHashInChain(const uint256& hashBlock);
 
 /** Context-dependent validity checks.
  *  By "context", we mean only the previous block headers, but not the UTXO

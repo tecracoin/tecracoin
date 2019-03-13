@@ -128,9 +128,9 @@ namespace libzerocoin {
 ///
 /// Returns the hash of the value.
 
-    arith_uint256 calculateGeneratorSeed(arith_uint256 seed, arith_uint256 pSeed, arith_uint256 qSeed, string label, uint32_t index, uint32_t count) {
+    uint256 calculateGeneratorSeed(uint256 seed, uint256 pSeed, uint256 qSeed, string label, uint32_t index, uint32_t count) {
         CHashWriter hasher(0, 0);
-        arith_uint256 hash;
+        uint256 hash;
 
         // Compute the hash of:
         // <modulus>||<securitylevel>||<auxString>||groupName
@@ -158,9 +158,9 @@ namespace libzerocoin {
 ///
 /// Returns the hash of the value.
 
-    arith_uint256 calculateSeed(Bignum modulus, string auxString, uint32_t securityLevel, string groupName) {
+    uint256 calculateSeed(Bignum modulus, string auxString, uint32_t securityLevel, string groupName) {
         CHashWriter hasher(0, 0);
-        arith_uint256 hash;
+        uint256 hash;
 
         // Compute the hash of:
         // <modulus>||<securitylevel>||<auxString>||groupName
@@ -172,16 +172,16 @@ namespace libzerocoin {
         hasher << string("||");
         hasher << groupName;
 
-        arith_uint256 hx = UintToArith256(hasher.GetHash());
+        uint256 hx = uint256(hasher.GetHash());
         return hx;
     }
 
-    arith_uint256 calculateHash(arith_uint256 input) {
+    uint256 calculateHash(uint256 input) {
         CHashWriter hasher(0, 0);
 
         // Compute the hash of "input"
         hasher << input;
-        arith_uint256 hx = UintToArith256(hasher.GetHash());
+        uint256 hx = uint256(hasher.GetHash());
         return hx;
     }
 
@@ -240,11 +240,11 @@ namespace libzerocoin {
 /// primes "p" and "q". It uses the procedure in Appendix A.2.3 to
 /// derive two generators "g", "h".
 
-    IntegerGroupParams deriveIntegerGroupParams(arith_uint256 seed, uint32_t pLen, uint32_t qLen) {
+    IntegerGroupParams deriveIntegerGroupParams(uint256 seed, uint32_t pLen, uint32_t qLen) {
         IntegerGroupParams result;
         Bignum p;
         Bignum q;
-        arith_uint256 pSeed, qSeed;
+        uint256 pSeed, qSeed;
 
         // Calculate "p" and "q" and "domain_parameter_seed" from the
         // "seed" buffer above, using the procedure described in NIST
@@ -307,9 +307,9 @@ namespace libzerocoin {
                 // NIST FIPS 186-3, Appendix A.2.3. This algorithm takes ("p", "q",
                 // "domain_parameter_seed", "index"). We use "index" value 1
                 // to generate "g" and "index" value 2 to generate "h".
-                arith_uint256 seed = calculateSeed(groupOrder, "", 128, "");
-                arith_uint256 pSeed = calculateHash(seed);
-                arith_uint256 qSeed = calculateHash(pSeed);
+                uint256 seed = calculateSeed(groupOrder, "", 128, "");
+                uint256 pSeed = calculateHash(seed);
+                uint256 qSeed = calculateHash(pSeed);
                 result.g = calculateGroupGenerator(seed, pSeed, qSeed, result.modulus, result.groupOrder, 1);
                 result.h = calculateGroupGenerator(seed, pSeed, qSeed, result.modulus, result.groupOrder, 2);
 
@@ -347,9 +347,9 @@ namespace libzerocoin {
 /// algorithms described in FIPS 186-3 Appendix A.1.2 to calculate
 /// primes "p" and "q".
 
-    void calculateGroupModulusAndOrder(arith_uint256 seed, uint32_t pLen, uint32_t qLen,
+    void calculateGroupModulusAndOrder(uint256 seed, uint32_t pLen, uint32_t qLen,
                                        Bignum &resultModulus, Bignum &resultGroupOrder,
-                                       arith_uint256 *resultPseed, arith_uint256 *resultQseed) {
+                                       uint256 *resultPseed, uint256 *resultQseed) {
         // Verify that the seed length is >= qLen
         if (qLen > (sizeof(seed)) * 8) {
             // TODO: The use of 256-bit seeds limits us to 256-bit group orders. We should probably change this.
@@ -363,14 +363,14 @@ namespace libzerocoin {
         // Generate a random prime for the group order.
         // This may throw an exception, which we'll pass upwards.
         // Result is the value "resultGroupOrder", "qseed" and "qgen_counter".
-        arith_uint256 qseed;
+        uint256 qseed;
         uint32_t qgen_counter;
         resultGroupOrder = generateRandomPrime(qLen, seed, &qseed, &qgen_counter);
 
         // Using ⎡pLen / 2 + 1⎤ as the length and qseed as the input_seed, use the random prime
         // routine to obtain p0 , pseed, and pgen_counter. We pass exceptions upward.
         uint32_t p0len = ceil((pLen / 2.0) + 1);
-        arith_uint256 pseed;
+        uint256 pseed;
         uint32_t pgen_counter;
         Bignum p0 = generateRandomPrime(p0len, qseed, &pseed, &pgen_counter);
 
@@ -447,7 +447,7 @@ namespace libzerocoin {
 /// Generates a random group generator deterministically as a function of (seed,pSeed,qSeed)
 /// Uses the algorithm described in FIPS 186-3 Appendix A.2.3.
 
-    Bignum calculateGroupGenerator(arith_uint256 seed, arith_uint256 pSeed, arith_uint256 qSeed, Bignum modulus,
+    Bignum calculateGroupGenerator(uint256 seed, uint256 pSeed, uint256 qSeed, Bignum modulus,
                                    Bignum groupOrder, uint32_t index) {
         Bignum result;
 
@@ -462,7 +462,7 @@ namespace libzerocoin {
         // Loop until we find a generator
         for (uint32_t count = 1; count < MAX_GENERATOR_ATTEMPTS; count++) {
             // hash = Hash(seed || pSeed || qSeed || “ggen” || index || count
-            arith_uint256 hash = calculateGeneratorSeed(seed, pSeed, qSeed, "ggen", index, count);
+            uint256 hash = calculateGeneratorSeed(seed, pSeed, qSeed, "ggen", index, count);
             Bignum W(hash);
 
             // Compute result = W^e mod p
@@ -490,7 +490,7 @@ namespace libzerocoin {
 /// seed. Uses the Shawe-Taylor algorithm as described in FIPS 186-3
 /// Appendix C.6. This is a recursive function.
 
-    Bignum generateRandomPrime(uint32_t primeBitLen, arith_uint256 in_seed, arith_uint256 *out_seed,
+    Bignum generateRandomPrime(uint32_t primeBitLen, uint256 in_seed, uint256 *out_seed,
                                uint32_t *prime_gen_counter) {
         // Verify that primeBitLen is not too small
         if (primeBitLen < 2) {
@@ -502,7 +502,7 @@ namespace libzerocoin {
             Bignum result(0);
 
             // Set prime_seed = in_seed, prime_gen_counter = 0.
-            arith_uint256 prime_seed = in_seed;
+            uint256 prime_seed = in_seed;
             (*prime_gen_counter) = 0;
 
             // Loop up to "4 * primeBitLen" iterations.
@@ -605,7 +605,7 @@ namespace libzerocoin {
         throw ZerocoinException("Unable to generate random prime (too many tests)");
     }
 
-    Bignum generateIntegerFromSeed(uint32_t numBits, arith_uint256 seed, uint32_t *numIterations) {
+    Bignum generateIntegerFromSeed(uint32_t numBits, uint256 seed, uint32_t *numIterations) {
         Bignum result(0);
         uint32_t iterations = ceil((double) numBits / (double) HASH_OUTPUT_BITS);
 

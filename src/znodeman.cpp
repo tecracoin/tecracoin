@@ -672,9 +672,9 @@ CZnode* CZnodeMan::GetNextZnodeInQueueForPayment(int nBlockHeight, bool fFilterS
     //  -- (chance per block * chances before IsScheduled will fire)
     int nTenthNetwork = nMnCount/10;
     int nCountTenth = 0;
-    arith_uint256 nHighest = 0;
+    uint256 nHighest = 0;
     BOOST_FOREACH (PAIRTYPE(int, CZnode*)& s, vecZnodeLastPaid){
-        arith_uint256 nScore = s.second->CalculateScore(blockHash);
+        uint256 nScore = s.second->CalculateScore(blockHash);
         if(nScore > nHighest){
             nHighest = nScore;
             pBestZnode = s.second;

@@ -10,7 +10,7 @@
 #include "wallet/walletdb.h"
 #include "wallet/wallet.h"
 #include "zerocoin.h"
-//#include "zpivchain.h"
+#include "zpivchain.h"
 
 using namespace libzerocoin;
 
@@ -245,12 +245,12 @@ void CzPIVWallet::SyncWithChain(bool fGenerateMintPool)
                 if (!setAddedTx.count(txHash)) {
                     CBlock block;
                     CWalletTx wtx(pwalletMain, tx);
-                    if (pindex && ReadBlockFromDisk(block, pindex))
+                    if (pindex && ReadBlockFromDisk(block, pindex, Params().GetConsensus()))
                         wtx.SetMerkleBranch(block);
 
                     //Fill out wtx so that a transaction record can be created
                     wtx.nTimeReceived = pindex->GetBlockTime();
-                    pwalletMain->AddToWallet(wtx);
+                    pwalletMain->AddToWallet(wtx, false, &walletdb);
                     setAddedTx.insert(txHash);
                 }
 
@@ -263,208 +263,207 @@ void CzPIVWallet::SyncWithChain(bool fGenerateMintPool)
     }
 }
 
-// bool CzPIVWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const uint256& txid, const CoinDenomination& denom)
-// {
-//     if (!mintPool.Has(bnValue))
-//         return error("%s: value not in pool", __func__);
-//     pair<uint256, uint32_t> pMint = mintPool.Get(bnValue);
+bool CzPIVWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const uint256& txid, const CoinDenomination& denom)
+{
+    if (!mintPool.Has(bnValue))
+        return error("%s: value not in pool", __func__);
+    pair<uint256, uint32_t> pMint = mintPool.Get(bnValue);
 
-//     // Regenerate the mint
-//     uint512 seedZerocoin = GetZerocoinSeed(pMint.second);
-//     CBigNum bnValueGen;
-//     CBigNum bnSerial;
-//     CBigNum bnRandomness;
-//     CKey key;
-//     SeedToZPIV(seedZerocoin, bnValueGen, bnSerial, bnRandomness, key);
+    // Regenerate the mint
+    uint512 seedZerocoin = GetZerocoinSeed(pMint.second);
+    CBigNum bnValueGen;
+    CBigNum bnSerial;
+    CBigNum bnRandomness;
+    CKey key;
+    SeedToZPIV(seedZerocoin, bnValueGen, bnSerial, bnRandomness, key);
+    CWalletDB walletdb(strWalletFile);
 
-//     //Sanity check
-//     if (bnValueGen != bnValue)
-//         return error("%s: generated pubcoin and expected value do not match!", __func__);
+    //Sanity check
+    if (bnValueGen != bnValue)
+        return error("%s: generated pubcoin and expected value do not match!", __func__);
 
-//     // Create mint object and database it
-//     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
-//     uint256 hashSerial = GetSerialHash(bnSerial);
-//     uint256 hashPubcoin = GetPubCoinHash(bnValue);
-//     uint256 nSerial = bnSerial.getuint256();
-//     uint256 hashStake = Hash(nSerial.begin(), nSerial.end());
-//     CDeterministicMint dMint(PrivateCoin::CURRENT_VERSION, pMint.second, hashSeed, hashSerial, hashPubcoin, hashStake);
-//     dMint.SetDenomination(denom);
-//     dMint.SetHeight(nHeight);
-//     dMint.SetTxHash(txid);
+    // Create mint object and database it
+    uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
+    uint256 hashSerial = GetSerialHash(bnSerial);
+    uint256 hashPubcoin = GetPubCoinHash(bnValue);
+    uint256 nSerial = bnSerial.getuint256();
+    CDeterministicMint dMint(PrivateCoin::CURRENT_VERSION, pMint.second, hashSeed, hashSerial, hashPubcoin);
+    dMint.SetDenomination(denom);
+    dMint.SetHeight(nHeight);
+    dMint.SetTxHash(txid);
 
-//     // Check if this is also already spent
-//     int nHeightTx;
-//     uint256 txidSpend;
-//     CTransaction txSpend;
-//     if (IsSerialInBlockchain(hashSerial, nHeightTx, txidSpend, txSpend)) {
-//         //Find transaction details and make a wallettx and add to wallet
-//         dMint.SetUsed(true);
-//         CWalletTx wtx(pwalletMain, txSpend);
-//         CBlockIndex* pindex = chainActive[nHeightTx];
-//         CBlock block;
-//         if (ReadBlockFromDisk(block, pindex))
-//             wtx.SetMerkleBranch(block);
+    // Check if this is also already spent
+    int nHeightTx;
+    uint256 txidSpend;
+    CTransaction txSpend;
+    if (IsSerialInBlockchain(hashSerial, nHeightTx, txidSpend, txSpend)) {
+        //Find transaction details and make a wallettx and add to wallet
+        dMint.SetUsed(true);
+        CWalletTx wtx(pwalletMain, txSpend);
+        CBlockIndex* pindex = chainActive[nHeightTx];
+        CBlock block;
+        if (ReadBlockFromDisk(block, pindex, Params().GetConsensus()))
+            wtx.SetMerkleBranch(block);
 
-//         wtx.nTimeReceived = pindex->nTime;
-//         pwalletMain->AddToWallet(wtx);
-//     }
+        wtx.nTimeReceived = pindex->nTime;
+        pwalletMain->AddToWallet(wtx, false, &walletdb);
+    }
 
-//     // Add to zpivTracker which also adds to database
-//     pwalletMain->zpivTracker->Add(dMint, true);
+    // Add to zpivTracker which also adds to database
+    pwalletMain->zpivTracker->Add(dMint, true);
     
-//     //Update the count if it is less than the mint's count
-//     if (nCountLastUsed < pMint.second) {
-//         CWalletDB walletdb(strWalletFile);
-//         nCountLastUsed = pMint.second;
-//         walletdb.WriteZPIVCount(nCountLastUsed);
-//     }
+    //Update the count if it is less than the mint's count
+    if (nCountLastUsed < pMint.second) {
+        nCountLastUsed = pMint.second;
+        walletdb.WriteZPIVCount(nCountLastUsed);
+    }
 
-//     //remove from the pool
-//     mintPool.Remove(dMint.GetPubcoinHash());
+    //remove from the pool
+    mintPool.Remove(dMint.GetPubcoinHash());
 
-//     return true;
-// }
+    return true;
+}
 
-// // Check if the value of the commitment meets requirements
-// bool IsValidCoinValue(const CBigNum& bnValue)
-// {
-//     return bnValue >= Params().Zerocoin_Params(false)->accumulatorParams.minCoinValue &&
-//     bnValue <= Params().Zerocoin_Params(false)->accumulatorParams.maxCoinValue &&
-//     bnValue.isPrime();
-// }
+// Check if the value of the commitment meets requirements
+bool IsValidCoinValue(const CBigNum& bnValue)
+{
+    return bnValue >= ZCParamsV2->accumulatorParams.minCoinValue &&
+    bnValue <= ZCParamsV2->accumulatorParams.maxCoinValue &&
+    bnValue.isPrime();
+}
 
-// void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, CBigNum& bnSerial, CBigNum& bnRandomness, CKey& key)
-// {
-//     ZerocoinParams* params = Params().Zerocoin_Params(false);
+void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, CBigNum& bnSerial, CBigNum& bnRandomness, CKey& key)
+{
+    //convert state seed into a seed for the private key
+    uint256 nSeedPrivKey = seedZerocoin.trim256();
 
-//     //convert state seed into a seed for the private key
-//     uint256 nSeedPrivKey = seedZerocoin.trim256();
+    bool isValidKey = false;
+    key = CKey();
+    while (!isValidKey) {
+        nSeedPrivKey = Hash(nSeedPrivKey.begin(), nSeedPrivKey.end());
+        isValidKey = libzerocoin::GenerateKeyPair(ZCParamsV2->coinCommitmentGroup.groupOrder, nSeedPrivKey, key, bnSerial);
+    }
 
-//     bool isValidKey = false;
-//     key = CKey();
-//     while (!isValidKey) {
-//         nSeedPrivKey = Hash(nSeedPrivKey.begin(), nSeedPrivKey.end());
-//         isValidKey = libzerocoin::GenerateKeyPair(params->coinCommitmentGroup.groupOrder, nSeedPrivKey, key, bnSerial);
-//     }
+    //hash randomness seed with Bottom 256 bits of seedZerocoin & attempts256 which is initially 0
+    uint256 randomnessSeed = uint512(seedZerocoin >> 256).trim256();
+    uint256 hashRandomness = Hash(randomnessSeed.begin(), randomnessSeed.end());
+    bnRandomness.setuint256(hashRandomness);
+    bnRandomness = bnRandomness % ZCParamsV2->coinCommitmentGroup.groupOrder;
 
-//     //hash randomness seed with Bottom 256 bits of seedZerocoin & attempts256 which is initially 0
-//     uint256 randomnessSeed = uint512(seedZerocoin >> 256).trim256();
-//     uint256 hashRandomness = Hash(randomnessSeed.begin(), randomnessSeed.end());
-//     bnRandomness.setuint256(hashRandomness);
-//     bnRandomness = bnRandomness % params->coinCommitmentGroup.groupOrder;
+    //See if serial and randomness make a valid commitment
+    // Generate a Pedersen commitment to the serial number
+    CBigNum commitmentValue = ZCParamsV2->coinCommitmentGroup.g.pow_mod(bnSerial, ZCParamsV2->coinCommitmentGroup.modulus).mul_mod(
+                        ZCParamsV2->coinCommitmentGroup.h.pow_mod(bnRandomness, ZCParamsV2->coinCommitmentGroup.modulus),
+                        ZCParamsV2->coinCommitmentGroup.modulus);
 
-//     //See if serial and randomness make a valid commitment
-//     // Generate a Pedersen commitment to the serial number
-//     CBigNum commitmentValue = params->coinCommitmentGroup.g.pow_mod(bnSerial, params->coinCommitmentGroup.modulus).mul_mod(
-//                         params->coinCommitmentGroup.h.pow_mod(bnRandomness, params->coinCommitmentGroup.modulus),
-//                         params->coinCommitmentGroup.modulus);
+    CBigNum random;
+    uint256 attempts256 = 0;
+    // Iterate on Randomness until a valid commitmentValue is found
+    while (true) {
+        // Now verify that the commitment is a prime number
+        // in the appropriate range. If not, we'll throw this coin
+        // away and generate a new one.
+        if (IsValidCoinValue(commitmentValue)) {
+            bnValue = commitmentValue;
+            return;
+        }
 
-//     CBigNum random;
-//     uint256 attempts256 = 0;
-//     // Iterate on Randomness until a valid commitmentValue is found
-//     while (true) {
-//         // Now verify that the commitment is a prime number
-//         // in the appropriate range. If not, we'll throw this coin
-//         // away and generate a new one.
-//         if (IsValidCoinValue(commitmentValue)) {
-//             bnValue = commitmentValue;
-//             return;
-//         }
+        //Did not create a valid commitment value.
+        //Change randomness to something new and random and try again
+        attempts256++;
+        hashRandomness = Hash(randomnessSeed.begin(), randomnessSeed.end(),
+                              attempts256.begin(), attempts256.end());
+        random.setuint256(hashRandomness);
+        bnRandomness = (bnRandomness + random) % ZCParamsV2->coinCommitmentGroup.groupOrder;
+        commitmentValue = commitmentValue.mul_mod(ZCParamsV2->coinCommitmentGroup.h.pow_mod(random, ZCParamsV2->coinCommitmentGroup.modulus), ZCParamsV2->coinCommitmentGroup.modulus);
+    }
+}
 
-//         //Did not create a valid commitment value.
-//         //Change randomness to something new and random and try again
-//         attempts256++;
-//         hashRandomness = Hash(randomnessSeed.begin(), randomnessSeed.end(),
-//                               attempts256.begin(), attempts256.end());
-//         random.setuint256(hashRandomness);
-//         bnRandomness = (bnRandomness + random) % params->coinCommitmentGroup.groupOrder;
-//         commitmentValue = commitmentValue.mul_mod(params->coinCommitmentGroup.h.pow_mod(random, params->coinCommitmentGroup.modulus), params->coinCommitmentGroup.modulus);
-//     }
-// }
+uint512 CzPIVWallet::GetZerocoinSeed(uint32_t n)
+{
+    CDataStream ss(SER_GETHASH, 0);
+    ss << seedMaster << n;
+    uint512 zerocoinSeed = Hash512(ss.begin(), ss.end());
+    return zerocoinSeed;
+}
 
-// uint512 CzPIVWallet::GetZerocoinSeed(uint32_t n)
-// {
-//     CDataStream ss(SER_GETHASH, 0);
-//     ss << seedMaster << n;
-//     uint512 zerocoinSeed = Hash512(ss.begin(), ss.end());
-//     return zerocoinSeed;
-// }
+void CzPIVWallet::UpdateCount()
+{
+    nCountLastUsed++;
+    CWalletDB walletdb(strWalletFile);
+    walletdb.WriteZPIVCount(nCountLastUsed);
+}
 
-// void CzPIVWallet::UpdateCount()
-// {
-//     nCountLastUsed++;
-//     CWalletDB walletdb(strWalletFile);
-//     walletdb.WriteZPIVCount(nCountLastUsed);
-// }
+void CzPIVWallet::GenerateDeterministicZPIV(CoinDenomination denom, PrivateCoin& coin, CDeterministicMint& dMint, bool fGenerateOnly)
+{
+    GenerateMint(nCountLastUsed + 1, denom, coin, dMint);
+    if (fGenerateOnly)
+        return;
 
-// void CzPIVWallet::GenerateDeterministicZPIV(CoinDenomination denom, PrivateCoin& coin, CDeterministicMint& dMint, bool fGenerateOnly)
-// {
-//     GenerateMint(nCountLastUsed + 1, denom, coin, dMint);
-//     if (fGenerateOnly)
-//         return;
+    //TODO remove this leak of seed from logs before merge to master
+    //LogPrintf("%s : Generated new deterministic mint. Count=%d pubcoin=%s seed=%s\n", __func__, nCount, coin.getPublicCoin().getValue().GetHex().substr(0,6), seedZerocoin.GetHex().substr(0, 4));
+}
 
-//     //TODO remove this leak of seed from logs before merge to master
-//     //LogPrintf("%s : Generated new deterministic mint. Count=%d pubcoin=%s seed=%s\n", __func__, nCount, coin.getPublicCoin().getValue().GetHex().substr(0,6), seedZerocoin.GetHex().substr(0, 4));
-// }
+void CzPIVWallet::GenerateMint(const uint32_t& nCount, const CoinDenomination denom, PrivateCoin& coin, CDeterministicMint& dMint)
+{
+    uint512 seedZerocoin = GetZerocoinSeed(nCount);
+    CBigNum bnValue;
+    CBigNum bnSerial;
+    CBigNum bnRandomness;
+    CKey key;
+    SeedToZPIV(seedZerocoin, bnValue, bnSerial, bnRandomness, key);
+    coin = PrivateCoin(ZCParamsV2, denom);
+    coin.setSerialNumber(bnSerial);
+    coin.setRandomness(bnRandomness);
+    coin.setPrivKey(key.GetPrivKey());
+    coin.setVersion(PrivateCoin::CURRENT_VERSION);
 
-// void CzPIVWallet::GenerateMint(const uint32_t& nCount, const CoinDenomination denom, PrivateCoin& coin, CDeterministicMint& dMint)
-// {
-//     uint512 seedZerocoin = GetZerocoinSeed(nCount);
-//     CBigNum bnValue;
-//     CBigNum bnSerial;
-//     CBigNum bnRandomness;
-//     CKey key;
-//     SeedToZPIV(seedZerocoin, bnValue, bnSerial, bnRandomness, key);
-//     coin = PrivateCoin(Params().Zerocoin_Params(false), denom, bnSerial, bnRandomness);
-//     coin.setPrivKey(key.GetPrivKey());
-//     coin.setVersion(PrivateCoin::CURRENT_VERSION);
 
-//     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
-//     uint256 hashSerial = GetSerialHash(bnSerial);
-//     uint256 nSerial = bnSerial.getuint256();
-//     uint256 hashStake = Hash(nSerial.begin(), nSerial.end());
-//     uint256 hashPubcoin = GetPubCoinHash(bnValue);
-//     dMint = CDeterministicMint(coin.getVersion(), nCount, hashSeed, hashSerial, hashPubcoin, hashStake);
-//     dMint.SetDenomination(denom);
-// }
+    uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
+    uint256 hashSerial = GetSerialHash(bnSerial);
+    uint256 nSerial = bnSerial.getuint256();
+    uint256 hashPubcoin = GetPubCoinHash(bnValue);
+    dMint = CDeterministicMint(coin.getVersion(), nCount, hashSeed, hashSerial, hashPubcoin);
+    dMint.SetDenomination(denom);
+}
 
-// bool CzPIVWallet::CheckSeed(const CDeterministicMint& dMint)
-// {
-//     //Check that the seed is correct    todo:handling of incorrect, or multiple seeds
-//     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
-//     return hashSeed == dMint.GetSeedHash();
-// }
+bool CzPIVWallet::CheckSeed(const CDeterministicMint& dMint)
+{
+    //Check that the seed is correct    todo:handling of incorrect, or multiple seeds
+    uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
+    return hashSeed == dMint.GetSeedHash();
+}
 
-// bool CzPIVWallet::RegenerateMint(const CDeterministicMint& dMint, CZerocoinMint& mint)
-// {
-//     if (!CheckSeed(dMint)) {
-//         uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
-//         return error("%s: master seed does not match!\ndmint:\n %s \nhashSeed: %s\nseed: %s", __func__, dMint.ToString(), hashSeed.GetHex(), seedMaster.GetHex());
-//     }
+bool CzPIVWallet::RegenerateMint(const CDeterministicMint& dMint, CZerocoinMint& mint)
+{
+    if (!CheckSeed(dMint)) {
+        uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
+        return error("%s: master seed does not match!\ndmint:\n %s \nhashSeed: %s\nseed: %s", __func__, dMint.ToString(), hashSeed.GetHex(), seedMaster.GetHex());
+    }
 
-//     //Generate the coin
-//     PrivateCoin coin(Params().Zerocoin_Params(false), dMint.GetDenomination(), false);
-//     CDeterministicMint dMintDummy;
-//     GenerateMint(dMint.GetCount(), dMint.GetDenomination(), coin, dMintDummy);
+    //Generate the coin
+    PrivateCoin coin(ZCParamsV2, dMint.GetDenomination(), false);
+    CDeterministicMint dMintDummy;
+    GenerateMint(dMint.GetCount(), dMint.GetDenomination(), coin, dMintDummy);
 
-//     //Fill in the zerocoinmint object's details
-//     CBigNum bnValue = coin.getPublicCoin().getValue();
-//     if (GetPubCoinHash(bnValue) != dMint.GetPubcoinHash())
-//         return error("%s: failed to correctly generate mint, pubcoin hash mismatch", __func__);
-//     mint.SetValue(bnValue);
+    //Fill in the zerocoinmint object's details
+    CBigNum bnValue = coin.getPublicCoin().getValue();
+    if (GetPubCoinHash(bnValue) != dMint.GetPubcoinHash())
+        return error("%s: failed to correctly generate mint, pubcoin hash mismatch", __func__);
+    mint.SetValue(bnValue);
 
-//     CBigNum bnSerial = coin.getSerialNumber();
-//     if (GetSerialHash(bnSerial) != dMint.GetSerialHash())
-//         return error("%s: failed to correctly generate mint, serial hash mismatch", __func__);
-//     mint.SetSerialNumber(bnSerial);
+    CBigNum bnSerial = coin.getSerialNumber();
+    if (GetSerialHash(bnSerial) != dMint.GetSerialHash())
+        return error("%s: failed to correctly generate mint, serial hash mismatch", __func__);
+    mint.SetSerialNumber(bnSerial);
 
-//     mint.SetRandomness(coin.getRandomness());
-//     mint.SetPrivKey(coin.getPrivKey());
-//     mint.SetVersion(coin.getVersion());
-//     mint.SetDenomination(dMint.GetDenomination());
-//     mint.SetUsed(dMint.IsUsed());
-//     mint.SetTxHash(dMint.GetTxHash());
-//     mint.SetHeight(dMint.GetHeight());
+    mint.SetRandomness(coin.getRandomness());
+    mint.SetPrivKey(coin.getPrivKey());
+    mint.SetVersion(coin.getVersion());
+    mint.SetDenomination(dMint.GetDenomination());
+    mint.SetUsed(dMint.IsUsed());
+    mint.SetTxHash(dMint.GetTxHash());
+    mint.SetHeight(dMint.GetHeight());
 
-//     return true;
-// }
+    return true;
+}

@@ -6,11 +6,11 @@
 #include "zpivtracker.h"
 #include "util.h"
 #include "sync.h"
-#include "main.h"
 #include "txdb.h"
 #include "wallet/walletdb.h"
 #include "zpivwallet.h"
 #include "libzerocoin/Zerocoin.h"
+#include "main.h"
 //#include "accumulators.h"
 
 using namespace std;
@@ -97,18 +97,6 @@ CMintMeta CzPIVTracker::GetMetaFromPubcoin(const uint256& hashPubcoin)
     }
 
     return CMintMeta();
-}
-
-bool CzPIVTracker::GetMetaFromStakeHash(const uint256& hashStake, CMintMeta& meta) const
-{
-    for (auto& it : mapSerialHashes) {
-        if (it.second.hashStake == hashStake) {
-            meta = it.second;
-            return true;
-        }
-    }
-
-    return false;
 }
 
 std::vector<uint256> CzPIVTracker::GetSerialHashes()
@@ -255,7 +243,6 @@ bool CzPIVTracker::UpdateState(const CMintMeta& meta)
         dMint.SetHeight(meta.nHeight);
         dMint.SetUsed(meta.isUsed);
         dMint.SetDenomination(meta.denom);
-        dMint.SetStakeHash(meta.hashStake);
 
         if (!walletdb.WriteDeterministicMint(dMint))
             return error("%s: failed to update deterministic mint when writing to db", __func__);
@@ -288,7 +275,6 @@ void CzPIVTracker::Add(const CDeterministicMint& dMint, bool isNew, bool isArchi
     meta.txid = dMint.GetTxHash();
     meta.isUsed = dMint.IsUsed();
     meta.hashSerial = dMint.GetSerialHash();
-    meta.hashStake = dMint.GetStakeHash();
     meta.denom = dMint.GetDenomination();
     meta.isArchived = isArchived;
     meta.isDeterministic = true;
@@ -308,12 +294,11 @@ void CzPIVTracker::Add(const CZerocoinMint& mint, bool isNew, bool isArchived)
     CMintMeta meta;
     meta.hashPubcoin = GetPubCoinHash(mint.GetValue());
     meta.nHeight = mint.GetHeight();
-    meta.nVersion = libzerocoin::ExtractVersionFromSerial(mint.GetSerialNumber());
+    meta.nVersion = mint.GetVersion();
     meta.txid = mint.GetTxHash();
     meta.isUsed = mint.IsUsed();
     meta.hashSerial = GetSerialHash(mint.GetSerialNumber());
     uint256 nSerial = mint.GetSerialNumber().getuint256();
-    meta.hashStake = Hash(nSerial.begin(), nSerial.end());
     meta.denom = mint.GetDenomination();
     meta.isArchived = isArchived;
     meta.isDeterministic = false;
@@ -356,8 +341,9 @@ void CzPIVTracker::RemovePending(const uint256& txid)
             break;
         }
     }
-
-    if (hashSerial > 0)
+    uint256 zero;
+    zero.SetNull();
+    if (hashSerial > zero)
         mapPendingSpends.erase(hashSerial);
 }
 
@@ -392,7 +378,7 @@ bool CzPIVTracker::UpdateStatusInternal(const std::set<uint256>& setMempool, CMi
         uint256 hashBlock;
 
         // Txid will be marked 0 if there is no knowledge of the final tx hash yet
-        if (mint.txid == 0) {
+        if (mint.txid.IsNull()) {
             if (!isMintInChain) {
                 LogPrintf("%s : Failed to find mint in zerocoinDB %s\n", __func__, mint.hashPubcoin.GetHex().substr(0, 6));
                 mint.isArchived = true;
@@ -406,7 +392,7 @@ bool CzPIVTracker::UpdateStatusInternal(const std::set<uint256>& setMempool, CMi
             return true;
 
         // Check the transaction associated with this mint
-        if (!IsInitialBlockDownload() && !GetTransaction(mint.txid, tx, hashBlock, true)) {
+        if (!IsInitialBlockDownload() && !GetTransaction(mint.txid, tx, Params().GetConsensus(), hashBlock, true)) {
             LogPrintf("%s : Failed to find tx for mint txid=%s\n", __func__, mint.txid.GetHex());
             mint.isArchived = true;
             Archive(mint);
@@ -418,10 +404,6 @@ bool CzPIVTracker::UpdateStatusInternal(const std::set<uint256>& setMempool, CMi
             LogPrintf("%s : Found orphaned mint txid=%s\n", __func__, mint.txid.GetHex());
             mint.isUsed = false;
             mint.nHeight = 0;
-            if (tx.IsCoinStake()) {
-                mint.isArchived = true;
-                Archive(mint);
-            }
 
             return true;
         }
@@ -464,7 +446,6 @@ std::set<CMintMeta> CzPIVTracker::ListMints(bool fUnusedOnly, bool fMatureOnly, 
         mempool.getTransactions(setMempool);
     }
 
-    std::map<libzerocoin::CoinDenomination, int> mapMaturity = GetMintMaturityHeight();
     for (auto& it : mapSerialHashes) {
         CMintMeta mint = it.second;
 
@@ -487,8 +468,6 @@ std::set<CMintMeta> CzPIVTracker::ListMints(bool fUnusedOnly, bool fMatureOnly, 
         if (fMatureOnly) {
             // Not confirmed
             if (!mint.nHeight || mint.nHeight > chainActive.Height() - Params().Zerocoin_MintRequiredConfirmations())
-                continue;
-            if (mint.nHeight >= mapMaturity.at(mint.denom))
                 continue;
         }
 

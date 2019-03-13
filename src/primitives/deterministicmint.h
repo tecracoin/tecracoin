@@ -26,7 +26,7 @@ private:
 
 public:
     CDeterministicMint();
-    CDeterministicMint(const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const uint256& hashPubcoin);
+    CDeterministicMint(uint8_t nVersion, const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const uint256& hashPubcoin);
 
     libzerocoin::CoinDenomination GetDenomination() const { return (libzerocoin::CoinDenomination)denom; }
     uint32_t GetCount() const { return nCount; }

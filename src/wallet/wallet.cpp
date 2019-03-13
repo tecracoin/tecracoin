@@ -3383,14 +3383,13 @@ bool CWallet::CreateZerocoinMintModel(string &stringError, string denomAmount) {
         if (stringError != "")
             return false;
 
-        const unsigned char *ecdsaSecretKey = newCoin.getEcdsaSeckey();
         CZerocoinEntry zerocoinTx;
         zerocoinTx.IsUsed = false;
         zerocoinTx.denomination = denomination;
         zerocoinTx.value = pubCoin.getValue();
         zerocoinTx.randomness = newCoin.getRandomness();
         zerocoinTx.serialNumber = newCoin.getSerialNumber();
-        zerocoinTx.ecdsaSecretKey = std::vector<unsigned char>(ecdsaSecretKey, ecdsaSecretKey+32);
+        zerocoinTx.ecdsaSecretKey = newCoin.getPrivKey();
         LogPrintf("CreateZerocoinMintModel() -> NotifyZerocoinChanged\n");
         LogPrintf("pubcoin=%s, isUsed=%s\n", zerocoinTx.value.GetHex(), zerocoinTx.IsUsed);
         LogPrintf("randomness=%s, serialNumber=%s\n", zerocoinTx.randomness, zerocoinTx.serialNumber);
@@ -3982,7 +3981,7 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
             privateCoin.setPublicCoin(pubCoinSelected);
             privateCoin.setRandomness(coinToUse.randomness);
             privateCoin.setSerialNumber(coinToUse.serialNumber);
-            privateCoin.setEcdsaSeckey(coinToUse.ecdsaSecretKey);
+            privateCoin.setPrivKey(coinToUse.ecdsaSecretKey);
 
             libzerocoin::CoinSpend spend(zcParams, privateCoin, accumulator, witness, metaData, accumulatorBlockHash);
             spend.setVersion(txVersion);
@@ -4241,7 +4240,7 @@ bool CWallet::CreateMultipleZerocoinSpendTransaction(std::string &thirdPartyaddr
                 privateCoin.setPublicCoin(pubCoinSelected);
                 privateCoin.setRandomness(coinToUse.randomness);
                 privateCoin.setSerialNumber(coinToUse.serialNumber);
-                privateCoin.setEcdsaSeckey(coinToUse.ecdsaSecretKey);
+                privateCoin.setPrivKey(coinToUse.ecdsaSecretKey);
 
 
                 LogPrintf("creating tempStorage object..\n");
@@ -4490,8 +4489,7 @@ string CWallet::MintAndStoreZerocoin(vector<CRecipient> vecSend,
         }
         zerocoinTx.randomness = privCoin.getRandomness();
         zerocoinTx.serialNumber = privCoin.getSerialNumber();
-        const unsigned char *ecdsaSecretKey = privCoin.getEcdsaSeckey();
-        zerocoinTx.ecdsaSecretKey = std::vector<unsigned char>(ecdsaSecretKey, ecdsaSecretKey+32);
+        zerocoinTx.ecdsaSecretKey = privCoin.getPrivKey();
         NotifyZerocoinChanged(this, zerocoinTx.value.GetHex(), "New (" + std::to_string(zerocoinTx.denomination) + " mint)", CT_NEW);
         walletdb.WriteZerocoinEntry(zerocoinTx);
     }

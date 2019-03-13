@@ -13,7 +13,7 @@
 #ifndef SPENDMETADATA_H_
 #define SPENDMETADATA_H_
 
-#include "../arith_uint256.h"
+#include "../uint256.h"
 #include "../serialize.h"
 
 using namespace std;
@@ -29,13 +29,13 @@ public:
 	 * @param accumulatorId hash of block containing accumulator
 	 * @param txHash hash of transaction
 	 */
-    SpendMetaData(arith_uint256 accumulatorId, uint256 txHash);
+    SpendMetaData(uint256 accumulatorId, uint256 txHash);
 
 	/**
 	 * The hash of the block containing the accumulator CoinSpend
 	 * proves membership in.
 	 */
-    arith_uint256 accumulatorId; // The block the accumulator is in
+    uint256 accumulatorId; // The block the accumulator is in
 	/**Contains the hash of the rest of transaction
 	 * spending a zerocoin (excluding the coinspend proof)
 	 */

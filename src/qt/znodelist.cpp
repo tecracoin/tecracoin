@@ -146,7 +146,7 @@ void ZnodeList::StartAll(std::string strCommand)
             continue;
         }
 
-        COutPoint outpoint = COutPoint(uint256S(mne.getTxHash()), nOutputIndex);
+        COutPoint outpoint = COutPoint(uint256(mne.getTxHash()), nOutputIndex);
 
         if(strCommand == "start-missing" && mnodeman.Has(CTxIn(outpoint))) continue;
 
@@ -239,7 +239,7 @@ void ZnodeList::updateMyNodeList(bool fForce)
             continue;
         }
 
-        updateMyZnodeInfo(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), COutPoint(uint256S(mne.getTxHash()), nOutputIndex));
+        updateMyZnodeInfo(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), COutPoint(uint256(mne.getTxHash()), nOutputIndex));
     }
     ui->tableWidgetZnodes->setSortingEnabled(true);
 

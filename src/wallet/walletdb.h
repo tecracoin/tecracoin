@@ -209,6 +209,14 @@ public:
     bool ArchiveDeterministicOrphan(const CDeterministicMint& dMint);
     bool UnarchiveZerocoinMint(const uint256& hashPubcoin, CZerocoinMint& mint);
     bool UnarchiveDeterministicMint(const uint256& hashPubcoin, CDeterministicMint& dMint);
+
+    bool WriteDeterministicMint(const CDeterministicMint& dMint);
+    bool ReadDeterministicMint(const uint256& hashPubcoin, CDeterministicMint& dMint);
+
+    std::list<CZerocoinMint> ListMintedCoins();
+    std::list<CDeterministicMint> ListDeterministicMints();
+
+    bool WriteZerocoinMint(const CZerocoinMint& zerocoinMint);
     
     std::map<uint256, std::vector<pair<uint256, uint32_t> > > MapMintPool();
     bool WriteMintPoolPair(const uint256& hashMasterSeed, const uint256& hashPubcoin, const uint32_t& nCount);

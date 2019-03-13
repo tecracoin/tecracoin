@@ -8,19 +8,19 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-#include "Zerocoin.h"
-#include <libzerocoin/Coin.h>
+//#include "Zerocoin.h"
+//#include <libzerocoin/Coin.h>
 
 namespace libzerocoin {
 
-// enum  CoinDenomination {
-//     ZQ_ERROR = 0,
-//     ZQ_LOVELACE = 1,
-//     ZQ_GOLDWASSER = 10,
-//     ZQ_RACKOFF = 25,
-//     ZQ_PEDERSEN = 50,
-//     ZQ_WILLIAMSON = 100
-// };
+enum  CoinDenomination {
+    ZQ_ERROR = 0,
+    ZQ_LOVELACE = 1,
+    ZQ_GOLDWASSER = 10,
+    ZQ_RACKOFF = 25,
+    ZQ_PEDERSEN = 50,
+    ZQ_WILLIAMSON = 100
+};
 
 // Order is with the Smallest Denomination first and is important for a particular routine that this order is maintained
 const std::vector<CoinDenomination> zerocoinDenomList = {ZQ_LOVELACE, ZQ_GOLDWASSER, ZQ_RACKOFF, ZQ_PEDERSEN, ZQ_WILLIAMSON};

@@ -15,21 +15,22 @@
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
 //#include "bitcoin_bignum/bignum.h"
-//#include "Params.h"
+#include "Denominations.h"
 #include "Zerocoin.h"
+#include "key.h"
 
 namespace libzerocoin {
 
-enum  CoinDenomination {
-    ZQ_ERROR = 0,
-    ZQ_LOVELACE = 1,
-    ZQ_GOLDWASSER = 10,
-    ZQ_RACKOFF = 25,
-    ZQ_PEDERSEN = 50,
-    ZQ_WILLIAMSON = 100 // Malcolm J. Williamson,
-                    // the scientist who actually invented
-                    // Public key cryptography
-};
+// enum  CoinDenomination {
+//     ZQ_ERROR = 0,
+//     ZQ_LOVELACE = 1,
+//     ZQ_GOLDWASSER = 10,
+//     ZQ_RACKOFF = 25,
+//     ZQ_PEDERSEN = 50,
+//     ZQ_WILLIAMSON = 100 // Malcolm J. Williamson,
+//                     // the scientist who actually invented
+//                     // Public key cryptography
+// };
 
 /** A Public coin is the part of a coin that
  * is published to the network and what is handled
@@ -95,6 +96,9 @@ private:
  */
 class PrivateCoin {
 public:
+    static int const PUBKEY_VERSION = 2;
+    static int const CURRENT_VERSION = 2;
+    static int const V2_BITSHIFT = 4;
     template<typename Stream>
     PrivateCoin(const ZerocoinParams* p, Stream& strm): params(p), publicCoin(p) {
         strm >> *this;
@@ -103,9 +107,13 @@ public:
     const PublicCoin& getPublicCoin() const;
     const Bignum& getSerialNumber() const;
     const Bignum& getRandomness() const;
-    const unsigned char* getEcdsaSeckey() const;
+    const CPrivKey& getPrivKey() const;
+    const CPubKey getPubKey() const;
     unsigned int getVersion() const;
+    bool sign(const uint256& hash, std::vector<unsigned char>& vchSig) const;
     static const Bignum serialNumberFromSerializedPublicKey(secp256k1_context *ctx, secp256k1_pubkey *pubkey);
+
+
 
     void setPublicCoin(PublicCoin p){
         publicCoin = p;
@@ -123,9 +131,8 @@ public:
         version = nVersion;
     };
 
-    void setEcdsaSeckey(const vector<unsigned char> &seckey) {
-        if (seckey.size() == sizeof(ecdsaSeckey))
-            std::copy(seckey.cbegin(), seckey.cend(), &ecdsaSeckey[0]);
+    void setPrivKey(const CPrivKey& p) { 
+        privkey = p; 
     }
 
     template <typename Stream, typename Operation>
@@ -146,7 +153,7 @@ public:
         }
 
         if (version == ZEROCOIN_TX_VERSION_2)
-            READWRITE(ecdsaSeckey);
+            READWRITE(privkey);
     }
 
 private:
@@ -155,7 +162,7 @@ private:
     Bignum randomness;
     Bignum serialNumber;
     unsigned int version = 0;
-    unsigned char ecdsaSeckey[32];
+    CPrivKey privkey;
 
     /**
      * @brief Mint a new coin.
@@ -186,6 +193,8 @@ private:
     void mintCoinFast(const CoinDenomination denomination);
 
 };
+
+bool GenerateKeyPair(const CBigNum& bnGroupOrder, const uint256& nPrivkey, CKey& key, CBigNum& bnSerial);
 
 } /* namespace libzerocoin */
 #endif /* COIN_H_ */

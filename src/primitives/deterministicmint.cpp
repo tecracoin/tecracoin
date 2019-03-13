@@ -13,9 +13,10 @@ CDeterministicMint::CDeterministicMint()
     SetNull();
 }
 
-CDeterministicMint::CDeterministicMint(const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const uint256& hashPubcoin)
+CDeterministicMint::CDeterministicMint(uint8_t nVersion, const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const uint256& hashPubcoin)
 {
     SetNull();
+    this->nVersion = nVersion;
     this->nCount = nCount;
     this->hashSeed = hashSeed;
     this->hashSerial = hashSerial;
