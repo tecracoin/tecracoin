@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(mtp_impl_integrity_test)
 
     uint32_t target = 0x2000fffful;
 
-    uint256 pow_limit = uint256("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    uint256 pow_limit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
     uint8_t hash_root_mtp[16];
     unsigned int nonce;
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(mtp_block_integrity_test)
     CBlock block2(block1); block2.mtpHashData = std::shared_ptr<CMTPHashData>(new CMTPHashData); block2.nVersionMTP = 1;
     CBlock block3(block1); block3.mtpHashData = std::shared_ptr<CMTPHashData>(new CMTPHashData); block3. nVersionMTP = 1;
     
-    uint256 pow_limit = uint256("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+    uint256 pow_limit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
 
     auto hash1 = mtp::hash(block1, pow_limit);
 

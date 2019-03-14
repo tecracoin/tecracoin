@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(tx_valid)
                     fValid = false;
                     break;
                 }
-                COutPoint outpoint(uint256(vinput[0].get_str()), vinput[1].get_int());
+                COutPoint outpoint(uint256S(vinput[0].get_str()), vinput[1].get_int());
                 mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
                 if (vinput.size() >= 4)
                 {
@@ -229,7 +229,7 @@ BOOST_AUTO_TEST_CASE(tx_invalid)
                     fValid = false;
                     break;
                 }
-                COutPoint outpoint(uint256(vinput[0].get_str()), vinput[1].get_int());
+                COutPoint outpoint(uint256S(vinput[0].get_str()), vinput[1].get_int());
                 mapprevOutScriptPubKeys[outpoint] = ParseScript(vinput[2].get_str());
                 if (vinput.size() >= 4)
                 {

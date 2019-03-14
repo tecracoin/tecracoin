@@ -584,7 +584,7 @@ UniValue getblockheader(const UniValue& params, bool fHelp)
     LOCK(cs_main);
 
     std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
+    uint256 hash(uint256S(strHash));
 
     bool fVerbose = true;
     if (params.size() > 1)
@@ -652,7 +652,7 @@ UniValue getblock(const UniValue& params, bool fHelp)
     LOCK(cs_main);
 
     std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
+    uint256 hash(uint256S(strHash));
 
     bool fVerbose = true;
     if (params.size() > 1)
@@ -818,7 +818,7 @@ UniValue gettxout(const UniValue& params, bool fHelp)
     UniValue ret(UniValue::VOBJ);
 
     std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
+    uint256 hash(uint256S(strHash));
     int n = params[1].get_int();
     bool fMempool = true;
     if (params.size() > 2)
@@ -1191,7 +1191,7 @@ UniValue invalidateblock(const UniValue& params, bool fHelp)
         );
 
     std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
+    uint256 hash(uint256S(strHash));
     CValidationState state;
 
     {
@@ -1230,7 +1230,7 @@ UniValue reconsiderblock(const UniValue& params, bool fHelp)
         );
 
     std::string strHash = params[0].get_str();
-    uint256 hash(strHash);
+    uint256 hash(uint256S(strHash));
 
     {
         LOCK(cs_main);

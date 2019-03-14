@@ -1454,7 +1454,7 @@ int input_mp_offers_string(const std::string& s)
     uint32_t prop_desired = boost::lexical_cast<uint32_t>(vstr[i++]);
     int64_t minFee = boost::lexical_cast<int64_t>(vstr[i++]);
     uint8_t blocktimelimit = boost::lexical_cast<unsigned int>(vstr[i++]); // lexical_cast can't handle char!
-    uint256 txid = uint256(vstr[i++]);
+    uint256 txid = uint256S(vstr[i++]);
 
     // TODO: should this be here? There are usually no sanity checks..
     if (EXODUS_PROPERTY_XZC != prop_desired) return -1;
@@ -1495,7 +1495,7 @@ int input_mp_accepts_string(const string &s)
   txidStr = vstr[i++];
 
   const string combo = STR_ACCEPT_ADDR_PROP_ADDR_COMBO(sellerAddr, buyerAddr, prop);
-  CMPAccept newAccept(amountOriginal, amountRemaining, nBlock, blocktimelimit, prop, offerOriginal, btcDesired, uint256(txidStr));
+  CMPAccept newAccept(amountOriginal, amountRemaining, nBlock, blocktimelimit, prop, offerOriginal, btcDesired, uint256S(txidStr));
   if (my_accepts.insert(std::make_pair(combo, newAccept)).second) {
     return 0;
   } else {
@@ -1558,7 +1558,7 @@ int input_mp_crowdsale_string(const std::string& s)
             vals.push_back(boost::lexical_cast<int64_t>(*it));
         }
 
-        uint256 txHash = uint256(entryData[0]);
+        uint256 txHash = uint256S(entryData[0]);
         newCrowdsale.insertDatabase(txHash, vals);
     }
 
@@ -1587,7 +1587,7 @@ int input_mp_mdexorder_string(const std::string& s)
     uint32_t desired_property = boost::lexical_cast<uint32_t>(vstr[i++]);
     uint8_t subaction = boost::lexical_cast<unsigned int>(vstr[i++]); // lexical_cast can't handle char!
     unsigned int idx = boost::lexical_cast<unsigned int>(vstr[i++]);
-    uint256 txid = uint256(vstr[i++]);
+    uint256 txid = uint256S(vstr[i++]);
     int64_t amount_remaining = boost::lexical_cast<int64_t>(vstr[i++]);
 
     CMPMetaDEx mdexObj(addr, block, property, amount_forsale, desired_property,
@@ -2583,7 +2583,7 @@ bool CMPTxList::LoadFreezeState(int blockHeight)
         if (txtype != EXODUS_TYPE_FREEZE_PROPERTY_TOKENS && txtype != EXODUS_TYPE_UNFREEZE_PROPERTY_TOKENS &&
             txtype != EXODUS_TYPE_ENABLE_FREEZING && txtype != EXODUS_TYPE_DISABLE_FREEZING) continue;
         if (atoi(vstr[0]) != 1) continue; // invalid, ignore
-        uint256 txid = uint256(it->key().ToString());
+        uint256 txid = uint256S(it->key().ToString());
         int txPosition = p_ExodusTXDB->FetchTransactionPosition(txid);
         std::string sortKey = strprintf("%06d%010d", atoi(vstr[1]), txPosition);
         loadOrder.push_back(std::make_pair(sortKey, txid));
@@ -2661,7 +2661,7 @@ void CMPTxList::LoadActivations(int blockHeight)
         boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
         if (4 != vstr.size()) continue; // unexpected number of tokens
         if (atoi(vstr[2]) != EXODUS_MESSAGE_TYPE_ACTIVATION || atoi(vstr[0]) != 1) continue; // we only care about valid activations
-        uint256 txid = uint256(it->key().ToString());;
+        uint256 txid = uint256S(it->key().ToString());;
         loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
     }
 
@@ -2729,7 +2729,7 @@ void CMPTxList::LoadAlerts(int blockHeight)
         boost::split(vstr, itData, boost::is_any_of(":"), token_compress_on);
         if (4 != vstr.size()) continue; // unexpected number of tokens
         if (atoi(vstr[2]) != EXODUS_MESSAGE_TYPE_ALERT || atoi(vstr[0]) != 1) continue; // not a valid alert
-        uint256 txid = uint256(it->key().ToString());;
+        uint256 txid = uint256S(it->key().ToString());;
         loadOrder.push_back(std::make_pair(atoi(vstr[1]), txid));
     }
 
@@ -3635,7 +3635,7 @@ void CMPTradeList::getTradesForAddress(std::string address, std::vector<uint256>
       std::string strValue = it->value().ToString();
       std::vector<std::string> vecValues;
       if (strKey.size() != 64) continue; // only interested in trades
-      uint256 txid = uint256(strKey);
+      uint256 txid = uint256S(strKey);
       size_t addressMatch = strValue.find(address);
       if (addressMatch == std::string::npos) continue;
       boost::split(vecValues, strValue, boost::is_any_of(":"), token_compress_on);

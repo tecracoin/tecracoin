@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(dbindexhelper_payToPubKey)
             BOOST_CHECK(dbIndexHelper.getAddressIndex()[i].first.spending == true);
             BOOST_CHECK(dbIndexHelper.getAddressIndex()[i].second == in_amounts[i]);
 
-            BOOST_CHECK(dbIndexHelper.getSpentIndex()[i].first.txid == uint256(prevout_txids[i].c_str()));
+            BOOST_CHECK(dbIndexHelper.getSpentIndex()[i].first.txid == uint256S(prevout_txids[i].c_str()));
             BOOST_CHECK(dbIndexHelper.getSpentIndex()[i].first.outputIndex == prevout_idx[i]);
         }
     }
@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(dbindexhelper_payToPubKey)
             BOOST_CHECK(dbIndexHelper.getAddressIndex()[outNum + i].first.spending == true);
             BOOST_CHECK(dbIndexHelper.getAddressIndex()[outNum + i].second == in_amounts[inNum-1-i]);
 
-            BOOST_CHECK(dbIndexHelper.getSpentIndex()[i].first.txid == uint256(prevout_txids[inNum-1-i].c_str()));
+            BOOST_CHECK(dbIndexHelper.getSpentIndex()[i].first.txid == uint256S(prevout_txids[inNum-1-i].c_str()));
             BOOST_CHECK(dbIndexHelper.getSpentIndex()[i].first.outputIndex == prevout_idx[inNum-1-i]);
         }
     }
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(dbindexhelper_zeromint)
             BOOST_CHECK(dbIndexHelper.getAddressUnspentIndex()[i].second.script.empty());
 
 
-            BOOST_CHECK(dbIndexHelper.getSpentIndex()[i].first.txid == uint256(prevout_txids[i].c_str()));
+            BOOST_CHECK(dbIndexHelper.getSpentIndex()[i].first.txid == uint256S(prevout_txids[i].c_str()));
             BOOST_CHECK(dbIndexHelper.getSpentIndex()[i].first.outputIndex == prevout_idx[i]);
         }
 

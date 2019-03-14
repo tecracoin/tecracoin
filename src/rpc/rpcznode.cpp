@@ -300,7 +300,7 @@ UniValue znode(const UniValue &params, bool fHelp) {
         BOOST_FOREACH(CZnodeConfig::CZnodeEntry mne, znodeConfig.getEntries()) {
             std::string strError;
 
-            CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CZnode *pmn = mnodeman.Find(vin);
             CZnodeBroadcast mnb;
 
@@ -347,7 +347,7 @@ UniValue znode(const UniValue &params, bool fHelp) {
         UniValue resultObj(UniValue::VOBJ);
 
         BOOST_FOREACH(CZnodeConfig::CZnodeEntry mne, znodeConfig.getEntries()) {
-            CTxIn vin = CTxIn(uint256(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
+            CTxIn vin = CTxIn(uint256S(mne.getTxHash()), uint32_t(atoi(mne.getOutputIndex().c_str())));
             CZnode *pmn = mnodeman.Find(vin);
 
             std::string strStatus = pmn ? pmn->GetStatus() : "MISSING";
