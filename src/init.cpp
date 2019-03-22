@@ -88,6 +88,11 @@
 #include "zmq/zmqnotificationinterface.h"
 #endif
 
+#ifdef ENABLE_WALLET
+CWallet* pwalletMain = NULL;
+CzPIVWallet* zwalletMain = NULL;
+int nWalletBackups = 10;
+#endif
 
 bool fFeeEstimatesInitialized = false;
 static const bool DEFAULT_PROXYRANDOMIZE = true;
@@ -287,6 +292,8 @@ void Shutdown() {
 #ifdef ENABLE_WALLET
     if (pwalletMain)
         pwalletMain->Flush(true);
+    delete zwalletMain;
+    zwalletMain = NULL;
 #endif
 
 #if ENABLE_ZMQ
@@ -1811,6 +1818,7 @@ bool AppInit2(boost::thread_group &threadGroup, CScheduler &scheduler) {
     LogPrintf("Step 8: load wallet ************************************\n");
     if (fDisableWallet) {
         pwalletMain = NULL;
+        zwalletMain = NULL;
         LogPrintf("Wallet disabled!\n");
     } else {
         CWallet::InitLoadWallet();

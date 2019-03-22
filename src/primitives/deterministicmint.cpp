@@ -13,14 +13,14 @@ CDeterministicMint::CDeterministicMint()
     SetNull();
 }
 
-CDeterministicMint::CDeterministicMint(uint8_t nVersion, const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const uint256& hashPubcoin)
+CDeterministicMint::CDeterministicMint(uint8_t nVersion, const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const Bignum& pubcoin)
 {
     SetNull();
     this->nVersion = nVersion;
     this->nCount = nCount;
     this->hashSeed = hashSeed;
     this->hashSerial = hashSerial;
-    this->hashPubcoin = hashPubcoin;
+    this->pubcoin = pubcoin;
 }
 
 void CDeterministicMint::SetNull()
@@ -28,7 +28,6 @@ void CDeterministicMint::SetNull()
     nCount = 0;
     hashSeed.SetNull();
     hashSerial.SetNull();
-    hashPubcoin.SetNull();
     txid.SetNull();
     nHeight = 0;
     denom = CoinDenomination::ZQ_ERROR;
@@ -38,5 +37,5 @@ void CDeterministicMint::SetNull()
 std::string CDeterministicMint::ToString() const
 {
     return strprintf(" DeterministicMint:\n   version=%d\n   count=%d\n   hashseed=%s\n   hashSerial=%s\n   hashPubcoin=%s\n   txid=%s\n   height=%d\n   denom=%d\n   isUsed=%d\n",
-    nVersion, nCount, hashSeed.GetHex(), hashSerial.GetHex(), hashPubcoin.GetHex(), txid.GetHex(), nHeight, denom, isUsed);
+    nVersion, nCount, hashSeed.GetHex(), hashSerial.GetHex(), GetPubCoinHash(pubcoin).GetHex(), txid.GetHex(), nHeight, denom, isUsed);
 }

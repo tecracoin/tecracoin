@@ -254,6 +254,19 @@ bool CWalletDB::WriteZerocoinEntry(const CZerocoinEntry &zerocoin) {
     return Write(make_pair(string("zerocoin"), zerocoin.value), zerocoin, true);
 }
 
+bool CWalletDB::ReadZerocoinEntry(const CBigNum &bnPubCoinValue, CZerocoinEntry &zerocoin) {
+    list <CZerocoinEntry> listPubcoin;
+    ListPubCoin(listPubcoin);
+
+    BOOST_FOREACH(const CZerocoinEntry &zerocoinItem, listPubcoin){
+        if (zerocoinItem.value == bnPubCoinValue) {
+            zerocoin = CZerocoinEntry(zerocoinItem);
+            return true;
+        }
+    }
+    return false;
+}
+
 bool CWalletDB::EraseZerocoinEntry(const CZerocoinEntry &zerocoin) {
     return Erase(make_pair(string("zerocoin"), zerocoin.value));
 }
@@ -410,25 +423,6 @@ bool CWalletDB::WriteDeterministicMint(const CDeterministicMint& dMint)
 bool CWalletDB::ReadDeterministicMint(const uint256& hashPubcoin, CDeterministicMint& dMint)
 {
     return Read(make_pair(string("dzpiv"), hashPubcoin), dMint);
-}
-
-bool CWalletDB::WriteZerocoinMint(const CZerocoinMint& zerocoinMint)
-{
-    CDataStream ss(SER_GETHASH, 0);
-    ss << zerocoinMint.GetValue();
-    uint256 hash = Hash(ss.begin(), ss.end());
-
-    Erase(make_pair(string("zerocoin"), hash));
-    return Write(make_pair(string("zerocoin"), hash), zerocoinMint, true);
-}
-
-bool CWalletDB::ReadZerocoinMint(const CBigNum &bnPubCoinValue, CZerocoinMint& zerocoinMint)
-{
-    CDataStream ss(SER_GETHASH, 0);
-    ss << bnPubCoinValue;
-    uint256 hash = Hash(ss.begin(), ss.end());
-
-    return ReadZerocoinMint(hash, zerocoinMint);
 }
 
 class CWalletScanState {
@@ -1311,63 +1305,13 @@ std::list<CDeterministicMint> CWalletDB::ListDeterministicMints()
     return listMints;
 }
 
-std::list<CZerocoinMint> CWalletDB::ListMintedCoins()
-{
-    std::list<CZerocoinMint> listPubCoin;
-    Dbc* pcursor = GetCursor();
-    if (!pcursor)
-        throw runtime_error(std::string(__func__)+" : cannot create DB cursor");
-    unsigned int fFlags = DB_SET_RANGE;
-    vector<CZerocoinMint> vOverWrite;
-    vector<CZerocoinMint> vArchive;
-    for (;;)
-    {
-        // Read next record
-        CDataStream ssKey(SER_DISK, CLIENT_VERSION);
-        if (fFlags == DB_SET_RANGE)
-            ssKey << make_pair(string("zerocoin"), uint256(0));
-        CDataStream ssValue(SER_DISK, CLIENT_VERSION);
-        int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
-        fFlags = DB_NEXT;
-        if (ret == DB_NOTFOUND)
-            break;
-        else if (ret != 0)
-        {
-            pcursor->close();
-            throw runtime_error(std::string(__func__)+" : error scanning DB");
-        }
-
-        // Unserialize
-        string strType;
-        ssKey >> strType;
-        if (strType != "zerocoin")
-            break;
-
-        uint256 hashPubcoin;
-        ssKey >> hashPubcoin;
-
-        CZerocoinMint mint;
-        ssValue >> mint;
-
-        listPubCoin.emplace_back(mint);
-    }
-
-    pcursor->close();
-    return listPubCoin;
-}
-
-bool CWalletDB::ReadZerocoinMint(const uint256& hashPubcoin, CZerocoinMint& mint)
-{
-    return Read(make_pair(string("zerocoin"), hashPubcoin), mint);
-}
-
-bool CWalletDB::ArchiveMintOrphan(const CZerocoinMint& zerocoinMint)
+bool CWalletDB::ArchiveMintOrphan(const CZerocoinEntry& zerocoin)
 {
     CDataStream ss(SER_GETHASH, 0);
-    ss << zerocoinMint.GetValue();
+    ss << zerocoin.value;
     uint256 hash = Hash(ss.begin(), ss.end());;
 
-    if (!Write(make_pair(string("zco"), hash), zerocoinMint)) {
+    if (!Write(make_pair(string("zco"), hash), zerocoin)) {
         LogPrintf("%s : failed to database orphaned zerocoin mint\n", __func__);
         return false;
     }
@@ -1405,15 +1349,15 @@ bool CWalletDB::UnarchiveDeterministicMint(const uint256& hashPubcoin, CDetermin
     return true;
 }
 
-bool CWalletDB::UnarchiveZerocoinMint(const uint256& hashPubcoin, CZerocoinMint& mint)
+bool CWalletDB::UnarchiveZerocoinMint(const uint256& hashPubcoin, CZerocoinEntry& zerocoin)
 {
-    if (!Read(make_pair(string("zco"), hashPubcoin), mint))
+    if (!Read(make_pair(string("zco"), hashPubcoin), zerocoin))
         return error("%s: failed to retrieve zerocoinmint from archive", __func__);
 
-    if (!WriteZerocoinMint(mint))
+    if (!WriteZerocoinEntry(zerocoin))
         return error("%s: failed to write zerocoinmint", __func__);
 
-    uint256 hash = GetPubCoinHash(mint.GetValue());
+    uint256 hash = GetPubCoinHash(zerocoin.value);
     if (!Erase(make_pair(string("zco"), hash)))
         return error("%s : failed to erase archived zerocoin mint", __func__);
 

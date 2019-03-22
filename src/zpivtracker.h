@@ -23,9 +23,9 @@ public:
     CzPIVTracker(std::string strWalletFile);
     ~CzPIVTracker();
     void Add(const CDeterministicMint& dMint, bool isNew = false, bool isArchived = false, CzPIVWallet* zPIVWallet = NULL);
-    void Add(const CZerocoinMint& mint, bool isNew = false, bool isArchived = false);
+    void Add(const CZerocoinEntry& zerocoin, bool isNew = false, bool isArchived = false);
     bool Archive(CMintMeta& meta);
-    bool HasPubcoin(const CBigNum& bnValue) const;
+    bool HasPubcoin(const CBigNum& pubcoin) const;
     bool HasPubcoinHash(const uint256& hashPubcoin) const;
     bool HasSerial(const CBigNum& bnSerial) const;
     bool HasSerialHash(const uint256& hashSerial) const;
@@ -33,17 +33,14 @@ public:
     bool IsEmpty() const { return mapSerialHashes.empty(); }
     void Init();
     CMintMeta Get(const uint256& hashSerial);
-    CMintMeta GetMetaFromPubcoin(const uint256& hashPubcoin);
     CAmount GetBalance(bool fConfirmedOnly, bool fUnconfirmedOnly) const;
     std::vector<uint256> GetSerialHashes();
     std::vector<CMintMeta> GetMints(bool fConfirmedOnly) const;
     CAmount GetUnconfirmedBalance() const;
     std::set<CMintMeta> ListMints(bool fUnusedOnly, bool fMatureOnly, bool fUpdateStatus, bool fWrongSeed = false);
     void RemovePending(const uint256& txid);
-    void SetPubcoinUsed(const uint256& hashPubcoin, const uint256& txid);
-    void SetPubcoinNotUsed(const uint256& hashPubcoin);
     bool UnArchive(const uint256& hashPubcoin, bool isDeterministic);
-    bool UpdateZerocoinMint(const CZerocoinMint& mint);
+    bool UpdateZerocoinEntry(const CZerocoinEntry& zerocoin);
     bool UpdateState(const CMintMeta& meta);
     void Clear();
 };

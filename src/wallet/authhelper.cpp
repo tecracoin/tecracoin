@@ -5,6 +5,7 @@
 #include "base58.h"
 #include "authhelper.h"
 #include "wallet.h"
+#include "init.h"
 #include "main.h"
 
 struct AuthorizationHelper::Impl

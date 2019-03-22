@@ -31,7 +31,7 @@ CzPIVTracker::~CzPIVTracker()
 
 void CzPIVTracker::Init()
 {
-    //Load all CZerocoinMints and CDeterministicMints from the database
+    //Load all CZerocoinEntries and CDeterministicMints from the database
     if (!fInitialized) {
         ListMints(false, false, true);
         fInitialized = true;
@@ -40,24 +40,26 @@ void CzPIVTracker::Init()
 
 bool CzPIVTracker::Archive(CMintMeta& meta)
 {
+    uint256 hashPubcoin = GetPubCoinHash(meta.pubcoin);
+
     if (mapSerialHashes.count(meta.hashSerial))
         mapSerialHashes.at(meta.hashSerial).isArchived = true;
 
     CWalletDB walletdb(strWalletFile);
-    CZerocoinMint mint;
-    if (walletdb.ReadZerocoinMint(meta.hashPubcoin, mint)) {
-        if (!CWalletDB(strWalletFile).ArchiveMintOrphan(mint))
-            return error("%s: failed to archive zerocoinmint", __func__);
-    } else {
-        //failed to read mint from DB, try reading deterministic
-        CDeterministicMint dMint;
-        if (!walletdb.ReadDeterministicMint(meta.hashPubcoin, dMint))
-            return error("%s: could not find pubcoinhash %s in db", __func__, meta.hashPubcoin.GetHex());
-        if (!walletdb.ArchiveDeterministicOrphan(dMint))
-            return error("%s: failed to archive deterministic ophaned mint", __func__);
-    }
+    CZerocoinEntry zerocoin;
+    // if (walletdb.ReadZerocoinEntry(meta.pubcoin, zerocoin)) {
+    //     if (!CWalletDB(strWalletFile).ArchiveMintOrphan(zerocoin))
+    //         return error("%s: failed to archive zerocoinmint", __func__);
+    // } else {
+    //     //failed to read mint from DB, try reading deterministic
+    //     CDeterministicMint dMint;
+    //     if (!walletdb.ReadDeterministicMint(hashPubcoin, dMint))
+    //         return error("%s: could not find pubcoinhash %s in db", __func__, hashPubcoin.GetHex());
+    //     if (!walletdb.ArchiveDeterministicOrphan(dMint))
+    //         return error("%s: failed to archive deterministic ophaned mint", __func__);
+    // }
 
-    LogPrintf("%s: archived pubcoinhash %s\n", __func__, meta.hashPubcoin.GetHex());
+    LogPrintf("%s: archived pubcoinhash %s\n", __func__, hashPubcoin.GetHex());
     return true;
 }
 
@@ -70,10 +72,10 @@ bool CzPIVTracker::UnArchive(const uint256& hashPubcoin, bool isDeterministic)
             return error("%s: failed to unarchive deterministic mint", __func__);
         Add(dMint, false);
     } else {
-        CZerocoinMint mint;
-        if (!walletdb.UnarchiveZerocoinMint(hashPubcoin, mint))
+        CZerocoinEntry zerocoin;
+        if (!walletdb.UnarchiveZerocoinMint(hashPubcoin, zerocoin))
             return error("%s: failed to unarchivezerocoin mint", __func__);
-        Add(mint, false);
+        Add(zerocoin, false);
     }
 
     LogPrintf("%s: unarchived %s\n", __func__, hashPubcoin.GetHex());
@@ -86,17 +88,6 @@ CMintMeta CzPIVTracker::Get(const uint256 &hashSerial)
         return CMintMeta();
 
     return mapSerialHashes.at(hashSerial);
-}
-
-CMintMeta CzPIVTracker::GetMetaFromPubcoin(const uint256& hashPubcoin)
-{
-    for (auto it : mapSerialHashes) {
-        CMintMeta meta = it.second;
-        if (meta.hashPubcoin == hashPubcoin)
-            return meta;
-    }
-
-    return CMintMeta();
 }
 
 std::vector<uint256> CzPIVTracker::GetSerialHashes()
@@ -176,10 +167,10 @@ bool CzPIVTracker::HasMintTx(const uint256& txid)
     return false;
 }
 
-bool CzPIVTracker::HasPubcoin(const CBigNum &bnValue) const
+bool CzPIVTracker::HasPubcoin(const CBigNum &pubcoin) const
 {
     // Check if this mint's pubcoin value belongs to our mapSerialHashes (which includes hashpubcoin values)
-    uint256 hash = GetPubCoinHash(bnValue);
+    uint256 hash = GetPubCoinHash(pubcoin);
     return HasPubcoinHash(hash);
 }
 
@@ -187,7 +178,7 @@ bool CzPIVTracker::HasPubcoinHash(const uint256& hashPubcoin) const
 {
     for (auto it : mapSerialHashes) {
         CMintMeta meta = it.second;
-        if (meta.hashPubcoin == hashPubcoin)
+        if (GetPubCoinHash(meta.pubcoin) == hashPubcoin)
             return true;
     }
     return false;
@@ -205,41 +196,41 @@ bool CzPIVTracker::HasSerialHash(const uint256& hashSerial) const
     return it != mapSerialHashes.end();
 }
 
-bool CzPIVTracker::UpdateZerocoinMint(const CZerocoinMint& mint)
+bool CzPIVTracker::UpdateZerocoinEntry(const CZerocoinEntry& zerocoin)
 {
-    if (!HasSerial(mint.GetSerialNumber()))
-        return error("%s: mint %s is not known", __func__, mint.GetValue().GetHex());
+    if (!HasSerial(zerocoin.serialNumber))
+        return error("%s: zerocoin %s is not known", __func__, zerocoin.value.GetHex());
 
-    uint256 hashSerial = GetSerialHash(mint.GetSerialNumber());
+    uint256 hashSerial = GetSerialHash(zerocoin.serialNumber);
 
     //Update the meta object
     CMintMeta meta = Get(hashSerial);
-    meta.isUsed = mint.IsUsed();
-    meta.denom = mint.GetDenomination();
-    meta.nHeight = mint.GetHeight();
+    meta.isUsed = zerocoin.IsUsed;
+    meta.denom = (libzerocoin::CoinDenomination)zerocoin.denomination;
+    meta.nHeight = zerocoin.nHeight;
     mapSerialHashes.at(hashSerial) = meta;
 
     //Write to db
-    return CWalletDB(strWalletFile).WriteZerocoinMint(mint);
+    return CWalletDB(strWalletFile).WriteZerocoinEntry(zerocoin);
 }
 
 bool CzPIVTracker::UpdateState(const CMintMeta& meta)
 {
+    uint256 hashPubcoin = GetPubCoinHash(meta.pubcoin);
     CWalletDB walletdb(strWalletFile);
 
     if (meta.isDeterministic) {
         CDeterministicMint dMint;
-        if (!walletdb.ReadDeterministicMint(meta.hashPubcoin, dMint)) {
+        if (!walletdb.ReadDeterministicMint(hashPubcoin, dMint)) {
             // Check archive just in case
             if (!meta.isArchived)
                 return error("%s: failed to read deterministic mint from database", __func__);
 
             // Unarchive this mint since it is being requested and updated
-            if (!walletdb.UnarchiveDeterministicMint(meta.hashPubcoin, dMint))
+            if (!walletdb.UnarchiveDeterministicMint(hashPubcoin, dMint))
                 return error("%s: failed to unarchive deterministic mint from database", __func__);
         }
 
-        dMint.SetTxHash(meta.txid);
         dMint.SetHeight(meta.nHeight);
         dMint.SetUsed(meta.isUsed);
         dMint.SetDenomination(meta.denom);
@@ -247,16 +238,15 @@ bool CzPIVTracker::UpdateState(const CMintMeta& meta)
         if (!walletdb.WriteDeterministicMint(dMint))
             return error("%s: failed to update deterministic mint when writing to db", __func__);
     } else {
-        CZerocoinMint mint;
-        if (!walletdb.ReadZerocoinMint(meta.hashPubcoin, mint))
-            return error("%s: failed to read mint from database", __func__);
+        CZerocoinEntry zerocoin;
+        // if (!walletdb.ReadZerocoinEntry(meta.pubcoin, zerocoin))
+        //     return error("%s: failed to read mint from database", __func__);
 
-        mint.SetTxHash(meta.txid);
-        mint.SetHeight(meta.nHeight);
-        mint.SetUsed(meta.isUsed);
-        mint.SetDenomination(meta.denom);
+        zerocoin.nHeight = meta.nHeight;
+        zerocoin.IsUsed = meta.isUsed;
+        zerocoin.denomination = meta.denom;
 
-        if (!walletdb.WriteZerocoinMint(mint))
+        if (!walletdb.WriteZerocoinEntry(zerocoin))
             return error("%s: failed to write mint to database", __func__);
     }
 
@@ -269,7 +259,7 @@ void CzPIVTracker::Add(const CDeterministicMint& dMint, bool isNew, bool isArchi
 {
     bool iszPIVWalletInitialized = (NULL != zPIVWallet);
     CMintMeta meta;
-    meta.hashPubcoin = dMint.GetPubcoinHash();
+    meta.pubcoin = dMint.GetPubcoin();
     meta.nHeight = dMint.GetHeight();
     meta.nVersion = dMint.GetVersion();
     meta.txid = dMint.GetTxHash();
@@ -289,47 +279,24 @@ void CzPIVTracker::Add(const CDeterministicMint& dMint, bool isNew, bool isArchi
         CWalletDB(strWalletFile).WriteDeterministicMint(dMint);
 }
 
-void CzPIVTracker::Add(const CZerocoinMint& mint, bool isNew, bool isArchived)
+void CzPIVTracker::Add(const CZerocoinEntry& zerocoin, bool isNew, bool isArchived)
 {
     CMintMeta meta;
-    meta.hashPubcoin = GetPubCoinHash(mint.GetValue());
-    meta.nHeight = mint.GetHeight();
-    meta.nVersion = mint.GetVersion();
-    meta.txid = mint.GetTxHash();
-    meta.isUsed = mint.IsUsed();
-    meta.hashSerial = GetSerialHash(mint.GetSerialNumber());
-    uint256 nSerial = mint.GetSerialNumber().getuint256();
-    meta.denom = mint.GetDenomination();
+    meta.pubcoin = zerocoin.value;
+    meta.nHeight = zerocoin.nHeight;
+    //meta.nVersion = zerocoin.GetVersion();
+    //meta.txid = zerocoin.GetTxHash();
+    meta.isUsed = zerocoin.IsUsed;
+    meta.hashSerial = GetSerialHash(zerocoin.serialNumber);
+    uint256 nSerial = zerocoin.serialNumber.getuint256();
+    meta.denom = (libzerocoin::CoinDenomination)zerocoin.denomination;
     meta.isArchived = isArchived;
     meta.isDeterministic = false;
     meta.isSeedCorrect = true;
     mapSerialHashes[meta.hashSerial] = meta;
 
     if (isNew)
-        CWalletDB(strWalletFile).WriteZerocoinMint(mint);
-}
-
-void CzPIVTracker::SetPubcoinUsed(const uint256& hashPubcoin, const uint256& txid)
-{
-    if (!HasPubcoinHash(hashPubcoin))
-        return;
-    CMintMeta meta = GetMetaFromPubcoin(hashPubcoin);
-    meta.isUsed = true;
-    mapPendingSpends.insert(make_pair(meta.hashSerial, txid));
-    UpdateState(meta);
-}
-
-void CzPIVTracker::SetPubcoinNotUsed(const uint256& hashPubcoin)
-{
-    if (!HasPubcoinHash(hashPubcoin))
-        return;
-    CMintMeta meta = GetMetaFromPubcoin(hashPubcoin);
-    meta.isUsed = false;
-
-    if (mapPendingSpends.count(meta.hashSerial))
-        mapPendingSpends.erase(meta.hashSerial);
-
-    UpdateState(meta);
+        CWalletDB(strWalletFile).WriteZerocoinEntry(zerocoin);
 }
 
 void CzPIVTracker::RemovePending(const uint256& txid)
@@ -349,10 +316,11 @@ void CzPIVTracker::RemovePending(const uint256& txid)
 
 bool CzPIVTracker::UpdateStatusInternal(const std::set<uint256>& setMempool, CMintMeta& mint)
 {
+    uint256 hashPubcoin = GetPubCoinHash(mint.pubcoin);
     //! Check whether this mint has been spent and is considered 'pending' or 'confirmed'
     // If there is not a record of the block height, then look it up and assign it
     uint256 txidMint;
-    bool isMintInChain = zerocoinDB->ReadCoinMint(mint.hashPubcoin, txidMint);
+    bool isMintInChain = zerocoinDB->ReadCoinMint(hashPubcoin, txidMint);
 
     //See if there is internal record of spending this mint (note this is memory only, would reset on restart)
     bool isPendingSpend = static_cast<bool>(mapPendingSpends.count(mint.hashSerial));
@@ -380,7 +348,7 @@ bool CzPIVTracker::UpdateStatusInternal(const std::set<uint256>& setMempool, CMi
         // Txid will be marked 0 if there is no knowledge of the final tx hash yet
         if (mint.txid.IsNull()) {
             if (!isMintInChain) {
-                LogPrintf("%s : Failed to find mint in zerocoinDB %s\n", __func__, mint.hashPubcoin.GetHex().substr(0, 6));
+                LogPrintf("%s : Failed to find mint in zerocoinDB %s\n", __func__, hashPubcoin.GetHex().substr(0, 6));
                 mint.isArchived = true;
                 Archive(mint);
                 return true;
@@ -410,7 +378,7 @@ bool CzPIVTracker::UpdateStatusInternal(const std::set<uint256>& setMempool, CMi
 
         // Check that the mint has correct used status
         if (mint.isUsed != isUsed) {
-            LogPrintf("%s : Set mint %s isUsed to %d\n", __func__, mint.hashPubcoin.GetHex(), isUsed);
+            LogPrintf("%s : Set mint %s isUsed to %d\n", __func__, hashPubcoin.GetHex(), isUsed);
             mint.isUsed = isUsed;
             return true;
         }
@@ -423,7 +391,8 @@ std::set<CMintMeta> CzPIVTracker::ListMints(bool fUnusedOnly, bool fMatureOnly, 
 {
     CWalletDB walletdb(strWalletFile);
     if (fUpdateStatus) {
-        std::list<CZerocoinMint> listMintsDB = walletdb.ListMintedCoins();
+        std::list<CZerocoinEntry> listMintsDB;
+        walletdb.ListPubCoin(listMintsDB);
         for (auto& mint : listMintsDB)
             Add(mint);
         LogPrint("zero", "%s: added %d zerocoinmints from DB\n", __func__, listMintsDB.size());

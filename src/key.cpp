@@ -142,10 +142,7 @@ bool CKey::SetPrivKey(const CPrivKey &privkey, bool fCompressedIn) {
 
 uint256 CKey::GetPrivKey_256()
 {
-    //void* key = keydata.data();
-    uint256* key_256 = (uint256*)vch;
-
-    return *key_256;
+    return *((uint256*)vch);
 }
 
 CPrivKey CKey::GetPrivKey() const {

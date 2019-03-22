@@ -12,7 +12,7 @@
 #include <functional>
 
 // zerocoin parameters
-extern libzerocoin::ZerocoinParams *ZCParams, *ZCParamsV2;
+extern libzerocoin::Params *ZCParams, *ZCParamsV2;
 
 // Test for zerocoin transaction version 2
 inline bool IsZerocoinTxV2(libzerocoin::CoinDenomination denomination, const Consensus::Params &params, int coinId) {

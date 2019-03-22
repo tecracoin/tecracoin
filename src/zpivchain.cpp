@@ -64,7 +64,7 @@ bool BlockToPubcoinList(const CBlock& block, std::list<libzerocoin::PublicCoin>&
 }
 
 //return a list of zerocoin mints contained in a specific block
-bool BlockToZerocoinMintList(const CBlock& block, std::list<CZerocoinMint>& vMints)
+bool BlockToZerocoinMintList(const CBlock& block, std::list<CZerocoinEntry>& vMints)
 {
     for (const CTransaction& tx : block.vtx) {
         if(!tx.IsZerocoinMint())
@@ -80,11 +80,11 @@ bool BlockToZerocoinMintList(const CBlock& block, std::list<CZerocoinMint>& vMin
             if(!TxOutToPublicCoin(txOut, pubCoin, state))
                 return false;
 
-            //version should not actually matter here since it is just a reference to the pubcoin, not to the privcoin
-            uint8_t version = 1;
-            CZerocoinMint mint = CZerocoinMint(pubCoin.getDenomination(), pubCoin.getValue(), 0, 0, false, version, nullptr);
-            mint.SetTxHash(tx.GetHash());
-            vMints.push_back(mint);
+            Bignum value = const_cast<Bignum&>(pubCoin.getValue());
+            Bignum randomness = 0;
+            Bignum serialNumber = 0;
+            CZerocoinEntry zerocoin = CZerocoinEntry(pubCoin.getDenomination(), value, randomness, serialNumber, false);
+            vMints.push_back(zerocoin);
         }
     }
 
@@ -97,7 +97,7 @@ void FindMints(std::vector<CMintMeta> vMintsToFind, std::vector<CMintMeta>& vMin
     // something went wrong
     for (CMintMeta meta : vMintsToFind) {
         uint256 txHash;
-        if (!zerocoinDB->ReadCoinMint(meta.hashPubcoin, txHash)) {
+        if (!zerocoinDB->ReadCoinMint(GetPubCoinHash(meta.pubcoin), txHash)) {
             vMissingMints.push_back(meta);
             continue;
         }
@@ -150,8 +150,8 @@ void FindMints(std::vector<CMintMeta> vMintsToFind, std::vector<CMintMeta>& vMin
             libzerocoin::PublicCoin pubcoin(ZCParamsV2);
             CValidationState state;
             TxOutToPublicCoin(out, pubcoin, state);
-            if (GetPubCoinHash(pubcoin.getValue()) == meta.hashPubcoin && pubcoin.getDenomination() != meta.denom) {
-                LogPrintf("%s: found mismatched denom pubcoinhash = %s\n", __func__, meta.hashPubcoin.GetHex());
+            if (pubcoin.getValue() == meta.pubcoin && pubcoin.getDenomination() != meta.denom) {
+                LogPrintf("%s: found mismatched denom pubcoinhash = %s\n", __func__, GetPubCoinHash(meta.pubcoin).GetHex());
                 meta.denom = pubcoin.getDenomination();
                 vMintsToUpdate.emplace_back(meta);
             }
@@ -165,7 +165,7 @@ void FindMints(std::vector<CMintMeta> vMintsToFind, std::vector<CMintMeta>& vMin
         meta.txid = txHash;
         meta.nHeight = mapBlockIndex[hashBlock]->nHeight;
         meta.isUsed = fSpent;
-        LogPrintf("%s: found updates for pubcoinhash = %s\n", __func__, meta.hashPubcoin.GetHex());
+        LogPrintf("%s: found updates for pubcoinhash = %s\n", __func__, GetPubCoinHash(meta.pubcoin).GetHex());
 
         vMintsToUpdate.push_back(meta);
     }
@@ -175,12 +175,6 @@ bool GetZerocoinMint(const CBigNum& bnPubcoin, uint256& txHash)
 {
     txHash.SetNull();
     return zerocoinDB->ReadCoinMint(bnPubcoin, txHash);
-}
-
-bool IsPubcoinInBlockchain(const uint256& hashPubcoin, uint256& txid)
-{
-    txid.SetNull();
-    return zerocoinDB->ReadCoinMint(hashPubcoin, txid);
 }
 
 bool IsSerialKnown(const CBigNum& bnSerial)
@@ -306,7 +300,7 @@ libzerocoin::CoinSpend TxInToZerocoinSpend(const CTxIn& txin)
     dataTxIn.insert(dataTxIn.end(), txin.scriptSig.begin() + BIGNUM_SIZE, txin.scriptSig.end());
     CDataStream serializedCoinSpend(dataTxIn, SER_NETWORK, PROTOCOL_VERSION);
     //bool fModulusV2 = (txin.nSequence >= ZC_MODULUS_V2_BASE_ID);
-    //libzerocoin::ZerocoinParams* paramsAccumulator = fModulusV2 ? ZCParamsV2 : ZCParams;
+    //libzerocoin::Params* paramsAccumulator = fModulusV2 ? ZCParamsV2 : ZCParams;
     libzerocoin::CoinSpend spend(ZCParamsV2, serializedCoinSpend);
 
     return spend;

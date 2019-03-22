@@ -9,6 +9,7 @@
 #include "script/script.h"
 #include "script/standard.h"
 #include "util.h"
+#include "init.h"
 #include "wallet/walletdb.h"
 #include "wallet/wallet.h"
 
@@ -164,6 +165,7 @@ bool CCryptoKeyStore::Lock()
     {
         LOCK(cs_KeyStore);
         vMasterKey.clear();
+        pwalletMain->zwallet->Lock();
     }
 
     NotifyStatusChanged(this);
@@ -203,6 +205,25 @@ bool CCryptoKeyStore::Unlock(const CKeyingMaterial& vMasterKeyIn)
             return false;
         vMasterKey = vMasterKeyIn;
         fDecryptionThoroughlyChecked = true;
+
+        uint256 hashSeed;
+        if (CWalletDB(pwalletMain->strWalletFile).ReadCurrentSeedHash(hashSeed)) {
+
+            uint256 nSeed;
+            if (!GetDeterministicSeed(hashSeed, nSeed)) {
+                return error("Failed to read zPIV seed from DB. Wallet is probably corrupt.");
+            }
+            pwalletMain->zwallet->SetMasterSeed(nSeed, false);
+        } else {
+            // First time this wallet has been unlocked with dzPIV
+            // Borrow random generator from the key class so that we don't have to worry about randomness
+            CKey key;
+            key.MakeNewKey(true);
+            uint256 seed = key.GetPrivKey_256();
+            LogPrintf("%s: first run of zpiv wallet detected, new seed generated. Seedhash=%s\n", __func__, Hash(seed.begin(), seed.end()).GetHex());
+            pwalletMain->zwallet->SetMasterSeed(seed, true);
+            pwalletMain->zwallet->GenerateMintPool();
+        }
     }
     NotifyStatusChanged(this);
     return true;

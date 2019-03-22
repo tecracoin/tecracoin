@@ -21,17 +21,6 @@
 
 namespace libzerocoin {
 
-// enum  CoinDenomination {
-//     ZQ_ERROR = 0,
-//     ZQ_LOVELACE = 1,
-//     ZQ_GOLDWASSER = 10,
-//     ZQ_RACKOFF = 25,
-//     ZQ_PEDERSEN = 50,
-//     ZQ_WILLIAMSON = 100 // Malcolm J. Williamson,
-//                     // the scientist who actually invented
-//                     // Public key cryptography
-// };
-
 /** A Public coin is the part of a coin that
  * is published to the network and what is handled
  * by other clients. It contains only the value
@@ -41,11 +30,11 @@ namespace libzerocoin {
 class PublicCoin {
 public:
     template<typename Stream>
-    PublicCoin(const ZerocoinParams* p, Stream& strm): params(p) {
+    PublicCoin(const Params* p, Stream& strm): params(p) {
         strm >> *this;
     }
 
-    PublicCoin(const ZerocoinParams* p);
+    PublicCoin(const Params* p);
 
     /**Generates a public coin
      *
@@ -53,7 +42,7 @@ public:
      * @param coin the value of the commitment.
      * @param denomination The denomination of the coin. Defaults to ZQ_LOVELACE
      */
-    PublicCoin(const ZerocoinParams* p, const Bignum& coin, const CoinDenomination d = ZQ_LOVELACE);
+    PublicCoin(const Params* p, const Bignum& coin, const CoinDenomination d = ZQ_LOVELACE);
     const Bignum& getValue() const;
     CoinDenomination getDenomination() const;
     bool operator==(const PublicCoin& rhs) const;
@@ -70,13 +59,13 @@ public:
         READWRITE(value);
         READWRITE(denomination);
     }
-	// IMPLEMENT_SERIALIZE
-	// (
-	//     READWRITE(value);
-	//     READWRITE(denomination);
-	// )
+// IMPLEMENT_SERIALIZE
+// (
+//     READWRITE(value);
+//     READWRITE(denomination);
+// )
 private:
-    const ZerocoinParams* params;
+    const Params* params;
     Bignum value;
     // Denomination is stored as an INT because storing
     // and enum raises amigiuities in the serialize code //FIXME if possible
@@ -100,15 +89,14 @@ public:
     static int const CURRENT_VERSION = 2;
     static int const V2_BITSHIFT = 4;
     template<typename Stream>
-    PrivateCoin(const ZerocoinParams* p, Stream& strm): params(p), publicCoin(p) {
+    PrivateCoin(const Params* p, Stream& strm): params(p), publicCoin(p) {
         strm >> *this;
     }
-    PrivateCoin(const ZerocoinParams* p, CoinDenomination denomination = ZQ_LOVELACE, int version = ZEROCOIN_TX_VERSION_1);
+    PrivateCoin(const Params* p, CoinDenomination denomination = ZQ_LOVELACE, int version = ZEROCOIN_TX_VERSION_1);
     const PublicCoin& getPublicCoin() const;
     const Bignum& getSerialNumber() const;
     const Bignum& getRandomness() const;
-    const CPrivKey& getPrivKey() const;
-    const CPubKey getPubKey() const;
+    const unsigned char* getEcdsaSeckey() const;
     unsigned int getVersion() const;
     bool sign(const uint256& hash, std::vector<unsigned char>& vchSig) const;
     static const Bignum serialNumberFromSerializedPublicKey(secp256k1_context *ctx, secp256k1_pubkey *pubkey);
@@ -131,8 +119,9 @@ public:
         version = nVersion;
     };
 
-    void setPrivKey(const CPrivKey& p) { 
-        privkey = p; 
+    void setEcdsaSeckey(const vector<unsigned char> &seckey) {
+        if (seckey.size() == sizeof(ecdsaSeckey))
+            std::copy(seckey.cbegin(), seckey.cend(), &ecdsaSeckey[0]);
     }
 
     template <typename Stream, typename Operation>
@@ -153,16 +142,16 @@ public:
         }
 
         if (version == ZEROCOIN_TX_VERSION_2)
-            READWRITE(privkey);
+            READWRITE(ecdsaSeckey);
     }
 
 private:
-    const ZerocoinParams* params;
+    const Params* params;
     PublicCoin publicCoin;
     Bignum randomness;
     Bignum serialNumber;
     unsigned int version = 0;
-    CPrivKey privkey;
+    unsigned char ecdsaSeckey[32];
 
     /**
      * @brief Mint a new coin.
@@ -193,8 +182,6 @@ private:
     void mintCoinFast(const CoinDenomination denomination);
 
 };
-
-bool GenerateKeyPair(const CBigNum& bnGroupOrder, const uint256& nPrivkey, CKey& key, CBigNum& bnSerial);
 
 } /* namespace libzerocoin */
 #endif /* COIN_H_ */

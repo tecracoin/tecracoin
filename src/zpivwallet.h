@@ -10,6 +10,7 @@
 #include "mintpool.h"
 #include "uint256.h"
 #include "primitives/zerocoin.h"
+#include "wallet/wallet.h"
 
 
 class CDeterministicMint;
@@ -32,7 +33,7 @@ public:
     void GenerateDeterministicZPIV(libzerocoin::CoinDenomination denom, libzerocoin::PrivateCoin& coin, CDeterministicMint& dMint, bool fGenerateOnly = false);
     void GenerateMint(const uint32_t& nCount, const libzerocoin::CoinDenomination denom, libzerocoin::PrivateCoin& coin, CDeterministicMint& dMint);
     void GetState(int& nCount, int& nLastGenerated);
-    bool RegenerateMint(const CDeterministicMint& dMint, CZerocoinMint& mint);
+    bool RegenerateMint(const CDeterministicMint& dMint, CZerocoinEntry& zerocoin);
     void GenerateMintPool(uint32_t nCountStart = 0, uint32_t nCountEnd = 0);
     bool LoadMintPoolFromDB();
     void RemoveMintsFromPool(const std::vector<uint256>& vPubcoinHashes);
@@ -40,7 +41,7 @@ public:
     bool IsInMintPool(const CBigNum& bnValue) { return mintPool.Has(bnValue); }
     void UpdateCount();
     void Lock();
-    void SeedToZPIV(const uint512& seed, CBigNum& bnValue, CBigNum& bnSerial, CBigNum& bnRandomness, CKey& key);
+    void SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, libzerocoin::PrivateCoin& coin);
     bool CheckSeed(const CDeterministicMint& dMint);
 
 private:

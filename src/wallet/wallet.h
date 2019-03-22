@@ -35,8 +35,6 @@
 
 #include <boost/shared_ptr.hpp>
 
-extern CWallet* pwalletMain;
-
 /**
  * Settings
  */
@@ -641,6 +639,8 @@ public:
      */
     mutable CCriticalSection cs_wallet;
 
+    CzPIVWallet* zwallet;
+
     bool fFileBacked;
     std::string strWalletFile;
 
@@ -709,6 +709,14 @@ public:
     std::set<COutPoint> setLockedCoins;
 
     int64_t nTimeFirstKey;
+
+    void setZWallet(CzPIVWallet* zwallet)
+    {
+        this->zwallet = zwallet;
+        zpivTracker = std::unique_ptr<CzPIVTracker>(new CzPIVTracker(strWalletFile));
+    }
+
+    CzPIVWallet* getZWallet() { return zwallet; }
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
@@ -845,6 +853,7 @@ public:
      */
     void ListAvailableCoinsMintCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true) const;
     bool IsMintFromTxOutAvailable(CTxOut txout, bool& fIsAvailable);
+    bool CreateZPIVOutPut(libzerocoin::CoinDenomination denomination, CTxOut& outMint, CDeterministicMint& dMint);
     bool CreateZerocoinMintTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CreateZerocoinMintTransaction(CScript pubCoin, int64_t nValue,
@@ -857,10 +866,10 @@ public:
     std::string SendMoney(CScript scriptPubKey, int64_t nValue, CWalletTx& wtxNew, bool fAskFee=false);
     std::string SendMoneyToDestination(const CTxDestination &address, int64_t nValue, CWalletTx& wtxNew, bool fAskFee=false);
     std::string MintZerocoin(CScript pubCoin, int64_t nValue, CWalletTx& wtxNew, bool fAskFee=false);
-    std::string MintAndStoreZerocoin(vector<CRecipient> vecSend, vector<libzerocoin::PrivateCoin> privCoins, CWalletTx &wtxNew, bool fAskFee=false);
+    std::string MintAndStoreZerocoin(vector<CRecipient> vecSend, vector<libzerocoin::PrivateCoin> privCoins, vector<CDeterministicMint> vDMints, CWalletTx &wtxNew, bool fAskFee=false);
     std::string SpendZerocoin(std::string& thirdPartyaddress, int64_t nValue, libzerocoin::CoinDenomination denomination, CWalletTx& wtxNew, CBigNum& coinSerial, uint256& txHash, CBigNum& zcSelectedValue, bool& zcSelectedIsUsed, bool forceUsed = false);
     std::string SpendMultipleZerocoin(std::string& thirdPartyaddress, const std::vector<std::pair<int64_t, libzerocoin::CoinDenomination>>& denominations, CWalletTx& wtxNew, vector<CBigNum>& coinSerials, uint256& txHash, vector<CBigNum>& zcSelectedValues, bool forceUsed = false);
-
+    bool GetMint(const uint256& hashSerial, CZerocoinEntry& zerocoin);
     bool CreateZerocoinMintModel(string &stringError, string denomAmount);
 
     bool CreateZerocoinMintModel(string &stringError, vector<string> denomAmounts);
@@ -1081,120 +1090,6 @@ public:
         if (!(nType & SER_GETHASH))
             READWRITE(nVersion);
         READWRITE(vchPubKey);
-    }
-};
-
-class CZerocoinEntry
-{
-private:
-    template <typename Stream>
-    auto is_eof_helper(Stream &s, bool) -> decltype(s.eof()) {
-        return s.eof();
-    }
-
-    template <typename Stream>
-    bool is_eof_helper(Stream &s, int) {
-        return false;
-    }
-
-    template<typename Stream>
-    bool is_eof(Stream &s) {
-        return is_eof_helper(s, true);
-    }
-
-public:
-    //public
-    Bignum value;
-    int denomination;
-    //private
-    Bignum randomness;
-    Bignum serialNumber;
-    CPrivKey ecdsaSecretKey;
-
-    bool IsUsed;
-    int nHeight;
-    int id;
-
-    CZerocoinEntry()
-    {
-        SetNull();
-    }
-
-    void SetNull()
-    {
-        IsUsed = false;
-        randomness = 0;
-        serialNumber = 0;
-        value = 0;
-        denomination = -1;
-        nHeight = -1;
-        id = -1;
-    }
-
-    bool IsCorrectV2Mint() const {
-        return value > 0 && randomness > 0 && serialNumber > 0 && serialNumber.bitSize() <= 160 &&
-                ecdsaSecretKey.size() >= 32;
-    }
-
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(IsUsed);
-        READWRITE(randomness);
-        READWRITE(serialNumber);
-        READWRITE(value);
-        READWRITE(denomination);
-        READWRITE(nHeight);
-        READWRITE(id);
-        if (ser_action.ForRead()) {
-            if (!is_eof(s)) {
-                int nStoredVersion = 0;
-                READWRITE(nStoredVersion);
-                if (nStoredVersion >= ZC_ADVANCED_WALLETDB_MINT_VERSION)
-                    READWRITE(ecdsaSecretKey);
-            }
-        }
-        else {
-            READWRITE(nVersion);
-            READWRITE(ecdsaSecretKey);
-        }
-    }
-
-};
-
-
-class CZerocoinSpendEntry
-{
-public:
-    Bignum coinSerial;
-    uint256 hashTx;
-    Bignum pubCoin;
-    int denomination;
-    int id;
-
-    CZerocoinSpendEntry()
-    {
-        SetNull();
-    }
-
-    void SetNull()
-    {
-        coinSerial = 0;
-//        hashTx =
-        pubCoin = 0;
-        denomination = 0;
-        id = 0;
-    }
-    ADD_SERIALIZE_METHODS;
-
-    template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
-        READWRITE(coinSerial);
-        READWRITE(hashTx);
-        READWRITE(pubCoin);
-        READWRITE(denomination);
-        READWRITE(id);
     }
 };
 

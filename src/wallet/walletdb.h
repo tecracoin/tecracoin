@@ -174,6 +174,7 @@ public:
     void ListAccountCreditDebit(const std::string& strAccount, std::list<CAccountingEntry>& acentries);
 
     bool WriteZerocoinEntry(const CZerocoinEntry& zerocoin);
+    bool ReadZerocoinEntry(const CBigNum &bnPubCoinValue, CZerocoinEntry& zerocoin);
     bool EraseZerocoinEntry(const CZerocoinEntry& zerocoin);
     void ListPubCoin(std::list<CZerocoinEntry>& listPubCoin);
     void ListCoinSpendSerial(std::list<CZerocoinSpendEntry>& listCoinSpendSerial);
@@ -202,21 +203,15 @@ public:
     bool ReadZPIVCount(uint32_t& nCount);
     bool WriteZPIVCount(const uint32_t& nCount);
 
-    bool ReadZerocoinMint(const CBigNum &bnPubcoinValue, CZerocoinMint& zerocoinMint);
-    bool ReadZerocoinMint(const uint256& hashPubcoin, CZerocoinMint& mint);
-
-    bool ArchiveMintOrphan(const CZerocoinMint& zerocoinMint);
+    bool ArchiveMintOrphan(const CZerocoinEntry& zerocoin);
     bool ArchiveDeterministicOrphan(const CDeterministicMint& dMint);
-    bool UnarchiveZerocoinMint(const uint256& hashPubcoin, CZerocoinMint& mint);
+    bool UnarchiveZerocoinMint(const uint256& hashPubcoin, CZerocoinEntry& zerocoin);
     bool UnarchiveDeterministicMint(const uint256& hashPubcoin, CDeterministicMint& dMint);
 
     bool WriteDeterministicMint(const CDeterministicMint& dMint);
     bool ReadDeterministicMint(const uint256& hashPubcoin, CDeterministicMint& dMint);
 
-    std::list<CZerocoinMint> ListMintedCoins();
     std::list<CDeterministicMint> ListDeterministicMints();
-
-    bool WriteZerocoinMint(const CZerocoinMint& zerocoinMint);
     
     std::map<uint256, std::vector<pair<uint256, uint32_t> > > MapMintPool();
     bool WriteMintPoolPair(const uint256& hashMasterSeed, const uint256& hashPubcoin, const uint32_t& nCount);

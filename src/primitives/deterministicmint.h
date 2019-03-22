@@ -9,6 +9,7 @@
 // #include <uint256.h>
 //#include <serialize.h>
 #include <libzerocoin/Zerocoin.h>
+#include "primitives/zerocoin.h"
 
 //struct that is safe to store essential mint data, without holding any information that allows for actual spending (serial, randomness, private key)
 class CDeterministicMint
@@ -18,7 +19,7 @@ private:
     uint32_t nCount;
     uint256 hashSeed;
     uint256 hashSerial;
-    uint256 hashPubcoin;
+    Bignum pubcoin;
     uint256 txid;
     int nHeight;
     int denom;
@@ -26,14 +27,15 @@ private:
 
 public:
     CDeterministicMint();
-    CDeterministicMint(uint8_t nVersion, const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const uint256& hashPubcoin);
+    CDeterministicMint(uint8_t nVersion, const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const Bignum& pubcoin);
 
     libzerocoin::CoinDenomination GetDenomination() const { return (libzerocoin::CoinDenomination)denom; }
     uint32_t GetCount() const { return nCount; }
     int GetHeight() const { return nHeight; }
     uint256 GetSeedHash() const { return hashSeed; }
     uint256 GetSerialHash() const { return hashSerial; }
-    uint256 GetPubcoinHash() const { return hashPubcoin; }
+    Bignum GetPubcoin() const { return pubcoin; }
+    uint256 GetPubcoinHash() const { return GetPubCoinHash(pubcoin); }
     uint256 GetTxHash() const { return txid; }
     uint8_t GetVersion() const { return nVersion; }
     bool IsUsed() const { return isUsed; }
@@ -52,7 +54,7 @@ public:
         READWRITE(nCount);
         READWRITE(hashSeed);
         READWRITE(hashSerial);
-        READWRITE(hashPubcoin);
+        READWRITE(pubcoin);
         READWRITE(txid);
         READWRITE(nHeight);
         READWRITE(denom);

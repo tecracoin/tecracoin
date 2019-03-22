@@ -2716,13 +2716,19 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
 
 
     // Always use modulus v2
-    libzerocoin::ZerocoinParams *zcParams = ZCParamsV2;
+    libzerocoin::Params *zcParams = ZCParamsV2;
+
+    CDeterministicMint dMint;
 
     // The following constructor does all the work of minting a brand
     // new zerocoin. It stores all the private values inside the
     // PrivateCoin object. This includes the coin secrets, which must be
     // stored in a secure location (wallet) at the client.
     libzerocoin::PrivateCoin newCoin(zcParams, denomination, ZEROCOIN_TX_VERSION_2);
+
+    // Generate and store secrets deterministically in the following function.
+    zwalletMain->GenerateDeterministicZPIV(denomination, newCoin, dMint);
+
     // Get a copy of the 'public' portion of the coin. You should
     // embed this into a Zerocoin 'MINT' transaction along with a series
     // of currency inputs totaling the assigned value of one zerocoin.
@@ -2745,19 +2751,29 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
             throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
         CWalletDB walletdb(pwalletMain->strWalletFile);
-        CZerocoinEntry zerocoinTx;
-        zerocoinTx.IsUsed = false;
-        zerocoinTx.denomination = denomination;
-        zerocoinTx.value = pubCoin.getValue();
-        libzerocoin::PublicCoin checkPubCoin(zcParams, zerocoinTx.value, denomination);
-        if (!checkPubCoin.validate()) {
-            return false;
-        }
-        zerocoinTx.randomness = newCoin.getRandomness();
-        zerocoinTx.serialNumber = newCoin.getSerialNumber();
-        zerocoinTx.ecdsaSecretKey = newCoin.getPrivKey();
-        pwalletMain->NotifyZerocoinChanged(pwalletMain, zerocoinTx.value.GetHex(), "New (" + std::to_string(zerocoinTx.denomination) + " mint)", CT_NEW);
-        walletdb.WriteZerocoinEntry(zerocoinTx);
+
+        dMint.SetTxHash(wtx.GetHash());
+        pwalletMain->zpivTracker->Add(dMint, true);
+
+        // CZerocoinEntry zerocoinTx;
+        // zerocoinTx.IsUsed = false;
+        // zerocoinTx.denomination = denomination;
+        // zerocoinTx.value = pubCoin.getValue();
+        // libzerocoin::PublicCoin checkPubCoin(zcParams, zerocoinTx.value, denomination);
+        // if (!checkPubCoin.validate()) {
+        //     return false;
+        // }
+
+        // zerocoinTx.randomness = newCoin.getRandomness();
+        // zerocoinTx.serialNumber = newCoin.getSerialNumber();
+        // const unsigned char *ecdsaSecretKey = newCoin.getEcdsaSeckey();
+        // zerocoinTx.ecdsaSecretKey = std::vector<unsigned char>(ecdsaSecretKey, ecdsaSecretKey+32);
+        // walletdb.WriteZerocoinEntry(zerocoinTx);
+
+        // Now that coin is verified and sent, update the count. (If not verified, we will repeat the same count on the next attempt)
+        zwalletMain->UpdateCount();
+        pwalletMain->NotifyZerocoinChanged(pwalletMain, pubCoin.getValue().GetHex(), "New (" + std::to_string(denomination) + " mint)", CT_NEW);
+        
 
         return wtx.GetHash().GetHex();
     } else {
@@ -2798,11 +2814,14 @@ UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
     int64_t denominationInt = 0;
     libzerocoin::CoinDenomination denomination;
     // Always use modulus v2
-    libzerocoin::ZerocoinParams *zcParams = ZCParamsV2;
+    libzerocoin::Params *zcParams = ZCParamsV2;
 
     vector<CRecipient> vecSend;
     vector<libzerocoin::PrivateCoin> privCoins;
     CWalletTx wtx;
+
+    vector<CDeterministicMint> vDMints;
+    CDeterministicMint dMint;
 
     vector<string> keys = sendTo.getKeys();
     BOOST_FOREACH(const string& denominationStr, keys){
@@ -2850,7 +2869,6 @@ UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
             // Get a copy of the 'public' portion of the coin. You should
             // embed this into a Zerocoin 'MINT' transaction along with a series
             // of currency inputs totaling the assigned value of one zerocoin.
-            
             libzerocoin::PublicCoin pubCoin = newCoin.getPublicCoin();
             
             //Validate
@@ -2859,6 +2877,7 @@ UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
             // loop until we find a valid coin
             while(!validCoin){
                 newCoin = libzerocoin::PrivateCoin(zcParams, denomination, ZEROCOIN_TX_VERSION_2);
+                zwalletMain->GenerateDeterministicZPIV(denomination, newCoin, dMint);
                 pubCoin = newCoin.getPublicCoin();
                 validCoin = pubCoin.validate();
             }
@@ -2871,10 +2890,11 @@ UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
 
             vecSend.push_back(recipient);
             privCoins.push_back(newCoin);
+            vDMints.push_back(dMint);
         }
     }
 
-    string strError = pwalletMain->MintAndStoreZerocoin(vecSend, privCoins, wtx);
+    string strError = pwalletMain->MintAndStoreZerocoin(vecSend, privCoins, vDMints, wtx);
 
     if (strError != "")
         throw runtime_error(strError);

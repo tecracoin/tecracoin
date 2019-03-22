@@ -12,8 +12,6 @@
 #include "zerocoin.h"
 #include "zpivchain.h"
 
-using namespace libzerocoin;
-
 CzPIVWallet::CzPIVWallet(std::string strWalletFile)
 {
     this->strWalletFile = strWalletFile;
@@ -126,10 +124,9 @@ void CzPIVWallet::GenerateMintPool(uint32_t nCountStart, uint32_t nCountEnd)
 
         uint512 seedZerocoin = GetZerocoinSeed(i);
         CBigNum bnValue;
-        CBigNum bnSerial;
-        CBigNum bnRandomness;
         CKey key;
-        SeedToZPIV(seedZerocoin, bnValue, bnSerial, bnRandomness, key);
+        libzerocoin::PrivateCoin coin(ZCParamsV2);
+        SeedToZPIV(seedZerocoin, bnValue, coin);
 
         mintPool.Add(bnValue, i);
         CWalletDB(strWalletFile).WriteMintPoolPair(hashSeed, GetPubCoinHash(bnValue), i);
@@ -192,7 +189,7 @@ void CzPIVWallet::SyncWithChain(bool fGenerateMintPool)
             }
 
             uint256 txHash;
-            CZerocoinMint mint;
+            //CZerocoinEntry zerocoin;
             if (zerocoinDB->ReadCoinMint(pMint.first, txHash)) {
                 //this mint has already occurred on the chain, increment counter's state to reflect this
                 LogPrintf("%s : Found wallet coin mint=%s count=%d tx=%s\n", __func__, pMint.first.GetHex(), pMint.second, txHash.GetHex());
@@ -208,14 +205,14 @@ void CzPIVWallet::SyncWithChain(bool fGenerateMintPool)
                 }
 
                 //Find the denomination
-                CoinDenomination denomination = CoinDenomination::ZQ_ERROR;
+                libzerocoin::CoinDenomination denomination = libzerocoin::CoinDenomination::ZQ_ERROR;
                 bool fFoundMint = false;
                 CBigNum bnValue = 0;
                 for (const CTxOut& out : tx.vout) {
                     if (!out.scriptPubKey.IsZerocoinMint())
                         continue;
 
-                    PublicCoin pubcoin(ZCParamsV2);
+                    libzerocoin::PublicCoin pubcoin(ZCParamsV2);
                     CValidationState state;
                     if (!TxOutToPublicCoin(out, pubcoin, state)) {
                         LogPrintf("%s : failed to get mint from txout for %s!\n", __func__, pMint.first.GetHex());
@@ -232,7 +229,7 @@ void CzPIVWallet::SyncWithChain(bool fGenerateMintPool)
                     }
                 }
 
-                if (!fFoundMint || denomination == ZQ_ERROR) {
+                if (!fFoundMint || denomination == libzerocoin::CoinDenomination::ZQ_ERROR) {
                     LogPrintf("%s : failed to get mint %s from tx %s!\n", __func__, pMint.first.GetHex(), tx.GetHash().GetHex());
                     found = false;
                     break;
@@ -263,7 +260,7 @@ void CzPIVWallet::SyncWithChain(bool fGenerateMintPool)
     }
 }
 
-bool CzPIVWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const uint256& txid, const CoinDenomination& denom)
+bool CzPIVWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const uint256& txid, const libzerocoin::CoinDenomination& denom)
 {
     if (!mintPool.Has(bnValue))
         return error("%s: value not in pool", __func__);
@@ -272,10 +269,8 @@ bool CzPIVWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const 
     // Regenerate the mint
     uint512 seedZerocoin = GetZerocoinSeed(pMint.second);
     CBigNum bnValueGen;
-    CBigNum bnSerial;
-    CBigNum bnRandomness;
-    CKey key;
-    SeedToZPIV(seedZerocoin, bnValueGen, bnSerial, bnRandomness, key);
+    libzerocoin::PrivateCoin coin(ZCParamsV2, denom, false);
+    SeedToZPIV(seedZerocoin, bnValueGen, coin);
     CWalletDB walletdb(strWalletFile);
 
     //Sanity check
@@ -284,13 +279,11 @@ bool CzPIVWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const 
 
     // Create mint object and database it
     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
-    uint256 hashSerial = GetSerialHash(bnSerial);
+    uint256 hashSerial = GetSerialHash(coin.getSerialNumber());
     uint256 hashPubcoin = GetPubCoinHash(bnValue);
-    uint256 nSerial = bnSerial.getuint256();
-    CDeterministicMint dMint(PrivateCoin::CURRENT_VERSION, pMint.second, hashSeed, hashSerial, hashPubcoin);
+    CDeterministicMint dMint(libzerocoin::PrivateCoin::CURRENT_VERSION, pMint.second, hashSeed, hashSerial, bnValue);
     dMint.SetDenomination(denom);
     dMint.SetHeight(nHeight);
-    dMint.SetTxHash(txid);
 
     // Check if this is also already spent
     int nHeightTx;
@@ -332,17 +325,24 @@ bool IsValidCoinValue(const CBigNum& bnValue)
     bnValue.isPrime();
 }
 
-void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, CBigNum& bnSerial, CBigNum& bnRandomness, CKey& key)
+void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, libzerocoin::PrivateCoin& coin)
 {
-    //convert state seed into a seed for the private key
-    uint256 nSeedPrivKey = seedZerocoin.trim256();
+    CBigNum bnRandomness;
 
-    bool isValidKey = false;
-    key = CKey();
-    while (!isValidKey) {
-        nSeedPrivKey = Hash(nSeedPrivKey.begin(), nSeedPrivKey.end());
-        isValidKey = libzerocoin::GenerateKeyPair(ZCParamsV2->coinCommitmentGroup.groupOrder, nSeedPrivKey, key, bnSerial);
+    //convert state seed into a seed for the private key
+    uint256 nSeedPrivKey = seedZerocoin.trim256(); 
+    nSeedPrivKey = Hash(nSeedPrivKey.begin(), nSeedPrivKey.end());
+    std::vector<unsigned char> privkey = std::vector<unsigned char>( nSeedPrivKey.GetHex().begin(), nSeedPrivKey.GetHex().end() );
+    coin.setEcdsaSeckey(privkey);
+
+    // Create a key pair
+    secp256k1_pubkey pubkey;
+    if (!secp256k1_ec_pubkey_create(libzerocoin::ctx, &pubkey, coin.getEcdsaSeckey())){
+        throw ZerocoinException("Unable to create public key.");
     }
+
+    // Hash the public key in the group to obtain a serial number
+    coin.setSerialNumber(coin.serialNumberFromSerializedPublicKey(libzerocoin::ctx, &pubkey));
 
     //hash randomness seed with Bottom 256 bits of seedZerocoin & attempts256 which is initially 0
     uint256 randomnessSeed = uint512(seedZerocoin >> 256).trim256();
@@ -352,8 +352,8 @@ void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, CBig
 
     //See if serial and randomness make a valid commitment
     // Generate a Pedersen commitment to the serial number
-    CBigNum commitmentValue = ZCParamsV2->coinCommitmentGroup.g.pow_mod(bnSerial, ZCParamsV2->coinCommitmentGroup.modulus).mul_mod(
-                        ZCParamsV2->coinCommitmentGroup.h.pow_mod(bnRandomness, ZCParamsV2->coinCommitmentGroup.modulus),
+    CBigNum commitmentValue = ZCParamsV2->coinCommitmentGroup.g.pow_mod(coin.getSerialNumber(), ZCParamsV2->coinCommitmentGroup.modulus).mul_mod(
+                        ZCParamsV2->coinCommitmentGroup.h.pow_mod(coin.getRandomness(), ZCParamsV2->coinCommitmentGroup.modulus),
                         ZCParamsV2->coinCommitmentGroup.modulus);
 
     CBigNum random;
@@ -364,6 +364,7 @@ void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, CBig
         // in the appropriate range. If not, we'll throw this coin
         // away and generate a new one.
         if (IsValidCoinValue(commitmentValue)) {
+            coin.setRandomness(bnRandomness);
             bnValue = commitmentValue;
             return;
         }
@@ -394,7 +395,7 @@ void CzPIVWallet::UpdateCount()
     walletdb.WriteZPIVCount(nCountLastUsed);
 }
 
-void CzPIVWallet::GenerateDeterministicZPIV(CoinDenomination denom, PrivateCoin& coin, CDeterministicMint& dMint, bool fGenerateOnly)
+void CzPIVWallet::GenerateDeterministicZPIV(libzerocoin::CoinDenomination denom, libzerocoin::PrivateCoin& coin, CDeterministicMint& dMint, bool fGenerateOnly)
 {
     GenerateMint(nCountLastUsed + 1, denom, coin, dMint);
     if (fGenerateOnly)
@@ -404,26 +405,18 @@ void CzPIVWallet::GenerateDeterministicZPIV(CoinDenomination denom, PrivateCoin&
     //LogPrintf("%s : Generated new deterministic mint. Count=%d pubcoin=%s seed=%s\n", __func__, nCount, coin.getPublicCoin().getValue().GetHex().substr(0,6), seedZerocoin.GetHex().substr(0, 4));
 }
 
-void CzPIVWallet::GenerateMint(const uint32_t& nCount, const CoinDenomination denom, PrivateCoin& coin, CDeterministicMint& dMint)
+void CzPIVWallet::GenerateMint(const uint32_t& nCount, const libzerocoin::CoinDenomination denom, libzerocoin::PrivateCoin& coin, CDeterministicMint& dMint)
 {
     uint512 seedZerocoin = GetZerocoinSeed(nCount);
     CBigNum bnValue;
-    CBigNum bnSerial;
-    CBigNum bnRandomness;
-    CKey key;
-    SeedToZPIV(seedZerocoin, bnValue, bnSerial, bnRandomness, key);
-    coin = PrivateCoin(ZCParamsV2, denom);
-    coin.setSerialNumber(bnSerial);
-    coin.setRandomness(bnRandomness);
-    coin.setPrivKey(key.GetPrivKey());
-    coin.setVersion(PrivateCoin::CURRENT_VERSION);
-
+    SeedToZPIV(seedZerocoin, bnValue, coin);
+    coin.setVersion(libzerocoin::PrivateCoin::CURRENT_VERSION);
 
     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
-    uint256 hashSerial = GetSerialHash(bnSerial);
-    uint256 nSerial = bnSerial.getuint256();
-    uint256 hashPubcoin = GetPubCoinHash(bnValue);
-    dMint = CDeterministicMint(coin.getVersion(), nCount, hashSeed, hashSerial, hashPubcoin);
+    uint256 hashSerial = GetSerialHash(coin.getSerialNumber());
+    uint256 nSerial = coin.getSerialNumber().getuint256();
+    //uint256 hashPubcoin = GetPubCoinHash(bnValue);
+    dMint = CDeterministicMint(coin.getVersion(), nCount, hashSeed, hashSerial, bnValue);
     dMint.SetDenomination(denom);
 }
 
@@ -434,7 +427,7 @@ bool CzPIVWallet::CheckSeed(const CDeterministicMint& dMint)
     return hashSeed == dMint.GetSeedHash();
 }
 
-bool CzPIVWallet::RegenerateMint(const CDeterministicMint& dMint, CZerocoinMint& mint)
+bool CzPIVWallet::RegenerateMint(const CDeterministicMint& dMint, CZerocoinEntry& zerocoin)
 {
     if (!CheckSeed(dMint)) {
         uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
@@ -442,7 +435,7 @@ bool CzPIVWallet::RegenerateMint(const CDeterministicMint& dMint, CZerocoinMint&
     }
 
     //Generate the coin
-    PrivateCoin coin(ZCParamsV2, dMint.GetDenomination(), false);
+    libzerocoin::PrivateCoin coin(ZCParamsV2, dMint.GetDenomination(), false);
     CDeterministicMint dMintDummy;
     GenerateMint(dMint.GetCount(), dMint.GetDenomination(), coin, dMintDummy);
 
@@ -450,20 +443,18 @@ bool CzPIVWallet::RegenerateMint(const CDeterministicMint& dMint, CZerocoinMint&
     CBigNum bnValue = coin.getPublicCoin().getValue();
     if (GetPubCoinHash(bnValue) != dMint.GetPubcoinHash())
         return error("%s: failed to correctly generate mint, pubcoin hash mismatch", __func__);
-    mint.SetValue(bnValue);
+    zerocoin.value = bnValue;
 
     CBigNum bnSerial = coin.getSerialNumber();
     if (GetSerialHash(bnSerial) != dMint.GetSerialHash())
         return error("%s: failed to correctly generate mint, serial hash mismatch", __func__);
-    mint.SetSerialNumber(bnSerial);
-
-    mint.SetRandomness(coin.getRandomness());
-    mint.SetPrivKey(coin.getPrivKey());
-    mint.SetVersion(coin.getVersion());
-    mint.SetDenomination(dMint.GetDenomination());
-    mint.SetUsed(dMint.IsUsed());
-    mint.SetTxHash(dMint.GetTxHash());
-    mint.SetHeight(dMint.GetHeight());
+    
+    zerocoin.denomination = dMint.GetDenomination();
+    zerocoin.randomness = coin.getRandomness();
+    zerocoin.serialNumber = bnSerial;
+    zerocoin.IsUsed = dMint.IsUsed();
+    zerocoin.nHeight = dMint.GetHeight();
+    zerocoin.ecdsaSecretKey = std::vector<unsigned char>(&coin.getEcdsaSeckey()[0],&coin.getEcdsaSeckey()[32]);
 
     return true;
 }
