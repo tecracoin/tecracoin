@@ -11,6 +11,7 @@
 #include "zpivwallet.h"
 #include "libzerocoin/Zerocoin.h"
 #include "main.h"
+#include "zerocoin.h"
 //#include "accumulators.h"
 
 using namespace std;
@@ -82,12 +83,25 @@ bool CzPIVTracker::UnArchive(const uint256& hashPubcoin, bool isDeterministic)
     return true;
 }
 
-CMintMeta CzPIVTracker::Get(const uint256 &hashSerial)
+bool CzPIVTracker::Get(const uint256 &hashSerial, CMintMeta& mMeta)
 {
     if (!mapSerialHashes.count(hashSerial))
-        return CMintMeta();
+        mMeta = CMintMeta();
+        return false;
 
-    return mapSerialHashes.at(hashSerial);
+    mMeta = mapSerialHashes.at(hashSerial);
+    return true;
+}
+
+CMintMeta CzPIVTracker::GetMetaFromPubcoin(const uint256& hashPubcoin)
+{
+    for (auto it : mapSerialHashes) {
+        CMintMeta meta = it.second;
+        if (GetPubCoinHash(meta.pubcoin) == hashPubcoin)
+            return meta;
+    }
+
+    return CMintMeta();
 }
 
 std::vector<uint256> CzPIVTracker::GetSerialHashes()
@@ -120,7 +134,7 @@ CAmount CzPIVTracker::GetBalance(bool fConfirmedOnly, bool fUnconfirmedOnly) con
             CMintMeta meta = it.second;
             if (meta.isUsed || meta.isArchived)
                 continue;
-            bool fConfirmed = ((meta.nHeight < chainActive.Height() - Params().Zerocoin_MintRequiredConfirmations()) && !(meta.nHeight == 0));
+            bool fConfirmed = ((meta.nHeight < chainActive.Height() - ZC_MINT_CONFIRMATIONS) && !(meta.nHeight == 0));
             if (fConfirmedOnly && !fConfirmed)
                 continue;
             if (fUnconfirmedOnly && fConfirmed)
@@ -148,7 +162,7 @@ std::vector<CMintMeta> CzPIVTracker::GetMints(bool fConfirmedOnly) const
         CMintMeta mint = it.second;
         if (mint.isArchived || mint.isUsed)
             continue;
-        bool fConfirmed = (mint.nHeight < chainActive.Height() - Params().Zerocoin_MintRequiredConfirmations());
+        bool fConfirmed = (mint.nHeight < chainActive.Height() - ZC_MINT_CONFIRMATIONS);
         if (fConfirmedOnly && !fConfirmed)
             continue;
         vMints.emplace_back(mint);
@@ -204,7 +218,8 @@ bool CzPIVTracker::UpdateZerocoinEntry(const CZerocoinEntry& zerocoin)
     uint256 hashSerial = GetSerialHash(zerocoin.serialNumber);
 
     //Update the meta object
-    CMintMeta meta = Get(hashSerial);
+    CMintMeta meta;
+    Get(hashSerial, meta);
     meta.isUsed = zerocoin.IsUsed;
     meta.denom = (libzerocoin::CoinDenomination)zerocoin.denomination;
     meta.nHeight = zerocoin.nHeight;
@@ -288,7 +303,6 @@ void CzPIVTracker::Add(const CZerocoinEntry& zerocoin, bool isNew, bool isArchiv
     //meta.txid = zerocoin.GetTxHash();
     meta.isUsed = zerocoin.IsUsed;
     meta.hashSerial = GetSerialHash(zerocoin.serialNumber);
-    uint256 nSerial = zerocoin.serialNumber.getuint256();
     meta.denom = (libzerocoin::CoinDenomination)zerocoin.denomination;
     meta.isArchived = isArchived;
     meta.isDeterministic = false;
@@ -297,6 +311,29 @@ void CzPIVTracker::Add(const CZerocoinEntry& zerocoin, bool isNew, bool isArchiv
 
     if (isNew)
         CWalletDB(strWalletFile).WriteZerocoinEntry(zerocoin);
+}
+
+void CzPIVTracker::SetPubcoinUsed(const uint256& hashPubcoin, const uint256& txid)
+{
+    if (!HasPubcoinHash(hashPubcoin))
+        return;
+    CMintMeta meta = GetMetaFromPubcoin(hashPubcoin);
+    meta.isUsed = true;
+    mapPendingSpends.insert(make_pair(meta.hashSerial, txid));
+    UpdateState(meta);
+}
+
+void CzPIVTracker::SetPubcoinNotUsed(const uint256& hashPubcoin)
+{
+    if (!HasPubcoinHash(hashPubcoin))
+        return;
+    CMintMeta meta = GetMetaFromPubcoin(hashPubcoin);
+    meta.isUsed = false;
+
+    if (mapPendingSpends.count(meta.hashSerial))
+        mapPendingSpends.erase(meta.hashSerial);
+
+    UpdateState(meta);
 }
 
 void CzPIVTracker::RemovePending(const uint256& txid)
@@ -320,14 +357,15 @@ bool CzPIVTracker::UpdateStatusInternal(const std::set<uint256>& setMempool, CMi
     //! Check whether this mint has been spent and is considered 'pending' or 'confirmed'
     // If there is not a record of the block height, then look it up and assign it
     uint256 txidMint;
-    bool isMintInChain = zerocoinDB->ReadCoinMint(hashPubcoin, txidMint);
+    bool isMintInChain = CZerocoinState::GetZerocoinState()->HasCoin(mint.pubcoin);
+    if(isMintInChain)
+        txidMint = GetMetaFromPubcoin(hashPubcoin).txid;
 
     //See if there is internal record of spending this mint (note this is memory only, would reset on restart)
     bool isPendingSpend = static_cast<bool>(mapPendingSpends.count(mint.hashSerial));
 
     // See if there is a blockchain record of spending this mint
-    uint256 txidSpend;
-    bool isConfirmedSpend = zerocoinDB->ReadCoinSpend(mint.hashSerial, txidSpend);
+    bool isConfirmedSpend = CZerocoinState::GetZerocoinState()->IsUsedCoinSerialHash(mint.hashSerial);
 
     // Double check the mempool for pending spend
     if (isPendingSpend) {
@@ -436,7 +474,8 @@ std::set<CMintMeta> CzPIVTracker::ListMints(bool fUnusedOnly, bool fMatureOnly, 
 
         if (fMatureOnly) {
             // Not confirmed
-            if (!mint.nHeight || mint.nHeight > chainActive.Height() - Params().Zerocoin_MintRequiredConfirmations())
+            // TODO DETERMINISTIC
+            if (!mint.nHeight || mint.nHeight > chainActive.Height() - ZC_MINT_CONFIRMATIONS)
                 continue;
         }
 

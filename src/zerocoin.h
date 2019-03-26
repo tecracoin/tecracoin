@@ -126,8 +126,12 @@ public:
 
     // Query if the coin serial was previously used
     bool IsUsedCoinSerial(const CBigNum &coinSerial);
+        // Query if the hash of a coin serial was previously used
+    bool IsUsedCoinSerialHash(const uint256 &coinSerialHash);
     // Query if there is a coin with given pubCoin value
     bool HasCoin(const CBigNum &pubCoin);
+    // Query if there is a coin with given hash of a pubCoin value
+    bool HasCoinHash(const uint256 &pubCoinHash);
 
     // Given denomination and id returns latest accumulator value and corresponding block hash
     // Do not take into account coins with height more than maxHeight

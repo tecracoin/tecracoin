@@ -32,16 +32,20 @@ public:
     bool HasMintTx(const uint256& txid);
     bool IsEmpty() const { return mapSerialHashes.empty(); }
     void Init();
-    CMintMeta Get(const uint256& hashSerial);
+    bool Get(const uint256& hashSerial, CMintMeta& mMeta);
+    CMintMeta GetMetaFromPubcoin(const uint256& hashPubcoin);
     CAmount GetBalance(bool fConfirmedOnly, bool fUnconfirmedOnly) const;
     std::vector<uint256> GetSerialHashes();
     std::vector<CMintMeta> GetMints(bool fConfirmedOnly) const;
     CAmount GetUnconfirmedBalance() const;
     std::set<CMintMeta> ListMints(bool fUnusedOnly, bool fMatureOnly, bool fUpdateStatus, bool fWrongSeed = false);
     void RemovePending(const uint256& txid);
+    void SetPubcoinUsed(const uint256& hashPubcoin, const uint256& txid);
+    void SetPubcoinNotUsed(const uint256& hashPubcoin);
     bool UnArchive(const uint256& hashPubcoin, bool isDeterministic);
     bool UpdateZerocoinEntry(const CZerocoinEntry& zerocoin);
     bool UpdateState(const CMintMeta& meta);
+    void SetMetaNonDeterministic();
     void Clear();
 };
 

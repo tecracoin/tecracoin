@@ -9,6 +9,7 @@
 #include "wallet/walletdb.h"
 #include "znode-payments.h"
 #include "znode-sync.h"
+#include "primitives/zerocoin.h"
 
 #include <atomic>
 #include <sstream>
@@ -893,8 +894,26 @@ bool CZerocoinState::IsUsedCoinSerial(const CBigNum &coinSerial) {
     return usedCoinSerials.count(coinSerial) != 0;
 }
 
+bool CZerocoinState::IsUsedCoinSerialHash(const uint256 &coinSerialHash) {
+    for ( auto it = usedCoinSerials.begin(); it != usedCoinSerials.end(); ++it ){
+        if(GetSerialHash(*it)==coinSerialHash){
+            return true;
+        }
+    }
+    return false;
+}
+
 bool CZerocoinState::HasCoin(const CBigNum &pubCoin) {
     return mintedPubCoins.count(pubCoin) != 0;
+}
+
+bool CZerocoinState::HasCoinHash(const uint256 &pubCoinHash) {
+    for ( auto it = mintedPubCoins.begin(); it != mintedPubCoins.end(); ++it ){
+        if(GetPubCoinHash((*it).first)==pubCoinHash){
+            return true;
+        }
+    }
+    return false;
 }
 
 int CZerocoinState::GetAccumulatorValueForSpend(CChain *chain, int maxHeight, int denomination, int id,

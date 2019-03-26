@@ -188,9 +188,9 @@ void CzPIVWallet::SyncWithChain(bool fGenerateMintPool)
                 continue;
             }
 
-            uint256 txHash;
-            //CZerocoinEntry zerocoin;
-            if (zerocoinDB->ReadCoinMint(pMint.first, txHash)) {
+            if (CZerocoinState::GetZerocoinState()->HasCoinHash(pMint.first)) {
+                uint256 txHash = pwalletMain->zpivTracker->GetMetaFromPubcoin(pMint.first).txid;
+
                 //this mint has already occurred on the chain, increment counter's state to reflect this
                 LogPrintf("%s : Found wallet coin mint=%s count=%d tx=%s\n", __func__, pMint.first.GetHex(), pMint.second, txHash.GetHex());
                 found = true;
@@ -280,7 +280,6 @@ bool CzPIVWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const 
     // Create mint object and database it
     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
     uint256 hashSerial = GetSerialHash(coin.getSerialNumber());
-    uint256 hashPubcoin = GetPubCoinHash(bnValue);
     CDeterministicMint dMint(libzerocoin::PrivateCoin::CURRENT_VERSION, pMint.second, hashSeed, hashSerial, bnValue);
     dMint.SetDenomination(denom);
     dMint.SetHeight(nHeight);
@@ -414,8 +413,6 @@ void CzPIVWallet::GenerateMint(const uint32_t& nCount, const libzerocoin::CoinDe
 
     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
     uint256 hashSerial = GetSerialHash(coin.getSerialNumber());
-    uint256 nSerial = coin.getSerialNumber().getuint256();
-    //uint256 hashPubcoin = GetPubCoinHash(bnValue);
     dMint = CDeterministicMint(coin.getVersion(), nCount, hashSeed, hashSerial, bnValue);
     dMint.SetDenomination(denom);
 }
