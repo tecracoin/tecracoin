@@ -276,7 +276,6 @@ void CzPIVTracker::Add(const CDeterministicMint& dMint, bool isNew, bool isArchi
     CMintMeta meta;
     meta.pubcoin = dMint.GetPubcoin();
     meta.nHeight = dMint.GetHeight();
-    meta.nVersion = dMint.GetVersion();
     meta.txid = dMint.GetTxHash();
     meta.isUsed = dMint.IsUsed();
     meta.hashSerial = dMint.GetSerialHash();
@@ -299,7 +298,6 @@ void CzPIVTracker::Add(const CZerocoinEntry& zerocoin, bool isNew, bool isArchiv
     CMintMeta meta;
     meta.pubcoin = zerocoin.value;
     meta.nHeight = zerocoin.nHeight;
-    //meta.nVersion = zerocoin.GetVersion();
     //meta.txid = zerocoin.GetTxHash();
     meta.isUsed = zerocoin.IsUsed;
     meta.hashSerial = GetSerialHash(zerocoin.serialNumber);

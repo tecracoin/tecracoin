@@ -10,8 +10,6 @@
 #include "dbwrapper.h"
 #include "chain.h"
 #include "spentindex.h"
-#include "zerocoin.h"
-#include "primitives/zerocoin.h"
 
 #include <map>
 #include <string>

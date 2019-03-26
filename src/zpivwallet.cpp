@@ -280,7 +280,7 @@ bool CzPIVWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const 
     // Create mint object and database it
     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
     uint256 hashSerial = GetSerialHash(coin.getSerialNumber());
-    CDeterministicMint dMint(libzerocoin::PrivateCoin::CURRENT_VERSION, pMint.second, hashSeed, hashSerial, bnValue);
+    CDeterministicMint dMint(pMint.second, hashSeed, hashSerial, bnValue);
     dMint.SetDenomination(denom);
     dMint.SetHeight(nHeight);
 
@@ -409,11 +409,10 @@ void CzPIVWallet::GenerateMint(const uint32_t& nCount, const libzerocoin::CoinDe
     uint512 seedZerocoin = GetZerocoinSeed(nCount);
     CBigNum bnValue;
     SeedToZPIV(seedZerocoin, bnValue, coin);
-    coin.setVersion(libzerocoin::PrivateCoin::CURRENT_VERSION);
 
     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
     uint256 hashSerial = GetSerialHash(coin.getSerialNumber());
-    dMint = CDeterministicMint(coin.getVersion(), nCount, hashSeed, hashSerial, bnValue);
+    dMint = CDeterministicMint(nCount, hashSeed, hashSerial, bnValue);
     dMint.SetDenomination(denom);
 }
 

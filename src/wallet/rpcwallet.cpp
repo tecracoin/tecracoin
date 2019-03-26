@@ -2755,21 +2755,6 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
         dMint.SetTxHash(wtx.GetHash());
         pwalletMain->zpivTracker->Add(dMint, true);
 
-        // CZerocoinEntry zerocoinTx;
-        // zerocoinTx.IsUsed = false;
-        // zerocoinTx.denomination = denomination;
-        // zerocoinTx.value = pubCoin.getValue();
-        // libzerocoin::PublicCoin checkPubCoin(zcParams, zerocoinTx.value, denomination);
-        // if (!checkPubCoin.validate()) {
-        //     return false;
-        // }
-
-        // zerocoinTx.randomness = newCoin.getRandomness();
-        // zerocoinTx.serialNumber = newCoin.getSerialNumber();
-        // const unsigned char *ecdsaSecretKey = newCoin.getEcdsaSeckey();
-        // zerocoinTx.ecdsaSecretKey = std::vector<unsigned char>(ecdsaSecretKey, ecdsaSecretKey+32);
-        // walletdb.WriteZerocoinEntry(zerocoinTx);
-
         // Now that coin is verified and sent, update the count. (If not verified, we will repeat the same count on the next attempt)
         zwalletMain->UpdateCount();
         pwalletMain->NotifyZerocoinChanged(pwalletMain, pubCoin.getValue().GetHex(), "New (" + std::to_string(denomination) + " mint)", CT_NEW);
@@ -2971,7 +2956,7 @@ UniValue spendzerocoin(const UniValue& params, bool fHelp) {
 
 UniValue spendmanyzerocoin(const UniValue& params, bool fHelp) {
 
-        if (fHelp || params.size() % 2 == 0 || params.size() == 1)
+        if (fHelp || params.size() != 1)
         throw runtime_error(
                 "spendmanyzerocoin \"{\"address\":\"<third party address or blank for internal>\", \"denominations\": [{\"value\":(1,10,25,50,100), \"amount\":<>}, {\"value\":(1,10,25,50,100), \"amount\":<>},...]}\"\n"
                 + HelpRequiringPassphrase()
@@ -2991,6 +2976,8 @@ UniValue spendmanyzerocoin(const UniValue& params, bool fHelp) {
                     + HelpExampleCli("spendmanyzerocoin", "\"{\\\"address\\\":\\\"\\\", \\\"denominations\\\": [{\\\"value\\\":1, \\\"amount\\\":2}]}\"")
         );
 
+    UniValue data = params[0].get_obj();
+
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
     int64_t value = 0;
@@ -2998,20 +2985,9 @@ UniValue spendmanyzerocoin(const UniValue& params, bool fHelp) {
     libzerocoin::CoinDenomination denomination;
     std::vector<std::pair<int64_t, libzerocoin::CoinDenomination>> denominations; 
 
-    UniValue inputs(UniValue::VARR);
+    UniValue inputs = find_value(data, "denominations");
 
-    string addressStr = params[0].get_str();
-
-    for(size_t i=1; i<params.size(); i++){
-        UniValue denomination(UniValue::VOBJ);
-
-        value = stoi(params[i].get_str());
-        amount = stoi(params[++i].get_str());
-        
-        denomination.push_back(Pair("value",value));
-        denomination.push_back(Pair("amount",amount));
-        inputs.push_back(denomination);
-    }
+    string addressStr = find_value(data, "address").get_str();
 
     for(size_t i=0; i<inputs.size();i++) {
 

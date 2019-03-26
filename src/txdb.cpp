@@ -17,9 +17,6 @@
 
 #include <boost/thread.hpp>
 
-#include <leveldb/db.h>
-#include <leveldb/write_batch.h>
-
 using namespace std;
 
 static const char DB_COINS = 'c';

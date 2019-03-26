@@ -14,7 +14,6 @@
 #define COIN_H_
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
-//#include "bitcoin_bignum/bignum.h"
 #include "Denominations.h"
 #include "Zerocoin.h"
 #include "key.h"
@@ -59,11 +58,11 @@ public:
         READWRITE(value);
         READWRITE(denomination);
     }
-// IMPLEMENT_SERIALIZE
-// (
-//     READWRITE(value);
-//     READWRITE(denomination);
-// )
+//    IMPLEMENT_SERIALIZE
+//    (
+//        READWRITE(value);
+//        READWRITE(denomination);
+//    )
 private:
     const Params* params;
     Bignum value;
@@ -85,9 +84,6 @@ private:
  */
 class PrivateCoin {
 public:
-    static int const PUBKEY_VERSION = 2;
-    static int const CURRENT_VERSION = 2;
-    static int const V2_BITSHIFT = 4;
     template<typename Stream>
     PrivateCoin(const Params* p, Stream& strm): params(p), publicCoin(p) {
         strm >> *this;
@@ -98,10 +94,7 @@ public:
     const Bignum& getRandomness() const;
     const unsigned char* getEcdsaSeckey() const;
     unsigned int getVersion() const;
-    bool sign(const uint256& hash, std::vector<unsigned char>& vchSig) const;
     static const Bignum serialNumberFromSerializedPublicKey(secp256k1_context *ctx, secp256k1_pubkey *pubkey);
-
-
 
     void setPublicCoin(PublicCoin p){
         publicCoin = p;

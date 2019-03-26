@@ -99,165 +99,132 @@ const Bignum& PrivateCoin::getRandomness() const {
 const unsigned char* PrivateCoin::getEcdsaSeckey() const {
      return this->ecdsaSeckey;
 }
+
 unsigned int PrivateCoin::getVersion() const {
      return this->version;
 }
 
 void PrivateCoin::mintCoin(const CoinDenomination denomination) {
 
-    Bignum s;
+        Bignum s;
 
-    // Repeat this process up to MAX_COINMINT_ATTEMPTS times until
-    // we obtain a prime number
-    for (uint32_t attempt = 0; attempt < MAX_COINMINT_ATTEMPTS; attempt++) {
-        if (this->version == 2) {
+        // Repeat this process up to MAX_COINMINT_ATTEMPTS times until
+        // we obtain a prime number
+        for (uint32_t attempt = 0; attempt < MAX_COINMINT_ATTEMPTS; attempt++) {
+            if (this->version == 2) {
+
+                // Create a key pair
+                secp256k1_pubkey pubkey;
+                do {
+                    if (RAND_bytes(this->ecdsaSeckey, sizeof(this->ecdsaSeckey))
+                            != 1) {
+                        throw ZerocoinException("Unable to generate randomness");
+                    }
+                } while (!secp256k1_ec_pubkey_create(ctx, &pubkey,
+                        this->ecdsaSeckey));
+
+                // Hash the public key in the group to obtain a serial number
+                s = serialNumberFromSerializedPublicKey(ctx, &pubkey);
+            } else {
+                // Generate a random serial number in the range 0...{q-1} where
+                // "q" is the order of the commitment group.
+                s = Bignum::randBignum(
+                        this->params->coinCommitmentGroup.groupOrder);
+            }
+
+            // Generate a Pedersen commitment to the serial number "s"
+            Commitment coin(&params->coinCommitmentGroup, s);
+
+            // Now verify that the commitment is a prime number
+            // in the appropriate range. If not, we'll throw this coin
+            // away and generate a new one.
+            if (coin.getCommitmentValue().isPrime(ZEROCOIN_MINT_PRIME_PARAM)
+                    && coin.getCommitmentValue()
+                            >= params->accumulatorParams.minCoinValue
+                    && coin.getCommitmentValue()
+                            <= params->accumulatorParams.maxCoinValue
+                    // for historical reasons we need all the public coins to have the same size in bytes
+                    && coin.getCommitmentValue().bitSize()
+                            > params->coinCommitmentGroup.modulus.bitSize()-8) {
+                // Found a valid coin. Store it.
+                this->serialNumber = s;
+                this->randomness = coin.getRandomness();
+                this->publicCoin = PublicCoin(params, coin.getCommitmentValue(),
+                        denomination);
+
+                // Success! We're done.
+                return;
+            }
+        }
+
+        // We only get here if we did not find a coin within
+        // MAX_COINMINT_ATTEMPTS. Throw an exception.
+        throw ZerocoinException(
+                "Unable to mint a new Zerocoin (too many attempts)");
+}
+
+void PrivateCoin::mintCoinFast(const CoinDenomination denomination) {
+        Bignum s;
+
+        if(this->version == 2) {
 
             // Create a key pair
             secp256k1_pubkey pubkey;
             do {
-                if (RAND_bytes(this->ecdsaSeckey, sizeof(this->ecdsaSeckey))
-                        != 1) {
+                if (RAND_bytes(this->ecdsaSeckey, sizeof(this->ecdsaSeckey)) != 1) {
                     throw ZerocoinException("Unable to generate randomness");
                 }
-            } while (!secp256k1_ec_pubkey_create(ctx, &pubkey,
-                    this->ecdsaSeckey));
+            }while (!secp256k1_ec_pubkey_create(ctx, &pubkey, this->ecdsaSeckey));
 
             // Hash the public key in the group to obtain a serial number
             s = serialNumberFromSerializedPublicKey(ctx, &pubkey);
         } else {
             // Generate a random serial number in the range 0...{q-1} where
             // "q" is the order of the commitment group.
-            s = Bignum::randBignum(
-                    this->params->coinCommitmentGroup.groupOrder);
+            s = Bignum::randBignum(this->params->coinCommitmentGroup.groupOrder);
         }
 
-        // Generate a Pedersen commitment to the serial number "s"
-        Commitment coin(&params->coinCommitmentGroup, s);
+        // Generate a random number "r" in the range 0...{q-1}
+        Bignum r = Bignum::randBignum(this->params->coinCommitmentGroup.groupOrder);
 
-        // Now verify that the commitment is a prime number
-        // in the appropriate range. If not, we'll throw this coin
-        // away and generate a new one.
-        if (coin.getCommitmentValue().isPrime(ZEROCOIN_MINT_PRIME_PARAM)
-                && coin.getCommitmentValue()
-                        >= params->accumulatorParams.minCoinValue
-                && coin.getCommitmentValue()
-                        <= params->accumulatorParams.maxCoinValue
+        // Manually compute a Pedersen commitment to the serial number "s" under randomness "r"
+        // C = g^s * h^r mod p
+        Bignum commitmentValue = this->params->coinCommitmentGroup.g.pow_mod(s, this->params->coinCommitmentGroup.modulus).mul_mod(this->params->coinCommitmentGroup.h.pow_mod(r, this->params->coinCommitmentGroup.modulus), this->params->coinCommitmentGroup.modulus);
+
+        // Repeat this process up to MAX_COINMINT_ATTEMPTS times until
+        // we obtain a prime number
+        for (uint32_t attempt = 0; attempt < MAX_COINMINT_ATTEMPTS; attempt++) {
+            // First verify that the commitment is a prime number
+            // in the appropriate range. If not, we'll throw this coin
+            // away and generate a new one.
+            if (commitmentValue.isPrime(ZEROCOIN_MINT_PRIME_PARAM) &&
+                commitmentValue >= params->accumulatorParams.minCoinValue &&
+                commitmentValue <= params->accumulatorParams.maxCoinValue &&
                 // for historical reasons we need all the public coins to have the same size in bytes
-                && coin.getCommitmentValue().bitSize()
-                        > params->coinCommitmentGroup.modulus.bitSize()-8) {
-            // Found a valid coin. Store it.
-            this->serialNumber = s;
-            this->randomness = coin.getRandomness();
-            this->publicCoin = PublicCoin(params, coin.getCommitmentValue(),
-                    denomination);
+                commitmentValue.bitSize() > params->coinCommitmentGroup.modulus.bitSize()-8) {
 
-            // Success! We're done.
-            return;
-        }
-    }
+                // Found a valid coin. Store it.
+                this->serialNumber = s;
+                this->randomness = r;
+                this->publicCoin = PublicCoin(params, commitmentValue, denomination);
 
-    // We only get here if we did not find a coin within
-    // MAX_COINMINT_ATTEMPTS. Throw an exception.
-    throw ZerocoinException(
-            "Unable to mint a new Zerocoin (too many attempts)");
-}
-
-// bool PrivateCoin::GenerateKeyPair()
-// {
-//     // Create a key pair
-//     secp256k1_pubkey pubkey;
-//     if (!secp256k1_ec_pubkey_create(ctx, &pubkey, this->ecdsaSeckey)){
-//         throw ZerocoinException("Unable to create public key.");
-//     }
-
-//     // Hash the public key in the group to obtain a serial number
-//     CBigNum& bnSerial = serialNumberFromSerializedPublicKey(ctx, &pubkey);
-
-//     // Generate a Pedersen commitment to the serial number "bnSerial"
-//     Commitment commitment(&params->coinCommitmentGroup, bnSerial);
-
-//     // Now verify that the commitment is a prime number
-//     // in the appropriate range. If not, we'll throw this coin
-//     // away and generate a new one.
-//     if (commitment.getCommitmentValue().isPrime(ZEROCOIN_MINT_PRIME_PARAM)
-//             && commitment.getCommitmentValue()
-//                     >= params->accumulatorParams.minCoinValue
-//             && commitment.getCommitmentValue()
-//                     <= params->accumulatorParams.maxCoinValue
-//             // for historical reasons we need all the public coins to have the same size in bytes
-//             && commitment.getCommitmentValue().bitSize()
-//                     > params->coinCommitmentGroup.modulus.bitSize()-8) {
-//         // Found a valid coin. Store it.
-//         this->serialNumber = bnSerial;
-//         this->randomness = commitment.getRandomness();
-//         this->publicCoin = PublicCoin(params, commitment.getCommitmentValue(),
-//                 denomination);
-//     }
-//     return true;
-// }
-
-void PrivateCoin::mintCoinFast(const CoinDenomination denomination) {
-    Bignum s;
-
-    if(this->version == 2) {
-
-        // Create a key pair
-        secp256k1_pubkey pubkey;
-        do {
-            if (RAND_bytes(this->ecdsaSeckey, sizeof(this->ecdsaSeckey)) != 1) {
-                throw ZerocoinException("Unable to generate randomness");
+                // Success! We're done.
+                return;
             }
-        }while (!secp256k1_ec_pubkey_create(ctx, &pubkey, this->ecdsaSeckey));
 
-        // Hash the public key in the group to obtain a serial number
-        s = serialNumberFromSerializedPublicKey(ctx, &pubkey);
-    } else {
-        // Generate a random serial number in the range 0...{q-1} where
-        // "q" is the order of the commitment group.
-        s = Bignum::randBignum(this->params->coinCommitmentGroup.groupOrder);
-    }
+            // Generate a new random "r_delta" in 0...{q-1}
+            Bignum r_delta = Bignum::randBignum(this->params->coinCommitmentGroup.groupOrder);
 
-    // Generate a random number "r" in the range 0...{q-1}
-    Bignum r = Bignum::randBignum(this->params->coinCommitmentGroup.groupOrder);
-
-    // Manually compute a Pedersen commitment to the serial number "s" under randomness "r"
-    // C = g^s * h^r mod p
-    Bignum commitmentValue = this->params->coinCommitmentGroup.g.pow_mod(s, this->params->coinCommitmentGroup.modulus).mul_mod(this->params->coinCommitmentGroup.h.pow_mod(r, this->params->coinCommitmentGroup.modulus), this->params->coinCommitmentGroup.modulus);
-
-    // Repeat this process up to MAX_COINMINT_ATTEMPTS times until
-    // we obtain a prime number
-    for (uint32_t attempt = 0; attempt < MAX_COINMINT_ATTEMPTS; attempt++) {
-        // First verify that the commitment is a prime number
-        // in the appropriate range. If not, we'll throw this coin
-        // away and generate a new one.
-        if (commitmentValue.isPrime(ZEROCOIN_MINT_PRIME_PARAM) &&
-            commitmentValue >= params->accumulatorParams.minCoinValue &&
-            commitmentValue <= params->accumulatorParams.maxCoinValue &&
-            // for historical reasons we need all the public coins to have the same size in bytes
-            commitmentValue.bitSize() > params->coinCommitmentGroup.modulus.bitSize()-8) {
-
-            // Found a valid coin. Store it.
-            this->serialNumber = s;
-            this->randomness = r;
-            this->publicCoin = PublicCoin(params, commitmentValue, denomination);
-
-            // Success! We're done.
-            return;
+            // The commitment was not prime. Increment "r" and recalculate "C":
+            // r = r + r_delta mod q
+            // C = C * h mod p
+            r = (r + r_delta) % this->params->coinCommitmentGroup.groupOrder;
+            commitmentValue = commitmentValue.mul_mod(this->params->coinCommitmentGroup.h.pow_mod(r_delta, this->params->coinCommitmentGroup.modulus), this->params->coinCommitmentGroup.modulus);
         }
 
-        // Generate a new random "r_delta" in 0...{q-1}
-        Bignum r_delta = Bignum::randBignum(this->params->coinCommitmentGroup.groupOrder);
-
-        // The commitment was not prime. Increment "r" and recalculate "C":
-        // r = r + r_delta mod q
-        // C = C * h mod p
-        r = (r + r_delta) % this->params->coinCommitmentGroup.groupOrder;
-        commitmentValue = commitmentValue.mul_mod(this->params->coinCommitmentGroup.h.pow_mod(r_delta, this->params->coinCommitmentGroup.modulus), this->params->coinCommitmentGroup.modulus);
-    }
-
-    // We only get here if we did not find a coin within
-    // MAX_COINMINT_ATTEMPTS. Throw an exception.
-    throw ZerocoinException("Unable to mint a new Zerocoin (too many attempts)");
+        // We only get here if we did not find a coin within
+        // MAX_COINMINT_ATTEMPTS. Throw an exception.
+        throw ZerocoinException("Unable to mint a new Zerocoin (too many attempts)");
 }
 
 

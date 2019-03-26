@@ -2343,35 +2343,6 @@ void CWallet::ListAvailableCoinsMintCoins(vector <COutput> &vCoins, bool fOnlyCo
     }
 }
 
-bool CWallet::IsMintFromTxOutAvailable(CTxOut txout, bool& fIsAvailable){
-    LOCK(cs_wallet);
-
-    if(!txout.scriptPubKey.IsZerocoinMint()){
-        throw runtime_error(std::string(__func__) + ": txout is not a ZEROCOIN_MINT\n");
-    }
-
-    list <CZerocoinEntry> listPubCoin = list<CZerocoinEntry>();
-    CWalletDB walletdb(pwalletMain->strWalletFile);
-    walletdb.ListPubCoin(listPubCoin);
-    vector<unsigned char> vchZeroMint;
-    vchZeroMint.insert(vchZeroMint.end(), txout.scriptPubKey.begin() + 6,
-                       txout.scriptPubKey.begin() + txout.scriptPubKey.size());
-
-    CBigNum pubCoin;
-    pubCoin.setvch(vchZeroMint);
-    LogPrintf("Pubcoin=%s\n", pubCoin.GetHex());
-    BOOST_FOREACH(const CZerocoinEntry &pubCoinItem, listPubCoin) {
-        if (pubCoinItem.value == pubCoin){
-            fIsAvailable = !(pubCoinItem.IsUsed ||
-                           (!pubCoinItem.IsUsed &&
-                            (pubCoinItem.randomness == 0 ||
-                             pubCoinItem.serialNumber == 0)));
-            return true;
-        }
-    }
-    return false;
-}
-
 static void ApproximateBestSubset(vector <pair<CAmount, pair<const CWalletTx *, unsigned int> >> vValue,
                                   const CAmount &nTotalLower,
                                   const CAmount &nTargetValue,

@@ -5,9 +5,6 @@
 #ifndef DETERMINISTICMINT_H
 #define DETERMINISTICMINT_H
 
-//#include <libzerocoin/Denominations.h>
-// #include <uint256.h>
-//#include <serialize.h>
 #include <libzerocoin/Zerocoin.h>
 #include "primitives/zerocoin.h"
 
@@ -15,7 +12,6 @@
 class CDeterministicMint
 {
 private:
-    uint8_t nVersion;
     uint32_t nCount;
     uint256 hashSeed;
     uint256 hashSerial;
@@ -27,7 +23,7 @@ private:
 
 public:
     CDeterministicMint();
-    CDeterministicMint(uint8_t nVersion, const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const Bignum& pubcoin);
+    CDeterministicMint(const uint32_t& nCount, const uint256& hashSeed, const uint256& hashSerial, const Bignum& pubcoin);
 
     libzerocoin::CoinDenomination GetDenomination() const { return (libzerocoin::CoinDenomination)denom; }
     uint32_t GetCount() const { return nCount; }
@@ -37,7 +33,6 @@ public:
     Bignum GetPubcoin() const { return pubcoin; }
     uint256 GetPubcoinHash() const { return GetPubCoinHash(pubcoin); }
     uint256 GetTxHash() const { return txid; }
-    uint8_t GetVersion() const { return nVersion; }
     bool IsUsed() const { return isUsed; }
     void SetDenomination(const libzerocoin::CoinDenomination denom) { this->denom = denom; }
     void SetHeight(const int& nHeight) { this->nHeight = nHeight; }

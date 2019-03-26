@@ -32,10 +32,8 @@
 #include <boost/signals2/signal.hpp>
 
 class CAddrMan;
-
 class CScheduler;
 class CNode;
-//class CTxMemPool;
 
 namespace boost {
     class thread_group;

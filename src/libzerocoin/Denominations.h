@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <string>
 #include <vector>
-//#include "Zerocoin.h"
-//#include <libzerocoin/Coin.h>
 
 namespace libzerocoin {
 

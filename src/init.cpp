@@ -91,7 +91,6 @@
 #ifdef ENABLE_WALLET
 CWallet* pwalletMain = NULL;
 CzPIVWallet* zwalletMain = NULL;
-int nWalletBackups = 10;
 #endif
 
 bool fFeeEstimatesInitialized = false;

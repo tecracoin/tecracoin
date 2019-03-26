@@ -60,7 +60,7 @@ namespace libzerocoin {
    extern secp256k1_context* ctx;
 }
 
-#include "serialize.h"
+#include "../serialize.h"
 #include "bitcoin_bignum/bignum.h"
 #include "../hash.h"
 #include "Params.h"
