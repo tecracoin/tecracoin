@@ -2714,6 +2714,8 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
     }
     LogPrintf("rpcWallet.mintzerocoin() denomination = %s, nAmount = %s \n", denomination, nAmount);
 
+    // Ensures deterministic mint pool has been generated
+    EnsureWalletIsUnlocked();
 
     // Always use modulus v2
     libzerocoin::Params *zcParams = ZCParamsV2;
@@ -2854,6 +2856,7 @@ UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
             // Get a copy of the 'public' portion of the coin. You should
             // embed this into a Zerocoin 'MINT' transaction along with a series
             // of currency inputs totaling the assigned value of one zerocoin.
+            
             libzerocoin::PublicCoin pubCoin = newCoin.getPublicCoin();
             
             //Validate

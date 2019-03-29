@@ -17,6 +17,7 @@
 #include "Denominations.h"
 #include "Zerocoin.h"
 #include "key.h"
+#include "uint256.h"
 
 namespace libzerocoin {
 
@@ -58,11 +59,11 @@ public:
         READWRITE(value);
         READWRITE(denomination);
     }
-//    IMPLEMENT_SERIALIZE
-//    (
-//        READWRITE(value);
-//        READWRITE(denomination);
-//    )
+//      IMPLEMENT_SERIALIZE
+//      (
+//          READWRITE(value);
+//          READWRITE(denomination);
+//      )
 private:
     const Params* params;
     Bignum value;
@@ -115,6 +116,11 @@ public:
     void setEcdsaSeckey(const vector<unsigned char> &seckey) {
         if (seckey.size() == sizeof(ecdsaSeckey))
             std::copy(seckey.cbegin(), seckey.cend(), &ecdsaSeckey[0]);
+    }
+
+    void setEcdsaSeckey(uint256 &seckey) {
+        if (seckey.size() == sizeof(ecdsaSeckey))
+            std::copy(seckey.begin(), seckey.end(), &ecdsaSeckey[0]);
     }
 
     template <typename Stream, typename Operation>

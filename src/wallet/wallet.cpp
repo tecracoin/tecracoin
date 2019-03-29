@@ -5616,14 +5616,6 @@ bool CWallet::InitLoadWallet() {
     }
     walletInstance->SetBroadcastTransactions(GetBoolArg("-walletbroadcast", DEFAULT_WALLETBROADCAST));
 
-    //Inititalize zPIVWallet
-    uiInterface.InitMessage(_("Syncing zPIV wallet..."));
-
-    //Load zerocoin mint hashes to memory
-    pwalletMain->zpivTracker->Init();
-    zwalletMain->LoadMintPoolFromDB();
-    zwalletMain->SyncWithChain();
-
     pwalletMain = walletInstance;
     return true;
 }

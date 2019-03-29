@@ -807,6 +807,14 @@ void ThreadImport(std::vector <boost::filesystem::path> vImportFiles) {
             LoadExternalBlockFile(chainparams, file, &pos);
             nFile++;
         }
+        // With Zerocoin data up to date, initialize zPIVWallet
+        uiInterface.InitMessage(_("Syncing zPIV wallet..."));
+
+        //Load zerocoin mint hashes to memory
+        pwalletMain->zpivTracker->Init();
+        zwalletMain->LoadMintPoolFromDB();
+        zwalletMain->SyncWithChain();
+
         pblocktree->WriteReindexing(false);
         fReindex = false;
         LogPrintf("Reindexing finished\n");

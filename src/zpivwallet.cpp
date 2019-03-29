@@ -303,7 +303,7 @@ bool CzPIVWallet::SetMintSeen(const CBigNum& bnValue, const int& nHeight, const 
 
     // Add to zpivTracker which also adds to database
     pwalletMain->zpivTracker->Add(dMint, true);
-    
+
     //Update the count if it is less than the mint's count
     if (nCountLastUsed < pMint.second) {
         nCountLastUsed = pMint.second;
@@ -329,10 +329,9 @@ void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, libz
     CBigNum bnRandomness;
 
     //convert state seed into a seed for the private key
-    uint256 nSeedPrivKey = seedZerocoin.trim256(); 
+    uint256 nSeedPrivKey = seedZerocoin.trim256();
     nSeedPrivKey = Hash(nSeedPrivKey.begin(), nSeedPrivKey.end());
-    std::vector<unsigned char> privkey = std::vector<unsigned char>( nSeedPrivKey.GetHex().begin(), nSeedPrivKey.GetHex().end() );
-    coin.setEcdsaSeckey(privkey);
+    coin.setEcdsaSeckey(nSeedPrivKey);
 
     // Create a key pair
     secp256k1_pubkey pubkey;
@@ -365,6 +364,7 @@ void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, libz
         if (IsValidCoinValue(commitmentValue)) {
             coin.setRandomness(bnRandomness);
             bnValue = commitmentValue;
+
             return;
         }
 
@@ -407,12 +407,14 @@ void CzPIVWallet::GenerateDeterministicZPIV(libzerocoin::CoinDenomination denom,
 void CzPIVWallet::GenerateMint(const uint32_t& nCount, const libzerocoin::CoinDenomination denom, libzerocoin::PrivateCoin& coin, CDeterministicMint& dMint)
 {
     uint512 seedZerocoin = GetZerocoinSeed(nCount);
-    CBigNum bnValue;
-    SeedToZPIV(seedZerocoin, bnValue, coin);
+    CBigNum commitmentValue;
+    SeedToZPIV(seedZerocoin, commitmentValue, coin);
+
+    coin.setPublicCoin(libzerocoin::PublicCoin(ZCParamsV2, commitmentValue, denom));
 
     uint256 hashSeed = Hash(seedMaster.begin(), seedMaster.end());
     uint256 hashSerial = GetSerialHash(coin.getSerialNumber());
-    dMint = CDeterministicMint(nCount, hashSeed, hashSerial, bnValue);
+    dMint = CDeterministicMint(nCount, hashSeed, hashSerial, coin.getPublicCoin().getValue());
     dMint.SetDenomination(denom);
 }
 
@@ -444,7 +446,7 @@ bool CzPIVWallet::RegenerateMint(const CDeterministicMint& dMint, CZerocoinEntry
     CBigNum bnSerial = coin.getSerialNumber();
     if (GetSerialHash(bnSerial) != dMint.GetSerialHash())
         return error("%s: failed to correctly generate mint, serial hash mismatch", __func__);
-    
+
     zerocoin.denomination = dMint.GetDenomination();
     zerocoin.randomness = coin.getRandomness();
     zerocoin.serialNumber = bnSerial;

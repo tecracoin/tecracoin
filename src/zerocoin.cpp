@@ -909,6 +909,7 @@ bool CZerocoinState::HasCoin(const CBigNum &pubCoin) {
 
 bool CZerocoinState::HasCoinHash(const uint256 &pubCoinHash) {
     for ( auto it = mintedPubCoins.begin(); it != mintedPubCoins.end(); ++it ){
+        LogPrintf("GetPubCoinHash mintedPubCoin: %s", GetPubCoinHash((*it).first).GetHex());
         if(GetPubCoinHash((*it).first)==pubCoinHash){
             return true;
         }

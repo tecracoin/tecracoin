@@ -9,11 +9,9 @@
 #include <vector>
 #include <openssl/bn.h>
 
-#include "../../uint256.h" // for uint64
 #include "../../uint256.h"
 #include "../../version.h"
 #include "../../clientversion.h"
-#include "serialize.h"
 /** Errors thrown by the bignum class */
 class bignum_error : public std::runtime_error
 {
@@ -52,7 +50,7 @@ public:
 /** C++ wrapper for BIGNUM (OpenSSL bignum) */class CBigNum
 {
 protected:
-    BIGNUM    *bn;
+    BIGNUM  *bn;
 
     void init()
     {
@@ -111,7 +109,6 @@ public:
 //    CBigNum(unsigned long n)    { init(); setulong(n); }
     CBigNum(uint64_t n)           { init(); setuint64(n); }
     explicit CBigNum(uint256 n) { init(); setuint256(n); }
-    //explicit CBigNum(uint256 n) { uint256 m = UintToArith256(n); init(); setuint256(m); }
 
     explicit CBigNum(const std::vector<unsigned char>& vch)
     {
@@ -598,7 +595,7 @@ public:
     /**
      * Miller-Rabin primality test on this element
      * @param checks: optional, the number of Miller-Rabin tests to run
-     *                          default causes error rate of 2^-80.
+     *              default causes error rate of 2^-80.
      * @return true if prime
      */
     bool isPrime(const int checks=BN_prime_checks) const {
