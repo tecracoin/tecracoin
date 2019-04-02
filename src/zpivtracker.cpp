@@ -363,7 +363,8 @@ bool CzPIVTracker::UpdateStatusInternal(const std::set<uint256>& setMempool, CMi
     bool isPendingSpend = static_cast<bool>(mapPendingSpends.count(mint.hashSerial));
 
     // See if there is a blockchain record of spending this mint
-    bool isConfirmedSpend = CZerocoinState::GetZerocoinState()->IsUsedCoinSerialHash(mint.hashSerial);
+    CBigNum bnSerial;
+    bool isConfirmedSpend = CZerocoinState::GetZerocoinState()->IsUsedCoinSerialHash(bnSerial, mint.hashSerial);
 
     // Double check the mempool for pending spend
     if (isPendingSpend) {

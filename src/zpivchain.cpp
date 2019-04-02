@@ -112,8 +112,8 @@ bool IsSerialInBlockchain(const uint256& hashSerial, int& nHeightTx, uint256& tx
 {
     txidSpend.SetNull();
     CMintMeta mMeta;
-
-    if (!CZerocoinState::GetZerocoinState()->IsUsedCoinSerialHash(hashSerial))
+    Bignum bnSerial;
+    if (!CZerocoinState::GetZerocoinState()->IsUsedCoinSerialHash(bnSerial, hashSerial))
         return false;
 
     if(!pwalletMain->zpivTracker->Get(hashSerial, mMeta))

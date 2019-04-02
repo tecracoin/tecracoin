@@ -711,6 +711,54 @@ int ZerocoinGetNHeight(const CBlockHeader &block) {
     return nHeight;
 }
 
+bool ZerocoinGetTxHash(uint256& txHash, uint256 pubCoinHash) {
+
+    CBigNum pubCoin;
+    if(!zerocoinState.HasCoinHash(pubCoin, pubCoinHash)){
+        return false;
+    }
+
+    int coinId;
+    int mintHeight = 0;
+    BOOST_FOREACH(libzerocoin::CoinDenomination denomination, libzerocoin::zerocoinDenomList){
+        mintHeight = zerocoinState.GetMintedCoinHeightAndId(pubCoin, denomination, coinId);
+        if(mintHeight!=-1){
+            break;
+        }
+    }
+    
+    if(mintHeight==-1)
+        return false;
+
+    // get block containing mint
+    CBlockIndex *mintBlock = chainActive[mintHeight];
+    CBlock block;
+    if(!ReadBlockFromDisk(block, mintBlock, Params().GetConsensus())){
+        LogPrintf("can't read block from disk.\n");
+    }
+
+    // cycle transaction hashes, looking for this pubcoin.
+    BOOST_FOREACH(CTransaction tx, block.vtx){   
+        if(tx.IsZerocoinMint()){
+            for (const CTxOut &txout: tx.vout) {
+                if (txout.scriptPubKey.IsZerocoinMint()){
+                    CBigNum txPubCoin(vector<unsigned char>(txout.scriptPubKey.begin()+6, txout.scriptPubKey.end()));
+                    if(pubCoin==txPubCoin){
+                        txHash = tx.GetHash();
+                        return true;
+                    }           
+                }
+            }
+        }
+    }
+
+    return false;
+}
+
+bool ZerocoinGetTxHash(uint256& txHash, CBigNum pubCoin) {
+    return ZerocoinGetTxHash(txHash, GetPubCoinHash(pubCoin));
+}
+
 
 bool ZerocoinBuildStateFromIndex(CChain *chain, set<CBlockIndex *> &changes) {
     auto params = Params().GetConsensus();
@@ -894,9 +942,10 @@ bool CZerocoinState::IsUsedCoinSerial(const CBigNum &coinSerial) {
     return usedCoinSerials.count(coinSerial) != 0;
 }
 
-bool CZerocoinState::IsUsedCoinSerialHash(const uint256 &coinSerialHash) {
+bool CZerocoinState::IsUsedCoinSerialHash(CBigNum &coinSerial, const uint256 &coinSerialHash) {
     for ( auto it = usedCoinSerials.begin(); it != usedCoinSerials.end(); ++it ){
         if(GetSerialHash(*it)==coinSerialHash){
+            coinSerial = *it;
             return true;
         }
     }
@@ -907,10 +956,10 @@ bool CZerocoinState::HasCoin(const CBigNum &pubCoin) {
     return mintedPubCoins.count(pubCoin) != 0;
 }
 
-bool CZerocoinState::HasCoinHash(const uint256 &pubCoinHash) {
+bool CZerocoinState::HasCoinHash(CBigNum &pubCoin, const uint256 &pubCoinHash) {
     for ( auto it = mintedPubCoins.begin(); it != mintedPubCoins.end(); ++it ){
-        LogPrintf("GetPubCoinHash mintedPubCoin: %s", GetPubCoinHash((*it).first).GetHex());
         if(GetPubCoinHash((*it).first)==pubCoinHash){
+            pubCoin = (*it).first;
             return true;
         }
     }

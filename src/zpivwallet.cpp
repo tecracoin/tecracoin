@@ -188,9 +188,8 @@ void CzPIVWallet::SyncWithChain(bool fGenerateMintPool)
                 continue;
             }
 
-            if (CZerocoinState::GetZerocoinState()->HasCoinHash(pMint.first)) {
-                uint256 txHash = pwalletMain->zpivTracker->GetMetaFromPubcoin(pMint.first).txid;
-
+            uint256 txHash;
+            if (ZerocoinGetTxHash(txHash, pMint.first)) {
                 //this mint has already occurred on the chain, increment counter's state to reflect this
                 LogPrintf("%s : Found wallet coin mint=%s count=%d tx=%s\n", __func__, pMint.first.GetHex(), pMint.second, txHash.GetHex());
                 found = true;
@@ -340,7 +339,8 @@ void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, libz
     }
 
     // Hash the public key in the group to obtain a serial number
-    coin.setSerialNumber(coin.serialNumberFromSerializedPublicKey(libzerocoin::ctx, &pubkey));
+    Bignum serialNumber = coin.serialNumberFromSerializedPublicKey(libzerocoin::ctx, &pubkey); 
+    coin.setSerialNumber(serialNumber);
 
     //hash randomness seed with Bottom 256 bits of seedZerocoin & attempts256 which is initially 0
     uint256 randomnessSeed = uint512(seedZerocoin >> 256).trim256();
@@ -351,7 +351,7 @@ void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, libz
     //See if serial and randomness make a valid commitment
     // Generate a Pedersen commitment to the serial number
     CBigNum commitmentValue = ZCParamsV2->coinCommitmentGroup.g.pow_mod(coin.getSerialNumber(), ZCParamsV2->coinCommitmentGroup.modulus).mul_mod(
-                        ZCParamsV2->coinCommitmentGroup.h.pow_mod(coin.getRandomness(), ZCParamsV2->coinCommitmentGroup.modulus),
+                        ZCParamsV2->coinCommitmentGroup.h.pow_mod(bnRandomness, ZCParamsV2->coinCommitmentGroup.modulus),
                         ZCParamsV2->coinCommitmentGroup.modulus);
 
     CBigNum random;
@@ -369,7 +369,7 @@ void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, libz
         }
 
         //Did not create a valid commitment value.
-        //Change randomness to something new and random and try again
+        //Change randomness to something new and (deterministically) random and try again
         attempts256++;
         hashRandomness = Hash(randomnessSeed.begin(), randomnessSeed.end(),
                               attempts256.begin(), attempts256.end());
