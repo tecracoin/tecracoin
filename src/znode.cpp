@@ -142,17 +142,17 @@ bool CZnode::UpdateFromNewBroadcast(CZnodeBroadcast &mnb) {
 // the proof of work for that block. The further away they are the better, the furthest will win the election
 // and get paid this block
 //
-uint256 CZnode::CalculateScore(const uint256 &blockHash) {
-    uint256 aux = vin.prevout.hash + vin.prevout.n;
+arith_uint256 CZnode::CalculateScore(const uint256 &blockHash) {
+    uint256 aux = ArithToUint256(UintToArith256(vin.prevout.hash) + vin.prevout.n);
 
     CHashWriter ss(SER_GETHASH, PROTOCOL_VERSION);
     ss << blockHash;
-    uint256 hash2 = ss.GetHash();
+    arith_uint256 hash2 = UintToArith256(ss.GetHash());
 
     CHashWriter ss2(SER_GETHASH, PROTOCOL_VERSION);
     ss2 << blockHash;
     ss2 << aux;
-    uint256 hash3 = ss2.GetHash();
+    arith_uint256 hash3 = UintToArith256(ss2.GetHash());
 
     return (hash3 > hash2 ? hash3 - hash2 : hash2 - hash3);
 }

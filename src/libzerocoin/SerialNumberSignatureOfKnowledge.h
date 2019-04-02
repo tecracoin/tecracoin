@@ -61,7 +61,7 @@ public:
 private:
 	const Params* params;
 	// challenge hash
-    uint256 hash; //TODO For efficiency, should this be a bitset where Templates define params?
+    arith_uint256 hash; //TODO For efficiency, should this be a bitset where Templates define params?
 
 	// challenge response values
 	// this is s_notprime instead of s

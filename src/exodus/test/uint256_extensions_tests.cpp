@@ -1,6 +1,6 @@
 #include "exodus/uint256_extensions.h"
 
-#include "uint256.h"
+#include "arith_uint256.h"
 #include "test/test_bitcoin.h"
 
 #include <boost/test/unit_test.hpp>
@@ -16,7 +16,7 @@ BOOST_AUTO_TEST_CASE(uint256_from_uint64_t)
 {
     uint64_t number = 103242;
 
-    uint256 a(number);
+    arith_uint256 a(number);
 
     BOOST_CHECK_EQUAL(number, a.GetLow64());
 }
@@ -27,9 +27,9 @@ BOOST_AUTO_TEST_CASE(uint256_add)
     uint64_t number_b = 234324;
     uint64_t number_c = number_a + number_b;
 
-    uint256 a(number_a);
-    uint256 b(number_b);
-    uint256 c = a + b;
+    arith_uint256 a(number_a);
+    arith_uint256 b(number_b);
+    arith_uint256 c = a + b;
 
     BOOST_CHECK_EQUAL(number_c, c.GetLow64());
 }
@@ -40,9 +40,9 @@ BOOST_AUTO_TEST_CASE(uint256_sub)
     uint64_t number_b = 234324;
     uint64_t number_c = number_a - number_b;
 
-    uint256 a(number_a);
-    uint256 b(number_b);
-    uint256 c = a - b;
+    arith_uint256 a(number_a);
+    arith_uint256 b(number_b);
+    arith_uint256 c = a - b;
 
     BOOST_CHECK_EQUAL(number_c, c.GetLow64());
 }
@@ -53,9 +53,9 @@ BOOST_AUTO_TEST_CASE(uint256_mul)
     uint64_t number_b = 234324;
     uint64_t number_c = number_a * number_b;
 
-    uint256 a(number_a);
-    uint256 b(number_b);
-    uint256 c = a * b;
+    arith_uint256 a(number_a);
+    arith_uint256 b(number_b);
+    arith_uint256 c = a * b;
 
     BOOST_CHECK_EQUAL(number_c, c.GetLow64());
 }
@@ -66,9 +66,9 @@ BOOST_AUTO_TEST_CASE(uint256_div)
     uint64_t number_b = 4;
     uint64_t number_c = number_a / number_b;
 
-    uint256 a(number_a);
-    uint256 b(number_b);
-    uint256 c = a / b;
+    arith_uint256 a(number_a);
+    arith_uint256 b(number_b);
+    arith_uint256 c = a / b;
 
     BOOST_CHECK_EQUAL(number_c, c.GetLow64());
 }

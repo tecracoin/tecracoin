@@ -7,7 +7,7 @@
 #include "zerocoin.h"
 
 #include "addrman.h"
-#include "uint256.h"
+#include "arith_uint256.h"
 #include "blockencodings.h"
 #include "chainparams.h"
 #include "checkpoints.h"
@@ -4316,7 +4316,7 @@ ContextualCheckBlockHeader(const CBlockHeader &block, CValidationState &state, c
 
 bool IsBlockHashInChain(const uint256& hashBlock)
 {
-    if (hashBlock == 0 || !mapBlockIndex.count(hashBlock))
+    if (hashBlock.IsNull() || !mapBlockIndex.count(hashBlock))
         return false;
 
     return chainActive.Contains(mapBlockIndex[hashBlock]);

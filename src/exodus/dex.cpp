@@ -13,7 +13,7 @@
 #include "exodus/rules.h"
 #include "exodus/uint256_extensions.h"
 
-#include "uint256.h"
+#include "arith_uint256.h"
 #include "main.h"
 #include "tinyformat.h"
 #include "uint256.h"
@@ -124,9 +124,9 @@ int64_t calculateDesiredBTC(const int64_t amountOffered, const int64_t amountDes
         return 0; // divide by null protection
     }
 
-    uint256 amountOffered256 = ConvertTo256(amountOffered);
-    uint256 amountDesired256 = ConvertTo256(amountDesired);
-    uint256 amountAvailable256 = ConvertTo256(amountAvailable);
+    arith_uint256 amountOffered256 = ConvertTo256(amountOffered);
+    arith_uint256 amountDesired256 = ConvertTo256(amountDesired);
+    arith_uint256 amountAvailable256 = ConvertTo256(amountAvailable);
 
     amountDesired256 = DivideAndRoundUp((amountDesired256 * amountAvailable256), amountOffered256);
 
@@ -424,12 +424,12 @@ static int64_t calculateDExPurchase(const int64_t amountOffered, const int64_t a
 int64_t calculateDExPurchase(const int64_t amountOffered, const int64_t amountDesired, const int64_t amountPaid)
 {
     // conversion
-    uint256 amountOffered256 = ConvertTo256(amountOffered);
-    uint256 amountDesired256 = ConvertTo256(amountDesired);
-    uint256 amountPaid256 = ConvertTo256(amountPaid);
+    arith_uint256 amountOffered256 = ConvertTo256(amountOffered);
+    arith_uint256 amountDesired256 = ConvertTo256(amountDesired);
+    arith_uint256 amountPaid256 = ConvertTo256(amountPaid);
 
     // actual calculation; round up
-    uint256 amountPurchased256 = DivideAndRoundUp((amountPaid256 * amountOffered256), amountDesired256);
+    arith_uint256 amountPurchased256 = DivideAndRoundUp((amountPaid256 * amountOffered256), amountDesired256);
 
     // convert back to int64_t
     return ConvertTo64(amountPurchased256);

@@ -9,7 +9,7 @@
 #include "exodus/tx.h"
 #include "exodus/uint256_extensions.h"
 
-#include "uint256.h"
+#include "arith_uint256.h"
 #include "chain.h"
 #include "main.h"
 #include "tinyformat.h"
@@ -207,7 +207,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             // purchase from Bob, using Bob's unit price
             // This implies rounding down, since rounding up is impossible, and would
             // require more tokens than Alice has
-            uint256 iCouldBuy = (ConvertTo256(pnew->getAmountRemaining()) * ConvertTo256(pold->getAmountForSale())) / ConvertTo256(pold->getAmountDesired());
+            arith_uint256 iCouldBuy = (ConvertTo256(pnew->getAmountRemaining()) * ConvertTo256(pold->getAmountForSale())) / ConvertTo256(pold->getAmountDesired());
 
             int64_t nCouldBuy = 0;
             if (iCouldBuy < ConvertTo256(pold->getAmountRemaining())) {
@@ -227,7 +227,7 @@ static MatchReturnType x_Trade(CMPMetaDEx* const pnew)
             // is fractional, always round UP the amount Alice has to pay
             // This will always be better for Bob. Rounding in the other direction
             // will always be impossible, because ot would violate Bob's accepted price
-            uint256 iWouldPay = DivideAndRoundUp((ConvertTo256(nCouldBuy) * ConvertTo256(pold->getAmountDesired())), ConvertTo256(pold->getAmountForSale()));
+            arith_uint256 iWouldPay = DivideAndRoundUp((ConvertTo256(nCouldBuy) * ConvertTo256(pold->getAmountDesired())), ConvertTo256(pold->getAmountForSale()));
             int64_t nWouldPay = ConvertTo64(iWouldPay);
 
             // If the resulting adjusted unit price is higher than Alice' price, the
@@ -402,7 +402,7 @@ rational_t CMPMetaDEx::inversePrice() const
 int64_t CMPMetaDEx::getAmountToFill() const
 {
     // round up to ensure that the amount we present will actually result in buying all available tokens
-    uint256 iAmountNeededToFill = DivideAndRoundUp((ConvertTo256(amount_remaining) * ConvertTo256(amount_desired)), ConvertTo256(amount_forsale));
+    arith_uint256 iAmountNeededToFill = DivideAndRoundUp((ConvertTo256(amount_remaining) * ConvertTo256(amount_desired)), ConvertTo256(amount_forsale));
     int64_t nAmountNeededToFill = ConvertTo64(iAmountNeededToFill);
     return nAmountNeededToFill;
 }

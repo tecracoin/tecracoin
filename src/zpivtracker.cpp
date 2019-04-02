@@ -343,9 +343,7 @@ void CzPIVTracker::RemovePending(const uint256& txid)
             break;
         }
     }
-    uint256 zero;
-    zero.SetNull();
-    if (hashSerial > zero)
+    if (UintToArith256(hashSerial) > 0)
         mapPendingSpends.erase(hashSerial);
 }
 

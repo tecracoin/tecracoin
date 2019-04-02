@@ -1144,7 +1144,7 @@ void static ZcoinMiner(const CChainParams &chainparams) {
             // Search
             //
             int64_t nStart = GetTime();
-            uint256 hashTarget = uint256().SetCompact(pblock->nBits);
+            arith_uint256 hashTarget = arith_uint256().SetCompact(pblock->nBits);
             LogPrintf("hashTarget: %s\n", hashTarget.ToString());
             LogPrintf("fTestnet: %d\n", fTestNet);
             LogPrintf("pindexPrev->nHeight: %s\n", pindexPrev->nHeight);
@@ -1190,13 +1190,13 @@ void static ZcoinMiner(const CChainParams &chainparams) {
 
                     //LogPrintf("*****\nhash   : %s  \ntarget : %s\n", UintToArith256(thash).ToString(), hashTarget.ToString());
 
-                    if (thash <= hashTarget) {
+                    if (UintToArith256(thash) <= hashTarget) {
                         // Found a solution
-                        LogPrintf("Found a solution. Hash: %s", thash.ToString());
+                        LogPrintf("Found a solution. Hash: %s", UintToArith256(thash).ToString());
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
 //                        CheckWork(pblock, *pwallet, reservekey);
                         LogPrintf("ZcoinMiner:\n");
-                        LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", thash.ToString(), hashTarget.ToString());
+                        LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", UintToArith256(thash).ToString(), hashTarget.ToString());
                         ProcessBlockFound(pblock, chainparams);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
                         coinbaseScript->KeepScript();

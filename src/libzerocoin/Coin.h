@@ -18,7 +18,6 @@
 #include "Zerocoin.h"
 #include "key.h"
 #include "uint256.h"
-
 namespace libzerocoin {
 
 /** A Public coin is the part of a coin that
@@ -59,11 +58,11 @@ public:
         READWRITE(value);
         READWRITE(denomination);
     }
-//      IMPLEMENT_SERIALIZE
-//      (
-//          READWRITE(value);
-//          READWRITE(denomination);
-//      )
+//	IMPLEMENT_SERIALIZE
+//	(
+//	    READWRITE(value);
+//	    READWRITE(denomination);
+//	)
 private:
     const Params* params;
     Bignum value;

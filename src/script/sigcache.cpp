@@ -24,7 +24,7 @@ class CSignatureCacheHasher
 {
 public:
     size_t operator()(const uint256& key) const {
-        return key.GetLow64();
+        return key.GetCheapHash();
     }
 };
 

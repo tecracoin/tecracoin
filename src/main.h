@@ -177,7 +177,7 @@ static const bool DEFAULT_PEERBLOOMFILTERS = true;
 
 struct BlockHasher
 {
-    size_t operator()(const uint256& hash) const { return hash.GetLow64(); }
+    size_t operator()(const uint256& hash) const { return hash.GetCheapHash(); }
 };
 
 extern CScript COINBASE_FLAGS;

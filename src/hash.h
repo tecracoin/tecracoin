@@ -12,7 +12,7 @@
 #include "prevector.h"
 #include "serialize.h"
 #include "uint256.h"
-#include "uint256.h"
+#include "arith_uint256.h"
 #include "version.h"
 
 #include <vector>
@@ -199,10 +199,10 @@ public:
         return result;
     }
 
-    uint256 GetArith256Hash() {
+    arith_uint256 GetArith256Hash() {
         uint256 result;
         ctx.Finalize((unsigned char*)&result);
-        return result;
+        return UintToArith256(result);
     }
 
     template<typename T>
@@ -252,10 +252,10 @@ public:
  *
  *  It is identical to:
  *    SipHasher(k0, k1)
- *      .Write(val.Get64(0))
- *      .Write(val.Get64(1))
- *      .Write(val.Get64(2))
- *      .Write(val.Get64(3))
+ *      .Write(val.GetUint64(0))
+ *      .Write(val.GetUint64(1))
+ *      .Write(val.GetUint64(2))
+ *      .Write(val.GetUint64(3))
  *      .Finalize()
  */
 uint64_t SipHashUint256(uint64_t k0, uint64_t k1, const uint256& val);

@@ -343,9 +343,9 @@ void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, libz
     coin.setSerialNumber(serialNumber);
 
     //hash randomness seed with Bottom 256 bits of seedZerocoin & attempts256 which is initially 0
-    uint256 randomnessSeed = uint512(seedZerocoin >> 256).trim256();
+    uint256 randomnessSeed = ArithToUint512(UintToArith512(seedZerocoin) >> 256).trim256();
     uint256 hashRandomness = Hash(randomnessSeed.begin(), randomnessSeed.end());
-    bnRandomness.setuint256(hashRandomness);
+    bnRandomness.setuint256(UintToArith256(hashRandomness));
     bnRandomness = bnRandomness % ZCParamsV2->coinCommitmentGroup.groupOrder;
 
     //See if serial and randomness make a valid commitment
@@ -355,7 +355,7 @@ void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, libz
                         ZCParamsV2->coinCommitmentGroup.modulus);
 
     CBigNum random;
-    uint256 attempts256 = 0;
+    arith_uint256 attempts256Arith = 0;
     // Iterate on Randomness until a valid commitmentValue is found
     while (true) {
         // Now verify that the commitment is a prime number
@@ -370,10 +370,11 @@ void CzPIVWallet::SeedToZPIV(const uint512& seedZerocoin, CBigNum& bnValue, libz
 
         //Did not create a valid commitment value.
         //Change randomness to something new and (deterministically) random and try again
-        attempts256++;
+        attempts256Arith++;
+        uint256 attempts256 = ArithToUint256(attempts256Arith);
         hashRandomness = Hash(randomnessSeed.begin(), randomnessSeed.end(),
                               attempts256.begin(), attempts256.end());
-        random.setuint256(hashRandomness);
+        random.setuint256(UintToArith256(hashRandomness));
         bnRandomness = (bnRandomness + random) % ZCParamsV2->coinCommitmentGroup.groupOrder;
         commitmentValue = commitmentValue.mul_mod(ZCParamsV2->coinCommitmentGroup.h.pow_mod(random, ZCParamsV2->coinCommitmentGroup.modulus), ZCParamsV2->coinCommitmentGroup.modulus);
     }

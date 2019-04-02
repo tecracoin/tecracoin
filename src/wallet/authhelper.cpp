@@ -16,7 +16,7 @@ struct AuthorizationHelper::Impl
     : rnd_dist(std::numeric_limits<rnd_type>::min(), std::numeric_limits<rnd_type>::max())
     {
         LOCK2(cs_main, pwalletMain->cs_wallet);
-        generator.seed(pwalletMain->GetHDChain().masterKeyID.Get64(0) ^ time(NULL));
+        generator.seed(pwalletMain->GetHDChain().masterKeyID.GetUint64(0) ^ time(NULL));
     }
 
     bool authorize(code_type const & functionName, code_type code)

@@ -9,7 +9,8 @@
 #include <vector>
 #include <openssl/bn.h>
 
-#include "../../uint256.h"
+#include "../../uint256.h" // for uint64
+#include "../../arith_uint256.h"
 #include "../../version.h"
 #include "../../clientversion.h"
 /** Errors thrown by the bignum class */
@@ -50,7 +51,7 @@ public:
 /** C++ wrapper for BIGNUM (OpenSSL bignum) */class CBigNum
 {
 protected:
-    BIGNUM  *bn;
+    BIGNUM	*bn;
 
     void init()
     {
@@ -62,7 +63,7 @@ public:
     {
         init();
     }
-    
+	
     CBigNum(const CBigNum& b)
     {
         init();
@@ -80,12 +81,12 @@ public:
         return (*this);
     }
 
-    CBigNum(const char *hexString)
-    {
-        init();
-        if (!SetHexBool(hexString))
-            throw bignum_error("CBigNum::CBigNum(const char *) : invalid hex string");
-    }
+	CBigNum(const char *hexString)
+	{
+		init();
+		if (!SetHexBool(hexString))
+			throw bignum_error("CBigNum::CBigNum(const char *) : invalid hex string");
+	}
 
     ~CBigNum()
     {
@@ -108,7 +109,8 @@ public:
     CBigNum(unsigned int n)     { init(); setulong(n); }
 //    CBigNum(unsigned long n)    { init(); setulong(n); }
     CBigNum(uint64_t n)           { init(); setuint64(n); }
-    explicit CBigNum(uint256 n) { init(); setuint256(n); }
+    explicit CBigNum(arith_uint256 n) { init(); setuint256(n); }
+    explicit CBigNum(uint256 n) { arith_uint256 m = UintToArith256(n); init(); setuint256(m); }
 
     explicit CBigNum(const std::vector<unsigned char>& vch)
     {
@@ -246,7 +248,7 @@ public:
         BN_mpi2bn(pch, p - pch, bn);
     }
 
-    void setuint256(uint256 n)
+    void setuint256(arith_uint256 n)
     {
         unsigned char pch[sizeof(n) + 6];
         unsigned char* p = pch + 4;
@@ -274,10 +276,10 @@ public:
         BN_mpi2bn(pch, p - pch, bn);
     }
 
-    uint256 getuint256() const
+    arith_uint256 getuint256() const
     {
-        uint256 n;
-        n.SetNull();
+        uint64_t x = 0;
+        arith_uint256 n = x;
         unsigned int nSize = BN_bn2mpi(bn, NULL);
         if (nSize < 4)
             return n;
@@ -595,7 +597,7 @@ public:
     /**
      * Miller-Rabin primality test on this element
      * @param checks: optional, the number of Miller-Rabin tests to run
-     *              default causes error rate of 2^-80.
+     * 			 	default causes error rate of 2^-80.
      * @return true if prime
      */
     bool isPrime(const int checks=BN_prime_checks) const {

@@ -7,7 +7,6 @@
 #include "consensus/merkle.h"
 #include "consensus/consensus.h"
 #include "zerocoin_params.h"
-#include "zerocoin.h"
 
 #include "tinyformat.h"
 #include "util.h"
@@ -19,7 +18,7 @@
 #include <boost/assign/list_of.hpp>
 
 #include "chainparamsseeds.h"
-#include "uint256.h"
+#include "arith_uint256.h"
 
 
 static CBlock CreateGenesisBlock(const char *pszTimestamp, const CScript &genesisOutputScript, uint32_t nTime, uint32_t nNonce,

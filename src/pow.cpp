@@ -5,7 +5,7 @@
 
 #include "pow.h"
 #include "main.h"
-#include "uint256.h"
+#include "arith_uint256.h"
 #include "chain.h"
 #include "primitives/block.h"
 #include "consensus/consensus.h"
@@ -19,7 +19,7 @@
 #include "mtpstate.h"
 #include "fixed.h"
 
-static CBigNum bnProofOfWorkLimit(~uint256(0) >> 8);
+static CBigNum bnProofOfWorkLimit(~arith_uint256(0) >> 8);
 
 double GetDifficultyHelper(unsigned int nBits) {
     int nShift = (nBits >> 24) & 0xff;
@@ -112,8 +112,8 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex *pindexLast, int64_t nF
         nActualTimespan = params.nPowTargetTimespan * 4;
 
     // Retarget
-    const uint256 bnPowLimit = params.powLimit;
-    uint256 bnNew;
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    arith_uint256 bnNew;
     bnNew.SetCompact(pindexLast->nBits);
     bnNew *= nActualTimespan;
     bnNew /= params.nPowTargetTimespan;
@@ -145,15 +145,15 @@ bool CheckMerkleTreeProof(const CBlockHeader &block, const Consensus::Params &pa
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params &params) {
     bool fNegative;
     bool fOverflow;
-    uint256 bnTarget;
+    arith_uint256 bnTarget;
 
     bnTarget.SetCompact(nBits, &fNegative, &fOverflow);
     // Check range
-    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > params.powLimit)
+    if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
         return false;
 
     // Check proof of work matches claimed amount
-    if (hash > bnTarget)
+    if (UintToArith256(hash) > bnTarget)
         return false;
     return true;
 }
