@@ -1,17 +1,18 @@
 // Copyright (c) 2018 The PIVX developers
+// Copyright (c) 2019 Zcoin
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_ZPIVTRACKER_H
-#define PIVX_ZPIVTRACKER_H
+#ifndef ZCOIN_ZEROCOINTRACKER_H
+#define ZCOIN_ZEROCOINTRACKER_H
 
 #include "primitives/zerocoin.h"
 #include <list>
 
 class CDeterministicMint;
-class CzPIVWallet;
+class CZerocoinWallet;
 
-class CzPIVTracker
+class CZerocoinTracker
 {
 private:
     bool fInitialized;
@@ -20,9 +21,9 @@ private:
     std::map<uint256, uint256> mapPendingSpends; //serialhash, txid of spend
     bool UpdateStatusInternal(const std::set<uint256>& setMempool, CMintMeta& mint);
 public:
-    CzPIVTracker(std::string strWalletFile);
-    ~CzPIVTracker();
-    void Add(const CDeterministicMint& dMint, bool isNew = false, bool isArchived = false, CzPIVWallet* zPIVWallet = NULL);
+    CZerocoinTracker(std::string strWalletFile);
+    ~CZerocoinTracker();
+    void Add(const CDeterministicMint& dMint, bool isNew = false, bool isArchived = false, CZerocoinWallet* zerocoinWallet = NULL);
     void Add(const CZerocoinEntry& zerocoin, bool isNew = false, bool isArchived = false);
     bool Archive(CMintMeta& meta);
     bool HasPubcoin(const CBigNum& pubcoin) const;
@@ -49,4 +50,4 @@ public:
     void Clear();
 };
 
-#endif //PIVX_ZPIVTRACKER_H
+#endif //ZCOIN_ZEROCOINTRACKER_H

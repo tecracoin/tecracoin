@@ -417,12 +417,12 @@ DBErrors CWalletDB::ReorderTransactions(CWallet *pwallet) {
 bool CWalletDB::WriteDeterministicMint(const CDeterministicMint& dMint)
 {
     uint256 hash = dMint.GetPubcoinHash();
-    return Write(make_pair(string("dzpiv"), hash), dMint, true);
+    return Write(make_pair(string("hdmint"), hash), dMint, true);
 }
 
 bool CWalletDB::ReadDeterministicMint(const uint256& hashPubcoin, CDeterministicMint& dMint)
 {
-    return Read(make_pair(string("dzpiv"), hashPubcoin), dMint);
+    return Read(make_pair(string("hdmint"), hashPubcoin), dMint);
 }
 
 class CWalletScanState {
@@ -1177,12 +1177,12 @@ bool CWalletDB::WriteCurrentSeedHash(const uint256& hashSeed)
     return Write(string("seedhash"), hashSeed);
 }
 
-bool CWalletDB::ReadZPIVSeed(const uint256& hashSeed, vector<unsigned char>& seed)
+bool CWalletDB::ReadZerocoinSeed(const uint256& hashSeed, vector<unsigned char>& seed)
 {
     return Read(make_pair(string("dzs"), hashSeed), seed);
 }
 
-bool CWalletDB::WriteZPIVSeed(const uint256& hashSeed, const vector<unsigned char>& seed)
+bool CWalletDB::WriteZerocoinSeed(const uint256& hashSeed, const vector<unsigned char>& seed)
 {
     if (!WriteCurrentSeedHash(hashSeed))
         return error("%s: failed to write current seed hash", __func__);
@@ -1190,12 +1190,12 @@ bool CWalletDB::WriteZPIVSeed(const uint256& hashSeed, const vector<unsigned cha
     return Write(make_pair(string("dzs"), hashSeed), seed);
 }
 
-bool CWalletDB::ReadZPIVCount(uint32_t& nCount)
+bool CWalletDB::ReadZerocoinCount(uint32_t& nCount)
 {
     return Read(string("dzc"), nCount);
 }
 
-bool CWalletDB::WriteZPIVCount(const uint32_t& nCount)
+bool CWalletDB::WriteZerocoinCount(const uint32_t& nCount)
 {
     return Write(string("dzc"), nCount);
 }
@@ -1274,7 +1274,7 @@ std::list<CDeterministicMint> CWalletDB::ListDeterministicMints()
         // Read next record
         CDataStream ssKey(SER_DISK, CLIENT_VERSION);
         if (fFlags == DB_SET_RANGE)
-            ssKey << make_pair(string("dzpiv"), ArithToUint256(arith_uint256(0)));
+            ssKey << make_pair(string("hdmint"), ArithToUint256(arith_uint256(0)));
         CDataStream ssValue(SER_DISK, CLIENT_VERSION);
         int ret = ReadAtCursor(pcursor, ssKey, ssValue, fFlags);
         fFlags = DB_NEXT;
@@ -1289,7 +1289,7 @@ std::list<CDeterministicMint> CWalletDB::ListDeterministicMints()
         // Unserialize
         string strType;
         ssKey >> strType;
-        if (strType != "dzpiv")
+        if (strType != "hdmint")
             break;
 
         uint256 hashPubcoin;
@@ -1329,7 +1329,7 @@ bool CWalletDB::ArchiveDeterministicOrphan(const CDeterministicMint& dMint)
     if (!Write(make_pair(string("dzco"), dMint.GetPubcoinHash()), dMint))
         return error("%s: write failed", __func__);
 
-    if (!Erase(make_pair(string("dzpiv"), dMint.GetPubcoinHash())))
+    if (!Erase(make_pair(string("hdmint"), dMint.GetPubcoinHash())))
         return error("%s: failed to erase", __func__);
 
     return true;

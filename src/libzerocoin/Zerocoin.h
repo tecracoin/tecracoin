@@ -71,6 +71,5 @@ namespace libzerocoin {
 #include "CoinSpend.h"
 #include "SerialNumberSignatureOfKnowledge.h"
 #include "ParamGeneration.h"
-#include "Denominations.h"
 
 #endif /* ZEROCOIN_H_ */

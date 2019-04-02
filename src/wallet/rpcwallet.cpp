@@ -2729,7 +2729,7 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
     libzerocoin::PrivateCoin newCoin(zcParams, denomination, ZEROCOIN_TX_VERSION_2);
 
     // Generate and store secrets deterministically in the following function.
-    zwalletMain->GenerateDeterministicZPIV(denomination, newCoin, dMint);
+    zwalletMain->GenerateDeterministicZerocoin(denomination, newCoin, dMint);
 
     // Get a copy of the 'public' portion of the coin. You should
     // embed this into a Zerocoin 'MINT' transaction along with a series
@@ -2755,7 +2755,7 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
         CWalletDB walletdb(pwalletMain->strWalletFile);
 
         dMint.SetTxHash(wtx.GetHash());
-        pwalletMain->zpivTracker->Add(dMint, true);
+        pwalletMain->zerocoinTracker->Add(dMint, true);
 
         // Now that coin is verified and sent, update the count. (If not verified, we will repeat the same count on the next attempt)
         zwalletMain->UpdateCount();
@@ -2865,7 +2865,7 @@ UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
             // loop until we find a valid coin
             while(!validCoin){
                 newCoin = libzerocoin::PrivateCoin(zcParams, denomination, ZEROCOIN_TX_VERSION_2);
-                zwalletMain->GenerateDeterministicZPIV(denomination, newCoin, dMint);
+                zwalletMain->GenerateDeterministicZerocoin(denomination, newCoin, dMint);
                 pubCoin = newCoin.getPublicCoin();
                 validCoin = pubCoin.validate();
             }

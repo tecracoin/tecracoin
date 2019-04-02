@@ -2,18 +2,14 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef PIVX_ZPIVCHAIN_H
-#define PIVX_ZPIVCHAIN_H
+#ifndef ZCOIN_ZEROCOINCHAIN_H
+#define ZCOIN_ZEROCOINCHAIN_H
 
-//#include "libzerocoin/Coin.h"
-//#include "libzerocoin/Denominations.h"
-//#include "libzerocoin/CoinSpend.h"
 #include "libzerocoin/Zerocoin.h"
 #include "zerocoin.h"
 #include <list>
 #include <string>
 
-class CBlock;
 class CBigNum;
 struct CMintMeta;
 class CTransaction;
@@ -23,17 +19,9 @@ class CValidationState;
 class CZerocoinEntry;
 class uint256;
 
-bool BlockToMintValueVector(const CBlock& block, const libzerocoin::CoinDenomination denom, std::vector<CBigNum>& vValues);
-bool BlockToPubcoinList(const CBlock& block, std::list<libzerocoin::PublicCoin>& listPubcoins);
-bool BlockToZerocoinMintList(const CBlock& block, std::list<CZerocoinEntry>& vMints);
-int GetZerocoinStartHeight();
-bool IsSerialKnown(const CBigNum& bnSerial);
 bool IsSerialInBlockchain(const CBigNum& bnSerial, int& nHeightTx);
 bool IsSerialInBlockchain(const uint256& hashSerial, int& nHeightTx, uint256& txidSpend);
 bool IsSerialInBlockchain(const uint256& hashSerial, int& nHeightTx, uint256& txidSpend, CTransaction& tx);
-libzerocoin::CoinSpend TxInToZerocoinSpend(const CTxIn& txin);
 bool TxOutToPublicCoin(const CTxOut& txout, libzerocoin::PublicCoin& pubCoin, CValidationState& state);
-std::list<libzerocoin::CoinDenomination> ZerocoinSpendListFromBlock(const CBlock& block);
 
-
-#endif //PIVX_ZPIVCHAIN_H
+#endif //ZCOIN_ZEROCOINCHAIN_H

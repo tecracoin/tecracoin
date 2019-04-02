@@ -202,9 +202,9 @@ BITCOIN_CORE_H = \
   zmq/zmqconfig.h\
   zmq/zmqnotificationinterface.h \
   zmq/zmqpublishnotifier.h \
-  zpivchain.h \
-  zpivtracker.h \
-  zpivwallet.h \
+  zerocoinchain.h \
+  zerocointracker.h \
+  zerocoinwallet.h \
   zerocoin.h \
   zerocoin_params.h \
   mtpstate.h \
@@ -259,7 +259,7 @@ libbitcoin_server_a_SOURCES = \
   versionbits.cpp \
   zerocoin.cpp \
   mtpstate.cpp \
-  zpivchain.cpp \
+  zerocoinchain.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
@@ -287,7 +287,7 @@ libbitcoin_wallet_a_SOURCES = \
   znodeconfig.cpp \
   znodeman.cpp \
   mintpool.cpp \
-  zpivwallet.cpp \
+  zerocoinwallet.cpp \
   primitives/zerocoin.cpp \
   wallet/crypter.cpp \
   wallet/db.cpp \
@@ -296,7 +296,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
   wallet/authhelper.cpp \
-  zpivtracker.cpp \
+  zerocointracker.cpp \
   policy/rbf.cpp \
   $(BITCOIN_CORE_H)
 

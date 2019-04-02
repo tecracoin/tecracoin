@@ -189,9 +189,6 @@ public:
     uint256 trim256() const
     {
         uint256 ret;
-        // for (unsigned int i = 0; i < 32; i++) {
-        //     ret.data[i] = data[i];
-        // }
         memcpy(ret.begin(), (*this).begin(), ret.size());
         return ret;
     }

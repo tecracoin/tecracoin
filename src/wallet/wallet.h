@@ -21,8 +21,8 @@
 #include "zerocoin_params.h"
 #include "univalue.h"
 
-#include "zpivwallet.h"
-#include "zpivtracker.h"
+#include "zerocoinwallet.h"
+#include "zerocointracker.h"
 
 #include <algorithm>
 #include <map>
@@ -639,7 +639,7 @@ public:
      */
     mutable CCriticalSection cs_wallet;
 
-    CzPIVWallet* zwallet;
+    CZerocoinWallet* zwallet;
 
     bool fFileBacked;
     std::string strWalletFile;
@@ -653,7 +653,7 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
-    std::unique_ptr<CzPIVTracker> zpivTracker;
+    std::unique_ptr<CZerocoinTracker> zerocoinTracker;
 
     CWallet()
     {
@@ -710,13 +710,13 @@ public:
 
     int64_t nTimeFirstKey;
 
-    void setZWallet(CzPIVWallet* zwallet)
+    void setZWallet(CZerocoinWallet* zwallet)
     {
         this->zwallet = zwallet;
-        zpivTracker = std::unique_ptr<CzPIVTracker>(new CzPIVTracker(strWalletFile));
+        zerocoinTracker = std::unique_ptr<CZerocoinTracker>(new CZerocoinTracker(strWalletFile));
     }
 
-    CzPIVWallet* getZWallet() { return zwallet; }
+    CZerocoinWallet* getZWallet() { return zwallet; }
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
@@ -852,7 +852,6 @@ public:
      * Add zerocoin Mint and Spend function
      */
     void ListAvailableCoinsMintCoins(std::vector<COutput>& vCoins, bool fOnlyConfirmed=true) const;
-    bool CreateZPIVOutPut(libzerocoin::CoinDenomination denomination, CTxOut& outMint, CDeterministicMint& dMint);
     bool CreateZerocoinMintTransaction(const std::vector<CRecipient>& vecSend, CWalletTx& wtxNew, CReserveKey& reservekey, CAmount& nFeeRet, int& nChangePosInOut,
                            std::string& strFailReason, const CCoinControl *coinControl = NULL, bool sign = true);
     bool CreateZerocoinMintTransaction(CScript pubCoin, int64_t nValue,

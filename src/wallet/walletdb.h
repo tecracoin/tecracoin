@@ -197,11 +197,11 @@ public:
 
     bool ReadCurrentSeedHash(uint256& hashSeed);
     bool WriteCurrentSeedHash(const uint256& hashSeed);
-    bool ReadZPIVSeed(const uint256& hashSeed, vector<unsigned char>& seed);
-    bool WriteZPIVSeed(const uint256& hashSeed, const vector<unsigned char>& seed);
+    bool ReadZerocoinSeed(const uint256& hashSeed, vector<unsigned char>& seed);
+    bool WriteZerocoinSeed(const uint256& hashSeed, const vector<unsigned char>& seed);
 
-    bool ReadZPIVCount(uint32_t& nCount);
-    bool WriteZPIVCount(const uint32_t& nCount);
+    bool ReadZerocoinCount(uint32_t& nCount);
+    bool WriteZerocoinCount(const uint32_t& nCount);
 
     bool ArchiveMintOrphan(const CZerocoinEntry& zerocoin);
     bool ArchiveDeterministicOrphan(const CDeterministicMint& dMint);

@@ -14,9 +14,9 @@
 #define COIN_H_
 #include <secp256k1.h>
 #include <secp256k1_recovery.h>
+#include "bitcoin_bignum/bignum.h"
+#include "Params.h"
 #include "Denominations.h"
-#include "Zerocoin.h"
-#include "key.h"
 #include "uint256.h"
 namespace libzerocoin {
 

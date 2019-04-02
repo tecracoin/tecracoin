@@ -90,7 +90,7 @@
 
 #ifdef ENABLE_WALLET
 CWallet* pwalletMain = NULL;
-CzPIVWallet* zwalletMain = NULL;
+CZerocoinWallet* zwalletMain = NULL;
 #endif
 
 bool fFeeEstimatesInitialized = false;
@@ -807,11 +807,11 @@ void ThreadImport(std::vector <boost::filesystem::path> vImportFiles) {
             LoadExternalBlockFile(chainparams, file, &pos);
             nFile++;
         }
-        // With Zerocoin data up to date, initialize zPIVWallet
-        uiInterface.InitMessage(_("Syncing zPIV wallet..."));
+        // With Zerocoin data up to date, initialize ZerocoinWallet
+        uiInterface.InitMessage(_("Syncing Zerocoin wallet..."));
 
         //Load zerocoin mint hashes to memory
-        pwalletMain->zpivTracker->Init();
+        pwalletMain->zerocoinTracker->Init();
         zwalletMain->LoadMintPoolFromDB();
         zwalletMain->SyncWithChain();
 

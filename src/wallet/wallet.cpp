@@ -32,7 +32,7 @@
 #include "znode-sync.h"
 #include "random.h"
 #include "init.h"
-#include "zpivwallet.h"
+#include "zerocoinwallet.h"
 
 #include <assert.h>
 #include <boost/algorithm/string/replace.hpp>
@@ -3270,7 +3270,7 @@ bool CWallet::CreateZerocoinMintModel(string &stringError, std::vector<std::pair
             // loop until we find a valid coin
             while(!validCoin){
                 newCoin = libzerocoin::PrivateCoin(zcParams, denomination, ZEROCOIN_TX_VERSION_2);
-                zwalletMain->GenerateDeterministicZPIV(denomination, newCoin, dMint);
+                zwalletMain->GenerateDeterministicZerocoin(denomination, newCoin, dMint);
                 pubCoin = newCoin.getPublicCoin();
                 validCoin = pubCoin.validate();
             }
@@ -3461,26 +3461,6 @@ bool CWallet::CreateZerocoinSpendModel(CWalletTx& wtx, string &stringError, stri
         return false;
     return true;
  }
-
- bool CWallet::CreateZPIVOutPut(libzerocoin::CoinDenomination denomination, CTxOut& outMint, CDeterministicMint& dMint)
-{
-    // mint a new coin (create Pedersen Commitment) and extract PublicCoin that is shareable from it
-    libzerocoin::PrivateCoin coin(ZCParamsV2, denomination, false);
-    zwalletMain->GenerateDeterministicZPIV(denomination, coin, dMint);
-
-    libzerocoin::PublicCoin pubCoin = coin.getPublicCoin();
-
-    // Validate
-    if(!pubCoin.validate())
-        return error("%s: newly created pubcoin is not valid", __func__);
-
-    zwalletMain->UpdateCount();
-
-    CScript scriptSerializedCoin = CScript() << OP_ZEROCOINMINT << pubCoin.getValue().getvch().size() << pubCoin.getValue().getvch();
-    outMint = CTxOut(libzerocoin::ZerocoinDenominationToAmount(denomination), scriptSerializedCoin);
-
-    return true;
-}
 
 /**
  * @brief CWallet::CreateZerocoinMintTransaction
@@ -3885,7 +3865,7 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
 
             // Get Mint metadata objects
             set<CMintMeta> setMints;
-            setMints = zpivTracker->ListMints(true, true, true);
+            setMints = zerocoinTracker->ListMints(true, true, true);
             if(setMints.empty()) {
                 strFailReason= _("Failed to find Zerocoins in wallet.dat");
                 return false;
@@ -4028,14 +4008,14 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
                     // THIS SELECEDTED COIN HAS BEEN USED, SO UPDATE ITS STATUS
                     strFailReason = _("Trying to spend an already spent serial #, try again.");
                     uint256 hashSerial = GetSerialHash(spend.getCoinSerialNumber());
-                    if (!zpivTracker->HasSerialHash(hashSerial))
+                    if (!zerocoinTracker->HasSerialHash(hashSerial))
                         strFailReason = "Tracker does not have serialhash " + hashSerial.GetHex();
                         return false;
 
                     CMintMeta meta;
-                    zpivTracker->Get(hashSerial, meta);
+                    zerocoinTracker->Get(hashSerial, meta);
                     meta.isUsed = true;
-                    zpivTracker->UpdateState(meta);
+                    zerocoinTracker->UpdateState(meta);
 
                     return false;
                 }
@@ -4490,7 +4470,7 @@ string CWallet::MintAndStoreZerocoin(vector<CRecipient> vecSend,
     CWalletDB walletdb(pwalletMain->strWalletFile);
     for (CDeterministicMint dMint : vDMints) {
         dMint.SetTxHash(wtxNew.GetHash());
-        zpivTracker->Add(dMint, true);
+        zerocoinTracker->Add(dMint, true);
     }
 
     zwalletMain->UpdateCount();
@@ -4593,7 +4573,7 @@ string CWallet::SpendZerocoin(std::string &thirdPartyaddress, int64_t nValue, li
 
         //reset mint
         uint256 hashPubcoin = GetPubCoinHash(zerocoin.value);
-        zpivTracker->SetPubcoinNotUsed(hashPubcoin);
+        zerocoinTracker->SetPubcoinNotUsed(hashPubcoin);
         pwalletMain->NotifyZerocoinChanged(pwalletMain, zerocoin.value.GetHex(), "New", CT_UPDATED);
 
         CZerocoinSpendEntry entry;
@@ -4612,9 +4592,9 @@ string CWallet::SpendZerocoin(std::string &thirdPartyaddress, int64_t nValue, li
     uint256 txidSpend = wtxNew.GetHash();
 
     uint256 hashPubcoin = GetPubCoinHash(zerocoin.value);
-    zpivTracker->SetPubcoinUsed(hashPubcoin, txidSpend);
+    zerocoinTracker->SetPubcoinUsed(hashPubcoin, txidSpend);
 
-    CMintMeta metaCheck = zpivTracker->GetMetaFromPubcoin(hashPubcoin);
+    CMintMeta metaCheck = zerocoinTracker->GetMetaFromPubcoin(hashPubcoin);
     if (!metaCheck.isUsed) {
         return _("Error, the mint did not get marked as used");
     }
@@ -4694,12 +4674,12 @@ string CWallet::SpendMultipleZerocoin(std::string &thirdPartyaddress, const std:
 
 bool CWallet::GetMint(const uint256& hashSerial, CZerocoinEntry& zerocoin)
 {
-    if (!zpivTracker->HasSerialHash(hashSerial))
+    if (!zerocoinTracker->HasSerialHash(hashSerial))
         return error("%s: serialhash %s is not in tracker", __func__, hashSerial.GetHex());
 
     CWalletDB walletdb(strWalletFile);
     CMintMeta meta;
-    zpivTracker->Get(hashSerial, meta);
+    zerocoinTracker->Get(hashSerial, meta);
     if (meta.isDeterministic) {
         CDeterministicMint dMint;
         if (!walletdb.ReadDeterministicMint(GetPubCoinHash(meta.pubcoin), dMint))
@@ -5551,7 +5531,7 @@ bool CWallet::InitLoadWallet() {
     }
 
     LogPrintf(" wallet      %15dms\n", GetTimeMillis() - nStart);
-    zwalletMain = new CzPIVWallet(pwalletMain->strWalletFile);
+    zwalletMain = new CZerocoinWallet(pwalletMain->strWalletFile);
     walletInstance->setZWallet(zwalletMain);
 
     RegisterValidationInterface(walletInstance);

@@ -1,9 +1,10 @@
 // Copyright (c) 2018 The PIVX developers
+// Copyright (c) 2019 Zcoin
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef DETERMINISTICMINT_H
-#define DETERMINISTICMINT_H
+#ifndef ZCOIN_DETERMINISTICMINT_H
+#define ZCOIN_DETERMINISTICMINT_H
 
 #include <libzerocoin/Zerocoin.h>
 #include "primitives/zerocoin.h"
@@ -57,4 +58,4 @@ public:
     };
 };
 
-#endif //PIVX_DETERMINISTICMINT_H
+#endif //ZCOIN_DETERMINISTICMINT_H
