@@ -44,7 +44,7 @@ bool CZerocoinTracker::Archive(CMintMeta& meta)
 {
     uint256 hashPubcoin = GetPubCoinHash(meta.pubcoin);
 
-    if (mapSerialHashes.count(meta.hashSerial))
+    if (HasSerialHash(meta.hashSerial))
         mapSerialHashes.at(meta.hashSerial).isArchived = true;
 
     CWalletDB walletdb(strWalletFile);
@@ -86,8 +86,8 @@ bool CZerocoinTracker::UnArchive(const uint256& hashPubcoin, bool isDeterministi
 
 bool CZerocoinTracker::Get(const uint256 &hashSerial, CMintMeta& mMeta)
 {
-    if (!mapSerialHashes.count(hashSerial))
-        mMeta = CMintMeta();
+    auto it = mapSerialHashes.find(hashSerial);
+    if(it == mapSerialHashes.end())
         return false;
 
     mMeta = mapSerialHashes.at(hashSerial);
@@ -354,9 +354,7 @@ bool CZerocoinTracker::UpdateStatusInternal(const std::set<uint256>& setMempool,
     //! Check whether this mint has been spent and is considered 'pending' or 'confirmed'
     // If there is not a record of the block height, then look it up and assign it
     uint256 txidMint;
-    bool isMintInChain = CZerocoinState::GetZerocoinState()->HasCoin(mint.pubcoin);
-    if(isMintInChain)
-        txidMint = GetMetaFromPubcoin(hashPubcoin).txid;
+    bool isMintInChain = ZerocoinGetMintTxHash(txidMint, mint.pubcoin);
 
     //See if there is internal record of spending this mint (note this is memory only, would reset on restart)
     bool isPendingSpend = static_cast<bool>(mapPendingSpends.count(mint.hashSerial));
@@ -403,21 +401,32 @@ bool CZerocoinTracker::UpdateStatusInternal(const std::set<uint256>& setMempool,
             return true;
         }
 
-        // An orphan tx if hashblock is in mapBlockIndex but not in chain active
-        if (mapBlockIndex.count(hashBlock) && !chainActive.Contains(mapBlockIndex.at(hashBlock))) {
-            LogPrintf("%s : Found orphaned mint txid=%s\n", __func__, mint.txid.GetHex());
-            mint.isUsed = false;
-            mint.nHeight = 0;
+        bool isUpdated = false;
 
-            return true;
+        // An orphan tx if hashblock is in mapBlockIndex but not in chain active
+        if (mapBlockIndex.count(hashBlock)){
+            if(!chainActive.Contains(mapBlockIndex.at(hashBlock))) {
+                LogPrintf("%s : Found orphaned mint txid=%s\n", __func__, mint.txid.GetHex());
+                mint.isUsed = false;
+                mint.nHeight = 0;
+
+                return true;
+            }else if(!mint.nHeight){ // assign nHeight if not present
+                int nHeight = mapBlockIndex.at(hashBlock)->nHeight;
+                LogPrintf("%s : Set mint %s nHeight to %d\n", __func__, hashPubcoin.GetHex(), nHeight);
+                mint.nHeight = nHeight;
+                isUpdated = true;
+            }
         }
 
         // Check that the mint has correct used status
         if (mint.isUsed != isUsed) {
-            LogPrintf("%s : Set mint %s isUsed to %d\n", __func__, hashPubcoin.GetHex(), isUsed);
+            LogPrintf("%s : Set mint %s isUsed to %d\n", __func__, hashPubcoin.GetHex(), isUsed);    
             mint.isUsed = isUsed;
-            return true;
+            isUpdated = true;
         }
+
+        if(isUpdated) return true;
     }
 
     return false;
@@ -450,7 +459,6 @@ std::set<CMintMeta> CZerocoinTracker::ListMints(bool fUnusedOnly, bool fMatureOn
         LOCK(mempool.cs);
         mempool.getTransactions(setMempool);
     }
-
     for (auto& it : mapSerialHashes) {
         CMintMeta mint = it.second;
 
@@ -472,7 +480,6 @@ std::set<CMintMeta> CZerocoinTracker::ListMints(bool fUnusedOnly, bool fMatureOn
 
         if (fMatureOnly) {
             // Not confirmed
-            // TODO DETERMINISTIC
             if (!mint.nHeight || mint.nHeight > chainActive.Height() - ZC_MINT_CONFIRMATIONS)
                 continue;
         }

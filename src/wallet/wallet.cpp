@@ -3806,7 +3806,7 @@ CWallet::CreateZerocoinMintTransaction(CScript pubCoin, int64_t nValue, CWalletT
 bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int64_t nValue, libzerocoin::CoinDenomination denomination,
                                              CWalletTx &wtxNew, CReserveKey &reservekey, CBigNum &coinSerial,
                                              uint256 &txHash, CBigNum &zcSelectedValue, bool &zcSelectedIsUsed,
-                                             CZerocoinEntry coinToUse, std::string &strFailReason, bool forceUsed) {
+                                             CZerocoinEntry& coinToUse, std::string &strFailReason, bool forceUsed) {
     if (nValue <= 0) {
         strFailReason = _("Transaction amounts must be positive");
         return false;
@@ -3865,7 +3865,7 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
 
             // Get Mint metadata objects
             set<CMintMeta> setMints;
-            setMints = zerocoinTracker->ListMints(true, true, true);
+            setMints = pwalletMain->zerocoinTracker->ListMints(true, true, true);
             if(setMints.empty()) {
                 strFailReason= _("Failed to find Zerocoins in wallet.dat");
                 return false;
@@ -3876,9 +3876,10 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
             for (const CMintMeta& mint : listMints) {
                 if (denomination == mint.denom
                     && ((mint.isUsed == false && !forceUsed) || (mint.isUsed == true && forceUsed))) {
-                    if (!GetMint(mint.hashSerial, coinToUse))
-                        strFailReason = "Failed to fetch hashSerial " + mint.hashSerial.GetHex();
-                        return false;
+                    if (!GetMint(mint.hashSerial, coinToUse)) {
+                            strFailReason = "Failed to fetch hashSerial " + mint.hashSerial.GetHex();
+                            return false;
+                        }
                     }
                     int id;
                     coinHeight = zerocoinState->GetMintedCoinHeightAndId(coinToUse.value, coinToUse.denomination, id);
@@ -4008,14 +4009,14 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
                     // THIS SELECEDTED COIN HAS BEEN USED, SO UPDATE ITS STATUS
                     strFailReason = _("Trying to spend an already spent serial #, try again.");
                     uint256 hashSerial = GetSerialHash(spend.getCoinSerialNumber());
-                    if (!zerocoinTracker->HasSerialHash(hashSerial))
+                    if (!pwalletMain->zerocoinTracker->HasSerialHash(hashSerial))
                         strFailReason = "Tracker does not have serialhash " + hashSerial.GetHex();
                         return false;
 
                     CMintMeta meta;
-                    zerocoinTracker->Get(hashSerial, meta);
+                    pwalletMain->zerocoinTracker->Get(hashSerial, meta);
                     meta.isUsed = true;
-                    zerocoinTracker->UpdateState(meta);
+                    pwalletMain->zerocoinTracker->UpdateState(meta);
 
                     return false;
                 }
@@ -4470,7 +4471,7 @@ string CWallet::MintAndStoreZerocoin(vector<CRecipient> vecSend,
     CWalletDB walletdb(pwalletMain->strWalletFile);
     for (CDeterministicMint dMint : vDMints) {
         dMint.SetTxHash(wtxNew.GetHash());
-        zerocoinTracker->Add(dMint, true);
+        pwalletMain->zerocoinTracker->Add(dMint, true);
     }
 
     zwalletMain->UpdateCount();
@@ -4573,7 +4574,7 @@ string CWallet::SpendZerocoin(std::string &thirdPartyaddress, int64_t nValue, li
 
         //reset mint
         uint256 hashPubcoin = GetPubCoinHash(zerocoin.value);
-        zerocoinTracker->SetPubcoinNotUsed(hashPubcoin);
+        pwalletMain->zerocoinTracker->SetPubcoinNotUsed(hashPubcoin);
         pwalletMain->NotifyZerocoinChanged(pwalletMain, zerocoin.value.GetHex(), "New", CT_UPDATED);
 
         CZerocoinSpendEntry entry;
@@ -4592,9 +4593,9 @@ string CWallet::SpendZerocoin(std::string &thirdPartyaddress, int64_t nValue, li
     uint256 txidSpend = wtxNew.GetHash();
 
     uint256 hashPubcoin = GetPubCoinHash(zerocoin.value);
-    zerocoinTracker->SetPubcoinUsed(hashPubcoin, txidSpend);
+    pwalletMain->zerocoinTracker->SetPubcoinUsed(hashPubcoin, txidSpend);
 
-    CMintMeta metaCheck = zerocoinTracker->GetMetaFromPubcoin(hashPubcoin);
+    CMintMeta metaCheck = pwalletMain->zerocoinTracker->GetMetaFromPubcoin(hashPubcoin);
     if (!metaCheck.isUsed) {
         return _("Error, the mint did not get marked as used");
     }
@@ -4674,14 +4675,13 @@ string CWallet::SpendMultipleZerocoin(std::string &thirdPartyaddress, const std:
 
 bool CWallet::GetMint(const uint256& hashSerial, CZerocoinEntry& zerocoin)
 {
-    if (!zerocoinTracker->HasSerialHash(hashSerial))
+    CMintMeta meta;
+    if(!pwalletMain->zerocoinTracker->Get(hashSerial, meta))
         return error("%s: serialhash %s is not in tracker", __func__, hashSerial.GetHex());
 
-    CWalletDB walletdb(strWalletFile);
-    CMintMeta meta;
-    zerocoinTracker->Get(hashSerial, meta);
     if (meta.isDeterministic) {
         CDeterministicMint dMint;
+        CWalletDB walletdb(strWalletFile);
         if (!walletdb.ReadDeterministicMint(GetPubCoinHash(meta.pubcoin), dMint))
             return error("%s: failed to read deterministic mint", __func__);
         if (!zwalletMain->RegenerateMint(dMint, zerocoin))

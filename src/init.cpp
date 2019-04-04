@@ -810,10 +810,12 @@ void ThreadImport(std::vector <boost::filesystem::path> vImportFiles) {
         // With Zerocoin data up to date, initialize ZerocoinWallet
         uiInterface.InitMessage(_("Syncing Zerocoin wallet..."));
 
+#ifdef ENABLE_WALLET
         //Load zerocoin mint hashes to memory
         pwalletMain->zerocoinTracker->Init();
         zwalletMain->LoadMintPoolFromDB();
         zwalletMain->SyncWithChain();
+#endif
 
         pblocktree->WriteReindexing(false);
         fReindex = false;

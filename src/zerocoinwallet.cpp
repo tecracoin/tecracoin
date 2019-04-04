@@ -190,7 +190,7 @@ void CZerocoinWallet::SyncWithChain(bool fGenerateMintPool)
             }
 
             uint256 txHash;
-            if (ZerocoinGetTxHash(txHash, pMint.first)) {
+            if (ZerocoinGetMintTxHash(txHash, pMint.first)) {
                 //this mint has already occurred on the chain, increment counter's state to reflect this
                 LogPrintf("%s : Found wallet coin mint=%s count=%d tx=%s\n", __func__, pMint.first.GetHex(), pMint.second, txHash.GetHex());
                 found = true;

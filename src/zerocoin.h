@@ -64,8 +64,8 @@ int ZerocoinGetNHeight(const CBlockHeader &block);
 /*
  * Get transaction hash from the chain using pubcoin value alone.
  */
-bool ZerocoinGetTxHash(uint256& txHash, uint256 pubCoinHash);
-bool ZerocoinGetTxHash(uint256& txHash, CBigNum pubCoin);
+bool ZerocoinGetMintTxHash(uint256& txHash, uint256 pubCoinHash);
+bool ZerocoinGetMintTxHash(uint256& txHash, CBigNum pubCoin);
 
 bool ZerocoinBuildStateFromIndex(CChain *chain, set<CBlockIndex *> &changes);
 

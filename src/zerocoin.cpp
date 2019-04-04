@@ -691,7 +691,7 @@ bool ConnectBlockZC(CValidationState &state, const CChainParams &chainParams, CB
             }
             // invalidate alternative accumulator value for this denomination and id
             pindexNew->alternativeAccumulatorChanges.erase(denomAndId);
-        }
+        }       
     }
     else if (!fJustCheck) {
         zerocoinState.AddBlock(pindexNew, chainParams.GetConsensus());
@@ -711,7 +711,7 @@ int ZerocoinGetNHeight(const CBlockHeader &block) {
     return nHeight;
 }
 
-bool ZerocoinGetTxHash(uint256& txHash, uint256 pubCoinHash) {
+bool ZerocoinGetMintTxHash(uint256& txHash, uint256 pubCoinHash) {
 
     CBigNum pubCoin;
     if(!zerocoinState.HasCoinHash(pubCoin, pubCoinHash)){
@@ -755,8 +755,8 @@ bool ZerocoinGetTxHash(uint256& txHash, uint256 pubCoinHash) {
     return false;
 }
 
-bool ZerocoinGetTxHash(uint256& txHash, CBigNum pubCoin) {
-    return ZerocoinGetTxHash(txHash, GetPubCoinHash(pubCoin));
+bool ZerocoinGetMintTxHash(uint256& txHash, CBigNum pubCoin) {
+    return ZerocoinGetMintTxHash(txHash, GetPubCoinHash(pubCoin));
 }
 
 
