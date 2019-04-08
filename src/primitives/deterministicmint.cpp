@@ -28,7 +28,7 @@ void CDeterministicMint::SetNull()
     hashSeed.SetNull();
     hashSerial.SetNull();
     txid.SetNull();
-    nHeight = 0;
+    nHeight = -1;
     denom = CoinDenomination::ZQ_ERROR;
     isUsed = false;
 }

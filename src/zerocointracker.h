@@ -37,8 +37,10 @@ public:
     CMintMeta GetMetaFromPubcoin(const uint256& hashPubcoin);
     CAmount GetBalance(bool fConfirmedOnly, bool fUnconfirmedOnly) const;
     std::vector<uint256> GetSerialHashes();
-    std::vector<CMintMeta> GetMints(bool fConfirmedOnly) const;
+    bool UpdateMints(std::set<uint256> serialHashes, bool fReset, bool fUpdateStatus, bool fStatus=false);
+    std::list<CMintMeta> GetMints(bool fConfirmedOnly, bool fInactive = true) const;
     CAmount GetUnconfirmedBalance() const;
+    std::list <CZerocoinEntry> MintMetaToZerocoinEntries(std::list<CMintMeta> setMints) const;
     std::set<CMintMeta> ListMints(bool fUnusedOnly, bool fMatureOnly, bool fUpdateStatus, bool fWrongSeed = false);
     void RemovePending(const uint256& txid);
     void SetPubcoinUsed(const uint256& hashPubcoin, const uint256& txid);

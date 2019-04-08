@@ -8,6 +8,7 @@
 #include "util.h"
 #include "sync.h"
 #include "txdb.h"
+#include "wallet/wallet.h"
 #include "wallet/walletdb.h"
 #include "zerocoinwallet.h"
 #include "libzerocoin/Zerocoin.h"
@@ -156,17 +157,17 @@ CAmount CZerocoinTracker::GetUnconfirmedBalance() const
     return GetBalance(false, true);
 }
 
-std::vector<CMintMeta> CZerocoinTracker::GetMints(bool fConfirmedOnly) const
+std::list<CMintMeta> CZerocoinTracker::GetMints(bool fConfirmedOnly, bool fInactive) const
 {
-    vector<CMintMeta> vMints;
+    std::list<CMintMeta> vMints;
     for (auto& it : mapSerialHashes) {
         CMintMeta mint = it.second;
-        if (mint.isArchived || mint.isUsed)
+        if ((mint.isArchived || mint.isUsed) && fInactive)
             continue;
         bool fConfirmed = (mint.nHeight < chainActive.Height() - ZC_MINT_CONFIRMATIONS);
         if (fConfirmedOnly && !fConfirmed)
             continue;
-        vMints.emplace_back(mint);
+        vMints.push_back(mint);
     }
     return vMints;
 }
@@ -432,14 +433,72 @@ bool CZerocoinTracker::UpdateStatusInternal(const std::set<uint256>& setMempool,
     return false;
 }
 
+std::list <CZerocoinEntry> CZerocoinTracker::MintMetaToZerocoinEntries(std::list<CMintMeta> listMints) const {
+    std::list <CZerocoinEntry> entries;
+    CZerocoinEntry entry;
+    for (const CMintMeta& mint : listMints) {
+        if (pwalletMain->GetMint(mint.hashSerial, entry))
+            entries.push_back(entry);
+    }
+    return entries;
+}
+
+bool CZerocoinTracker::UpdateMints(std::set<uint256> serialHashes, bool fReset, bool fUpdateStatus, bool fStatus){
+    // if list is populated, only update mints with these serials
+    bool fSelection = serialHashes.size()>0;
+    // Only allow updates for one or the other
+    if(fReset && fUpdateStatus)
+        return false;
+
+    std::list<CZerocoinEntry> listMintsDB;
+    CWalletDB walletdb(strWalletFile);
+    walletdb.ListPubCoin(listMintsDB);
+    for (auto& mint : listMintsDB){
+        if(fReset){
+            mint.nHeight = -1;
+            mint.IsUsed = false;
+        }
+        else if(fUpdateStatus){
+            mint.IsUsed = fStatus;
+        }
+
+        if((!fSelection) ||
+            (fSelection && (serialHashes.find(GetSerialHash(mint.serialNumber)) != serialHashes.end()))){
+            Add(mint);
+        }
+    }
+    std::list<CDeterministicMint> listDeterministicDB = walletdb.ListDeterministicMints();
+
+    CZerocoinWallet* zerocoinWallet = new CZerocoinWallet(strWalletFile);
+    for (auto& dMint : listDeterministicDB) {
+        if(fReset){
+            dMint.SetHeight(-1);
+            dMint.SetUsed(false);
+        }
+        else if(fUpdateStatus){
+            dMint.SetUsed(fStatus);
+        }
+
+        if((!fSelection) ||
+            (fSelection && (serialHashes.find(dMint.GetSerialHash()) != serialHashes.end()))){ 
+            Add(dMint, true, false, zerocoinWallet);
+        }
+    }
+    delete zerocoinWallet;
+
+    return true;
+}
+
 std::set<CMintMeta> CZerocoinTracker::ListMints(bool fUnusedOnly, bool fMatureOnly, bool fUpdateStatus, bool fWrongSeed)
 {
+    std::set<CMintMeta> setMints;
     CWalletDB walletdb(strWalletFile);
     if (fUpdateStatus) {
         std::list<CZerocoinEntry> listMintsDB;
         walletdb.ListPubCoin(listMintsDB);
-        for (auto& mint : listMintsDB)
+        for (auto& mint : listMintsDB){
             Add(mint);
+        }
         LogPrint("zero", "%s: added %d zerocoinmints from DB\n", __func__, listMintsDB.size());
 
         std::list<CDeterministicMint> listDeterministicDB = walletdb.ListDeterministicMints();
@@ -453,7 +512,6 @@ std::set<CMintMeta> CZerocoinTracker::ListMints(bool fUnusedOnly, bool fMatureOn
     }
 
     std::vector<CMintMeta> vOverWrite;
-    std::set<CMintMeta> setMints;
     std::set<uint256> setMempool;
     {
         LOCK(mempool.cs);

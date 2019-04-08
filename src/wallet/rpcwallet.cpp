@@ -19,7 +19,7 @@
 #include "utilmoneystr.h"
 #include "wallet.h"
 #include "walletdb.h"
-#include "zerocoin.h"
+#include "zerocointracker.h"
 
 #include <znode-payments.h>
 
@@ -2853,10 +2853,13 @@ UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
             // PrivateCoin object. This includes the coin secrets, which must be
             // stored in a secure location (wallet) at the client.
             libzerocoin::PrivateCoin newCoin(zcParams, denomination, ZEROCOIN_TX_VERSION_2);
+
+            // Generate and store secrets deterministically in the following function.
+            zwalletMain->GenerateDeterministicZerocoin(denomination, newCoin, dMint);
+
             // Get a copy of the 'public' portion of the coin. You should
             // embed this into a Zerocoin 'MINT' transaction along with a series
             // of currency inputs totaling the assigned value of one zerocoin.
-            
             libzerocoin::PublicCoin pubCoin = newCoin.getPublicCoin();
             
             //Validate
@@ -3037,7 +3040,6 @@ UniValue spendmanyzerocoin(const UniValue& params, bool fHelp) {
 
     // Wallet comments
     CWalletTx wtx;
-    vector<CBigNum> coinSerials;
     uint256 txHash;
     vector<CBigNum> zcSelectedValues;
     string strError = "";
@@ -3051,7 +3053,7 @@ UniValue spendmanyzerocoin(const UniValue& params, bool fHelp) {
         return strError;
     }
     
-    strError = pwalletMain->SpendMultipleZerocoin(thirdPartyAddress, denominations, wtx, coinSerials, txHash, zcSelectedValues, false);
+    strError = pwalletMain->SpendMultipleZerocoin(thirdPartyAddress, denominations, wtx, txHash, zcSelectedValues, false);
     if (strError != "")
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
@@ -3064,23 +3066,8 @@ UniValue resetmintzerocoin(const UniValue& params, bool fHelp) {
                 "resetmintzerocoin"
                 + HelpRequiringPassphrase());
 
-    list <CZerocoinEntry> listPubcoin;
-    CWalletDB walletdb(pwalletMain->strWalletFile);
-    walletdb.ListPubCoin(listPubcoin);
-
-    BOOST_FOREACH(const CZerocoinEntry &zerocoinItem, listPubcoin){
-        if (zerocoinItem.randomness != 0 && zerocoinItem.serialNumber != 0) {
-            CZerocoinEntry zerocoinTx;
-            zerocoinTx.IsUsed = false;
-            zerocoinTx.denomination = zerocoinItem.denomination;
-            zerocoinTx.value = zerocoinItem.value;
-            zerocoinTx.serialNumber = zerocoinItem.serialNumber;
-            zerocoinTx.nHeight = -1;
-            zerocoinTx.randomness = zerocoinItem.randomness;
-            zerocoinTx.ecdsaSecretKey = zerocoinItem.ecdsaSecretKey;
-            walletdb.WriteZerocoinEntry(zerocoinTx);
-        }
-    }
+    std::set<uint256> serialHashes;
+    pwalletMain->zerocoinTracker->UpdateMints(serialHashes, true, false);
 
     return NullUniValue;
 }
@@ -3100,8 +3087,8 @@ UniValue listmintzerocoins(const UniValue& params, bool fHelp) {
     }
 
     list <CZerocoinEntry> listPubcoin;
-    CWalletDB walletdb(pwalletMain->strWalletFile);
-    walletdb.ListPubCoin(listPubcoin);
+    std::list<CMintMeta> mintMetas = pwalletMain->zerocoinTracker->GetMints(false, false);
+    listPubcoin = pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(mintMetas);
     UniValue results(UniValue::VARR);
 
     BOOST_FOREACH(const CZerocoinEntry &zerocoinItem, listPubcoin) {
@@ -3137,8 +3124,8 @@ UniValue listpubcoins(const UniValue& params, bool fHelp) {
     }
 
     list <CZerocoinEntry> listPubcoin;
-    CWalletDB walletdb(pwalletMain->strWalletFile);
-    walletdb.ListPubCoin(listPubcoin);
+    std::list<CMintMeta> mintMetas = pwalletMain->zerocoinTracker->GetMints(false, false);
+    listPubcoin = pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(mintMetas);
     UniValue results(UniValue::VARR);
     listPubcoin.sort(CompID);
 
@@ -3176,7 +3163,8 @@ UniValue setmintzerocoinstatus(const UniValue& params, bool fHelp) {
 
     list <CZerocoinEntry> listPubcoin;
     CWalletDB walletdb(pwalletMain->strWalletFile);
-    walletdb.ListPubCoin(listPubcoin);
+    std::list<CMintMeta> mintMetas = pwalletMain->zerocoinTracker->GetMints(false);
+    listPubcoin = pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(mintMetas);
 
     UniValue results(UniValue::VARR);
 
@@ -3185,20 +3173,13 @@ UniValue setmintzerocoinstatus(const UniValue& params, bool fHelp) {
             LogPrintf("zerocoinItem.serialNumber = %s\n", zerocoinItem.serialNumber.GetHex());
             if (zerocoinItem.serialNumber == coinSerial) {
                 LogPrintf("setmintzerocoinstatus Found!\n");
-                CZerocoinEntry zerocoinTx;
-                zerocoinTx.id = zerocoinItem.id;
-                zerocoinTx.IsUsed = fStatus;
-                zerocoinTx.denomination = zerocoinItem.denomination;
-                zerocoinTx.value = zerocoinItem.value;
-                zerocoinTx.serialNumber = zerocoinItem.serialNumber;
-                zerocoinTx.nHeight = zerocoinItem.nHeight;
-                zerocoinTx.randomness = zerocoinItem.randomness;
-                zerocoinTx.ecdsaSecretKey = zerocoinItem.ecdsaSecretKey;
-                const std::string& isUsedDenomStr = zerocoinTx.IsUsed
-                        ? "Used (" + std::to_string(zerocoinTx.denomination) + " mint)"
-                        : "New (" + std::to_string(zerocoinTx.denomination) + " mint)";
-                pwalletMain->NotifyZerocoinChanged(pwalletMain, zerocoinTx.value.GetHex(), isUsedDenomStr, CT_UPDATED);
-                walletdb.WriteZerocoinEntry(zerocoinTx);
+                std::set<uint256> serialHashes;
+                serialHashes.insert(GetSerialHash(zerocoinItem.serialNumber));
+                pwalletMain->zerocoinTracker->UpdateMints(serialHashes, false, true, fStatus);
+                const std::string& isUsedDenomStr = fStatus
+                        ? "Used (" + std::to_string(zerocoinItem.denomination) + " mint)"
+                        : "New (" + std::to_string(zerocoinItem.denomination) + " mint)";
+                pwalletMain->NotifyZerocoinChanged(pwalletMain, zerocoinItem.value.GetHex(), isUsedDenomStr, CT_UPDATED);
 
                 if (!fStatus) {
                     // erase zerocoin spend entry
@@ -3208,13 +3189,13 @@ UniValue setmintzerocoinstatus(const UniValue& params, bool fHelp) {
                 }
 
                 UniValue entry(UniValue::VOBJ);
-                entry.push_back(Pair("id", zerocoinTx.id));
-                entry.push_back(Pair("IsUsed", zerocoinTx.IsUsed));
-                entry.push_back(Pair("denomination", zerocoinTx.denomination));
-                entry.push_back(Pair("value", zerocoinTx.value.GetHex()));
-                entry.push_back(Pair("serialNumber", zerocoinTx.serialNumber.GetHex()));
-                entry.push_back(Pair("nHeight", zerocoinTx.nHeight));
-                entry.push_back(Pair("randomness", zerocoinTx.randomness.GetHex()));
+                entry.push_back(Pair("id", zerocoinItem.id));
+                entry.push_back(Pair("IsUsed", zerocoinItem.IsUsed));
+                entry.push_back(Pair("denomination", zerocoinItem.denomination));
+                entry.push_back(Pair("value", zerocoinItem.value.GetHex()));
+                entry.push_back(Pair("serialNumber", zerocoinItem.serialNumber.GetHex()));
+                entry.push_back(Pair("nHeight", zerocoinItem.nHeight));
+                entry.push_back(Pair("randomness", zerocoinItem.randomness.GetHex()));
                 results.push_back(entry);
                 break;
             }
