@@ -389,11 +389,31 @@ uint512 CZerocoinWallet::GetZerocoinSeed(uint32_t n)
     return zerocoinSeed;
 }
 
-void CZerocoinWallet::UpdateCount()
+uint32_t CZerocoinWallet::GetCount()
+{
+    return nCountLastUsed;
+}
+
+void CZerocoinWallet::SetCount(uint32_t nCount)
+{
+    nCountLastUsed = nCount;
+}
+
+void CZerocoinWallet::UpdateCountLocal()
 {
     nCountLastUsed++;
+}
+
+void CZerocoinWallet::UpdateCountDB()
+{
     CWalletDB walletdb(strWalletFile);
     walletdb.WriteZerocoinCount(nCountLastUsed);
+}
+
+void CZerocoinWallet::UpdateCount()
+{
+    UpdateCountLocal();
+    UpdateCountDB();
 }
 
 void CZerocoinWallet::GenerateDeterministicZerocoin(libzerocoin::CoinDenomination denom, libzerocoin::PrivateCoin& coin, CDeterministicMint& dMint, bool fGenerateOnly)

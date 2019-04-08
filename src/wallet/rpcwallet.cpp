@@ -2655,6 +2655,7 @@ UniValue listunspentmintzerocoins(const UniValue &params, bool fHelp) {
     UniValue results(UniValue::VARR);
     vector <COutput> vecOutputs;
     assert(pwalletMain != NULL);
+    pwalletMain->zerocoinTracker->ListMints(false,false,true);
     pwalletMain->ListAvailableCoinsMintCoins(vecOutputs, false);
     LogPrintf("vecOutputs.size()=%s\n", vecOutputs.size());
     BOOST_FOREACH(const COutput &out, vecOutputs)
@@ -2810,6 +2811,8 @@ UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
     vector<CDeterministicMint> vDMints;
     CDeterministicMint dMint;
 
+    uint32_t nCountLastUsed = zwalletMain->GetCount();
+
     vector<string> keys = sendTo.getKeys();
     BOOST_FOREACH(const string& denominationStr, keys){
 
@@ -2873,6 +2876,9 @@ UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
                 validCoin = pubCoin.validate();
             }
 
+            // Update local count (don't write back to DB until we know coin is verified)
+            zwalletMain->UpdateCountLocal();
+
             // Create script for coin
             CScript scriptSerializedCoin =
                     CScript() << OP_ZEROCOINMINT << pubCoin.getValue().getvch().size() << pubCoin.getValue().getvch();
@@ -2887,8 +2893,11 @@ UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
 
     string strError = pwalletMain->MintAndStoreZerocoin(vecSend, privCoins, vDMints, wtx);
 
-    if (strError != "")
+    if (strError != ""){
+        // reset countLastUsed value
+        zwalletMain->SetCount(nCountLastUsed);
         throw runtime_error(strError);
+    }
 
     return wtx.GetHash().GetHex();
 }

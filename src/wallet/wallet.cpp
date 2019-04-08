@@ -2282,10 +2282,12 @@ bool CWallet::GetVinAndKeysFromOutput(COutput out, CTxIn &txinRet, CPubKey &pubK
 
 //[zcoin]
 void CWallet::ListAvailableCoinsMintCoins(vector <COutput> &vCoins, bool fOnlyConfirmed) const {
+    LOCK(cs_main);
     vCoins.clear();
     {
         LOCK(cs_wallet);
         list <CZerocoinEntry> listPubCoin = list<CZerocoinEntry>();
+        CWalletDB walletdb(pwalletMain->strWalletFile);
         std::list<CMintMeta> mintMetas = pwalletMain->zerocoinTracker->GetMints(true);
         listPubCoin = pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(mintMetas);
         LogPrintf("listPubCoin.size()=%s\n", listPubCoin.size());
@@ -3220,6 +3222,8 @@ bool CWallet::CreateZerocoinMintModel(string &stringError, std::vector<std::pair
     vector<CDeterministicMint> vDMints;
     CDeterministicMint dMint;
 
+    uint32_t nCountLastUsed = zwalletMain->GetCount();
+
     std::pair<int,int> denominationPair;
     BOOST_FOREACH(denominationPair, denominationPairs){
         int denominationValue = denominationPair.first;
@@ -3279,6 +3283,9 @@ bool CWallet::CreateZerocoinMintModel(string &stringError, std::vector<std::pair
                 validCoin = pubCoin.validate();
             }
 
+            // Update local count (don't write back to DB until we know coin is verified)
+            zwalletMain->UpdateCountLocal();
+
             // Create script for coin
             CScript scriptSerializedCoin =
                     CScript() << OP_ZEROCOINMINT << pubCoin.getValue().getvch().size() << pubCoin.getValue().getvch();
@@ -3294,6 +3301,8 @@ bool CWallet::CreateZerocoinMintModel(string &stringError, std::vector<std::pair
     string strError = pwalletMain->MintAndStoreZerocoin(vecSend, privCoins, vDMints, wtx);
 
     if (strError != ""){
+        // reset countLastUsed value
+        zwalletMain->SetCount(nCountLastUsed);
         return false;
     }
 
@@ -4133,9 +4142,6 @@ bool CWallet::CreateMultipleZerocoinSpendTransaction(std::string &thirdPartyaddr
             
                 // Fill vin
                 // Select not yet used coin from the wallet with minimal possible id
-                list <CZerocoinEntry> listPubCoin;
-                CWalletDB(strWalletFile).ListPubCoin(listPubCoin);
-                listPubCoin.sort(CompHeight);
                 CZerocoinEntry coinToUse;
                 CZerocoinState *zerocoinState = CZerocoinState::GetZerocoinState();
                 CBigNum accumulatorValue;
@@ -4156,7 +4162,8 @@ bool CWallet::CreateMultipleZerocoinSpendTransaction(std::string &thirdPartyaddr
                 list<CMintMeta> listMints(setMints.begin(), setMints.end());
                 for (const CMintMeta& mint : listMints) {
                     if (denomination == mint.denom
-                        && ((mint.isUsed == false && !forceUsed) || (mint.isUsed == true && forceUsed))) {
+                        && ((mint.isUsed == false && !forceUsed) || (mint.isUsed == true && forceUsed))
+                        && (tempCoinsToUse.find(mint.pubcoin)==tempCoinsToUse.end())) {
                         if (!GetMint(mint.hashSerial, coinToUse)) {
                                 strFailReason = "Failed to fetch hashSerial " + mint.hashSerial.GetHex();
                                 return false;
@@ -4181,6 +4188,7 @@ bool CWallet::CreateMultipleZerocoinSpendTransaction(std::string &thirdPartyaddr
 
 
                             coinId = id;
+                            tempCoinsToUse.insert(mint.pubcoin);
                             break;
                         }
                 }
@@ -4488,10 +4496,11 @@ string CWallet::MintAndStoreZerocoin(vector<CRecipient> vecSend,
         if (!checkPubCoin.validate()) {
             return "error: pubCoin not validated.";
         }
-        // Now that coin is verified and sent, update the count. (If not verified, we will repeat the same count on the next attempt)
-        zwalletMain->UpdateCount();
         NotifyZerocoinChanged(this, privCoin.getPublicCoin().getValue().GetHex(), "New (" + std::to_string(privCoin.getPublicCoin().getDenomination()) + " mint)", CT_NEW);
     }
+
+    // Now that all coins are verified and sent, update the count in the database.
+    zwalletMain->UpdateCountDB();
 
     //update mints with full transaction hash and then database them
     CWalletDB walletdb(pwalletMain->strWalletFile);
@@ -4621,7 +4630,8 @@ string CWallet::SpendZerocoin(std::string &thirdPartyaddress, int64_t nValue, li
 
     CMintMeta metaCheck = pwalletMain->zerocoinTracker->GetMetaFromPubcoin(hashPubcoin);
     if (!metaCheck.isUsed) {
-        return _("Error, the mint did not get marked as used");
+        strError = "Error, mint with pubcoin hash " + hashPubcoin.GetHex() + " did not get marked as used";
+        LogPrintf("SpendZerocoin() : %s\n", strError.c_str());
     }
 
     return "";
@@ -4687,9 +4697,10 @@ string CWallet::SpendMultipleZerocoin(std::string &thirdPartyaddress, const std:
         pwalletMain->zerocoinTracker->SetPubcoinUsed(hashPubcoin, txidSpend);
 
         CMintMeta metaCheck = pwalletMain->zerocoinTracker->GetMetaFromPubcoin(hashPubcoin);
-        if (!metaCheck.isUsed)
+        if (!metaCheck.isUsed){
             strError = "Error, mint with pubcoin hash " + hashPubcoin.GetHex() + " did not get marked as used";
             LogPrintf("SpendZerocoin() : %s\n", strError.c_str());
+        }
     }
 
 

@@ -40,10 +40,15 @@ public:
     void RemoveMintsFromPool(const std::vector<uint256>& vPubcoinHashes);
     bool SetMintSeen(const CBigNum& bnValue, const int& nHeight, const uint256& txid, const libzerocoin::CoinDenomination& denom);
     bool IsInMintPool(const CBigNum& bnValue) { return mintPool.Has(bnValue); }
-    void UpdateCount();
     void Lock();
     void SeedToZerocoin(const uint512& seedZerocoin, CBigNum& bnValue, libzerocoin::PrivateCoin& coin);
     bool CheckSeed(const CDeterministicMint& dMint);
+    // Count updating functions
+    uint32_t GetCount();
+    void SetCount(uint32_t nCount);
+    void UpdateCountLocal();
+    void UpdateCountDB();
+    void UpdateCount();
 
 private:
     uint512 GetZerocoinSeed(uint32_t n);
