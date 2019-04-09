@@ -19,6 +19,7 @@ private:
     Bignum pubcoin;
     uint256 txid;
     int nHeight;
+    int nId;
     int denom;
     bool isUsed;
 
@@ -29,6 +30,7 @@ public:
     libzerocoin::CoinDenomination GetDenomination() const { return (libzerocoin::CoinDenomination)denom; }
     uint32_t GetCount() const { return nCount; }
     int GetHeight() const { return nHeight; }
+    int GetId() const { return nId; }
     uint256 GetSeedHash() const { return hashSeed; }
     uint256 GetSerialHash() const { return hashSerial; }
     Bignum GetPubcoin() const { return pubcoin; }
@@ -37,6 +39,7 @@ public:
     bool IsUsed() const { return isUsed; }
     void SetDenomination(const libzerocoin::CoinDenomination denom) { this->denom = denom; }
     void SetHeight(const int& nHeight) { this->nHeight = nHeight; }
+    void SetId(const int& nId) { this->nId = nId; }
     void SetNull();
     void SetTxHash(const uint256& txid) { this->txid = txid; }
     void SetUsed(const bool isUsed) { this->isUsed = isUsed; }
@@ -53,6 +56,7 @@ public:
         READWRITE(pubcoin);
         READWRITE(txid);
         READWRITE(nHeight);
+        READWRITE(nId);
         READWRITE(denom);
         READWRITE(isUsed);
     };

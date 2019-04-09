@@ -18,6 +18,7 @@
 struct CMintMeta
 {
     int nHeight;
+    int nId;
     CBigNum pubcoin;
     uint256 hashSerial;
     uint8_t nVersion;
@@ -68,6 +69,7 @@ public:
     CZerocoinEntry(const CZerocoinEntry& other) {
         denomination = other.denomination;
         nHeight = other.nHeight;
+        id = other.id;
         value = other.value;
         randomness = other.randomness;
         serialNumber = other.serialNumber;

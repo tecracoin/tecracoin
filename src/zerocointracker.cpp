@@ -249,6 +249,7 @@ bool CZerocoinTracker::UpdateState(const CMintMeta& meta)
         }
 
         dMint.SetHeight(meta.nHeight);
+        dMint.SetId(meta.nId);
         dMint.SetUsed(meta.isUsed);
         dMint.SetDenomination(meta.denom);
 
@@ -260,6 +261,7 @@ bool CZerocoinTracker::UpdateState(const CMintMeta& meta)
         //     return error("%s: failed to read mint from database", __func__);
 
         zerocoin.nHeight = meta.nHeight;
+        zerocoin.id = meta.nId;
         zerocoin.IsUsed = meta.isUsed;
         zerocoin.denomination = meta.denom;
 
@@ -278,6 +280,7 @@ void CZerocoinTracker::Add(const CDeterministicMint& dMint, bool isNew, bool isA
     CMintMeta meta;
     meta.pubcoin = dMint.GetPubcoin();
     meta.nHeight = dMint.GetHeight();
+    meta.nId = dMint.GetId();
     meta.txid = dMint.GetTxHash();
     meta.isUsed = dMint.IsUsed();
     meta.hashSerial = dMint.GetSerialHash();
@@ -300,6 +303,7 @@ void CZerocoinTracker::Add(const CZerocoinEntry& zerocoin, bool isNew, bool isAr
     CMintMeta meta;
     meta.pubcoin = zerocoin.value;
     meta.nHeight = zerocoin.nHeight;
+    meta.nId = zerocoin.id;
     //meta.txid = zerocoin.GetTxHash();
     meta.isUsed = zerocoin.IsUsed;
     meta.hashSerial = GetSerialHash(zerocoin.serialNumber);
@@ -361,8 +365,9 @@ bool CZerocoinTracker::UpdateStatusInternal(const std::set<uint256>& setMempool,
     bool isPendingSpend = static_cast<bool>(mapPendingSpends.count(mint.hashSerial));
 
     // See if there is a blockchain record of spending this mint
+    CZerocoinState *zerocoinState = CZerocoinState::GetZerocoinState();
     CBigNum bnSerial;
-    bool isConfirmedSpend = CZerocoinState::GetZerocoinState()->IsUsedCoinSerialHash(bnSerial, mint.hashSerial);
+    bool isConfirmedSpend = zerocoinState->IsUsedCoinSerialHash(bnSerial, mint.hashSerial);
 
     // Double check the mempool for pending spend
     if (isPendingSpend) {
@@ -376,7 +381,7 @@ bool CZerocoinTracker::UpdateStatusInternal(const std::set<uint256>& setMempool,
 
     bool isUsed = isPendingSpend || isConfirmedSpend;
 
-    if (!mint.nHeight || !isMintInChain || isUsed != mint.isUsed) {
+    if ((mint.nHeight==-1) || (mint.nId<=0) || !isMintInChain || isUsed != mint.isUsed) {
         CTransaction tx;
         uint256 hashBlock;
 
@@ -412,10 +417,14 @@ bool CZerocoinTracker::UpdateStatusInternal(const std::set<uint256>& setMempool,
                 mint.nHeight = 0;
 
                 return true;
-            }else if(!mint.nHeight){ // assign nHeight if not present
-                int nHeight = mapBlockIndex.at(hashBlock)->nHeight;
+            }else if((mint.nHeight==-1) || (mint.nId<=0)){ // assign nHeight if not present
+                int nId;
+                int nHeight;
+                nHeight = zerocoinState->GetMintedCoinHeightAndId(mint.pubcoin, mint.denom, nId);
                 LogPrintf("%s : Set mint %s nHeight to %d\n", __func__, hashPubcoin.GetHex(), nHeight);
+                LogPrintf("%s : Set mint %s nId to %d\n", __func__, hashPubcoin.GetHex(), nId);
                 mint.nHeight = nHeight;
+                mint.nId = nId;
                 isUpdated = true;
             }
         }
@@ -433,14 +442,13 @@ bool CZerocoinTracker::UpdateStatusInternal(const std::set<uint256>& setMempool,
     return false;
 }
 
-std::list <CZerocoinEntry> CZerocoinTracker::MintMetaToZerocoinEntries(std::list<CMintMeta> listMints) const {
-    std::list <CZerocoinEntry> entries;
+bool CZerocoinTracker::MintMetaToZerocoinEntries(std::list <CZerocoinEntry>& entries, std::list<CMintMeta> listMints) const {
     CZerocoinEntry entry;
     for (const CMintMeta& mint : listMints) {
         if (pwalletMain->GetMint(mint.hashSerial, entry))
             entries.push_back(entry);
     }
-    return entries;
+    return true;
 }
 
 bool CZerocoinTracker::UpdateMints(std::set<uint256> serialHashes, bool fReset, bool fUpdateStatus, bool fStatus){

@@ -20,6 +20,7 @@
 #include "wallet.h"
 #include "walletdb.h"
 #include "zerocointracker.h"
+#include "znode-sync.h"
 
 #include <znode-payments.h>
 
@@ -3076,6 +3077,7 @@ UniValue resetmintzerocoin(const UniValue& params, bool fHelp) {
                 + HelpRequiringPassphrase());
 
     std::set<uint256> serialHashes;
+    pwalletMain->zerocoinTracker->ListMints(false, false, true);
     pwalletMain->zerocoinTracker->UpdateMints(serialHashes, true, false);
 
     return NullUniValue;
@@ -3095,9 +3097,10 @@ UniValue listmintzerocoins(const UniValue& params, bool fHelp) {
         fAllStatus = params[0].get_bool();
     }
 
-    list <CZerocoinEntry> listPubcoin;
+    pwalletMain->zerocoinTracker->ListMints(false, false, true);
     std::list<CMintMeta> mintMetas = pwalletMain->zerocoinTracker->GetMints(false, false);
-    listPubcoin = pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(mintMetas);
+    std::list<CZerocoinEntry> listPubcoin;
+    pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(listPubcoin, mintMetas);
     UniValue results(UniValue::VARR);
 
     BOOST_FOREACH(const CZerocoinEntry &zerocoinItem, listPubcoin) {
@@ -3133,8 +3136,9 @@ UniValue listpubcoins(const UniValue& params, bool fHelp) {
     }
 
     list <CZerocoinEntry> listPubcoin;
+    pwalletMain->zerocoinTracker->ListMints(false, false, true);
     std::list<CMintMeta> mintMetas = pwalletMain->zerocoinTracker->GetMints(false, false);
-    listPubcoin = pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(mintMetas);
+    pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(listPubcoin, mintMetas);
     UniValue results(UniValue::VARR);
     listPubcoin.sort(CompID);
 
@@ -3172,8 +3176,9 @@ UniValue setmintzerocoinstatus(const UniValue& params, bool fHelp) {
 
     list <CZerocoinEntry> listPubcoin;
     CWalletDB walletdb(pwalletMain->strWalletFile);
-    std::list<CMintMeta> mintMetas = pwalletMain->zerocoinTracker->GetMints(false);
-    listPubcoin = pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(mintMetas);
+    pwalletMain->zerocoinTracker->ListMints(false, false, true);
+    std::list<CMintMeta> mintMetas = pwalletMain->zerocoinTracker->GetMints(false, false);
+    pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(listPubcoin, mintMetas);
 
     UniValue results(UniValue::VARR);
 

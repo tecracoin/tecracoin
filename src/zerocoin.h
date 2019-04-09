@@ -117,6 +117,9 @@ public:
     // serials of spends currently in the mempool mapped to tx hashes
     unordered_map<CBigNum,uint256,CBigNumHash> mempoolCoinSerials;
 
+    // Update deterministic mint data
+    void UpdateDeterministicState();
+
     // Add mint, automatically assigning id to it. Returns id and previous accumulator value (if any)
     int AddMint(CBlockIndex *index, int denomination, const CBigNum &pubCoin, CBigNum &previousAccValue);
     // Add serial to the list of used ones

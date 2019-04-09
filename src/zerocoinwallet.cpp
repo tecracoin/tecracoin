@@ -474,6 +474,7 @@ bool CZerocoinWallet::RegenerateMint(const CDeterministicMint& dMint, CZerocoinE
     zerocoin.serialNumber = bnSerial;
     zerocoin.IsUsed = dMint.IsUsed();
     zerocoin.nHeight = dMint.GetHeight();
+    zerocoin.id = dMint.GetId();
     zerocoin.ecdsaSecretKey = std::vector<unsigned char>(&coin.getEcdsaSeckey()[0],&coin.getEcdsaSeckey()[32]);
 
     return true;

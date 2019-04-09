@@ -2286,10 +2286,10 @@ void CWallet::ListAvailableCoinsMintCoins(vector <COutput> &vCoins, bool fOnlyCo
     vCoins.clear();
     {
         LOCK(cs_wallet);
-        list <CZerocoinEntry> listPubCoin = list<CZerocoinEntry>();
+        std::list <CZerocoinEntry> listPubCoin;
         CWalletDB walletdb(pwalletMain->strWalletFile);
         std::list<CMintMeta> mintMetas = pwalletMain->zerocoinTracker->GetMints(true);
-        listPubCoin = pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(mintMetas);
+        pwalletMain->zerocoinTracker->MintMetaToZerocoinEntries(listPubCoin, mintMetas);
         LogPrintf("listPubCoin.size()=%s\n", listPubCoin.size());
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it) {
             const CWalletTx *pcoin = &(*it).second;

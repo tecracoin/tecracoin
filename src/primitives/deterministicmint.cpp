@@ -29,12 +29,13 @@ void CDeterministicMint::SetNull()
     hashSerial.SetNull();
     txid.SetNull();
     nHeight = -1;
+    nId = 0;
     denom = CoinDenomination::ZQ_ERROR;
     isUsed = false;
 }
 
 std::string CDeterministicMint::ToString() const
 {
-    return strprintf(" DeterministicMint:\n   count=%d\n   hashseed=%s\n   hashSerial=%s\n   hashPubcoin=%s\n   txid=%s\n   height=%d\n   denom=%d\n   isUsed=%d\n",
-    nCount, hashSeed.GetHex(), hashSerial.GetHex(), GetPubCoinHash(pubcoin).GetHex(), txid.GetHex(), nHeight, denom, isUsed);
+    return strprintf(" DeterministicMint:\n   count=%d\n   hashseed=%s\n   hashSerial=%s\n   hashPubcoin=%s\n   txid=%s\n   height=%d\n   id=%d\n   denom=%d\n   isUsed=%d\n",
+    nCount, hashSeed.GetHex(), hashSerial.GetHex(), GetPubCoinHash(pubcoin).GetHex(), txid.GetHex(), nHeight, nId, denom, isUsed);
 }

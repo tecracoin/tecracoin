@@ -813,6 +813,10 @@ std::size_t CZerocoinState::CBigNumHash::operator ()(const CBigNum &bn) const no
 CZerocoinState::CZerocoinState() {
 }
 
+void CZerocoinState::UpdateDeterministicState(){
+    pwalletMain->zerocoinTracker->ListMints(false, false, true);
+}
+
 int CZerocoinState::AddMint(CBlockIndex *index, int denomination, const CBigNum &pubCoin, CBigNum &previousAccValue) {
 
     int mintId = 1;

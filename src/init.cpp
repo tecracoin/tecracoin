@@ -816,13 +816,6 @@ void ThreadImport(std::vector <boost::filesystem::path> vImportFiles) {
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
         InitBlockIndex(chainparams);
     }
-
-#ifdef ENABLE_WALLET
-    //Load zerocoin mint hashes to memory
-    pwalletMain->zerocoinTracker->Init();
-    zwalletMain->LoadMintPoolFromDB();
-    zwalletMain->SyncWithChain();
-#endif
         
     // hardcoded $DATADIR/bootstrap.dat
     boost::filesystem::path pathBootstrap = GetDataDir() / "bootstrap.dat";
@@ -861,6 +854,13 @@ void ThreadImport(std::vector <boost::filesystem::path> vImportFiles) {
         LogPrintf("Stopping after block import\n");
         StartShutdown();
     }
+
+#ifdef ENABLE_WALLET
+    //Load zerocoin mint hashes to memory
+    pwalletMain->zerocoinTracker->Init();
+    zwalletMain->LoadMintPoolFromDB();
+    zwalletMain->SyncWithChain();
+#endif
 }
 
 /** Sanity checks
