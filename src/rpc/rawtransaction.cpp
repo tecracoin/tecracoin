@@ -24,6 +24,7 @@
 #include "uint256.h"
 #include "utilstrencodings.h"
 #include "util.h"
+#include "zerocoin.h"
 #ifdef ENABLE_WALLET
 #include "wallet/wallet.h"
 #endif
@@ -593,6 +594,94 @@ UniValue decodescript(const UniValue& params, bool fHelp)
     return r;
 }
 
+UniValue decodezerocoinspend(const UniValue& params, bool fHelp)
+{
+    if (fHelp || params.size() != 2) {
+        throw std::runtime_error(
+            "decodezerocoinspend version \"hex\"\n"
+            "\nDecode a hex-encoded Zerocoin spend.\n"
+            "\nArguments:\n"
+            "1. version     (numeric, required) The version of Zerocoin spend, either 1 or 2\n"
+            "2. \"hex\"     (string, required) The hex encoded Zerocoin spend\n"
+            "\nExamples:\n"
+            + HelpExampleCli("decodezerocoinspend", "2 \"hexstring\"")
+            + HelpExampleRpc("decodezerocoinspend", "2, \"hexstring\"")
+        );
+    }
+
+    auto version = params[0].get_int();
+    auto raw = ParseHexV(params[1].get_str(), "parameter 2");
+
+    if (version != 1 && version != 2) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "parameter 1 must be 1 or 2");
+    }
+
+    CDataStream serialized(raw, SER_NETWORK, PROTOCOL_VERSION);
+    libzerocoin::CoinSpend spend(version == 2 ? ZCParamsV2 : ZCParams, serialized);
+
+    UniValue accumulatorPoK(UniValue::VOBJ);
+	accumulatorPoK.push_back(Pair("C_e", spend.getAccumulatorPoK().getCe().GetHex()));
+	accumulatorPoK.push_back(Pair("C_u", spend.getAccumulatorPoK().getCu().GetHex()));
+	accumulatorPoK.push_back(Pair("C_r", spend.getAccumulatorPoK().getCr().GetHex()));
+	accumulatorPoK.push_back(Pair("st_1", spend.getAccumulatorPoK().getSt1().GetHex()));
+	accumulatorPoK.push_back(Pair("st_2", spend.getAccumulatorPoK().getSt2().GetHex()));
+	accumulatorPoK.push_back(Pair("st_3", spend.getAccumulatorPoK().getSt3().GetHex()));
+	accumulatorPoK.push_back(Pair("t_1", spend.getAccumulatorPoK().getT1().GetHex()));
+	accumulatorPoK.push_back(Pair("t_2", spend.getAccumulatorPoK().getT2().GetHex()));
+	accumulatorPoK.push_back(Pair("t_3", spend.getAccumulatorPoK().getT3().GetHex()));
+	accumulatorPoK.push_back(Pair("t_4", spend.getAccumulatorPoK().getT4().GetHex()));
+	accumulatorPoK.push_back(Pair("s_alpha", spend.getAccumulatorPoK().getSAlpha().GetHex()));
+	accumulatorPoK.push_back(Pair("s_beta", spend.getAccumulatorPoK().getSBeta().GetHex()));
+	accumulatorPoK.push_back(Pair("s_zeta", spend.getAccumulatorPoK().getSZeta().GetHex()));
+	accumulatorPoK.push_back(Pair("s_sigma", spend.getAccumulatorPoK().getSSigma().GetHex()));
+	accumulatorPoK.push_back(Pair("s_eta", spend.getAccumulatorPoK().getSEta().GetHex()));
+	accumulatorPoK.push_back(Pair("s_epsilon", spend.getAccumulatorPoK().getSEpsilon().GetHex()));
+	accumulatorPoK.push_back(Pair("s_delta", spend.getAccumulatorPoK().getSDelta().GetHex()));
+	accumulatorPoK.push_back(Pair("s_xi", spend.getAccumulatorPoK().getSXi().GetHex()));
+	accumulatorPoK.push_back(Pair("s_phi", spend.getAccumulatorPoK().getSPhi().GetHex()));
+	accumulatorPoK.push_back(Pair("s_gamma", spend.getAccumulatorPoK().getSGamma().GetHex()));
+	accumulatorPoK.push_back(Pair("s_psi", spend.getAccumulatorPoK().getSPsi().GetHex()));
+
+    UniValue notPrime(UniValue::VARR);
+    for (auto& n : spend.getSerialNumberSoK().getSNotPrime()) {
+        notPrime.push_back(n.GetHex());
+    }
+
+    UniValue prime(UniValue::VARR);
+    for (auto& n : spend.getSerialNumberSoK().getSPrime()) {
+        prime.push_back(n.GetHex());
+    }
+
+    UniValue serialNumberSoK(UniValue::VOBJ);
+    serialNumberSoK.push_back(Pair("s_notprime", notPrime));
+    serialNumberSoK.push_back(Pair("sprime", prime));
+    serialNumberSoK.push_back(Pair("hash", spend.getSerialNumberSoK().getHash().GetHex()));
+
+    UniValue commitmentPoK(UniValue::VOBJ);
+    commitmentPoK.push_back(Pair("S1", spend.getCommitmentPoK().getS1().GetHex()));
+    commitmentPoK.push_back(Pair("S2", spend.getCommitmentPoK().getS2().GetHex()));
+    commitmentPoK.push_back(Pair("S3", spend.getCommitmentPoK().getS3().GetHex()));
+    commitmentPoK.push_back(Pair("challenge", spend.getCommitmentPoK().getChallenge().GetHex()));
+
+    UniValue r(UniValue::VOBJ);
+    r.push_back(Pair("denomination", std::to_string(spend.getDenomination())));
+    r.push_back(Pair("accCommitmentToCoinValue", spend.getAccCommitmentToCoinValue().GetHex()));
+    r.push_back(Pair("serialCommitmentToCoinValue", spend.getSerialCommitmentToCoinValue().GetHex()));
+    r.push_back(Pair("coinSerialNumber", spend.getCoinSerialNumber().GetHex()));
+    r.push_back(Pair("accumulatorPoK", accumulatorPoK));
+    r.push_back(Pair("serialNumberSoK", serialNumberSoK));
+    r.push_back(Pair("commitmentPoK", commitmentPoK));
+
+    if (version == 2) {
+        r.push_back(Pair("version", spend.getVersion()));
+        r.push_back(Pair("ecdsaPubkey", HexStr(spend.getEcdsaPubkey())));
+        r.push_back(Pair("ecdsaSignature", HexStr(spend.getEcdsaSignature())));
+        r.push_back(Pair("accumulatorBlockHash", spend.getAccumulatorBlockHash().GetHex()));
+    }
+
+    return r;
+}
+
 /** Pushes a JSON object for script verification or signing errors to vErrorsRet. */
 static void TxInErrorToJSON(const CTxIn& txin, UniValue& vErrorsRet, const std::string& strMessage)
 {
@@ -938,6 +1027,7 @@ static const CRPCCommand commands[] =
     { "rawtransactions",    "createrawtransaction",   &createrawtransaction,   true  },
     { "rawtransactions",    "decoderawtransaction",   &decoderawtransaction,   true  },
     { "rawtransactions",    "decodescript",           &decodescript,           true  },
+    { "rawtransactions",    "decodezerocoinspend",    &decodezerocoinspend,    true  },
     { "rawtransactions",    "sendrawtransaction",     &sendrawtransaction,     false },
     { "rawtransactions",    "signrawtransaction",     &signrawtransaction,     false }, /* uses wallet if enabled */
 

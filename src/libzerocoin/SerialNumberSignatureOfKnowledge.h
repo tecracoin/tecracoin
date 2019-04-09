@@ -44,6 +44,10 @@ public:
 	 */
     SerialNumberSignatureOfKnowledge(const Params* p, const PrivateCoin& coin, const Commitment& commitmentToCoin, uint256 msghash);
 
+		const vector<Bignum>& getSNotPrime() const { return s_notprime; }
+		const vector<Bignum>& getSPrime() const { return sprime; }
+		const arith_uint256& getHash() const { return hash; }
+
 	/** Verifies the Signature of knowledge.
 	 *
 	 * @param msghash hash of meta data to create a signature of knowledge on.

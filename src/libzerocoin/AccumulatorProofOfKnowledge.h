@@ -29,6 +29,29 @@ public:
 	 * @param a
 	 */
 	AccumulatorProofOfKnowledge(const AccumulatorAndProofParams* p, const Commitment& commitmentToCoin, const AccumulatorWitness& witness, Accumulator& a);
+
+	const Bignum& getCe() const { return C_e; }
+	const Bignum& getCu() const { return C_u; }
+	const Bignum& getCr() const { return C_r; }
+	const Bignum& getSt1() const { return st_1; }
+	const Bignum& getSt2() const { return st_2; }
+	const Bignum& getSt3() const { return st_3; }
+	const Bignum& getT1() const { return t_1; }
+	const Bignum& getT2() const { return t_2; }
+	const Bignum& getT3() const { return t_3; }
+	const Bignum& getT4() const { return t_4; }
+	const Bignum& getSAlpha() const { return s_alpha; }
+	const Bignum& getSBeta() const { return s_beta; }
+	const Bignum& getSZeta() const { return s_zeta; }
+	const Bignum& getSSigma() const { return s_sigma; }
+	const Bignum& getSEta() const { return s_eta; }
+	const Bignum& getSEpsilon() const { return s_epsilon; }
+	const Bignum& getSDelta() const { return s_delta; }
+	const Bignum& getSXi() const { return s_xi; }
+	const Bignum& getSPhi() const { return s_phi; }
+	const Bignum& getSGamma() const { return s_gamma; }
+	const Bignum& getSPsi() const { return s_psi; }
+
 	/** Verifies that  a commitment c is accumulated in accumulated a
 	 */
 	bool Verify(const Accumulator& a,const Bignum& valueOfCommitmentToCoin) const;

@@ -95,6 +95,26 @@ public:
 	 */
 	CoinDenomination getDenomination() const;
 
+	const Bignum& getAccCommitmentToCoinValue() const {
+		return accCommitmentToCoinValue;
+	}
+
+	const Bignum& getSerialCommitmentToCoinValue() const {
+		return serialCommitmentToCoinValue;
+	}
+
+	const AccumulatorProofOfKnowledge& getAccumulatorPoK() const {
+		return accumulatorPoK;
+	}
+
+	const SerialNumberSignatureOfKnowledge& getSerialNumberSoK() const {
+		return serialNumberSoK;
+	}
+
+	const CommitmentProofOfKnowledge& getCommitmentPoK() const {
+		return commitmentPoK;
+	}
+
 	void setVersion(unsigned int nVersion){
         version = nVersion;
 	}
@@ -102,7 +122,15 @@ public:
     int getVersion() const {
         return version;
     }
-	
+
+	const std::vector<unsigned char>& getEcdsaPubkey() const {
+		return ecdsaPubkey;
+	}
+
+	const std::vector<unsigned char>& getEcdsaSignature() const {
+		return ecdsaSignature;
+	}
+
 	uint256 getAccumulatorBlockHash() const {
 		return accumulatorBlockHash;
 	}

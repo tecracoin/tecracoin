@@ -82,6 +82,11 @@ public:
 		strm >> *this;
 	}
 
+	const Bignum& getS1() const { return S1; }
+	const Bignum& getS2() const { return S2; }
+	const Bignum& getS3() const { return S3; }
+	const Bignum& getChallenge() const { return challenge; }
+
 	const Bignum calculateChallenge(const Bignum& a, const Bignum& b, const Bignum &commitOne, const Bignum &commitTwo) const;
 
 	/**Verifies the proof
