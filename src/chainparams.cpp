@@ -440,7 +440,7 @@ public:
         consensus.nSpendV2ID_25 = 3;
         consensus.nSpendV2ID_50 = 3;
         consensus.nSpendV2ID_100 = 3;
-        consensus.nModulusV2StartBlock = 130;
+        consensus.nModulusV2StartBlock = 1;
         consensus.nModulusV1MempoolStopBlock = 135;
         consensus.nModulusV1StopBlock = 140;
         consensus.nMultipleSpendInputsInOneTxStartBlock = 1;

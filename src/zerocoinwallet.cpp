@@ -126,7 +126,7 @@ void CZerocoinWallet::GenerateMintPool(uint32_t nCountStart, uint32_t nCountEnd)
         uint512 seedZerocoin = GetZerocoinSeed(i);
         CBigNum bnValue;
         CKey key;
-        libzerocoin::PrivateCoin coin(ZCParamsV2);
+        libzerocoin::PrivateCoin coin(ZCParams);
         SeedToZerocoin(seedZerocoin, bnValue, coin);
 
         mintPool.Add(bnValue, i);

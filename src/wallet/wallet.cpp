@@ -4109,7 +4109,8 @@ bool CWallet::CreateMultipleZerocoinSpendTransaction(std::string &thirdPartyaddr
 
             // Set up the Zerocoin Params object
             bool fModulusV2 = chainActive.Height() >= Params().GetConsensus().nModulusV2StartBlock;
-            libzerocoin::Params *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
+            //libzerocoin::Params *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
+            libzerocoin::Params *zcParams = ZCParams;
             // objects holding spend inputs & storage values while tx is formed
             struct TempStorage {
                 libzerocoin::PrivateCoin privateCoin;

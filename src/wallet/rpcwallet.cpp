@@ -2720,7 +2720,7 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
     EnsureWalletIsUnlocked();
 
     // Always use modulus v2
-    libzerocoin::Params *zcParams = ZCParamsV2;
+    libzerocoin::Params *zcParams = fModulusV2 ? ZCParamsV2 : ZCParams;
 
     CDeterministicMint dMint;
 

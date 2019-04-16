@@ -807,8 +807,6 @@ void ThreadImport(std::vector <boost::filesystem::path> vImportFiles) {
             LoadExternalBlockFile(chainparams, file, &pos);
             nFile++;
         }
-        // With Zerocoin data up to date, initialize ZerocoinWallet
-        uiInterface.InitMessage(_("Syncing Zerocoin wallet..."));
 
         pblocktree->WriteReindexing(false);
         fReindex = false;
@@ -816,7 +814,7 @@ void ThreadImport(std::vector <boost::filesystem::path> vImportFiles) {
         // To avoid ending up in a situation without genesis block, re-try initializing (no-op if reindexing worked):
         InitBlockIndex(chainparams);
     }
-        
+      
     // hardcoded $DATADIR/bootstrap.dat
     boost::filesystem::path pathBootstrap = GetDataDir() / "bootstrap.dat";
     if (boost::filesystem::exists(pathBootstrap)) {
@@ -856,6 +854,8 @@ void ThreadImport(std::vector <boost::filesystem::path> vImportFiles) {
     }
 
 #ifdef ENABLE_WALLET
+    // With Zerocoin data up to date, initialize ZerocoinWallet
+    uiInterface.InitMessage(_("Syncing Zerocoin wallet..."));
     //Load zerocoin mint hashes to memory
     pwalletMain->zerocoinTracker->Init();
     zwalletMain->LoadMintPoolFromDB();
