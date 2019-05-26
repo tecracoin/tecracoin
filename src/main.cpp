@@ -3333,7 +3333,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams &chainParams) {
 }
 
 /** Disconnect chainActive's tip. You probably want to call mempool.removeForReorg and manually re-limit mempool size after this, with cs_main held. */
-bool static DisconnectTip(CValidationState &state, const CChainParams &chainparams, bool fBare = false) {
+bool DisconnectTip(CValidationState &state, const CChainParams &chainparams, bool fBare) {
     LogPrintf("DisconnectTip()\n");
     CBlockIndex *pindexDelete = chainActive.Tip();
     assert(pindexDelete);

@@ -340,6 +340,11 @@ void FlushStateToDisk();
 /** Prune block files and flush state to disk. */
 void PruneAndFlush();
 
+bool DisconnectTip(
+        CValidationState &state,
+        const CChainParams &chainparams,
+        bool fBare = false);
+
 /** (try to) add transaction to memory pool **/
 bool AcceptToMemoryPool(
         CTxMemPool& pool,
