@@ -688,6 +688,9 @@ void CZerocoinStateV3::RemoveBlock(CBlockIndex *index) {
             coinGroups.erase(coin.first);
             // decrease pubcoin id for this denomination
             latestCoinIds[coin.first.first]--;
+            if (0 == latestCoinIds[coin.first.first]) {
+                latestCoinIds.erase(coin.first.first);
+            }
         }
         else {
             // roll back lastBlock to previous position

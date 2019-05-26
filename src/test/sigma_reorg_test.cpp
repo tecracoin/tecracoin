@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(sigma_reorg_test_simple_fork)
 {
     CZerocoinStateV3 *zerocoinState = CZerocoinStateV3::GetZerocoinState();
     string denomination;
-    vector<uint256> vtxid;
+    vector<uint256> three_mints_ids;
 
     // Create 400-200+1 = 201 new empty blocks. // consensus.nMintV3SigmaStartBlock = 400
     CreateAndProcessEmptyBlocks(201, scriptPubKey);
@@ -53,12 +53,11 @@ BOOST_AUTO_TEST_CASE(sigma_reorg_test_simple_fork)
         stringError, denominationPairs, SIGMA), stringError + " - Create Mint failed");
     BOOST_CHECK_MESSAGE(mempool.size() == 2, "Mints were not added to mempool");
 
-    vtxid.clear();
-    mempool.queryHashes(vtxid);
-    vtxid.resize(1);
+    mempool.queryHashes(three_mints_ids);
+    three_mints_ids.resize(1);
 
     // Create a block with just 3 mints, but do not process it.
-    CBlock block_with_3_mints = CreateBlock(vtxid, scriptPubKey);
+    // CBlock block_with_3_mints = CreateBlock(three_mints_ids, scriptPubKey);
 
     // All 2 transactions must be able to be added to the next block.
     int previousHeight = chainActive.Height();
@@ -87,19 +86,25 @@ BOOST_AUTO_TEST_CASE(sigma_reorg_test_simple_fork)
     CBlock block_with_spends = CreateAndProcessBlock({}, scriptPubKey);
     BOOST_CHECK_MESSAGE(previousHeight + 1 == chainActive.Height(), "Block not added to chain");
 
-    // Disconnect the last 8 blocks, I.E. all the blocks with our mints and spends.
-    DisconnectBlocks(8);
+    {
+        LOCK(cs_main);
+        // Disconnect the last 8 blocks, I.E. all the blocks with our mints and spends.
+        DisconnectBlocks(8);
 
-    // There must be 5 transactions in the mempool.
-    BOOST_CHECK_MESSAGE(mempool.size() == 5, "Transactions not added back to mempool on blocks removal.");
+        // Invalidate the first block of these 8, the one with 6 mints.
+        CValidationState state;
+        InvalidateBlock(state, Params(), mapBlockIndex[block_with_all_mints.GetHash()]);
+    }
 
     // Now create more blocks, using the same transactions. We can not create a block with 
     // all 4 transactions, because some of them are spends.
     previousHeight = chainActive.Height();
-    BOOST_CHECK_MESSAGE(ProcessBlock(block_with_3_mints), "Block with 3 mints cannot be added back to chain");
-    BOOST_CHECK_MESSAGE(previousHeight + 1 == chainActive.Height(), "Block not added to chain");
+    
+    CBlock block_with_3_mints = CreateAndProcessBlock(three_mints_ids, scriptPubKey);
+    BOOST_CHECK_MESSAGE(previousHeight + 1 == chainActive.Height(),
+        "Block with 3 mints not added to chain");
 
-    vtxid.clear();
+    three_mints_ids.clear();
     mempool.clear();
     zerocoinState->Reset();
 }
