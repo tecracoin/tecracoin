@@ -24,13 +24,10 @@
 BOOST_FIXTURE_TEST_SUITE(sigma_reorg, ZerocoinTestingSetup200)
 
 /*
-1. Add 2 more blocks to the chain with 2 mints and 2 spends in each.
-2. Create another chain of blocks of length 3 such that a fork appears at the very start, and these 3 blocks replace the initial 2.
-3. Make sure that the blockchain automatically switched to the new chain.
 */
 BOOST_AUTO_TEST_CASE(sigma_reorg_test_simple_fork)
 {
-    CZerocoinStateV3 *zerocoinState = CZerocoinStateV3::GetZerocoinState();
+    sigma::CSigmaState *zerocoinState = sigma::CSigmaState::GetState();
     string denomination;
     vector<uint256> three_mints_ids;
 
@@ -92,8 +89,8 @@ BOOST_AUTO_TEST_CASE(sigma_reorg_test_simple_fork)
         DisconnectBlocks(8);
 
         // Invalidate the first block of these 8, the one with 6 mints.
-        CValidationState state;
-        InvalidateBlock(state, Params(), mapBlockIndex[block_with_all_mints.GetHash()]);
+        // CValidationState state;
+        // InvalidateBlock(state, Params(), mapBlockIndex[block_with_all_mints.GetHash()]);
     }
 
     // Now create more blocks, using the same transactions. We can not create a block with 

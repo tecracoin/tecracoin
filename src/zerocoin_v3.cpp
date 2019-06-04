@@ -1,6 +1,6 @@
 #include "main.h"
 #include "zerocoin_v3.h"
-#include "zerocoin.h" // Mostly for reusing class libzerocoin::SpendMetaData
+#include "zerocoin.h" // Mostly for reusing class libsigma::SpendMetaData
 #include "timedata.h"
 #include "chainparams.h"
 #include "util.h"
@@ -35,7 +35,7 @@ static bool CheckSigmaSpendSerial(
         const Scalar &serial,
         int nHeight,
         bool fConnectTip) {
-    // check for zerocoin transaction in this block as well
+    // check for sigma transaction in this block as well
     if (sigmaTxInfo &&
             !sigmaTxInfo->fInfoIsComplete &&
             sigmaTxInfo->spentSerials.find(serial) != sigmaTxInfo->spentSerials.end())
@@ -210,7 +210,7 @@ bool CheckSigmaSpendTransaction(
 
         uint256 txHashForMetadata;
 
-        // Obtain the hash of the transaction sans the zerocoin part
+        // Obtain the hash of the transaction sans the sigma part
         CMutableTransaction txTemp = tx;
         BOOST_FOREACH(CTxIn &txTempIn, txTemp.vin) {
             if (txTempIn.scriptSig.IsSigmaSpend()) {
@@ -232,7 +232,6 @@ bool CheckSigmaSpendTransaction(
             return state.DoS(100, false, NO_MINT_ZEROCOIN,
                     "CheckSigmaSpendTransaction: Error: no coins were minted with such parameters");
 
-        bool passVerify = false;
         CBlockIndex *index = coinGroup.lastBlock;
         pair<sigma::CoinDenomination, int> denominationAndId = std::make_pair(
             targetDenominations[vinIndex], pubcoinId);
@@ -253,18 +252,14 @@ bool CheckSigmaSpendTransaction(
         // the block on which the spend occured.
         // This list of public coins is required by function "Verify" of CoinSpend.
         std::vector<sigma::PublicCoin> anonymity_set;
-        while(true) {
-            BOOST_FOREACH(const sigma::PublicCoin& pubCoinValue,
-                    index->sigmaMintedPubCoins[denominationAndId]) {
-                anonymity_set.push_back(pubCoinValue);
-            }
-            if (index == coinGroup.firstBlock)
-                break;
-            index = index->pprev;
+        for (;index != coinGroup.firstBlock; index = index->pprev) {
+            anonymity_set.insert(
+                anonymity_set.end(),
+                index->sigmaMintedPubCoins[denominationAndId].begin(),
+                index->sigmaMintedPubCoins[denominationAndId].end());
         }
 
-        passVerify = spend->Verify(anonymity_set, newMetaData);
-        if (passVerify) {
+        if (spend->Verify(anonymity_set, newMetaData)) {
             Scalar serial = spend->getCoinSerialNumber();
             // do not check for duplicates in case we've seen exact copy of this tx in this block before
             if (!(sigmaTxInfo && sigmaTxInfo->zcTransactions.count(hashTx) > 0)) {
@@ -301,13 +296,12 @@ bool CheckSigmaSpendTransaction(
         }
     }
 
-    if (hasSigmaSpendInputs) {
-        if (hasNonSigmaInputs) {
-            // mixing zerocoin spend input with non-zerocoin inputs is prohibited
-            return state.DoS(100, false,
-                             REJECT_MALFORMED,
-                             "CheckSigmaSpendTransaction: can't mix zerocoin spend input with regular ones");
-        }
+    if (hasSigmaSpendInputs && hasNonSigmaInputs) {
+        // mixing sigma spend input with non-sigma inputs is prohibited
+        return state.DoS(
+            100, false,
+            REJECT_MALFORMED,
+            "CheckSigmaSpendTransaction: can't mix sigma spend input with regular ones");
     }
 
     return true;
@@ -425,7 +419,7 @@ bool CheckSigmaTransaction(
             if(!txin.scriptSig.IsSigmaSpend()) {
                 return state.DoS(100, false,
                                  REJECT_MALFORMED,
-                                 "CheckSigmaSpendTransaction: can't mix zerocoin spend input with regular ones");
+                                 "CheckSigmaSpendTransaction: can't mix sigma spend input with regular ones");
             }
             // Get the CoinDenomination value of each vin for the CheckSigmaSpendTransaction function
             uint32_t pubcoinId = txin.prevout.n;
@@ -470,7 +464,7 @@ Scalar GetSigmaSpendSerialNumber(const CTransaction &tx, const CTxIn &txin) {
 
     try {
         // NOTE(martun): +1 on the next line stands for 1 byte in which the opcode of
-        // OP_SIGMASPEND is written. In zerocoin you will see +4 instead,
+        // OP_SIGMASPEND is written. In sigma you will see +4 instead,
         // because the size of serialized spend is also written, probably in 3 bytes.
         CDataStream serializedCoinSpend(
                 (const char *)&*(txin.scriptSig.begin() + 1),
@@ -492,7 +486,7 @@ CAmount GetSigmaSpendInput(const CTransaction &tx) {
         CAmount sum(0);
         BOOST_FOREACH(const CTxIn& txin, tx.vin){
             // NOTE(martun): +1 on the next line stands for 1 byte in which the opcode of
-            // OP_ZEROCOINSPENDV3 is written. In zerocoin you will see +4 instead,
+            // OP_ZEROCOINSPENDV3 is written. In sigma you will see +4 instead,
             // because the size of serialized spend is also written, probably in 3 bytes.
             CDataStream serializedCoinSpend(
                     (const char *)&*(txin.scriptSig.begin() + 1),
@@ -519,7 +513,7 @@ bool ConnectBlockSigma(
         CBlockIndex *pindexNew,
         const CBlock *pblock,
         bool fJustCheck) {
-    // Add zerocoin transaction information to index
+    // Add sigma transaction information to index
     if (pblock && pblock->sigmaTxInfo) {
         if (!fJustCheck) {
             pindexNew->sigmaMintedPubCoins.clear();
@@ -543,7 +537,7 @@ bool ConnectBlockSigma(
 
             if (!fJustCheck) {
                 pindexNew->sigmaSpentSerials.insert(serial.first);
-                sigmaState.AddSpend(serial.first);
+                // sigmaState.AddSpend(serial.first);
             }
         }
 
@@ -559,9 +553,6 @@ bool ConnectBlockSigma(
             pair<sigma::CoinDenomination, int> denomAndId = make_pair(denomination, mintId);
             pindexNew->sigmaMintedPubCoins[denomAndId].push_back(mint);
         }
-    }
-    else if (!fJustCheck) { // TODO(martun): not sure if this else is necessary here. Check again later.
-        sigmaState.AddBlock(pindexNew);
     }
     return true;
 }
@@ -656,6 +647,7 @@ void CSigmaState::AddSpend(const Scalar &serial) {
 }
 
 void CSigmaState::AddBlock(CBlockIndex *index) {
+    // Next code must be similiar to calling AddMint for each mint, yet is more optimal.
     BOOST_FOREACH(
         const PAIRTYPE(PAIRTYPE(sigma::CoinDenomination, int), vector<sigma::PublicCoin>) &pubCoins,
             index->sigmaMintedPubCoins) {
@@ -674,12 +666,13 @@ void CSigmaState::AddBlock(CBlockIndex *index) {
             coinInfo.denomination = pubCoins.first.first;
             coinInfo.id = pubCoins.first.second;
             coinInfo.nHeight = index->nHeight;
-            mintedPubCoins.insert(pair<sigma::PublicCoin, CMintedCoinInfo>(coin, coinInfo));
+            mintedPubCoins.insert(std::make_pair(coin, coinInfo));
         }
     }
 
+    // Add all the spends.
     BOOST_FOREACH(const Scalar &serial, index->sigmaSpentSerials) {
-        usedCoinSerials.insert(serial);
+        AddSpend(serial);
     }
 }
 

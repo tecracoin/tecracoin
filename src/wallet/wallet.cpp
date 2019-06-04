@@ -6309,7 +6309,7 @@ string CWallet::SpendSigma(
                 pubCoinTx.set_denomination_value(ownCoinItem.get_denomination_value());
                 pubCoinTx.ecdsaSecretKey = ownCoinItem.ecdsaSecretKey;
                 CWalletDB(strWalletFile).WriteZerocoinEntry(pubCoinTx);
-                LogPrintf("SpendZerocoin failed, re-updated status -> NotifyZerocoinChanged\n");
+                LogPrintf("Sigma Spend failed, re-updated status -> NotifyZerocoinChanged\n");
                 LogPrintf("pubcoin=%s, isUsed=New\n", ownCoinItem.value.GetHex());
                 pwalletMain->NotifyZerocoinChanged(pwalletMain, ownCoinItem.value.GetHex(), "New", CT_UPDATED);
             }
