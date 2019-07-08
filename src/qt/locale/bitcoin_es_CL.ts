@@ -64,7 +64,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>ZcoinGUI</name>
+    <name>TecraCoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Firmar &amp;Mensaje...</translation>
@@ -142,8 +142,8 @@
         <translation>Cargando el index de bloques...</translation>
     </message>
     <message>
-        <source>Send coins to a Zcoin address</source>
-        <translation>Enviar monedas a una dirección zcoin</translation>
+        <source>Send coins to a TecraCoin address</source>
+        <translation>Enviar monedas a una dirección tecracoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -166,8 +166,8 @@
         <translation>Verificar mensaje....</translation>
     </message>
     <message>
-        <source>Zcoin</source>
-        <translation>Zcoin</translation>
+        <source>TecraCoin</source>
+        <translation>TecraCoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -186,7 +186,7 @@
         <translation>&amp;Mostrar/Ocultar</translation>
     </message>
     <message>
-        <source>Sign messages with your Zcoin addresses to prove you own them</source>
+        <source>Sign messages with your TecraCoin addresses to prove you own them</source>
         <translation>Firmar un mensaje para provar que usted es dueño de esta dirección</translation>
     </message>
     <message>
@@ -206,8 +206,8 @@
         <translation>Barra de pestañas</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and zcoin: URIs)</source>
-        <translation>Pide pagos (genera codigos QR and zcoin: URls)</translation>
+        <source>Request payments (generates QR codes and tecracoin: URIs)</source>
+        <translation>Pide pagos (genera codigos QR and tecracoin: URls)</translation>
     </message>
     <message>
         <source>%1 and %2</source>
@@ -368,8 +368,8 @@
         <translation>experto</translation>
     </message>
     <message>
-        <source>Automatically open the Zcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Abre automáticamente el puerto del cliente Zcoin en el router. Esto funciona solo cuando tu router es compatible con UPnP y está habilitado.</translation>
+        <source>Automatically open the TecraCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Abre automáticamente el puerto del cliente TecraCoin en el router. Esto funciona solo cuando tu router es compatible con UPnP y está habilitado.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -689,7 +689,7 @@
         <translation>Firma</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Zcoin address</source>
+        <source>Sign the message to prove you own this TecraCoin address</source>
         <translation>Firmar un mensjage para probar que usted es dueño de esta dirección</translation>
     </message>
     <message>
@@ -752,7 +752,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>zcoin-core</name>
+    <name>tecracoin-core</name>
     <message>
         <source>Options:</source>
         <translation>Opciones:
@@ -774,8 +774,8 @@
 </translation>
     </message>
     <message>
-        <source>Zcoin Core</source>
-        <translation>zcoin core</translation>
+        <source>TecraCoin Core</source>
+        <translation>tecracoin core</translation>
     </message>
     <message>
         <source>Connect only to the specified node(s)</source>

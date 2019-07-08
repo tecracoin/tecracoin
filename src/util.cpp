@@ -99,13 +99,13 @@ namespace boost {
 
 using namespace std;
 
-// znode fZnode
-bool fZNode = false;
+// tnode fTnode
+bool fTNode = false;
 bool fLiteMode = false;
 int nWalletBackups = 10;
 
-const char * const BITCOIN_CONF_FILENAME = "zcoin.conf";
-const char * const BITCOIN_PID_FILENAME = "zcoind.pid";
+const char * const BITCOIN_CONF_FILENAME = "tecracoin.conf";
+const char * const BITCOIN_PID_FILENAME = "tecracoind.pid";
 
 map<string, string> mapArgs;
 map<string, vector<string> > mapMultiArgs;
@@ -212,25 +212,32 @@ static void DebugPrintInit()
     vMsgsBeforeOpenLog = new list<string>;
 }
 
-void OpenDebugLog()
+
+void OpenDebugLog(bool forceOpen)
 {
     boost::call_once(&DebugPrintInit, debugPrintInitFlag);
     boost::mutex::scoped_lock scoped_lock(*mutexDebugLog);
 
-    assert(fileout == NULL);
-    assert(vMsgsBeforeOpenLog);
+    if(!forceOpen){
+        assert(fileout == NULL);
+        assert(vMsgsBeforeOpenLog);
+    }
     boost::filesystem::path pathDebug = GetDataDir() / "debug.log";
-    fileout = fopen(pathDebug.string().c_str(), "a");
-    if (fileout) setbuf(fileout, NULL); // unbuffered
-
-    // dump buffered messages from before we opened the log
-    while (!vMsgsBeforeOpenLog->empty()) {
-        FileWriteStr(vMsgsBeforeOpenLog->front(), fileout);
-        vMsgsBeforeOpenLog->pop_front();
+    if(!fileout){
+        fileout = fopen(pathDebug.string().c_str(), "a");
+        if (fileout) setbuf(fileout, NULL); // unbuffered
     }
 
-    delete vMsgsBeforeOpenLog;
-    vMsgsBeforeOpenLog = NULL;
+    if(vMsgsBeforeOpenLog){
+        // dump buffered messages from before we opened the log
+        while (!vMsgsBeforeOpenLog->empty()) {
+            FileWriteStr(vMsgsBeforeOpenLog->front(), fileout);
+            vMsgsBeforeOpenLog->pop_front();
+        }
+
+        delete vMsgsBeforeOpenLog;
+        vMsgsBeforeOpenLog = NULL;
+    }
 }
 
 bool LogAcceptCategory(const char* category)
@@ -442,7 +449,7 @@ static std::string FormatException(const std::exception* pex, const char* pszThr
     char pszModule[MAX_PATH] = "";
     GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
 #else
-    const char* pszModule = "zcoin";
+    const char* pszModule = "tecracoin";
 #endif
     if (pex)
         return strprintf(
@@ -462,13 +469,13 @@ void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
 boost::filesystem::path GetDefaultDataDir()
 {
     namespace fs = boost::filesystem;
-    // Windows < Vista: C:\Documents and Settings\Username\Application Data\zcoin
-    // Windows >= Vista: C:\Users\Username\AppData\Roaming\zcoin
-    // Mac: ~/Library/Application Support/zcoin
-    // Unix: ~/.zcoin
+    // Windows < Vista: C:\Documents and Settings\Username\Application Data\tecracoin
+    // Windows >= Vista: C:\Users\Username\AppData\Roaming\tecracoin
+    // Mac: ~/Library/Application Support/tecracoin
+    // Unix: ~/.tecracoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "zcoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / "tecracoin";
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -478,10 +485,10 @@ boost::filesystem::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/zcoin";
+    return pathRet / "Library/Application Support/tecracoin";
 #else
     // Unix
-    return pathRet / ".zcoin";
+    return pathRet / ".tecracoin";
 #endif
 #endif
 }
@@ -563,9 +570,9 @@ boost::filesystem::path GetConfigFile()
     return pathConfigFile;
 }
 
-boost::filesystem::path GetZnodeConfigFile()
+boost::filesystem::path GetTnodeConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-znconf", "znode.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-znconf", "tnode.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
     LogPrintf("pathConfigFile=%s\n", pathConfigFile);
     return pathConfigFile;
@@ -855,14 +862,16 @@ int GetNumCores()
 #endif
 }
 
-std::string CopyrightHolders(const std::string& strPrefix)
+std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear)
 {
-    std::string strCopyrightHolders = strPrefix + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
-
+    std::string strYear = nStartYear == nEndYear ? strprintf(" %u ", nStartYear) : strprintf(" %u-%u ", nStartYear, nEndYear);
+    std::string strCopyrightHolders;
     // Check for untranslated substitution to make sure Bitcoin Core copyright is not removed by accident
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
-        strCopyrightHolders += "\n" + strPrefix + "The Bitcoin Core developers";
+        strCopyrightHolders += strPrefix + strprintf(" %u-%u ", 2009, nEndYear) + "The Bitcoin Core developers, The Zcoin Core Developers";
     }
+
+    strCopyrightHolders += "\n" + strPrefix + strYear + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));
     return strCopyrightHolders;
 }
 

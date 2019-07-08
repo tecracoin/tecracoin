@@ -47,7 +47,9 @@ unsigned char GetNfactor(int64_t nTimestamp) {
 }
 
 uint256 CBlockHeader::GetHash() const {
-    return SerializeHash(*this);
+    uint256 thash;
+    lyra2z_hash(BEGIN(nVersion), BEGIN(thash));
+    return thash;
 }
 
 uint256 CBlockHeader::GetPoWHash(int nHeight, bool forceCalc) const {
@@ -68,21 +70,7 @@ uint256 CBlockHeader::GetPoWHash(int nHeight, bool forceCalc) const {
     }
     uint256 powHash;
     try {
-        if (!fTestNet && nHeight >= HF_LYRA2Z_HEIGHT) {
-            lyra2z_hash(BEGIN(nVersion), BEGIN(powHash));
-        } else if (!fTestNet && nHeight >= HF_LYRA2_HEIGHT) {
-            LYRA2(BEGIN(powHash), 32, BEGIN(nVersion), 80, BEGIN(nVersion), 80, 2, 8192, 256);
-        } else if (!fTestNet && nHeight >= HF_LYRA2VAR_HEIGHT) {
-            LYRA2(BEGIN(powHash), 32, BEGIN(nVersion), 80, BEGIN(nVersion), 80, 2, nHeight, 256);
-        } else if (fTestNet && nHeight >= HF_LYRA2Z_HEIGHT_TESTNET) { // testnet
-            lyra2z_hash(BEGIN(nVersion), BEGIN(powHash));
-        } else if (fTestNet && nHeight >= HF_LYRA2_HEIGHT_TESTNET) { // testnet
-            LYRA2(BEGIN(powHash), 32, BEGIN(nVersion), 80, BEGIN(nVersion), 80, 2, 8192, 256);
-        } else if (fTestNet && nHeight >= HF_LYRA2VAR_HEIGHT_TESTNET) { // testnet
-            LYRA2(BEGIN(powHash), 32, BEGIN(nVersion), 80, BEGIN(nVersion), 80, 2, nHeight, 256);
-        } else {
-            scrypt_N_1_1_256(BEGIN(nVersion), BEGIN(powHash), GetNfactor(nTime));
-        }
+        lyra2z_hash(BEGIN(nVersion), BEGIN(powHash));
     } catch (std::exception &e) {
         LogPrintf("excepetion: %s", e.what());
     }
@@ -125,7 +113,7 @@ int64_t GetBlockWeight(const CBlock& block)
 }
 
 void CBlock::ZerocoinClean() const {
-    if (zerocoinTxInfo != NULL)
-        delete zerocoinTxInfo;
+    //if (zerocoinTxInfo != NULL)
+        //delete zerocoinTxInfo; No need since now it is a shared ptr
     zerocoinTxInfo = NULL;
 }

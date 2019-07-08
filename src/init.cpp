@@ -71,12 +71,12 @@
 #include <event2/util.h>
 #include <event2/event.h>
 #include <event2/thread.h>
-#include "activeznode.h"
+#include "activetnode.h"
 #include "darksend.h"
-#include "znode-payments.h"
-#include "znode-sync.h"
-#include "znodeman.h"
-#include "znodeconfig.h"
+#include "tnode-payments.h"
+#include "tnode-sync.h"
+#include "tnodeman.h"
+#include "tnodeconfig.h"
 #include "netfulfilledman.h"
 #include "flat-database.h"
 #include "instantx.h"
@@ -242,9 +242,9 @@ void Shutdown() {
 
     // STORE DATA CACHES INTO SERIALIZED DAT FILES
     // TODO: https://github.com/zcoinofficial/zcoin/issues/182
-    //    CFlatDB<CZnodeMan> flatdb1("zncache.dat", "magicZnodeCache");
+    //    CFlatDB<CTnodeMan> flatdb1("tncache.dat", "magicTnodeCache");
     //    flatdb1.Dump(mnodeman);
-    //    CFlatDB<CZnodePayments> flatdb2("znpayments.dat", "magicZnodePaymentsCache");
+    //    CFlatDB<CTnodePayments> flatdb2("tnpayments.dat", "magicTnodePaymentsCache");
     //    flatdb2.Dump(mnpayments);
     //    CFlatDB<CNetFulfilledRequestManager> flatdb4("netfulfilled.dat", "magicFulfilledCache");
     //    flatdb4.Dump(netfulfilledman);
@@ -552,10 +552,12 @@ std::string HelpMessage(HelpMessageMode mode) {
                                                     _("<category> can be:") + " " + debugCategories + ".");
     if (showDebug)
         strUsage += HelpMessageOpt("-nodebug", "Turn off debugging messages, same as -debug=0");
+    strUsage += HelpMessageOpt("-mineraddr", strprintf(_("Miner address to include in coinbase, when using coinbasetxn for getblocktemplate (default: %s"), ""));
     strUsage += HelpMessageOpt("-gen", strprintf(_("Generate coins (default: %u)"), DEFAULT_GENERATE));
     strUsage += HelpMessageOpt("-genproclimit=<n>", strprintf(
             _("Set the number of threads for coin generation if enabled (-1 = all cores, default: %d)"),
             DEFAULT_GENERATE_THREADS));
+
 
     strUsage += HelpMessageOpt("-help-debug", _("Show all debugging options (usage: --help -help-debug)"));
     strUsage += HelpMessageOpt("-logips",
@@ -657,10 +659,10 @@ std::string HelpMessage(HelpMessageMode mode) {
 }
 
 std::string LicenseInfo() {
-    const std::string URL_SOURCE_CODE = "<https://github.com/zcoinofficial/zcoin>";
-    const std::string URL_WEBSITE = "<https://zcoin.io/>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/tecracoin/tecracoin>";
+    const std::string URL_WEBSITE = "<https://tecracoin.io/>";
     // todo: remove urls from translations on next change
-    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
+    return CopyrightHolders(_("Copyright (C)"), 2018, COPYRIGHT_YEAR) + "\n" +
            "\n" +
            strprintf(_("Please contribute if you find %s useful. "
                                "Visit %s for further information about the software."),
@@ -965,7 +967,7 @@ void RunTor(){
 	argv.push_back("--HiddenServiceDir");
 	argv.push_back((tor_dir / "onion").string());
 	argv.push_back("--HiddenServicePort");
-	argv.push_back("8168");
+	argv.push_back("2718");
 
 	if (clientTransportPlugin) {
 		printf("Using OBFS4.\n");
@@ -1038,7 +1040,7 @@ void InitLogging() {
     fLogIPs = GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrintf("Zcoin version %s\n", FormatFullVersion());
+    LogPrintf("TecraCoin version %s\n", FormatFullVersion());
 }
 
 /** Initialize bitcoin.
@@ -1539,6 +1541,8 @@ bool AppInit2(boost::thread_group &threadGroup, CScheduler &scheduler) {
     // ********************************************************* Step 7: load block chain
     LogPrintf("Step 7: load block chain ************************************\n");
     fReindex = GetBoolArg("-reindex", false);
+    //tecrafork: force reindex on every start
+//    fReindex = GetBoolArg("-reindex", true);
     bool fReindexChainState = GetBoolArg("-reindex-chainstate", false);
 
     // Upgrading to 0.8; hard-link the old blknnnn.dat files into /blocks/
@@ -1832,46 +1836,46 @@ bool AppInit2(boost::thread_group &threadGroup, CScheduler &scheduler) {
                      chainparams);
 
     // ********************************************************* Step 11a: setup PrivateSend
-    fZNode = GetBoolArg("-znode", false);
+    fTNode = GetBoolArg("-tnode", false);
 
-    LogPrintf("fZNode = %s\n", fZNode);
-    LogPrintf("znodeConfig.getCount(): %s\n", znodeConfig.getCount());
+    LogPrintf("fTNode = %s\n", fTNode);
+    LogPrintf("tnodeConfig.getCount(): %s\n", tnodeConfig.getCount());
 
-    if ((fZNode || znodeConfig.getCount() > 0) && !fTxIndex) {
-        return InitError("Enabling Znode support requires turning on transaction indexing."
+    if ((fTNode || tnodeConfig.getCount() > 0) && !fTxIndex) {
+        return InitError("Enabling Tnode support requires turning on transaction indexing."
                                  "Please add txindex=1 to your configuration and start with -reindex");
     }
 
-    if (fZNode) {
-        LogPrintf("ZNODE:\n");
+    if (fTNode) {
+        LogPrintf("TNODE:\n");
 
-        if (!GetArg("-znodeaddr", "").empty()) {
-            // Hot Znode (either local or remote) should get its address in
-            // CActiveZnode::ManageState() automatically and no longer relies on Znodeaddr.
-            return InitError(_("znodeaddr option is deprecated. Please use znode.conf to manage your remote znodes."));
+        if (!GetArg("-tnodeaddr", "").empty()) {
+            // Hot Tnode (either local or remote) should get its address in
+            // CActiveTnode::ManageState() automatically and no longer relies on Tnodeaddr.
+            return InitError(_("tnodeaddr option is deprecated. Please use tnode.conf to manage your remote tnodes."));
         }
 
-        std::string strZnodePrivKey = GetArg("-znodeprivkey", "");
-        if (!strZnodePrivKey.empty()) {
-            if (!darkSendSigner.GetKeysFromSecret(strZnodePrivKey, activeZnode.keyZnode,
-                                                  activeZnode.pubKeyZnode))
-                return InitError(_("Invalid znodeprivkey. Please see documenation."));
+        std::string strTnodePrivKey = GetArg("-tnodeprivkey", "");
+        if (!strTnodePrivKey.empty()) {
+            if (!darkSendSigner.GetKeysFromSecret(strTnodePrivKey, activeTnode.keyTnode,
+                                                  activeTnode.pubKeyTnode))
+                return InitError(_("Invalid tnodeprivkey. Please see documenation."));
 
-            LogPrintf("  pubKeyZnode: %s\n", CBitcoinAddress(activeZnode.pubKeyZnode.GetID()).ToString());
+            LogPrintf("  pubKeyTnode: %s\n", CBitcoinAddress(activeTnode.pubKeyTnode.GetID()).ToString());
         } else {
             return InitError(
-                    _("You must specify a znodeprivkey in the configuration. Please see documentation for help."));
+                    _("You must specify a tnodeprivkey in the configuration. Please see documentation for help."));
         }
     }
 
-    LogPrintf("Using Znode config file %s\n", GetZnodeConfigFile().string());
+    LogPrintf("Using Tnode config file %s\n", GetTnodeConfigFile().string());
 
-    if (GetBoolArg("-znconflock", true) && pwalletMain && (znodeConfig.getCount() > 0)) {
+    if (GetBoolArg("-znconflock", true) && pwalletMain && (tnodeConfig.getCount() > 0)) {
         LOCK(pwalletMain->cs_wallet);
-        LogPrintf("Locking Znodes:\n");
+        LogPrintf("Locking Tnodes:\n");
         uint256 mnTxHash;
         int outputIndex;
-        BOOST_FOREACH(CZnodeConfig::CZnodeEntry mne, znodeConfig.getEntries()) {
+        BOOST_FOREACH(CTnodeConfig::CTnodeEntry mne, tnodeConfig.getEntries()) {
             mnTxHash.SetHex(mne.getTxHash());
             outputIndex = boost::lexical_cast<unsigned int>(mne.getOutputIndex());
             COutPoint outpoint = COutPoint(mnTxHash, outputIndex);
@@ -1902,10 +1906,10 @@ bool AppInit2(boost::thread_group &threadGroup, CScheduler &scheduler) {
 //    nInstantSendDepth = GetArg("-instantsenddepth", DEFAULT_INSTANTSEND_DEPTH);
 //    nInstantSendDepth = std::min(std::max(nInstantSendDepth, 0), 60);
 
-    // lite mode disables all Znode and Darksend related functionality
+    // lite mode disables all Tnode and Darksend related functionality
     fLiteMode = GetBoolArg("-litemode", false);
-    if (fZNode && fLiteMode) {
-        return InitError("You can not start a znode in litemode");
+    if (fTNode && fLiteMode) {
+        return InitError("You can not start a tnode in litemode");
     }
 
     LogPrintf("fLiteMode %d\n", fLiteMode);
@@ -1919,20 +1923,20 @@ bool AppInit2(boost::thread_group &threadGroup, CScheduler &scheduler) {
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
     // TODO: https://github.com/zcoinofficial/zcoin/issues/182
-    /* uiInterface.InitMessage(_("Loading znode cache..."));
-    CFlatDB<CZnodeMan> flatdb1("zncache.dat", "magicZnodeCache");
+    /* uiInterface.InitMessage(_("Loading tnode cache..."));
+    CFlatDB<CTnodeMan> flatdb1("tncache.dat", "magicTnodeCache");
     if (!flatdb1.Load(mnodeman)) {
-        return InitError("Failed to load znode cache from zncache.dat");
+        return InitError("Failed to load tnode cache from tncache.dat");
     }
 
     if (mnodeman.size()) {
-        uiInterface.InitMessage(_("Loading Znode payment cache..."));
-        CFlatDB<CZnodePayments> flatdb2("znpayments.dat", "magicZnodePaymentsCache");
+        uiInterface.InitMessage(_("Loading Tnode payment cache..."));
+        CFlatDB<CTnodePayments> flatdb2("tnpayments.dat", "magicTnodePaymentsCache");
         if (!flatdb2.Load(mnpayments)) {
-            return InitError("Failed to load znode payments cache from znpayments.dat");
+            return InitError("Failed to load tnode payments cache from tnpayments.dat");
         }
     } else {
-        uiInterface.InitMessage(_("Znode cache is empty, skipping payments and governance cache..."));
+        uiInterface.InitMessage(_("Tnode cache is empty, skipping payments and governance cache..."));
     } */
 
     // uiInterface.InitMessage(_("Loading fulfilled requests cache..."));
@@ -1951,7 +1955,7 @@ bool AppInit2(boost::thread_group &threadGroup, CScheduler &scheduler) {
     mnodeman.UpdatedBlockTip(chainActive.Tip());
     darkSendPool.UpdatedBlockTip(chainActive.Tip());
     mnpayments.UpdatedBlockTip(chainActive.Tip());
-    znodeSync.UpdatedBlockTip(chainActive.Tip());
+    tnodeSync.UpdatedBlockTip(chainActive.Tip());
     // governance.UpdatedBlockTip(chainActive.Tip());
 
     // ********************************************************* Step 11d: start dash-privatesend thread

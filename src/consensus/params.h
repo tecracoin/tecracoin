@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2018 The TecraCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -67,14 +68,26 @@ struct Params {
     //int nBudgetPaymentsStartBlock;
     //int nBudgetPaymentsCycleBlocks;
     //int nBudgetPaymentsWindowBlocks;
-    int nZnodeMinimumConfirmations;
-    int nZnodePaymentsStartBlock;
-    //int nZnodePaymentsIncreaseBlock;
-    //int nZnodePaymentsIncreasePeriod; // in blocks
+    int nTnodeMinimumConfirmations;
+    int nTnodePaymentsStartBlock;
+    int64_t nPremineSubsidy;
+    //int nTnodePaymentsIncreaseBlock;
+    //int nTnodePaymentsIncreasePeriod; // in blocks
     //int nSuperblockStartBlock;
 
     int64_t DifficultyAdjustmentInterval() const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
+
+    /** block number to disable zerocoin on consensus level */
+    int nDisableZerocoinStartBlock;
+
+
+
+    int rewardsStage2Start;
+    int rewardsStage3Start;
+    int rewardsStage4Start;
+    int rewardsStage5Start;
+    int rewardsStage6Start;
 };
 } // namespace Consensus
 

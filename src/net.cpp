@@ -354,20 +354,20 @@ CNode *FindNode(const NodeId nodeid) {
     return NULL;
 }
 
-CNode *ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool fConnectToZnode) {
+CNode *ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool fConnectToTnode) {
     if (pszDest == NULL) {
-        // we clean znode connections in CZnodeMan::ProcessZnodeConnections()
-        // so should be safe to skip this and connect to local Hot MN on CActiveZnode::ManageState()
-        if (IsLocal(addrConnect) && !fConnectToZnode)
+        // we clean tnode connections in CTnodeMan::ProcessTnodeConnections()
+        // so should be safe to skip this and connect to local Hot MN on CActiveTnode::ManageState()
+        if (IsLocal(addrConnect) && !fConnectToTnode)
             return NULL;
         LOCK(cs_vNodes);
         // Look for an existing connection
         CNode *pnode = FindNode((CService) addrConnect);
         if (pnode) {
-            // we have existing connection to this node but it was not a connection to znode,
+            // we have existing connection to this node but it was not a connection to tnode,
             // change flag and add reference so that we can correctly clear it later
-            if (fConnectToZnode && !pnode->fZnode) {
-                pnode->fZnode = true;
+            if (fConnectToTnode && !pnode->fTnode) {
+                pnode->fTnode = true;
             }
             pnode->AddRef();
             return pnode;
@@ -398,8 +398,8 @@ CNode *ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
             // name catch this early.
             CNode *pnode = FindNode((CService) addrConnect);
             if (pnode) {
-                if (fConnectToZnode && !pnode->fZnode) {
-                    pnode->fZnode = true;
+                if (fConnectToTnode && !pnode->fTnode) {
+                    pnode->fTnode = true;
                 }
                 pnode->AddRef();
                 {
@@ -417,8 +417,8 @@ CNode *ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure
 
         // Add node
         CNode *pnode = new CNode(hSocket, addrConnect, pszDest ? pszDest : "", false);
-        if (fConnectToZnode) {
-            pnode->fZnode = true;
+        if (fConnectToTnode) {
+            pnode->fTnode = true;
         }
         pnode->AddRef();
 
@@ -1599,6 +1599,7 @@ void ThreadOpenConnections() {
         while (true) {
             CAddrInfo addr = addrman.Select(fFeeler);
 
+//            LogPrintf("[net:open_connections] trying: %s\n",addr.ToString());
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
                 break;
@@ -1610,27 +1611,35 @@ void ThreadOpenConnections() {
             if (nTries > 100)
                 break;
 
-            if (IsLimited(addr))
+            if (IsLimited(addr)){
+//                LogPrintf("[net:open_connections] denied, reason: limited: %s\n",addr.ToString());
                 continue;
-
+}
             // only connect to full nodes
-            if ((addr.nServices & REQUIRED_SERVICES) != REQUIRED_SERVICES)
+            if ((addr.nServices & REQUIRED_SERVICES) != REQUIRED_SERVICES){
+//                LogPrintf("[net:open_connections] denied, reason: services: %s\n",addr.ToString());
                 continue;
+            }
 
             // only consider very recently tried nodes after 30 failed attempts
-            if (nANow - addr.nLastTry < 600 && nTries < 30)
+            if (nANow - addr.nLastTry < 600 && nTries < 30){
+//                LogPrintf("[net:open_connections] denied, reason: time_try %s\n",addr.ToString());
                 continue;
+        }
 
             // only consider nodes missing relevant services after 40 failed attempts and only if less than half the outbound are up.
             if ((addr.nServices & nRelevantServices) != nRelevantServices &&
-                (nTries < 40 || nOutbound >= (MAX_OUTBOUND_CONNECTIONS >> 1)))
+                    (nTries < 40 || nOutbound >= (MAX_OUTBOUND_CONNECTIONS >> 1))){
+//                LogPrintf("[net:open_connections] denied, reason: outbound %s %d; outbound: %d;s: %d \n",addr.ToString(),nRelevantServices,nOutbound,addr.nServices );
                 continue;
+            }
 
             // do not allow non-default ports, unless after 50 invalid addresses selected already
             if (addr.GetPort() != Params().GetDefaultPort() && nTries < 50)
                 continue;
 
             addrConnect = addr;
+//            LogPrintf("[net:open_connections] success: %s",addr.ToString());
             break;
         }
 
@@ -2397,8 +2406,8 @@ CNode::CNode(SOCKET hSocketIn, const CAddress &addrIn, const std::string &addrNa
     minFeeFilter = 0;
     lastSentFeeFilter = 0;
     nextSendTimeFeeFilter = 0;
-    // znode
-    fZnode = false;
+    // tnode
+    fTnode = false;
 
     BOOST_FOREACH(
     const std::string &msg, getAllNetMessageTypes())

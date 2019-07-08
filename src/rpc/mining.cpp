@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2018 The TecraCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,7 +21,7 @@
 #include "txmempool.h"
 #include "util.h"
 #ifdef ENABLE_WALLET
-#include "znode-sync.h"
+#include "tnode-sync.h"
 #endif
 #include "utilstrencodings.h"
 #include "validationinterface.h"
@@ -229,7 +230,7 @@ UniValue generatetoaddress(const UniValue& params, bool fHelp)
     CBitcoinAddress address(params[1].get_str());
     if (!address.IsValid())
         throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Error: Invalid address");
-    
+
     boost::shared_ptr<CReserveScript> coinbaseScript(new CReserveScript());
     coinbaseScript->reserveScript = GetScriptForDestination(address.Get());
 
@@ -445,7 +446,8 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "  \"coinbaseaux\" : {                 (json object) data that should be included in the coinbase's scriptSig content\n"
             "      \"flags\" : \"xx\"                  (string) key name is to be ignored, and value included in scriptSig\n"
             "  },\n"
-            "  \"coinbasevalue\" : n,              (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in Satoshis)\n"
+            "  \"coinbasevalue\" : n,                (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in Satoshis)\n"
+            "  \"coinbasesubsidy\" : n,              (numeric) maximum allowable input to coinbase transaction, including the generation award and excluding transaction fees (in Satoshis)\n"
             "  \"coinbasetxn\" : { ... },          (json object) information for coinbase transaction\n"
             "  \"target\" : \"xxxx\",                (string) The hash target\n"
             "  \"mintime\" : xxx,                  (numeric) The minimum timestamp appropriate for next block time in seconds since epoch (Jan 1 1970 GMT)\n"
@@ -460,13 +462,11 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
-            "  \"znode\" : {                  (json object) required znode payee that must be included in the next block\n"
+            "  \"tnode\" : {                  (json object) required tnode payee that must be included in the next block\n"
             "      \"payee\" : \"xxxx\",             (string) payee address\n"
             "      \"script\" : \"xxxx\",            (string) payee scriptPubKey\n"
             "      \"amount\": n                   (numeric) required amount to pay\n"
             "  },\n"
-            "  \"znode_payments_started\" :  true|false, (boolean) true, if znode payments started\n"
-//            "  \"znode_payments_enforced\" : true|false, (boolean) true, if znode payments are enforced\n"
             "}\n"
 
             "\nExamples:\n"
@@ -543,13 +543,13 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid mode");
 
     if (vNodes.empty())
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Zcoin is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "TecraCoin is not connected!");
     if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Zcoin is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "TecraCoin is downloading blocks...");
 
-    if (!znodeSync.IsSynced())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Zcoin Core is syncing with network...");
-
+    if (!tnodeSync.IsSynced()){
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "TecraCoin Core is syncing with network...");
+    }
     static unsigned int nTransactionsUpdatedLast;
     if (!lpval.isNull())
     {
@@ -597,6 +597,11 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         // TODO: Maybe recheck connections/IBD and (if something wrong) send an expires-immediately template to stop miners?
     }
 
+    /**
+     * If coinbasetxn=true it will use cmd line arg mineraddr(it enables for us cpu/solo mining), otherwise it will switch to default mode, aka pool/gpu mining.
+     */
+    bool coinbasetxn = GetArg("-mineraddr", "").length() > 0;
+
     // Update block
     static CBlockIndex* pindexPrev;
     static int64_t nStart;
@@ -615,8 +620,17 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
             delete pblocktemplate;
             pblocktemplate = NULL;
         }
-        CScript scriptDummy = CScript() << OP_TRUE;
-        pblocktemplate = BlockAssembler(Params()).CreateNewBlock(scriptDummy);
+        CScript coinbaseScript;
+        if(coinbasetxn) {
+            //We take miner addr from node cmd line
+            coinbaseScript = GetScriptForDestination(CBitcoinAddress(GetArg("-mineraddr", "")).Get());
+            pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbaseScript);
+        }else{
+            //Miner will have to supply it's own addr
+            coinbaseScript = CScript() << OP_TRUE; //"dummy" script
+            pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbaseScript);
+        }
+
         if (!pblocktemplate)
             throw JSONRPCError(RPC_OUT_OF_MEMORY, "Out of memory");
 
@@ -640,22 +654,17 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     map<uint256, int64_t> setTxIndex;
     int i = 0;
     unsigned int COUNT_SPEND_ZC_TX = 0;
-    unsigned int MAX_SPEND_ZC_TX_PER_BLOCK = 0;
-    if(chainActive.Height() + 1 > OLD_LIMIT_SPEND_TXS){
-        MAX_SPEND_ZC_TX_PER_BLOCK = 0;
-    }
+    unsigned int MAX_SPEND_ZC_TX_PER_BLOCK = 1;
 
-    if(chainActive.Height() + 1 > SWITCH_TO_MORE_SPEND_TXS){
-        MAX_SPEND_ZC_TX_PER_BLOCK = 1;
-    }
-
+    UniValue txCoinbase = NullUniValue;
     BOOST_FOREACH (CTransaction& tx, pblock->vtx) {
         uint256 txHash = tx.GetHash();
         setTxIndex[txHash] = i++;
 
-        if (tx.IsCoinBase())
+        //We process coinbase tx, only if we create it(scenario: cpu/solo mining), not miner(scenario: gpu/pool)
+        if (tx.IsCoinBase() && !coinbasetxn){
             continue;
-
+        }
         // https://github.com/zcoinofficial/zcoin/pull/26
         // make order independence
         // and easy to read for other people
@@ -691,7 +700,12 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
         entry.push_back(Pair("sigops", nTxSigOps));
         entry.push_back(Pair("weight", GetTransactionWeight(tx)));
 
-        transactions.push_back(entry);
+        if(tx.IsCoinBase()){
+            txCoinbase = entry;
+            entry.push_back(Pair("required", true));// coinbase IS required
+        }else{
+            transactions.push_back(entry);
+        }
     }
 
     UniValue aux(UniValue::VOBJ);
@@ -764,8 +778,18 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
 
     result.push_back(Pair("previousblockhash", pblock->hashPrevBlock.GetHex()));
     result.push_back(Pair("transactions", transactions));
-    result.push_back(Pair("coinbaseaux", aux));
-    result.push_back(Pair("coinbasevalue", (int64_t)pblock->vtx[0].vout[0].nValue));
+
+    if(coinbasetxn){
+        //We supply our own coinbase tx, miner cannot modify it
+        assert(txCoinbase.isObject());
+        result.push_back(Pair("coinbasetxn", txCoinbase));
+    }else {
+        //We supply some data and miner has to build coinbase tx
+        result.push_back(Pair("coinbaseaux", aux));
+        result.push_back(Pair("coinbasevalue", (int64_t) pblock->vtx[0].vout[0].nValue));
+        result.push_back(Pair("coinbasesubsidy", (int64_t) GetBlockSubsidy(pindexPrev->nHeight+1,Params().GetConsensus())));
+    }
+
     result.push_back(Pair("longpollid", chainActive.Tip()->GetBlockHash().GetHex() + i64tostr(nTransactionsUpdatedLast)));
     result.push_back(Pair("target", hashTarget.GetHex()));
     result.push_back(Pair("mintime", (int64_t)pindexPrev->GetMedianTimePast()+1));
@@ -783,18 +807,16 @@ UniValue getblocktemplate(const UniValue& params, bool fHelp)
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
-    UniValue znodeObj(UniValue::VOBJ);
-    if(pblock->txoutZnode != CTxOut()) {
+    UniValue tnodeObj(UniValue::VOBJ);
+    if(pblock->txoutTnode != CTxOut()) {
         CTxDestination address1;
-        ExtractDestination(pblock->txoutZnode.scriptPubKey, address1);
+        ExtractDestination(pblock->txoutTnode.scriptPubKey, address1);
         CBitcoinAddress address2(address1);
-        znodeObj.push_back(Pair("payee", address2.ToString().c_str()));
-        znodeObj.push_back(Pair("script", HexStr(pblock->txoutZnode.scriptPubKey.begin(), pblock->txoutZnode.scriptPubKey.end())));
-        znodeObj.push_back(Pair("amount", pblock->txoutZnode.nValue));
+        tnodeObj.push_back(Pair("payee", address2.ToString().c_str()));
+        tnodeObj.push_back(Pair("script", HexStr(pblock->txoutTnode.scriptPubKey.begin(), pblock->txoutTnode.scriptPubKey.end())));
+        tnodeObj.push_back(Pair("amount", pblock->txoutTnode.nValue));
     }
-    result.push_back(Pair("znode", znodeObj));
-    result.push_back(Pair("znode_payments_started", pindexPrev->nHeight + 1 > Params().GetConsensus().nZnodePaymentsStartBlock));
-//    result.push_back(Pair("znode_payments_enforced", sporkManager.IsSporkActive(SPORK_8_MASTERNODE_PAYMENT_ENFORCEMENT)));
+    result.push_back(Pair("tnode", tnodeObj));
 
     const struct BIP9DeploymentInfo& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];
     if (!pblocktemplate->vchCoinbaseCommitment.empty() && setClientRules.find(segwit_info.name) != setClientRules.end()) {

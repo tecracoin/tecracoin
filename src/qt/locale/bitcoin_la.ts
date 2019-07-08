@@ -52,7 +52,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>ZcoinGUI</name>
+    <name>TecraCoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Signa &amp;nuntium...</translation>
@@ -114,8 +114,8 @@
         <translation>Recreans indicem frustorum in disco...</translation>
     </message>
     <message>
-        <source>Send coins to a Zcoin address</source>
-        <translation>Mitte nummos ad inscriptionem Zcoin</translation>
+        <source>Send coins to a TecraCoin address</source>
+        <translation>Mitte nummos ad inscriptionem TecraCoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -138,8 +138,8 @@
         <translation>&amp;Verifica nuntium...</translation>
     </message>
     <message>
-        <source>Zcoin</source>
-        <translation>Zcoin</translation>
+        <source>TecraCoin</source>
+        <translation>TecraCoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -166,12 +166,12 @@
         <translation>Cifra claves privatas quae cassidili tui sunt</translation>
     </message>
     <message>
-        <source>Sign messages with your Zcoin addresses to prove you own them</source>
-        <translation>Signa nuntios cum tuis inscriptionibus Zcoin ut demonstres te eas possidere</translation>
+        <source>Sign messages with your TecraCoin addresses to prove you own them</source>
+        <translation>Signa nuntios cum tuis inscriptionibus TecraCoin ut demonstres te eas possidere</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Zcoin addresses</source>
-        <translation>Verifica nuntios ut certus sis eos signatos esse cum specificatis inscriptionibus Zcoin</translation>
+        <source>Verify messages to ensure they were signed with specified TecraCoin addresses</source>
+        <translation>Verifica nuntios ut certus sis eos signatos esse cum specificatis inscriptionibus TecraCoin</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -339,8 +339,8 @@
         <translation>Cassidile</translation>
     </message>
     <message>
-        <source>Automatically open the Zcoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
-        <translation>Aperi per se portam clientis Zcoin in itineratore.  Hoc tantum effectivum est si itineratrum tuum supportat UPnP et id activum est.</translation>
+        <source>Automatically open the TecraCoin client port on the router. This only works when your router supports UPnP and it is enabled.</source>
+        <translation>Aperi per se portam clientis TecraCoin in itineratore.  Hoc tantum effectivum est si itineratrum tuum supportat UPnP et id activum est.</translation>
     </message>
     <message>
         <source>Map port using &amp;UPnP</source>
@@ -418,8 +418,8 @@
         <translation>Schema</translation>
     </message>
     <message>
-        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the Zcoin network after a connection is established, but this process has not completed yet.</source>
-        <translation>Monstrata informatio fortasse non recentissima est.  Tuum cassidile per se synchronizat cum rete Zcoin postquam conexio constabilita est, sed hoc actio nondum perfecta est.</translation>
+        <source>The displayed information may be out of date. Your wallet automatically synchronizes with the TecraCoin network after a connection is established, but this process has not completed yet.</source>
+        <translation>Monstrata informatio fortasse non recentissima est.  Tuum cassidile per se synchronizat cum rete TecraCoin postquam conexio constabilita est, sed hoc actio nondum perfecta est.</translation>
     </message>
     <message>
         <source>Immature:</source>
@@ -661,8 +661,8 @@
         <translation>Copia signationem in latibulum systematis</translation>
     </message>
     <message>
-        <source>Sign the message to prove you own this Zcoin address</source>
-        <translation>Signa nuntium ut demonstres hanc inscriptionem Zcoin a te possessa esse</translation>
+        <source>Sign the message to prove you own this TecraCoin address</source>
+        <translation>Signa nuntium ut demonstres hanc inscriptionem TecraCoin a te possessa esse</translation>
     </message>
     <message>
         <source>Sign &amp;Message</source>
@@ -681,8 +681,8 @@
         <translation>&amp;Verifica Nuntium</translation>
     </message>
     <message>
-        <source>Verify the message to ensure it was signed with the specified Zcoin address</source>
-        <translation>Verifica nuntium ut cures signatum esse cum specifica inscriptione Zcoin</translation>
+        <source>Verify the message to ensure it was signed with the specified TecraCoin address</source>
+        <translation>Verifica nuntium ut cures signatum esse cum specifica inscriptione TecraCoin</translation>
     </message>
     <message>
         <source>Verify &amp;Message</source>
@@ -732,7 +732,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>zcoin-core</name>
+    <name>tecracoin-core</name>
     <message>
         <source>Options:</source>
         <translation>Optiones:</translation>
@@ -762,8 +762,8 @@
         <translation>Accipe conexiones externas (praedefinitum: 1 nisi -proxy neque -connect)</translation>
     </message>
     <message>
-        <source>Zcoin Core</source>
-        <translation>Zcoin Nucleus</translation>
+        <source>TecraCoin Core</source>
+        <translation>TecraCoin Nucleus</translation>
     </message>
     <message>
         <source>Bind to given address and always listen on it. Use [host]:port notation for IPv6</source>

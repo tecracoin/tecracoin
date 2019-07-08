@@ -48,14 +48,14 @@ struct PrecomputedTransactionData;
 struct CNodeStateStats;
 struct LockPoints;
 
-/** btzc: update zcoin config */
+/** btzc: update tecracoin config */
 /** Default for DEFAULT_WHITELISTRELAY. */
 static const bool DEFAULT_WHITELISTRELAY = true;
 /** Default for DEFAULT_WHITELISTFORCERELAY. */
 static const bool DEFAULT_WHITELISTFORCERELAY = true;
 /** Default for -minrelaytxfee, minimum relay fee for transactions */
-//btzc: update zcoin fee
-static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = CENT / 10; //0.001 zcoin,
+//btzc: update tecracoin fee
+static const unsigned int DEFAULT_MIN_RELAY_TX_FEE = CENT / 10; //0.001 tecracoin,
 static const unsigned int MAX_STANDARD_TX_SIZE = 300000;
 //! -maxtxfee default
 static const CAmount DEFAULT_TRANSACTION_MAXFEE = 1000 * CENT;
@@ -79,11 +79,11 @@ static const unsigned int DEFAULT_DESCENDANT_LIMIT = 25;
 static const unsigned int DEFAULT_DESCENDANT_SIZE_LIMIT = 101;
 /** Default for -mempoolexpiry, expiration time for mempool transactions in hours */
 static const unsigned int DEFAULT_MEMPOOL_EXPIRY = 72;
-/** The maximum size of a blk?????.dat, btzc:zcoin: 128 MiB */
+/** The maximum size of a blk?????.dat, btzc:tecracoin: 128 MiB */
 static const unsigned int MAX_BLOCKFILE_SIZE = 0x8000000; // 128 MiB;
-/** The pre-allocation chunk size for blk?????.dat files (since 0.8), btzc:zcoin: 16MiB */
+/** The pre-allocation chunk size for blk?????.dat files (since 0.8), btzc:tecracoin: 16MiB */
 static const unsigned int BLOCKFILE_CHUNK_SIZE = 0x1000000; // 16 MiB
-/** The pre-allocation chunk size for rev?????.dat files (since 0.8), btzc:zcoin: 1MiB */
+/** The pre-allocation chunk size for rev?????.dat files (since 0.8), btzc:tecracoin: 1MiB */
 static const unsigned int UNDOFILE_CHUNK_SIZE = 0x100000; // 1 MiB
 /** Default for -blockprioritysize, maximum space for zero/low-fee transactions **/
 static const unsigned int DEFAULT_BLOCK_PRIORITY_SIZE = 50000; // 50KB
@@ -137,7 +137,7 @@ static const int64_t BLOCK_DOWNLOAD_TIMEOUT_PER_PEER = 500000;
 
 static const unsigned int DEFAULT_LIMITFREERELAY = 15;
 static const bool DEFAULT_RELAYPRIORITY = true;
-static const int64_t DEFAULT_MAX_TIP_AGE = 24 * 60 * 60;
+static const int64_t DEFAULT_MAX_TIP_AGE = 6 * 60 * 60;
 
 /** Default for -permitbaremultisig */
 static const bool DEFAULT_PERMIT_BAREMULTISIG = true;
@@ -165,13 +165,13 @@ static std::map<int, CBlock> mapBlockData;
 static const bool DEFAULT_PEERBLOOMFILTERS = true;
 
 // Block Height Lyra2Z
-#define LYRA2Z_HEIGHT 20500
+//#define LYRA2Z_HEIGHT 20500
 
 // Block Height Limit Spend One TX Per Block
-#define OLD_LIMIT_SPEND_TXS 22000
-
-// Add more spend txs per block at block height
-#define SWITCH_TO_MORE_SPEND_TXS 60000
+//#define OLD_LIMIT_SPEND_TXS 22000
+//
+//// Add more spend txs per block at block height
+//#define SWITCH_TO_MORE_SPEND_TXS 60000
 
 
 struct BlockHasher
@@ -391,7 +391,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, int nHeight);
 
 /** Context-independent validity checks */
-//BTZC: ADD params for zcoin works
+//BTZC: ADD params for tecracoin works
 bool CheckTransaction(const CTransaction& tx, CValidationState& state, uint256 hashTx, bool isVerifyDB, int nHeight = INT_MAX, bool isCheckWallet = false, CZerocoinTxInfo *zerocoinTxInfo = NULL);
 //bool CheckTransaction(const CTransaction& tx, CValidationState& state);
 
@@ -523,7 +523,7 @@ int GetUTXOHeight(const COutPoint& outpoint);
 int GetInputAge(const CTxIn &txin);
 int GetInputAgeIX(const uint256 &nTXHash, const CTxIn &txin);
 int GetIXConfirmations(const uint256 &nTXHash);
-CAmount GetZnodePayment(int nHeight, CAmount blockValue = 50 * COIN);
+CAmount GetTnodePayment(int nHeight, CAmount blockValue);
 
 /** Check a block is completely valid from start to finish (only works on top of our current best block, with cs_main held) */
 bool TestBlockValidity(CValidationState& state, const CChainParams& chainparams, const CBlock& block, CBlockIndex* pindexPrev, bool fCheckPOW = true, bool fCheckMerkleRoot = true);

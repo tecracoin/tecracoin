@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2018 The TecraCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -46,9 +47,9 @@
 
 #include "darksend.h"
 #include "instantx.h"
-#include "znode-payments.h"
-#include "znode-sync.h"
-#include "znodeman.h"
+#include "tnode-payments.h"
+#include "tnode-sync.h"
+#include "tnodeman.h"
 #include "coins.h"
 
 #include <atomic>
@@ -65,7 +66,7 @@
 using namespace std;
 
 #if defined(NDEBUG)
-# error "Zcoin cannot be compiled without assertions."
+# error "TecraCoin cannot be compiled without assertions."
 #endif
 
 /**
@@ -104,7 +105,7 @@ CAmount maxTxFee = DEFAULT_TRANSACTION_MAXFEE;
 CTxMemPool mempool(::minRelayTxFee);
 FeeFilterRounder filterRounder(::minRelayTxFee);
 
-// Dash znode
+// Dash tnode
 map <uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 
 struct IteratorComparator {
@@ -137,7 +138,7 @@ static void CheckBlockIndex(const Consensus::Params &consensusParams);
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "Zcoin Signed Message:\n";
+const string strMessageMagic = "TecraCoin Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -1231,9 +1232,20 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool, CValidationState &state, const C
     // Check for conflicts with in-memory transactions
     set <uint256> setConflicts;
     //btzc
+    CZerocoinState *zcState = CZerocoinState::GetZerocoinState();
+    CBigNum zcSpendSerial;
     {
         LOCK(pool.cs); // protect pool.mapNextTx
-        if (!tx.IsZerocoinSpend()) {
+        if (tx.IsZerocoinSpend()) {
+            zcSpendSerial = ZerocoinGetSpendSerialNumber(tx);
+            if (!zcSpendSerial)
+                return state.Invalid(false, REJECT_INVALID, "txn-invalid-zerocoin-spend");
+            if (!zcState->CanAddSpendToMempool(zcSpendSerial)) {
+                LogPrintf("AcceptToMemoryPool(): serial number %s has been used\n", zcSpendSerial.ToString());
+                return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+            }
+        }
+        else {
             BOOST_FOREACH(
             const CTxIn &txin, tx.vin)
             {
@@ -1664,8 +1676,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool &pool, CValidationState &state, const C
             if (tx.IsZerocoinSpend()) {
                 pool.countZCSpend++;
             }
-        }
+        }        
     }
+
+    if (tx.IsZerocoinSpend())
+        zcState->AddSpendToMempool(zcSpendSerial, hash);
 
     SyncWithWallets(tx, NULL, NULL);
     LogPrintf("AcceptToMemoryPoolWorker -> OK\n");
@@ -1866,6 +1881,7 @@ bool ReadBlockFromDisk(CBlock &block, const CBlockIndex *pindex, const Consensus
 
 CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams, int nTime) {
     bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET);
+
     // Just want to make sure no one gets a dime before 28 Sep 2016 12:00 AM UTC
     if (nTime < nStartRewardTime && !fTestNet)
         return 0;
@@ -1873,12 +1889,17 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams, i
     // Genesis block is 0 coin
     if (nHeight == 0)
         return 0;
+
+    // Block 1 premine subsidy
+    if (nHeight == 1)
+        return consensusParams.nPremineSubsidy * COIN;
+
     int halvings = nHeight / consensusParams.nSubsidyHalvingInterval;
     // Force block reward to zero when right shift is undefined.
     if (halvings >= 64)
         return 0;
 
-    CAmount nSubsidy = 50 * COIN;
+    CAmount nSubsidy = 112.5 * COIN;
     // Subsidy is cut in half every 210,000 blocks which will occur approximately every 4 years.
     nSubsidy >>= halvings;
     return nSubsidy;
@@ -2559,7 +2580,7 @@ static int64_t nTimeTotal = 0;
 
 bool ConnectBlock(const CBlock &block, CValidationState &state, CBlockIndex *pindex, CCoinsViewCache &view,
                   const CChainParams &chainparams, bool fJustCheck) {
-    //btzc: zcoin code
+    //btzc: tecracoin code
 //    if (BlockMerkleBranch(block).size() <=0) {
 //        return false;
 //    };
@@ -2708,7 +2729,7 @@ bool ConnectBlock(const CBlock &block, CValidationState &state, CBlockIndex *pin
         const CTransaction &tx = block.vtx[i];
 
         uint256 txHash = tx.GetHash();
-        if (txIds.count(txHash) > 0 && (fTestNet || pindex->nHeight >= HF_ZNODE_HEIGHT))
+        if (txIds.count(txHash) > 0 && (fTestNet || pindex->nHeight >= HF_TNODE_HEIGHT))
             return state.DoS(100, error("ConnectBlock(): duplicate transactions in the same block"),
                              REJECT_INVALID, "bad-txns-duplicatetxid");
         txIds.insert(txHash);
@@ -2853,7 +2874,7 @@ bool ConnectBlock(const CBlock &block, CValidationState &state, CBlockIndex *pin
                                     block.vtx[0].GetValueOut(), blockReward),
                          REJECT_INVALID, "bad-cb-amount");
 
-    // ZNODE : MODIFIED TO CHECK ZNODE PAYMENTS AND SUPERBLOCKS
+    // TNODE : MODIFIED TO CHECK TNODE PAYMENTS AND SUPERBLOCKS
     // It's possible that we simply don't have enough data and this could fail
     // (i.e. block itself could be a correct one and we need to store it),
     // that's why this is in ConnectBlock. Could be the other way around however -
@@ -2867,10 +2888,10 @@ bool ConnectBlock(const CBlock &block, CValidationState &state, CBlockIndex *pin
 
     if (!IsBlockPayeeValid(block.vtx[0], pindex->nHeight, blockReward)) {
         mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-        return state.DoS(0, error("ConnectBlock(): couldn't find znode or superblock payments"),
+        return state.DoS(0, error("ConnectBlock(): couldn't find tnode or superblock payments"),
                          REJECT_INVALID, "bad-cb-payee");
     }
-    // END ZNODE
+    // END TNODE
 
     if (!control.Wait())
         return state.DoS(100, false);
@@ -2945,6 +2966,27 @@ bool ConnectBlock(const CBlock &block, CValidationState &state, CBlockIndex *pin
             nErased += EraseOrphanTx(orphanHash);
         }
         LogPrint("mempool", "Erased %d orphan tx included or conflicted by block\n", nErased);
+    }
+
+    // Erase conflicting zerocoin txs from the mempool
+    CZerocoinState *zcState = CZerocoinState::GetZerocoinState();
+    BOOST_FOREACH(const CTransaction &tx, block.vtx) {
+        if (tx.IsZerocoinSpend()) {
+            CBigNum zcSpendSerial = ZerocoinGetSpendSerialNumber(tx);
+            uint256 thisTxHash = tx.GetHash();
+            uint256 conflictingTxHash = zcState->GetMempoolConflictingTxHash(zcSpendSerial);
+            if (!conflictingTxHash.IsNull() && conflictingTxHash != thisTxHash) {
+                std::list<CTransaction> removed;
+                auto pTx = mempool.get(conflictingTxHash);
+                if (pTx)
+                    mempool.removeRecursive(*pTx, removed);
+                LogPrintf("ConnectBlock: removed conflicting zerocoin spend tx %s from the mempool\n",
+                          conflictingTxHash.ToString());
+            }
+
+            // In any case we need to remove serial from mempool set
+            zcState->RemoveSpendFromMempool(zcSpendSerial);
+        }
     }
 
     int64_t nTime6 = GetTimeMicros();
@@ -3086,7 +3128,7 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams &chainParams) {
     mnodeman.UpdatedBlockTip(chainActive.Tip());
     darkSendPool.UpdatedBlockTip(chainActive.Tip());
     mnpayments.UpdatedBlockTip(chainActive.Tip());
-    znodeSync.UpdatedBlockTip(chainActive.Tip());
+    tnodeSync.UpdatedBlockTip(chainActive.Tip());
 
     // New best block
     nTimeBestReceived = GetTime();
@@ -3313,25 +3355,28 @@ int GetInputAge(const CTxIn &txin) {
     }
 }
 
-CAmount GetZnodePayment(int nHeight, CAmount blockValue) {
-//    CAmount ret = blockValue * 30/100 ; // start at 30%
-//    int nMNPIBlock = Params().GetConsensus().nZnodePaymentsStartBlock;
-////    int nMNPIBlock = Params().GetConsensus().nZnodePaymentsIncreaseBlock;
-//    int nMNPIPeriod = Params().GetConsensus().nZnodePaymentsIncreasePeriod;
-//
-//    // mainnet:
-//    if (nHeight > nMNPIBlock) ret += blockValue / 20; // 158000 - 25.0% - 2014-10-24
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 1)) ret += blockValue / 20; // 175280 - 30.0% - 2014-11-25
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 2)) ret += blockValue / 20; // 192560 - 35.0% - 2014-12-26
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 3)) ret += blockValue / 40; // 209840 - 37.5% - 2015-01-26
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 4)) ret += blockValue / 40; // 227120 - 40.0% - 2015-02-27
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 5)) ret += blockValue / 40; // 244400 - 42.5% - 2015-03-30
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 6)) ret += blockValue / 40; // 261680 - 45.0% - 2015-05-01
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 7)) ret += blockValue / 40; // 278960 - 47.5% - 2015-06-01
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 9)) ret += blockValue / 40; // 313520 - 50.0% - 2015-08-03
-    CAmount ret = 15 * COIN; //15XZC
-
-    return ret;
+CAmount GetTnodePayment(int nHeight, CAmount blockValue) {
+    if(nHeight < Params().GetConsensus().nTnodePaymentsStartBlock){
+        return 0;
+    }else if(nHeight < Params().GetConsensus().rewardsStage2Start) {
+        // T1
+        return blockValue * 39 / 100;
+    }else if(nHeight < Params().GetConsensus().rewardsStage3Start){
+        // T2
+        return blockValue * 15 / 100;
+    }else if(nHeight < Params().GetConsensus().rewardsStage4Start){
+        // T3
+        return blockValue * 15 / 100;
+    }else if(nHeight < Params().GetConsensus().rewardsStage5Start){
+        // T4
+        return blockValue * 20 / 100;
+    }else if(nHeight < Params().GetConsensus().rewardsStage6Start) {
+        // T5
+        return blockValue * 25 / 100;
+    }else{
+        // T6
+        return blockValue * 25 / 100;
+    }
 }
 
 bool DisconnectBlocks(int blocks) {
@@ -3930,6 +3975,11 @@ bool FindUndoPos(CValidationState &state, int nFile, CDiskBlockPos &pos, unsigne
 //btzc: code from vertcoin, add
 bool CheckBlockHeader(const CBlockHeader &block, CValidationState &state, const Consensus::Params &consensusParams, bool fCheckPOW) {
     int nHeight = ZerocoinGetNHeight(block);
+    bool fMainNet = (Params().NetworkIDString() == CBaseChainParams::MAIN);
+    // TecraFork: added hard checkpoint
+    if(fMainNet && nHeight > 2500 && nHeight < 15000){
+        return block.GetPoWHash(nHeight) == block.GetHash();
+    }
     if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(nHeight), block.nBits, consensusParams)) {
         //Maybe cache is not valid
         if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(nHeight, true), block.nBits, consensusParams)) {
@@ -4017,23 +4067,23 @@ bool CheckBlock(const CBlock &block, CValidationState &state, const Consensus::P
                         instantsend.Relay(hashLocked);
                         LOCK(cs_main);
                         mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-                        return state.DoS(0, error("CheckBlock(XZC): transaction %s conflicts with transaction lock %s",
+                        return state.DoS(0, error("CheckBlock(TCR): transaction %s conflicts with transaction lock %s",
                                                   tx.GetHash().ToString(), hashLocked.ToString()),
                                          REJECT_INVALID, "conflict-tx-lock");
                     }
                 }
             }
         } else {
-            LogPrintf("CheckBlock(XZC): spork is off, skipping transaction locking checks\n");
+            LogPrintf("CheckBlock(TCR): spork is off, skipping transaction locking checks\n");
         }
 
         // Check transactions
         if (nHeight == INT_MAX)
             nHeight = ZerocoinGetNHeight(block.GetBlockHeader());
         if (block.zerocoinTxInfo == NULL)
-            block.zerocoinTxInfo = new CZerocoinTxInfo();
+            block.zerocoinTxInfo = std::make_shared<CZerocoinTxInfo>();
         BOOST_FOREACH(const CTransaction &tx, block.vtx)
-        if (!CheckTransaction(tx, state, tx.GetHash(), isVerifyDB, nHeight, false, block.zerocoinTxInfo)) {
+        if (!CheckTransaction(tx, state, tx.GetHash(), isVerifyDB, nHeight, false, block.zerocoinTxInfo.get())) {
             LogPrintf("block=%s\n", block.ToString());
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                  strprintf("Transaction check failed (tx hash %s) %s", tx.GetHash().ToString(),
@@ -4430,7 +4480,7 @@ bool ProcessNewBlock(CValidationState &state, const CChainParams &chainparams, C
         return error("%s: ActivateBestChain failed", __func__);
     }
 
-    znodeSync.IsBlockchainSynced(true);
+    tnodeSync.IsBlockchainSynced(true);
 
     return true;
 }
@@ -5495,26 +5545,26 @@ bool static AlreadyHave(const CInv &inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main) {
         case MSG_SPORK:
             return mapSporks.count(inv.hash);
 
-        case MSG_ZNODE_PAYMENT_VOTE:
-            return mnpayments.mapZnodePaymentVotes.count(inv.hash);
+        case MSG_TNODE_PAYMENT_VOTE:
+            return mnpayments.mapTnodePaymentVotes.count(inv.hash);
 
-        case MSG_ZNODE_PAYMENT_BLOCK:
+        case MSG_TNODE_PAYMENT_BLOCK:
         {
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            return mi != mapBlockIndex.end() && mnpayments.mapZnodeBlocks.find(mi->second->nHeight) != mnpayments.mapZnodeBlocks.end();
+            return mi != mapBlockIndex.end() && mnpayments.mapTnodeBlocks.find(mi->second->nHeight) != mnpayments.mapTnodeBlocks.end();
         }
 
-        case MSG_ZNODE_ANNOUNCE:
-            return mnodeman.mapSeenZnodeBroadcast.count(inv.hash) && !mnodeman.IsMnbRecoveryRequested(inv.hash);
+        case MSG_TNODE_ANNOUNCE:
+            return mnodeman.mapSeenTnodeBroadcast.count(inv.hash) && !mnodeman.IsMnbRecoveryRequested(inv.hash);
 
-        case MSG_ZNODE_PING:
-            return mnodeman.mapSeenZnodePing.count(inv.hash);
+        case MSG_TNODE_PING:
+            return mnodeman.mapSeenTnodePing.count(inv.hash);
 
         case MSG_DSTX:
             return mapDarksendBroadcastTxes.count(inv.hash);
 
-        case MSG_ZNODE_VERIFY:
-            return mnodeman.mapSeenZnodeVerification.count(inv.hash);
+        case MSG_TNODE_VERIFY:
+            return mnodeman.mapSeenTnodeVerification.count(inv.hash);
     }
     // Don't know what it is, just say we already got one
     return true;
@@ -5706,28 +5756,28 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                     }
                 }
 
-                if (!pushed && inv.type == MSG_ZNODE_PAYMENT_VOTE) {
+                if (!pushed && inv.type == MSG_TNODE_PAYMENT_VOTE) {
                     if(mnpayments.HasVerifiedPaymentVote(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnpayments.mapZnodePaymentVotes[inv.hash];
-                        pfrom->PushMessage(NetMsgType::ZNODEPAYMENTVOTE, ss);
+                        ss << mnpayments.mapTnodePaymentVotes[inv.hash];
+                        pfrom->PushMessage(NetMsgType::TNODEPAYMENTVOTE, ss);
                         pushed = true;
                     }
                 }
 
-                if (!pushed && inv.type == MSG_ZNODE_PAYMENT_BLOCK) {
+                if (!pushed && inv.type == MSG_TNODE_PAYMENT_BLOCK) {
                     BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-                    LOCK(cs_mapZnodeBlocks);
-                    if (mi != mapBlockIndex.end() && mnpayments.mapZnodeBlocks.count(mi->second->nHeight)) {
-                        BOOST_FOREACH(CZnodePayee& payee, mnpayments.mapZnodeBlocks[mi->second->nHeight].vecPayees) {
+                    LOCK(cs_mapTnodeBlocks);
+                    if (mi != mapBlockIndex.end() && mnpayments.mapTnodeBlocks.count(mi->second->nHeight)) {
+                        BOOST_FOREACH(CTnodePayee& payee, mnpayments.mapTnodeBlocks[mi->second->nHeight].vecPayees) {
                             std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
                             BOOST_FOREACH(uint256& hash, vecVoteHashes) {
                                 if(mnpayments.HasVerifiedPaymentVote(hash)) {
                                     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                                     ss.reserve(1000);
-                                    ss << mnpayments.mapZnodePaymentVotes[hash];
-                                    pfrom->PushMessage(NetMsgType::ZNODEPAYMENTVOTE, ss);
+                                    ss << mnpayments.mapTnodePaymentVotes[hash];
+                                    pfrom->PushMessage(NetMsgType::TNODEPAYMENTVOTE, ss);
                                 }
                             }
                         }
@@ -5735,21 +5785,21 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                     }
                 }
 
-                if (!pushed && inv.type == MSG_ZNODE_ANNOUNCE) {
-                    if(mnodeman.mapSeenZnodeBroadcast.count(inv.hash)){
+                if (!pushed && inv.type == MSG_TNODE_ANNOUNCE) {
+                    if(mnodeman.mapSeenTnodeBroadcast.count(inv.hash)){
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnodeman.mapSeenZnodeBroadcast[inv.hash].second;
+                        ss << mnodeman.mapSeenTnodeBroadcast[inv.hash].second;
                         pfrom->PushMessage(NetMsgType::MNANNOUNCE, ss);
                         pushed = true;
                     }
                 }
 
-                if (!pushed && inv.type == MSG_ZNODE_PING) {
-                    if(mnodeman.mapSeenZnodePing.count(inv.hash)) {
+                if (!pushed && inv.type == MSG_TNODE_PING) {
+                    if(mnodeman.mapSeenTnodePing.count(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnodeman.mapSeenZnodePing[inv.hash];
+                        ss << mnodeman.mapSeenTnodePing[inv.hash];
                         pfrom->PushMessage(NetMsgType::MNPING, ss);
                         pushed = true;
                     }
@@ -5765,11 +5815,11 @@ void static ProcessGetData(CNode *pfrom, const Consensus::Params &consensusParam
                     }
                 }
 
-                if (!pushed && inv.type == MSG_ZNODE_VERIFY) {
-                    if(mnodeman.mapSeenZnodeVerification.count(inv.hash)) {
+                if (!pushed && inv.type == MSG_TNODE_VERIFY) {
+                    if(mnodeman.mapSeenTnodeVerification.count(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << mnodeman.mapSeenZnodeVerification[inv.hash];
+                        ss << mnodeman.mapSeenTnodeVerification[inv.hash];
                         pfrom->PushMessage(NetMsgType::MNVERIFY, ss);
                         pushed = true;
                     }
@@ -6371,22 +6421,22 @@ bool static ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, 
                 return true; // not an error
             }
 
-            CZnode *pmn = mnodeman.Find(dstx.vin);
+            CTnode *pmn = mnodeman.Find(dstx.vin);
             if (pmn == NULL) {
-                LogPrint("privatesend", "DSTX -- Can't find znode %s to verify %s\n",
+                LogPrint("privatesend", "DSTX -- Can't find tnode %s to verify %s\n",
                          dstx.vin.prevout.ToStringShort(), hashTx.ToString());
                 return false;
             }
 
             if (!pmn->fAllowMixingTx) {
-                LogPrint("privatesend", "DSTX -- Znode %s is sending too many transactions %s\n",
+                LogPrint("privatesend", "DSTX -- Tnode %s is sending too many transactions %s\n",
                          dstx.vin.prevout.ToStringShort(), hashTx.ToString());
                 return true;
                 // TODO: Not an error? Could it be that someone is relaying old DSTXes
                 // we have no idea about (e.g we were offline)? How to handle them?
             }
 
-            if (!dstx.CheckSignature(pmn->pubKeyZnode)) {
+            if (!dstx.CheckSignature(pmn->pubKeyTnode)) {
                 LogPrint("privatesend", "DSTX -- CheckSignature() failed for %s\n", hashTx.ToString());
                 return false;
             }
@@ -6474,7 +6524,7 @@ bool static ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, 
             BOOST_FOREACH(uint256
             hash, vEraseQueue)
             EraseOrphanTx(hash);
-            //btzc: zcoin condition
+            //btzc: tecracoin condition
         } else if (!AlreadyHave(inv) && tx.IsZerocoinSpend() && AcceptToMemoryPool(mempool, state, tx, false, true, &fMissingInputsZerocoin, false, 0, true)) {
             RelayTransaction(tx);
 //            LogPrint("mempool", "AcceptToMemoryPool: peer=%d: accepted %s (poolsz %u txn, %u kB)\n",
@@ -7162,7 +7212,7 @@ bool static ProcessMessage(CNode *pfrom, string strCommand, CDataStream &vRecv, 
             mnpayments.ProcessMessage(pfrom, strCommand, vRecv);
             instantsend.ProcessMessage(pfrom, strCommand, vRecv);
             sporkManager.ProcessSpork(pfrom, strCommand, vRecv);
-            znodeSync.ProcessMessage(pfrom, strCommand, vRecv);
+            tnodeSync.ProcessMessage(pfrom, strCommand, vRecv);
         } else {
             // Ignore unknown commands for extensibility
             LogPrint("net", "Unknown command \"%s\" from peer=%d\n", SanitizeString(strCommand), pfrom->id);

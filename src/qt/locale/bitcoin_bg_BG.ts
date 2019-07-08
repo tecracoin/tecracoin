@@ -76,7 +76,7 @@
     </message>
 </context>
 <context>
-    <name>ZcoinGUI</name>
+    <name>TecraCoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Подпиши съобщение...</translation>
@@ -260,9 +260,9 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>zcoin-core</name>
+    <name>tecracoin-core</name>
     <message>
-        <source>Zcoin Core</source>
+        <source>TecraCoin Core</source>
         <translation>Биткойн ядро</translation>
     </message>
     </context>

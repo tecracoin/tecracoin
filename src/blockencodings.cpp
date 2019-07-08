@@ -160,7 +160,7 @@ ReadStatus PartiallyDownloadedBlock::FillBlock(CBlock& block, const std::vector<
         return READ_STATUS_INVALID;
 
     CValidationState state;
-    LogPrintf("PartiallyDownloadedBlock->CheckBlock() hash=%s", block.GetHash().ToString());
+    LogPrintf("PartiallyDownloadedBlock->CheckBlock() hash=%s\n", block.GetHash().ToString());
     if (!CheckBlock(block, state, Params().GetConsensus())) {
         // TODO: We really want to just check merkle tree manually here,
         // but that is expensive, and CheckBlock caches a block's

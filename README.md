@@ -27,11 +27,11 @@ Build
 ----------------------
 1.  Clone the source:
 
-        git clone https://github.com/zcoinofficial/zcoin
+        git clone https://github.com/tecracoin/tecracoin
 
-2.  Build Zcoin-core:
+2.  Build TecraCoin-core:
 
-    Configure and build the headless zcoin binaries as well as the GUI (if Qt is found).
+    Configure and build the headless tecracoin binaries as well as the GUI (if Qt is found).
 
     You can disable the GUI build by passing `--without-gui` to configure.
         

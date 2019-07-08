@@ -76,7 +76,7 @@
     </message>
 </context>
 <context>
-    <name>ZcoinGUI</name>
+    <name>TecraCoinGUI</name>
     <message>
         <source>&amp;Transactions</source>
         <translation>Transazioni</translation>
@@ -180,6 +180,6 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>zcoin-core</name>
+    <name>tecracoin-core</name>
     </context>
 </TS>

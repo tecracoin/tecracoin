@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2018 The TecraCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -30,8 +31,9 @@
 #include "crypto/scrypt.h"
 #include "crypto/Lyra2Z/Lyra2Z.h"
 #include "crypto/Lyra2Z/Lyra2.h"
-#include "znode-payments.h"
-#include "znode-sync.h"
+#include "tnode-payments.h"
+#include "tnode-sync.h"
+#include "zerocoin.h"
 #include <algorithm>
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -148,75 +150,87 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     CBlockIndex* pindexPrev = chainActive.Tip();
     const int nHeight = pindexPrev->nHeight + 1;
 
+    const CAmount blockSubsidy = GetBlockSubsidy(nHeight, chainparams.GetConsensus());
 
     // To founders and investors
-    // To founders and investors
-    if ((nHeight + 1 > 0) && (nHeight + 1 < 210000)) {
-        CScript FOUNDER_1_SCRIPT;
-        CScript FOUNDER_2_SCRIPT;
-        CScript FOUNDER_3_SCRIPT;
-        CScript FOUNDER_4_SCRIPT;
-        CScript FOUNDER_5_SCRIPT;
-        if (nHeight < Params().GetConsensus().nZnodePaymentsStartBlock) {
-            // Take some reward away from us
-            coinbaseTx.vout[0].nValue = -10 * COIN;
+    if (nHeight > 0 && nHeight < Params().GetConsensus().nSubsidyHalvingInterval * 10) {
+        CScript FOUNDER_0_SCRIPT = Params().GetFounderScript(0);
+        CScript FOUNDER_1_SCRIPT = Params().GetFounderScript(1);
+        CScript FOUNDER_2_SCRIPT = Params().GetFounderScript(2);
+        CScript FOUNDER_3_SCRIPT = Params().GetFounderScript(3);
 
-            if (!fTestNet && (GetAdjustedTime() > nStartRewardTime)) {
-                FOUNDER_1_SCRIPT = GetScriptForDestination(CBitcoinAddress("aCAgTPgtYcA4EysU4UKC86EQd5cTtHtCcr").Get());
-                if (nHeight + 1 < 14000) {
-                    FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("aLrg41sXbXZc5MyEj7dts8upZKSAtJmRDR").Get());
-                } else {
-                    FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD").Get());
-                }
-                FOUNDER_3_SCRIPT = GetScriptForDestination(CBitcoinAddress("aQ18FBVFtnueucZKeVg4srhmzbpAeb1KoN").Get());
-                FOUNDER_4_SCRIPT = GetScriptForDestination(CBitcoinAddress("a1HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3").Get());
-                FOUNDER_5_SCRIPT = GetScriptForDestination(CBitcoinAddress("a1kCCGddf5pMXSipLVD9hBG2MGGVNaJ15U").Get());
-            } else if (!fTestNet && (GetAdjustedTime() <= nStartRewardTime)) {
-                throw std::runtime_error("CreateNewBlock() : Create new block too early");
-            } else if (fTestNet) {
-                FOUNDER_1_SCRIPT = GetScriptForDestination(CBitcoinAddress("TDk19wPKYq91i18qmY6U9FeTdTxwPeSveo").Get());
-                FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("TWZZcDGkNixTAMtRBqzZkkMHbq1G6vUTk5").Get());
-                FOUNDER_3_SCRIPT = GetScriptForDestination(CBitcoinAddress("TRZTFdNCKCKbLMQV8cZDkQN9Vwuuq4gDzT").Get());
-                FOUNDER_4_SCRIPT = GetScriptForDestination(CBitcoinAddress("TG2ruj59E5b1u9G3F7HQVs6pCcVDBxrQve").Get());
-                FOUNDER_5_SCRIPT = GetScriptForDestination(CBitcoinAddress("TCsTzQZKVn4fao8jDmB9zQBk9YQNEZ3XfS").Get());
-            }
+        if (!fTestNet && (GetAdjustedTime() <= nStartRewardTime)) {
+            throw std::runtime_error("CreateNewBlock() : Create new block too early");
+        }
+
+        if(nHeight == 1){
+            // In this stage miners have no reward
+            coinbaseTx.vout[0].nValue = -blockSubsidy;
 
             // And give it to the founders
-            coinbaseTx.vout.push_back(CTxOut(2 * COIN, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(2 * COIN, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(2 * COIN, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(2 * COIN, CScript(FOUNDER_4_SCRIPT.begin(), FOUNDER_4_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(2 * COIN, CScript(FOUNDER_5_SCRIPT.begin(), FOUNDER_5_SCRIPT.end())));
-        } else if (nHeight >= Params().GetConsensus().nZnodePaymentsStartBlock) {
-            // Take some reward away from us
-            coinbaseTx.vout[0].nValue = -7 * COIN;
-
-            if (!fTestNet && (GetAdjustedTime() > nStartRewardTime)) {
-                FOUNDER_1_SCRIPT = GetScriptForDestination(CBitcoinAddress("aCAgTPgtYcA4EysU4UKC86EQd5cTtHtCcr").Get());
-                if (nHeight + 1 < 14000) {
-                    FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("aLrg41sXbXZc5MyEj7dts8upZKSAtJmRDR").Get());
-                } else {
-                    FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD").Get());
-                }
-                FOUNDER_3_SCRIPT = GetScriptForDestination(CBitcoinAddress("aQ18FBVFtnueucZKeVg4srhmzbpAeb1KoN").Get());
-                FOUNDER_4_SCRIPT = GetScriptForDestination(CBitcoinAddress("a1HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3").Get());
-                FOUNDER_5_SCRIPT = GetScriptForDestination(CBitcoinAddress("a1kCCGddf5pMXSipLVD9hBG2MGGVNaJ15U").Get());
-            } else if (!fTestNet && (GetAdjustedTime() <= nStartRewardTime)) {
-                throw std::runtime_error("CreateNewBlock() : Create new block too early");
-            } else if (fTestNet) {
-                FOUNDER_1_SCRIPT = GetScriptForDestination(CBitcoinAddress("TDk19wPKYq91i18qmY6U9FeTdTxwPeSveo").Get());
-                FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("TWZZcDGkNixTAMtRBqzZkkMHbq1G6vUTk5").Get());
-                FOUNDER_3_SCRIPT = GetScriptForDestination(CBitcoinAddress("TRZTFdNCKCKbLMQV8cZDkQN9Vwuuq4gDzT").Get());
-                FOUNDER_4_SCRIPT = GetScriptForDestination(CBitcoinAddress("TG2ruj59E5b1u9G3F7HQVs6pCcVDBxrQve").Get());
-                FOUNDER_5_SCRIPT = GetScriptForDestination(CBitcoinAddress("TCsTzQZKVn4fao8jDmB9zQBk9YQNEZ3XfS").Get());
-            }
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy, CScript(FOUNDER_0_SCRIPT.begin(), FOUNDER_0_SCRIPT.end())));// premine
+        } else if(nHeight < Params().GetConsensus().nTnodePaymentsStartBlock){
+            // In this stage miners have 1% reward
+            coinbaseTx.vout[0].nValue = -blockSubsidy * 99 / 100;
 
             // And give it to the founders
-            coinbaseTx.vout.push_back(CTxOut(1 * COIN, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(1 * COIN, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(1 * COIN, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(3 * COIN, CScript(FOUNDER_4_SCRIPT.begin(), FOUNDER_4_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(1 * COIN, CScript(FOUNDER_5_SCRIPT.begin(), FOUNDER_5_SCRIPT.end())));
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 79 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+        } else if(nHeight < Params().GetConsensus().rewardsStage2Start){
+            // T1
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue = -blockSubsidy * 60 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 40 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+        } else if(nHeight < Params().GetConsensus().rewardsStage3Start){
+            // T2
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue = -blockSubsidy * 84 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 64 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+        } else if(nHeight < Params().GetConsensus().rewardsStage4Start){
+            // T3
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue = -blockSubsidy * 75 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 50 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 15 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+        } else if(nHeight < Params().GetConsensus().rewardsStage5Start){
+            // T4
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue = -blockSubsidy * 65 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 35 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 20 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+        } else if(nHeight < Params().GetConsensus().rewardsStage6Start){
+            // T5
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue = -blockSubsidy * 55 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 20 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 25 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+        } else {
+            // T6
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue = -blockSubsidy * 50 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 15 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 25 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
         }
     }
 
@@ -241,13 +255,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
 
     unsigned int COUNT_SPEND_ZC_TX = 0;
-    unsigned int MAX_SPEND_ZC_TX_PER_BLOCK = 0;
-    if(fTestNet || nHeight > HF_ZEROSPEND_FIX){
-        MAX_SPEND_ZC_TX_PER_BLOCK = 1;
-    }
-    if(fTestNet || nHeight > SWITCH_TO_MORE_SPEND_TXS){
-        MAX_SPEND_ZC_TX_PER_BLOCK = 1;
-    }
+    unsigned int MAX_SPEND_ZC_TX_PER_BLOCK = 1;
 
     // Collect memory pool transactions into the block
     CTxMemPool::setEntries inBlock;
@@ -385,6 +393,10 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
                 continue;
             }
 
+            // temporarily disable zerocoin
+            if (tx.IsZerocoinSpend() || tx.IsZerocoinMint(tx))
+                continue;
+
             if (tx.IsZerocoinSpend()) {
                 LogPrintf("try to include zerocoinspend tx=%s\n", tx.GetHash().ToString());
                 LogPrintf("COUNT_SPEND_ZC_TX =%s\n", COUNT_SPEND_ZC_TX);
@@ -428,6 +440,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
                 nBlockSigOpsCost += nTxSigOps;
                 nFees += nTxFees;
                 COUNT_SPEND_ZC_TX++;
+                inBlock.insert(iter);
                 continue;
             }
             unsigned int nTxSigOps = iter->GetSigOpCost();
@@ -482,13 +495,13 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
                 }
             }
         }
-        CAmount blockReward = nFees + GetBlockSubsidy(nHeight, chainparams.GetConsensus());
-        // Update coinbase transaction with additional info about znode and governance payments,
+        CAmount blockReward = nFees + blockSubsidy;
+        // Update coinbase transaction with additional info about tnode and governance payments,
         // get some info back to pass to getblocktemplate
-        if (nHeight >= chainparams.GetConsensus().nZnodePaymentsStartBlock) {
-            CAmount znodePayment = GetZnodePayment(nHeight, blockReward);
-            coinbaseTx.vout[0].nValue -= znodePayment;
-            FillBlockPayments(coinbaseTx, nHeight, znodePayment, pblock->txoutZnode, pblock->voutSuperblock);
+        if (nHeight >= chainparams.GetConsensus().nTnodePaymentsStartBlock) {
+            CAmount tnodePayment = GetTnodePayment(nHeight, blockSubsidy);
+            coinbaseTx.vout[0].nValue -= tnodePayment;
+            FillBlockPayments(coinbaseTx, nHeight, tnodePayment, pblock->txoutTnode, pblock->voutSuperblock);
         }
 
         nLastBlockTx = nBlockTx;
@@ -884,13 +897,10 @@ void BlockAssembler::addPriorityTxs()
     double actualPriority = -1;
 
     unsigned int COUNT_SPEND_ZC_TX = 0;
-    unsigned int MAX_SPEND_ZC_TX_PER_BLOCK = 0;
-    if (chainActive.Height() + 1 > HF_ZEROSPEND_FIX) {
-        MAX_SPEND_ZC_TX_PER_BLOCK = 1;
-    }
-    if (nHeight + 1 > SWITCH_TO_MORE_SPEND_TXS) {
-        MAX_SPEND_ZC_TX_PER_BLOCK = 1;
-    }
+    unsigned int MAX_SPEND_ZC_TX_PER_BLOCK = 1;
+
+    // Block zerocoin
+    MAX_SPEND_ZC_TX_PER_BLOCK = 0;
 
     vecPriority.reserve(mempool.mapTx.size());
     for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
@@ -901,7 +911,7 @@ void BlockAssembler::addPriorityTxs()
         CTransaction tx = mi->GetTx();
         mempool.ApplyDeltas(tx.GetHash(), dPriority, dummy);
         vecPriority.push_back(TxCoinAgePriority(dPriority, mi));
-        //add zcoin validation
+        //add tecracoin validation
         if (tx.IsCoinBase() || !CheckFinalTx(tx))
             continue;
         if (tx.IsZerocoinSpend()) {
@@ -1050,14 +1060,14 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
     // Process this block the same as if we had received it from another node
     CValidationState state;
     if (!ProcessNewBlock(state, chainparams, NULL, pblock, true, NULL, false))
-        return error("ZcoinMiner: ProcessNewBlock, block not accepted");
+        return error("TecraCoinMiner: ProcessNewBlock, block not accepted");
 
     return true;
 }
 
-void static ZcoinMiner(const CChainParams &chainparams) {
+void static TecraCoinMiner(const CChainParams &chainparams) {
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("zcoin-miner");
+    RenameThread("tecracoin-miner");
 
     unsigned int nExtraNonce = 0;
 
@@ -1069,7 +1079,7 @@ void static ZcoinMiner(const CChainParams &chainparams) {
         // due to some internal error but also if the keypool is empty.
         // In the latter case, already the pointer is NULL.
         if (!coinbaseScript || coinbaseScript->reserveScript.empty()) {
-            LogPrintf("ZcoinMiner stop here coinbaseScript=%s, coinbaseScript->reserveScript.empty()=%s\n", coinbaseScript, coinbaseScript->reserveScript.empty());
+            LogPrintf("TecraCoinMiner stop here coinbaseScript=%s, coinbaseScript->reserveScript.empty()=%s\n", coinbaseScript, coinbaseScript->reserveScript.empty());
             throw std::runtime_error("No coinbase script available (mining requires a wallet)");
         }
 
@@ -1099,13 +1109,13 @@ void static ZcoinMiner(const CChainParams &chainparams) {
             }
             auto_ptr <CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
             if (!pblocktemplate.get()) {
-                LogPrintf("Error in ZcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
+                LogPrintf("Error in TecraCoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
                 return;
             }
             CBlock *pblock = &pblocktemplate->block;
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
-            LogPrintf("Running ZcoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
+            LogPrintf("Running TecraCoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
                       ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
             //
@@ -1124,29 +1134,7 @@ void static ZcoinMiner(const CChainParams &chainparams) {
                 uint256 thash;
 
                 while (true) {
-                    if ((!fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2Z_HEIGHT)) {
-                        lyra2z_hash(BEGIN(pblock->nVersion), BEGIN(thash));
-                    } else if (!fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2_HEIGHT) {
-                        LYRA2(BEGIN(thash), 32, BEGIN(pblock->nVersion), 80, BEGIN(pblock->nVersion), 80, 2, 8192, 256);
-                    } else if (!fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2VAR_HEIGHT) {
-                        LYRA2(BEGIN(thash), 32, BEGIN(pblock->nVersion), 80, BEGIN(pblock->nVersion), 80, 2,
-                              pindexPrev->nHeight + 1, 256);
-                    } else if (fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2Z_HEIGHT_TESTNET) { // testnet
-                        lyra2z_hash(BEGIN(pblock->nVersion), BEGIN(thash));
-                    } else if (fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2_HEIGHT_TESTNET) { // testnet
-                        LYRA2(BEGIN(thash), 32, BEGIN(pblock->nVersion), 80, BEGIN(pblock->nVersion), 80, 2, 8192, 256);
-                    } else if (fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2VAR_HEIGHT_TESTNET) { // testnet
-                        LYRA2(BEGIN(thash), 32, BEGIN(pblock->nVersion), 80, BEGIN(pblock->nVersion), 80, 2, pindexPrev->nHeight + 1, 256);
-                    } else {
-                        unsigned long int scrypt_scratpad_size_current_block =
-                                ((1 << (GetNfactor(pblock->nTime) + 1)) * 128) + 63;
-                        char *scratchpad = (char *) malloc(scrypt_scratpad_size_current_block * sizeof(char));
-                        scrypt_N_1_1_256_sp_generic(BEGIN(pblock->nVersion), BEGIN(thash), scratchpad,
-                                                    GetNfactor(pblock->nTime));
-//                        LogPrintf("scrypt thash: %s\n", thash.ToString().c_str());
-//                        LogPrintf("hashTarget: %s\n", hashTarget.ToString().c_str());
-                        free(scratchpad);
-                    }
+                    lyra2z_hash(BEGIN(pblock->nVersion), BEGIN(thash));
 
                     //LogPrintf("*****\nhash   : %s  \ntarget : %s\n", UintToArith256(thash).ToString(), hashTarget.ToString());
 
@@ -1155,7 +1143,7 @@ void static ZcoinMiner(const CChainParams &chainparams) {
                         LogPrintf("Found a solution. Hash: %s", UintToArith256(thash).ToString());
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
 //                        CheckWork(pblock, *pwallet, reservekey);
-                        LogPrintf("ZcoinMiner:\n");
+                        LogPrintf("TecraCoinMiner:\n");
                         LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", UintToArith256(thash).ToString(), hashTarget.ToString());
                         ProcessBlockFound(pblock, chainparams);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -1193,11 +1181,11 @@ void static ZcoinMiner(const CChainParams &chainparams) {
         }
     }
     catch (const boost::thread_interrupted &) {
-        LogPrintf("ZcoinMiner terminated\n");
+        LogPrintf("TecraCoinMiner terminated\n");
         throw;
     }
     catch (const std::runtime_error &e) {
-        LogPrintf("ZcoinMiner runtime error: %s\n", e.what());
+        LogPrintf("TecraCoinMiner runtime error: %s\n", e.what());
         return;
     }
 }
@@ -1221,7 +1209,7 @@ void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainpar
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&ZcoinMiner, boost::cref(chainparams)));
+        minerThreads->create_thread(boost::bind(&TecraCoinMiner, boost::cref(chainparams)));
 }
 
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)

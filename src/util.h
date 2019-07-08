@@ -41,7 +41,7 @@ public:
     /** Translate a message to the native language of the user. */
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
-extern bool fZNode;
+extern bool fTNode;
 extern bool fLiteMode;
 extern int nWalletBackups;
 
@@ -135,7 +135,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 const boost::filesystem::path &GetBackupsDir();
 void ClearDatadirCache();
 boost::filesystem::path GetConfigFile();
-boost::filesystem::path GetZnodeConfigFile();
+boost::filesystem::path GetTnodeConfigFile();
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
@@ -144,7 +144,7 @@ void ReadConfigFile(std::map<std::string, std::string>& mapSettingsRet, std::map
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
-void OpenDebugLog();
+void OpenDebugLog(bool force = false);
 void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
 
@@ -257,7 +257,7 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
-std::string CopyrightHolders(const std::string& strPrefix);
+std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear);
 
 
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2010 Satoshi Nakamoto
-// Copyright (c) 2009-2016 The zcoin Core developers
+// Copyright (c) 2009-2016 The tecracoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,6 +20,8 @@
 #include "wallet.h"
 #include "walletdb.h"
 #include "zerocoin.h"
+
+#include <tnode-payments.h>
 
 #include <stdint.h>
 
@@ -112,13 +114,13 @@ UniValue getnewaddress(const UniValue& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getnewaddress ( \"account\" )\n"
-            "\nReturns a new zcoin address for receiving payments.\n"
+            "\nReturns a new tecracoin address for receiving payments.\n"
             "If 'account' is specified (DEPRECATED), it is added to the address book \n"
             "so payments received with the address will be credited to 'account'.\n"
             "\nArguments:\n"
             "1. \"account\"        (string, optional) DEPRECATED. The account name for the address to be linked to. If not provided, the default account \"\" is used. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created if there is no account by the given name.\n"
             "\nResult:\n"
-            "\"zcoinaddress\"    (string) The new zcoin address\n"
+            "\"tecracoinaddress\"    (string) The new tecracoin address\n"
             "\nExamples:\n"
             + HelpExampleCli("getnewaddress", "")
             + HelpExampleRpc("getnewaddress", "")
@@ -164,11 +166,11 @@ UniValue getaccountaddress(const UniValue& params, bool fHelp)
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "getaccountaddress \"account\"\n"
-            "\nDEPRECATED. Returns the current zcoin address for receiving payments to this account.\n"
+            "\nDEPRECATED. Returns the current tecracoin address for receiving payments to this account.\n"
             "\nArguments:\n"
             "1. \"account\"       (string, required) The account name for the address. It can also be set to the empty string \"\" to represent the default account. The account does not need to exist, it will be created and a new address created  if there is no account by the given name.\n"
             "\nResult:\n"
-            "\"zcoinaddress\"   (string) The account zcoin address\n"
+            "\"tecracoinaddress\"   (string) The account tecracoin address\n"
             "\nExamples:\n"
             + HelpExampleCli("getaccountaddress", "")
             + HelpExampleCli("getaccountaddress", "\"\"")
@@ -196,7 +198,7 @@ UniValue getrawchangeaddress(const UniValue& params, bool fHelp)
     if (fHelp || params.size() > 1)
         throw runtime_error(
             "getrawchangeaddress\n"
-            "\nReturns a new zcoin address, for receiving change.\n"
+            "\nReturns a new tecracoin address, for receiving change.\n"
             "This is for use with raw transactions, NOT normal use.\n"
             "\nResult:\n"
             "\"address\"    (string) The address\n"
@@ -230,10 +232,10 @@ UniValue setaccount(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "setaccount \"zcoinaddress\" \"account\"\n"
+            "setaccount \"tecracoinaddress\" \"account\"\n"
             "\nDEPRECATED. Sets the account associated with the given address.\n"
             "\nArguments:\n"
-            "1. \"zcoinaddress\"  (string, required) The zcoin address to be associated with an account.\n"
+            "1. \"tecracoinaddress\"  (string, required) The tecracoin address to be associated with an account.\n"
             "2. \"account\"         (string, required) The account to assign the address to.\n"
             "\nExamples:\n"
             + HelpExampleCli("setaccount", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" \"tabby\"")
@@ -244,7 +246,7 @@ UniValue setaccount(const UniValue& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid zcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid tecracoin address");
 
     string strAccount;
     if (params.size() > 1)
@@ -276,10 +278,10 @@ UniValue getaccount(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() != 1)
         throw runtime_error(
-            "getaccount \"zcoinaddress\"\n"
+            "getaccount \"tecracoinaddress\"\n"
             "\nDEPRECATED. Returns the account associated with the given address.\n"
             "\nArguments:\n"
-            "1. \"zcoinaddress\"  (string, required) The zcoin address for account lookup.\n"
+            "1. \"tecracoinaddress\"  (string, required) The tecracoin address for account lookup.\n"
             "\nResult:\n"
             "\"accountname\"        (string) the account address\n"
             "\nExamples:\n"
@@ -291,7 +293,7 @@ UniValue getaccount(const UniValue& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid zcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid tecracoin address");
 
     string strAccount;
     map<CTxDestination, CAddressBookData>::iterator mi = pwalletMain->mapAddressBook.find(address.Get());
@@ -330,7 +332,7 @@ UniValue getaddressesbyaccount(const UniValue& params, bool fHelp)
             "1. \"account\"  (string, required) The account name.\n"
             "\nResult:\n"
             "[                     (json array of string)\n"
-            "  \"zcoinaddress\"  (string) a zcoin address associated with the given account\n"
+            "  \"tecracoinaddress\"  (string) a tecracoin address associated with the given account\n"
             "  ,...\n"
             "]\n"
             "\nExamples:\n"
@@ -365,7 +367,7 @@ static void SendMoney(const CTxDestination &address, CAmount nValue, bool fSubtr
     if (nValue > curBalance)
         throw JSONRPCError(RPC_WALLET_INSUFFICIENT_FUNDS, "Insufficient funds");
 
-    // Parse Zcoin address
+    // Parse TecraCoin address
     CScript scriptPubKey = GetScriptForDestination(address);
 
     // Create and send the transaction
@@ -392,11 +394,11 @@ UniValue sendtoaddress(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() < 2 || params.size() > 5)
         throw runtime_error(
-            "sendtoaddress \"zcoinaddress\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
+            "sendtoaddress \"tecracoinaddress\" amount ( \"comment\" \"comment-to\" subtractfeefromamount )\n"
             "\nSend an amount to a given address.\n"
             + HelpRequiringPassphrase() +
             "\nArguments:\n"
-            "1. \"zcoinaddress\"  (string, required) The zcoin address to send to.\n"
+            "1. \"tecracoinaddress\"  (string, required) The tecracoin address to send to.\n"
             "2. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. eg 0.1\n"
             "3. \"comment\"     (string, optional) A comment used to store what the transaction is for. \n"
             "                             This is not part of the transaction, just kept in your wallet.\n"
@@ -418,7 +420,7 @@ UniValue sendtoaddress(const UniValue& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid zcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid tecracoin address");
 
     // Amount
     CAmount nAmount = AmountFromValue(params[1]);
@@ -458,7 +460,7 @@ UniValue listaddressgroupings(const UniValue& params, bool fHelp)
             "[\n"
             "  [\n"
             "    [\n"
-            "      \"zcoinaddress\",     (string) The zcoin address\n"
+            "      \"tecracoinaddress\",     (string) The tecracoin address\n"
             "      amount,                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
             "      \"account\"             (string, optional) The account (DEPRECATED)\n"
             "    ]\n"
@@ -501,11 +503,11 @@ UniValue signmessage(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() != 2)
         throw runtime_error(
-            "signmessage \"zcoinaddress\" \"message\"\n"
+            "signmessage \"tecracoinaddress\" \"message\"\n"
             "\nSign a message with the private key of an address"
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
-            "1. \"zcoinaddress\"  (string, required) The zcoin address to use for the private key.\n"
+            "1. \"tecracoinaddress\"  (string, required) The tecracoin address to use for the private key.\n"
             "2. \"message\"         (string, required) The message to create a signature of.\n"
             "\nResult:\n"
             "\"signature\"          (string) The signature of the message encoded in base 64\n"
@@ -557,10 +559,10 @@ UniValue getreceivedbyaddress(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-            "getreceivedbyaddress \"zcoinaddress\" ( minconf )\n"
+            "getreceivedbyaddress \"tecracoinaddress\" ( minconf )\n"
             "\nReturns the total amount received by the given bitcoinaddress in transactions with at least minconf confirmations.\n"
             "\nArguments:\n"
-            "1. \"zcoinaddress\"  (string, required) The zcoin address for transactions.\n"
+            "1. \"tecracoinaddress\"  (string, required) The tecracoin address for transactions.\n"
             "2. minconf             (numeric, optional, default=1) Only include transactions confirmed at least this many times.\n"
             "\nResult:\n"
             "amount   (numeric) The total amount in " + CURRENCY_UNIT + " received at this address.\n"
@@ -569,18 +571,18 @@ UniValue getreceivedbyaddress(const UniValue& params, bool fHelp)
             + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\"") +
             "\nThe amount including unconfirmed transactions, zero confirmations\n"
             + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" 0") +
-            "\nThe amount with at least 6 confirmation, very safe\n"
-            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" 6") +
+            "\nThe amount with at least 24 confirmation, very safe\n"
+            + HelpExampleCli("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\" 24") +
             "\nAs a json rpc call\n"
-            + HelpExampleRpc("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", 6")
+            + HelpExampleRpc("getreceivedbyaddress", "\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", 24")
        );
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
 
-    // zcoin address
+    // tecracoin address
     CBitcoinAddress address = CBitcoinAddress(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid zcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid tecracoin address");
     CScript scriptPubKey = GetScriptForDestination(address.Get());
     if (!IsMine(*pwalletMain, scriptPubKey))
         return ValueFromAmount(0);
@@ -627,10 +629,10 @@ UniValue getreceivedbyaccount(const UniValue& params, bool fHelp)
             + HelpExampleCli("getreceivedbyaccount", "\"\"") +
             "\nAmount received at the tabby account including unconfirmed amounts with zero confirmations\n"
             + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 0") +
-            "\nThe amount with at least 6 confirmation, very safe\n"
-            + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 6") +
+            "\nThe amount with at least 24 confirmation, very safe\n"
+            + HelpExampleCli("getreceivedbyaccount", "\"tabby\" 24") +
             "\nAs a json rpc call\n"
-            + HelpExampleRpc("getreceivedbyaccount", "\"tabby\", 6")
+            + HelpExampleRpc("getreceivedbyaccount", "\"tabby\", 24")
         );
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -810,12 +812,12 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
 
     if (fHelp || params.size() < 3 || params.size() > 6)
         throw runtime_error(
-            "sendfrom \"fromaccount\" \"tozcoinaddress\" amount ( minconf \"comment\" \"comment-to\" )\n"
-            "\nDEPRECATED (use sendtoaddress). Sent an amount from an account to a zcoin address."
+            "sendfrom \"fromaccount\" \"totecracoinaddress\" amount ( minconf \"comment\" \"comment-to\" )\n"
+            "\nDEPRECATED (use sendtoaddress). Sent an amount from an account to a tecracoin address."
             + HelpRequiringPassphrase() + "\n"
             "\nArguments:\n"
             "1. \"fromaccount\"       (string, required) The name of the account to send funds from. May be the default account using \"\".\n"
-            "2. \"tozcoinaddress\"  (string, required) The zcoin address to send funds to.\n"
+            "2. \"totecracoinaddress\"  (string, required) The tecracoin address to send funds to.\n"
             "3. amount                (numeric or string, required) The amount in " + CURRENCY_UNIT + " (transaction fee is added on top).\n"
             "4. minconf               (numeric, optional, default=1) Only use funds with at least this many confirmations.\n"
             "5. \"comment\"           (string, optional) A comment used to store what the transaction is for. \n"
@@ -828,10 +830,10 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
             "\nExamples:\n"
             "\nSend 0.01 " + CURRENCY_UNIT + " from the default account to the address, must have at least 1 confirmation\n"
             + HelpExampleCli("sendfrom", "\"\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01") +
-            "\nSend 0.01 from the tabby account to the given address, funds must have at least 6 confirmations\n"
-            + HelpExampleCli("sendfrom", "\"tabby\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01 6 \"donation\" \"seans outpost\"") +
+            "\nSend 0.01 from the tabby account to the given address, funds must have at least 24 confirmations\n"
+            + HelpExampleCli("sendfrom", "\"tabby\" \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\" 0.01 24 \"donation\" \"seans outpost\"") +
             "\nAs a json rpc call\n"
-            + HelpExampleRpc("sendfrom", "\"tabby\", \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.01, 6, \"donation\", \"seans outpost\"")
+            + HelpExampleRpc("sendfrom", "\"tabby\", \"1M72Sfpbz1BPpXFHz9m3CdqATR44Jvaydd\", 0.01, 24, \"donation\", \"seans outpost\"")
         );
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -839,7 +841,7 @@ UniValue sendfrom(const UniValue& params, bool fHelp)
     string strAccount = AccountFromValue(params[0]);
     CBitcoinAddress address(params[1].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid zcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid tecracoin address");
     CAmount nAmount = AmountFromValue(params[2]);
     if (nAmount <= 0)
         throw JSONRPCError(RPC_TYPE_ERROR, "Invalid amount for send");
@@ -881,7 +883,7 @@ UniValue sendmany(const UniValue& params, bool fHelp)
             "1. \"fromaccount\"         (string, required) DEPRECATED. The account to send the funds from. Should be \"\" for the default account\n"
             "2. \"amounts\"             (string, required) A json object with addresses and amounts\n"
             "    {\n"
-            "      \"address\":amount   (numeric or string) The zcoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
+            "      \"address\":amount   (numeric or string) The tecracoin address is the key, the numeric amount (can be string) in " + CURRENCY_UNIT + " is the value\n"
             "      ,...\n"
             "    }\n"
             "3. minconf                 (numeric, optional, default=1) Only use the balance confirmed at least this many times.\n"
@@ -934,7 +936,7 @@ UniValue sendmany(const UniValue& params, bool fHelp)
     {
         CBitcoinAddress address(name_);
         if (!address.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid zcoin address: ")+name_);
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid tecracoin address: ")+name_);
 
         if (setAddress.count(address))
             throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+name_);
@@ -990,20 +992,20 @@ UniValue addmultisigaddress(const UniValue& params, bool fHelp)
     {
         string msg = "addmultisigaddress nrequired [\"key\",...] ( \"account\" )\n"
             "\nAdd a nrequired-to-sign multisignature address to the wallet.\n"
-            "Each key is a zcoin address or hex-encoded public key.\n"
+            "Each key is a tecracoin address or hex-encoded public key.\n"
             "If 'account' is specified (DEPRECATED), assign address to that account.\n"
 
             "\nArguments:\n"
             "1. nrequired        (numeric, required) The number of required signatures out of the n keys or addresses.\n"
-            "2. \"keysobject\"   (string, required) A json array of zcoin addresses or hex-encoded public keys\n"
+            "2. \"keysobject\"   (string, required) A json array of tecracoin addresses or hex-encoded public keys\n"
             "     [\n"
-            "       \"address\"  (string) zcoin address or hex-encoded public key\n"
+            "       \"address\"  (string) tecracoin address or hex-encoded public key\n"
             "       ...,\n"
             "     ]\n"
             "3. \"account\"      (string, optional) DEPRECATED. An account to assign the addresses to.\n"
 
             "\nResult:\n"
-            "\"zcoinaddress\"  (string) A zcoin address associated with the keys.\n"
+            "\"tecracoinaddress\"  (string) A tecracoin address associated with the keys.\n"
 
             "\nExamples:\n"
             "\nAdd a multisig address from 2 addresses\n"
@@ -1104,7 +1106,7 @@ UniValue addwitnessaddress(const UniValue& params, bool fHelp)
 
     CBitcoinAddress address(params[0].get_str());
     if (!address.IsValid())
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid zcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid tecracoin address");
 
     Witnessifier w;
     CTxDestination dest = address.Get();
@@ -1327,9 +1329,8 @@ UniValue listreceivedbyaccount(const UniValue& params, bool fHelp)
     return ListReceived(params, true);
 }
 
-static void MaybePushAddress(UniValue & entry, const CTxDestination &dest)
-{
-    CBitcoinAddress addr;
+static void MaybePushAddress(UniValue & entry, const CTxDestination &dest, CBitcoinAddress &addr)
+{  
     if (addr.Set(dest))
         entry.push_back(Pair("address", addr.ToString()));
 }
@@ -1340,6 +1341,7 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
     string strSentAccount;
     list<COutputEntry> listReceived;
     list<COutputEntry> listSent;
+    CBitcoinAddress addr;
 
     wtx.GetAmounts(listReceived, listSent, nFee, strSentAccount, filter);
 
@@ -1355,8 +1357,16 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
             if(involvesWatchonly || (::IsMine(*pwalletMain, s.destination) & ISMINE_WATCH_ONLY))
                 entry.push_back(Pair("involvesWatchonly", true));
             entry.push_back(Pair("account", strSentAccount));
-            MaybePushAddress(entry, s.destination);
-            entry.push_back(Pair("category", "send"));
+            MaybePushAddress(entry, s.destination, addr);
+            if(wtx.IsZerocoinMint(wtx)){
+                    entry.push_back(Pair("category", "mint"));
+                }
+            else if(wtx.IsZerocoinSpend()){
+                    entry.push_back(Pair("category", "spend"));
+                }
+            else {
+                entry.push_back(Pair("category", "send"));
+            }
             entry.push_back(Pair("amount", ValueFromAmount(-s.amount)));
             if (pwalletMain->mapAddressBook.count(s.destination))
                 entry.push_back(Pair("label", pwalletMain->mapAddressBook[s.destination].name));
@@ -1383,18 +1393,31 @@ void ListTransactions(const CWalletTx& wtx, const string& strAccount, int nMinDe
                 if(involvesWatchonly || (::IsMine(*pwalletMain, r.destination) & ISMINE_WATCH_ONLY))
                     entry.push_back(Pair("involvesWatchonly", true));
                 entry.push_back(Pair("account", account));
-                MaybePushAddress(entry, r.destination);
+                MaybePushAddress(entry, r.destination, addr);
                 if (wtx.IsCoinBase())
                 {
-                    if (wtx.GetDepthInMainChain() < 1)
+                    int txHeight = chainActive.Height() - wtx.GetDepthInMainChain();
+                    CScript payee;
+
+                    mnpayments.GetBlockPayee(txHeight, payee);
+                    //compare address of payee to addr. 
+                    CTxDestination payeeDest;
+                    ExtractDestination(payee, payeeDest);
+                    CBitcoinAddress payeeAddr(payeeDest);
+                    if(addr.ToString() == payeeAddr.ToString()){
+                        entry.push_back(Pair("category", "tnode"));
+                    }
+                    else if (wtx.GetDepthInMainChain() < 1)
                         entry.push_back(Pair("category", "orphan"));
                     else if (wtx.GetBlocksToMaturity() > 0)
                         entry.push_back(Pair("category", "immature"));
                     else
                         entry.push_back(Pair("category", "generate"));
                 }
-                else
-                {
+                else if(wtx.IsZerocoinSpend()){
+                    entry.push_back(Pair("category", "spend"));
+                }
+                else {
                     entry.push_back(Pair("category", "receive"));
                 }
                 entry.push_back(Pair("amount", ValueFromAmount(r.amount)));
@@ -1445,7 +1468,7 @@ UniValue listtransactions(const UniValue& params, bool fHelp)
             "  {\n"
             "    \"account\":\"accountname\",       (string) DEPRECATED. The account name associated with the transaction. \n"
             "                                                It will be \"\" for the default account.\n"
-            "    \"address\":\"zcoinaddress\",    (string) The zcoin address of the transaction. Not present for \n"
+            "    \"address\":\"tecracoinaddress\",    (string) The tecracoin address of the transaction. Not present for \n"
             "                                                move transactions (category = move).\n"
             "    \"category\":\"send|receive|move\", (string) The transaction category. 'move' is a local (off blockchain)\n"
             "                                                transaction between accounts, and not associated with an address,\n"
@@ -1649,7 +1672,7 @@ UniValue listsinceblock(const UniValue& params, bool fHelp)
             "{\n"
             "  \"transactions\": [\n"
             "    \"account\":\"accountname\",       (string) DEPRECATED. The account name associated with the transaction. Will be \"\" for the default account.\n"
-            "    \"address\":\"zcoinaddress\",    (string) The zcoin address of the transaction. Not present for move transactions (category = move).\n"
+            "    \"address\":\"tecracoinaddress\",    (string) The tecracoin address of the transaction. Not present for move transactions (category = move).\n"
             "    \"category\":\"send|receive\",     (string) The transaction category. 'send' has negative amounts, 'receive' has positive amounts.\n"
             "    \"amount\": x.xxx,          (numeric) The amount in " + CURRENCY_UNIT + ". This is negative for the 'send' category, and for the 'move' category for moves \n"
             "                                          outbound. It is positive for the 'receive' category, and for the 'move' category for inbound funds.\n"
@@ -1751,7 +1774,7 @@ UniValue gettransaction(const UniValue& params, bool fHelp)
             "  \"details\" : [\n"
             "    {\n"
             "      \"account\" : \"accountname\",  (string) DEPRECATED. The account name involved in the transaction, can be \"\" for the default account.\n"
-            "      \"address\" : \"zcoinaddress\",   (string) The zcoin address involved in the transaction\n"
+            "      \"address\" : \"tecracoinaddress\",   (string) The tecracoin address involved in the transaction\n"
             "      \"category\" : \"send|receive\",    (string) The category, either 'send' or 'receive'\n"
             "      \"amount\" : x.xxx,                 (numeric) The amount in " + CURRENCY_UNIT + "\n"
             "      \"label\" : \"label\",              (string) A comment for the address/transaction, if any\n"
@@ -1918,7 +1941,7 @@ UniValue walletpassphrase(const UniValue& params, bool fHelp)
         throw runtime_error(
             "walletpassphrase \"passphrase\" timeout\n"
             "\nStores the wallet decryption key in memory for 'timeout' seconds.\n"
-            "This is needed prior to performing transactions related to private keys such as sending zcoins\n"
+            "This is needed prior to performing transactions related to private keys such as sending tecracoins\n"
             "\nArguments:\n"
             "1. \"passphrase\"     (string, required) The wallet passphrase\n"
             "2. timeout            (numeric, required) The time to keep the decryption key in seconds.\n"
@@ -2076,7 +2099,7 @@ UniValue encryptwallet(const UniValue& params, bool fHelp)
             "\nNow set the passphrase to use the wallet, such as for signing or sending bitcoin\n"
             + HelpExampleCli("walletpassphrase", "\"my pass phrase\"") +
             "\nNow we can so something like sign\n"
-            + HelpExampleCli("signmessage", "\"zcoinaddress\" \"test message\"") +
+            + HelpExampleCli("signmessage", "\"tecracoinaddress\" \"test message\"") +
             "\nNow lock the wallet again by removing the passphrase\n"
             + HelpExampleCli("walletlock", "") +
             "\nAs a json rpc call\n"
@@ -2108,7 +2131,7 @@ UniValue encryptwallet(const UniValue& params, bool fHelp)
     // slack space in .dat files; that is bad if the old data is
     // unencrypted private keys. So:
     StartShutdown();
-    return "wallet encrypted; zcoin server stopping, restart to run with encrypted wallet. The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
+    return "wallet encrypted; tecracoin server stopping, restart to run with encrypted wallet. The keypool has been flushed and a new HD seed was generated (if you are using HD). You need to make a new backup.";
 }
 
 UniValue lockunspent(const UniValue& params, bool fHelp)
@@ -2263,8 +2286,8 @@ UniValue settxfee(const UniValue& params, bool fHelp)
             "\nResult\n"
             "true|false        (boolean) Returns true if successful\n"
             "\nExamples:\n"
-            + HelpExampleCli("settxfee", "0.00000001 XZC")
-            + HelpExampleRpc("settxfee", "0.00000001 XZC")
+            + HelpExampleCli("settxfee", "0.00000001 TCR")
+            + HelpExampleRpc("settxfee", "0.00000001 TCR")
         );
 
     LOCK2(cs_main, pwalletMain->cs_wallet);
@@ -2361,9 +2384,9 @@ UniValue listunspent(const UniValue& params, bool fHelp)
             "\nArguments:\n"
             "1. minconf          (numeric, optional, default=1) The minimum confirmations to filter\n"
             "2. maxconf          (numeric, optional, default=9999999) The maximum confirmations to filter\n"
-            "3. \"addresses\"    (string) A json array of zcoin addresses to filter\n"
+            "3. \"addresses\"    (string) A json array of tecracoin addresses to filter\n"
             "    [\n"
-            "      \"address\"   (string) zcoin address\n"
+            "      \"address\"   (string) tecracoin address\n"
             "      ,...\n"
             "    ]\n"
             "\nResult\n"
@@ -2371,7 +2394,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
             "  {\n"
             "    \"txid\" : \"txid\",          (string) the transaction id \n"
             "    \"vout\" : n,               (numeric) the vout value\n"
-            "    \"address\" : \"address\",    (string) the zcoin address\n"
+            "    \"address\" : \"address\",    (string) the tecracoin address\n"
             "    \"account\" : \"account\",    (string) DEPRECATED. The associated account, or \"\" for the default account\n"
             "    \"scriptPubKey\" : \"key\",   (string) the script key\n"
             "    \"amount\" : x.xxx,         (numeric) the transaction amount in " + CURRENCY_UNIT + "\n"
@@ -2406,7 +2429,7 @@ UniValue listunspent(const UniValue& params, bool fHelp)
             const UniValue& input = inputs[idx];
             CBitcoinAddress address(input.get_str());
             if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid zcoin address: ")+input.get_str());
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, string("Invalid tecracoin address: ")+input.get_str());
             if (setAddress.count(address))
                 throw JSONRPCError(RPC_INVALID_PARAMETER, string("Invalid parameter, duplicated address: ")+input.get_str());
            setAddress.insert(address);
@@ -2479,7 +2502,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
                             "1. \"hexstring\"           (string, required) The hex string of the raw transaction\n"
                             "2. options               (object, optional)\n"
                             "   {\n"
-                            "     \"changeAddress\"     (string, optional, default pool address) The zcoin address to receive the change\n"
+                            "     \"changeAddress\"     (string, optional, default pool address) The tecracoin address to receive the change\n"
                             "     \"changePosition\"    (numeric, optional, default random) The index of the change output\n"
                             "     \"includeWatching\"   (boolean, optional, default false) Also select inputs which are watch only\n"
                             "     \"lockUnspents\"      (boolean, optional, default false) Lock selected unspent outputs\n"
@@ -2537,7 +2560,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
             CBitcoinAddress address(options["changeAddress"].get_str());
 
             if (!address.IsValid())
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "changeAddress must be a valid zcoin address");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "changeAddress must be a valid tecracoin address");
 
             changeAddress = address.Get();
         }
@@ -2585,7 +2608,7 @@ UniValue fundrawtransaction(const UniValue& params, bool fHelp)
     return result;
 }
 
-//[zcoin]: zerocoin section
+//[tecracoin]: zerocoin section
 // zerocoin section
 
 UniValue listunspentmintzerocoins(const UniValue &params, bool fHelp) {
@@ -2718,10 +2741,138 @@ UniValue mintzerocoin(const UniValue& params, bool fHelp)
         zerocoinTx.ecdsaSecretKey = std::vector<unsigned char>(ecdsaSecretKey, ecdsaSecretKey+32);
         walletdb.WriteZerocoinEntry(zerocoinTx);
 
-        return pubCoin.getValue().GetHex();
+        return wtx.GetHash().GetHex();
     } else {
         return "";
     }
+
+}
+
+UniValue mintmanyzerocoin(const UniValue& params, bool fHelp)
+{
+
+    if (fHelp || params.size() > 1)
+        throw runtime_error(
+                "mintmanyzerocoin {<denomination>(1,10,25,50,100):\"amount\"...}\n"
+                + HelpRequiringPassphrase()
+                + "\nMint 1 or more zerocoins. Amounts must be of denominations specified.\n"
+                "\nArguments:\n"
+                "1. \"denominations\"             (object, required) A json object with amounts and denominations\n"
+                    "    {\n"
+                    "      \"denomination\":amount The denomination of zerocoin to mint (must be one of (1,10,25,50,100)) followed by the amount of the denomination to mint.\n"
+                    "      ,...\n"
+                    "    }\n"
+                "\nExamples:\n"
+                    + HelpExampleCli("mintmanyzerocoin", "\"\" \"{\\\"25\\\":10,\\\"10\\\":5}\"")
+        );
+
+
+    UniValue txids(UniValue::VARR);
+
+    int64_t denomination_int = 0;
+    libzerocoin::CoinDenomination denomination;
+
+    UniValue sendTo = params[0].get_obj();
+
+    vector<string> keys = sendTo.getKeys();
+    BOOST_FOREACH(const string& denomination_str, keys){
+
+        denomination_int = stoi(denomination_str.c_str());
+
+        switch(denomination_int){
+            case 1:
+                denomination = libzerocoin::ZQ_LOVELACE;
+                break;
+            case 10:
+                denomination = libzerocoin::ZQ_GOLDWASSER;
+                break;
+            case 25:
+                denomination = libzerocoin::ZQ_RACKOFF;
+                break;
+            case 50:
+                denomination = libzerocoin::ZQ_PEDERSEN;
+                break;
+            case 100:
+                denomination = libzerocoin::ZQ_WILLIAMSON;                                                
+                break;
+            default:
+                throw runtime_error(
+                    "mintzerocoin <amount>(1,10,25,50,100) (\"tecracoinaddress\")\n");
+        }
+
+
+        int64_t amount = sendTo[denomination_str].get_int();
+
+        LogPrintf("rpcWallet.mintzerocoin() denomination = %s, amount = %s \n", denomination_str, amount);
+
+        
+
+        if(amount < 0){
+                throw runtime_error(
+                    "mintzerocoin <amount>(1,10,25,50,100) (\"tecracoinaddress\")\n");
+        }
+
+        for(int64_t i=0; i<amount; i++){
+            bool valid_coin = false;
+            // Always use modulus v2
+            libzerocoin::Params *zcParams = ZCParamsV2;
+            //do {
+            // The following constructor does all the work of minting a brand
+            // new zerocoin. It stores all the private values inside the
+            // PrivateCoin object. This includes the coin secrets, which must be
+            // stored in a secure location (wallet) at the client.
+            libzerocoin::PrivateCoin newCoin(zcParams, denomination, ZEROCOIN_TX_VERSION_2);
+            // Get a copy of the 'public' portion of the coin. You should
+            // embed this into a Zerocoin 'MINT' transaction along with a series
+            // of currency inputs totaling the assigned value of one zerocoin.
+            
+            libzerocoin::PublicCoin pubCoin = newCoin.getPublicCoin();
+            
+            //Validate
+            valid_coin = pubCoin.validate();
+
+            // loop until we find a valid coin
+            while(!valid_coin){
+                libzerocoin::PrivateCoin newCoin(zcParams, denomination, ZEROCOIN_TX_VERSION_2);
+                libzerocoin::PublicCoin pubCoin = newCoin.getPublicCoin();
+                valid_coin = pubCoin.validate();
+            }
+
+            // Validate
+            CScript scriptSerializedCoin =
+                    CScript() << OP_ZEROCOINMINT << pubCoin.getValue().getvch().size() << pubCoin.getValue().getvch();
+
+            if (pwalletMain->IsLocked())
+                throw JSONRPCError(RPC_WALLET_UNLOCK_NEEDED, "Error: Please enter the wallet passphrase with walletpassphrase first.");
+
+            // Wallet comments
+            CWalletTx wtx;
+
+            string strError = pwalletMain->MintZerocoin(scriptSerializedCoin, (denomination_int * COIN), wtx);
+
+            if (strError != "")
+                throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+            CWalletDB walletdb(pwalletMain->strWalletFile);
+            CZerocoinEntry zerocoinTx;
+            zerocoinTx.IsUsed = false;
+            zerocoinTx.denomination = denomination;
+            zerocoinTx.value = pubCoin.getValue();
+            libzerocoin::PublicCoin checkPubCoin(zcParams, zerocoinTx.value, denomination);
+            if (!checkPubCoin.validate()) {
+                return false;
+            }
+            zerocoinTx.randomness = newCoin.getRandomness();
+            zerocoinTx.serialNumber = newCoin.getSerialNumber();
+            const unsigned char *ecdsaSecretKey = newCoin.getEcdsaSeckey();
+            zerocoinTx.ecdsaSecretKey = std::vector<unsigned char>(ecdsaSecretKey, ecdsaSecretKey+32);
+            walletdb.WriteZerocoinEntry(zerocoinTx);
+
+            txids.push_back(wtx.GetHash().GetHex());
+        }
+    }
+
+    return txids;
 
 }
 
@@ -2729,11 +2880,11 @@ UniValue spendzerocoin(const UniValue& params, bool fHelp) {
 
     if (fHelp || params.size() < 1 || params.size() > 2)
         throw runtime_error(
-                "spendzerocoin <amount>(1,10,25,50,100) (\"zcoinaddress\")\n"
+                "spendzerocoin <amount>(1,10,25,50,100) (\"tecracoinaddress\")\n"
                 + HelpRequiringPassphrase() +
 				"\nArguments:\n"
 				"1. \"amount\"      (numeric or string, required) The amount in " + CURRENCY_UNIT + " to send. currently options are following 1, 10, 25, 50 and 100 only\n"
-				"2. \"zcoinaddress\"  (string, optional) The zcoin address to send to third party.\n"
+				"2. \"tecracoinaddress\"  (string, optional) The tecracoin address to send to third party.\n"
 				"\nExamples:\n"
 				            + HelpExampleCli("spendzerocoin", "10 \"a1kCCGddf5pMXSipLVD9hBG2MGGVNaJ15U\"")
         );
@@ -2760,7 +2911,7 @@ UniValue spendzerocoin(const UniValue& params, bool fHelp) {
         nAmount = AmountFromValue(params[0]);
     } else {
         throw runtime_error(
-                "spendzerocoin <amount>(1,10,25,50,100) (\"zcoinaddress\")\n");
+                "spendzerocoin <amount>(1,10,25,50,100) (\"tecracoinaddress\")\n");
     }
 
     CBitcoinAddress address;
@@ -2770,7 +2921,7 @@ UniValue spendzerocoin(const UniValue& params, bool fHelp) {
     	thirdPartyaddress = params[1].get_str();
     	address = CBitcoinAddress(params[1].get_str());
 		 if (!address.IsValid())
-			 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Zcoin address");
+			 throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid TecraCoin address");
     }
 
     EnsureWalletIsUnlocked();
@@ -2789,6 +2940,97 @@ UniValue spendzerocoin(const UniValue& params, bool fHelp) {
         throw JSONRPCError(RPC_WALLET_ERROR, strError);
 
     return wtx.GetHash().GetHex();
+
+}
+
+UniValue spendmanyzerocoin(const UniValue& params, bool fHelp) {
+
+    if (fHelp || params.size() != 1)
+        throw runtime_error(
+                "spendmanyzerocoin {\"address\":<denomination>(1,10,25,50,100), \"amount\": 10...}\n"
+                + HelpRequiringPassphrase()
+                + "\nSpend multiple zerocoins. Amounts must be of denominations specified.\n"
+                "\nArguments:\n"
+                "1. \"addresses\"             (object, required) A json object with addresses and amounts\n"
+                    "    {\n"
+                    "      \"address\":denomination,   (numeric or string) The tecracoin address is the key; leave as \"\" to spend to self. The numeric amount must be one of (1,10,25,50,100)\n"
+                    "      \"amount,                    (numeric or string) The amount of spends to this address.\n"
+                    "      ,...\n"
+                    "    }\n"
+                "\nExamples:\n"
+                    + HelpExampleCli("spendmanyzerocoin", "\"\" \"[{\\\"address\\\":\"1D1ZrZNe3JUo7ZycKEYQQiQAWd9y54F4XZ\", \\\"denomination\\\":25, \\\"amount\\\": 1}{\\\"\\\":10, amount:}]\"")
+        );
+
+    UniValue txids(UniValue::VARR);
+
+    LOCK2(cs_main, pwalletMain->cs_wallet);
+
+    int64_t denomination_in = 0;
+    libzerocoin::CoinDenomination denomination;
+
+    UniValue inputs = params[0].get_array();
+
+    for(size_t i=0; i<inputs.size();i++) {
+
+        const UniValue& input_obj = inputs[i].get_obj();
+
+        int amount = find_value(input_obj, "amount").get_int();
+
+        denomination_in = find_value(input_obj, "denomination").get_int();
+
+        string address_str = find_value(input_obj, "address").get_str();
+
+        switch(denomination_in){
+            case 1:
+                denomination = libzerocoin::ZQ_LOVELACE;
+                break;
+            case 10:
+                denomination = libzerocoin::ZQ_GOLDWASSER;
+                break;
+            case 25:
+                denomination = libzerocoin::ZQ_RACKOFF;
+                break;
+            case 50:
+                denomination = libzerocoin::ZQ_PEDERSEN;
+                break;
+            case 100:
+                denomination = libzerocoin::ZQ_WILLIAMSON;                                                
+                break;
+            default:
+                throw runtime_error(
+                    "spendmanyzerocoin <amount>(1,10,25,50,100) (\"tecracoinaddress\")\n");
+        }
+
+        string thirdPartyaddress = "";
+        if (!(address_str == "")){
+            CBitcoinAddress address(address_str);
+            if (!address.IsValid())
+                throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid TecraCoin address");
+            thirdPartyaddress = address_str;
+        }
+
+        EnsureWalletIsUnlocked();
+
+        // Wallet comments
+        CWalletTx wtx;
+        CBigNum coinSerial;
+        uint256 txHash;
+        CBigNum zcSelectedValue;
+        bool zcSelectedIsUsed;
+
+        for(int j=0;j<amount;j++) {
+
+            string strError = pwalletMain->SpendZerocoin(thirdPartyaddress, (denomination_in * COIN), denomination, wtx, coinSerial, txHash, zcSelectedValue,
+                                                         zcSelectedIsUsed);
+
+            if (strError != "")
+                throw JSONRPCError(RPC_WALLET_ERROR, strError);
+
+            txids.push_back(wtx.GetHash().GetHex());
+        }
+    }
+
+    return txids;
 
 }
 
@@ -3137,7 +3379,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "setmininput",              &setmininput,              false },
     { "wallet",             "listunspentmintzerocoins",             &listunspentmintzerocoins,             false },
     { "wallet",             "mintzerocoin",             &mintzerocoin,             false },
+    { "wallet",             "mintmanyzerocoin",             &mintmanyzerocoin,             false },
     { "wallet",             "spendzerocoin",            &spendzerocoin,            false },
+    { "wallet",             "spendmanyzerocoin",            &spendmanyzerocoin,            false },
     { "wallet",             "resetmintzerocoin",        &resetmintzerocoin,        false },
     { "wallet",             "setmintzerocoinstatus",        &setmintzerocoinstatus,        false },
     { "wallet",             "listmintzerocoins",        &listmintzerocoins,        false },

@@ -1,13 +1,13 @@
-#include "znodelist.h"
-#include "ui_znodelist.h"
+#include "tnodelist.h"
+#include "ui_tnodelist.h"
 
-#include "activeznode.h"
+#include "activetnode.h"
 #include "clientmodel.h"
 #include "init.h"
 #include "guiutil.h"
-#include "znode-sync.h"
-#include "znodeconfig.h"
-#include "znodeman.h"
+#include "tnode-sync.h"
+#include "tnodeconfig.h"
+#include "tnodeman.h"
 #include "sync.h"
 #include "wallet/wallet.h"
 #include "walletmodel.h"
@@ -26,9 +26,9 @@ int GetOffsetFromUtc()
 #endif
 }
 
-ZnodeList::ZnodeList(const PlatformStyle *platformStyle, QWidget *parent) :
+TnodeList::TnodeList(const PlatformStyle *platformStyle, QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ZnodeList),
+    ui(new Ui::TnodeList),
     clientModel(0),
     walletModel(0)
 {
@@ -43,25 +43,25 @@ ZnodeList::ZnodeList(const PlatformStyle *platformStyle, QWidget *parent) :
     int columnActiveWidth = 130;
     int columnLastSeenWidth = 130;
 
-    ui->tableWidgetMyZnodes->setColumnWidth(0, columnAliasWidth);
-    ui->tableWidgetMyZnodes->setColumnWidth(1, columnAddressWidth);
-    ui->tableWidgetMyZnodes->setColumnWidth(2, columnProtocolWidth);
-    ui->tableWidgetMyZnodes->setColumnWidth(3, columnStatusWidth);
-    ui->tableWidgetMyZnodes->setColumnWidth(4, columnActiveWidth);
-    ui->tableWidgetMyZnodes->setColumnWidth(5, columnLastSeenWidth);
+    ui->tableWidgetMyTnodes->setColumnWidth(0, columnAliasWidth);
+    ui->tableWidgetMyTnodes->setColumnWidth(1, columnAddressWidth);
+    ui->tableWidgetMyTnodes->setColumnWidth(2, columnProtocolWidth);
+    ui->tableWidgetMyTnodes->setColumnWidth(3, columnStatusWidth);
+    ui->tableWidgetMyTnodes->setColumnWidth(4, columnActiveWidth);
+    ui->tableWidgetMyTnodes->setColumnWidth(5, columnLastSeenWidth);
 
-    ui->tableWidgetZnodes->setColumnWidth(0, columnAddressWidth);
-    ui->tableWidgetZnodes->setColumnWidth(1, columnProtocolWidth);
-    ui->tableWidgetZnodes->setColumnWidth(2, columnStatusWidth);
-    ui->tableWidgetZnodes->setColumnWidth(3, columnActiveWidth);
-    ui->tableWidgetZnodes->setColumnWidth(4, columnLastSeenWidth);
+    ui->tableWidgetTnodes->setColumnWidth(0, columnAddressWidth);
+    ui->tableWidgetTnodes->setColumnWidth(1, columnProtocolWidth);
+    ui->tableWidgetTnodes->setColumnWidth(2, columnStatusWidth);
+    ui->tableWidgetTnodes->setColumnWidth(3, columnActiveWidth);
+    ui->tableWidgetTnodes->setColumnWidth(4, columnLastSeenWidth);
 
-    ui->tableWidgetMyZnodes->setContextMenuPolicy(Qt::CustomContextMenu);
+    ui->tableWidgetMyTnodes->setContextMenuPolicy(Qt::CustomContextMenu);
 
     QAction *startAliasAction = new QAction(tr("Start alias"), this);
     contextMenu = new QMenu();
     contextMenu->addAction(startAliasAction);
-    connect(ui->tableWidgetMyZnodes, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
+    connect(ui->tableWidgetMyTnodes, SIGNAL(customContextMenuRequested(const QPoint&)), this, SLOT(showContextMenu(const QPoint&)));
     connect(startAliasAction, SIGNAL(triggered()), this, SLOT(on_startButton_clicked()));
 
     timer = new QTimer(this);
@@ -74,50 +74,50 @@ ZnodeList::ZnodeList(const PlatformStyle *platformStyle, QWidget *parent) :
     updateNodeList();
 }
 
-ZnodeList::~ZnodeList()
+TnodeList::~TnodeList()
 {
     delete ui;
 }
 
-void ZnodeList::setClientModel(ClientModel *model)
+void TnodeList::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if(model) {
-        // try to update list when znode count changes
-        connect(clientModel, SIGNAL(strZnodesChanged(QString)), this, SLOT(updateNodeList()));
+        // try to update list when tnode count changes
+        connect(clientModel, SIGNAL(strTnodesChanged(QString)), this, SLOT(updateNodeList()));
     }
 }
 
-void ZnodeList::setWalletModel(WalletModel *model)
+void TnodeList::setWalletModel(WalletModel *model)
 {
     this->walletModel = model;
 }
 
-void ZnodeList::showContextMenu(const QPoint &point)
+void TnodeList::showContextMenu(const QPoint &point)
 {
-    QTableWidgetItem *item = ui->tableWidgetMyZnodes->itemAt(point);
+    QTableWidgetItem *item = ui->tableWidgetMyTnodes->itemAt(point);
     if(item) contextMenu->exec(QCursor::pos());
 }
 
-void ZnodeList::StartAlias(std::string strAlias)
+void TnodeList::StartAlias(std::string strAlias)
 {
     std::string strStatusHtml;
     strStatusHtml += "<center>Alias: " + strAlias;
 
-    BOOST_FOREACH(CZnodeConfig::CZnodeEntry mne, znodeConfig.getEntries()) {
+    BOOST_FOREACH(CTnodeConfig::CTnodeEntry mne, tnodeConfig.getEntries()) {
         if(mne.getAlias() == strAlias) {
             std::string strError;
-            CZnodeBroadcast mnb;
+            CTnodeBroadcast mnb;
 
-            bool fSuccess = CZnodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
+            bool fSuccess = CTnodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
             if(fSuccess) {
-                strStatusHtml += "<br>Successfully started znode.";
-                mnodeman.UpdateZnodeList(mnb);
-                mnb.RelayZNode();
-                mnodeman.NotifyZnodeUpdates();
+                strStatusHtml += "<br>Successfully started tnode.";
+                mnodeman.UpdateTnodeList(mnb);
+                mnb.RelayTNode();
+                mnodeman.NotifyTnodeUpdates();
             } else {
-                strStatusHtml += "<br>Failed to start znode.<br>Error: " + strError;
+                strStatusHtml += "<br>Failed to start tnode.<br>Error: " + strError;
             }
             break;
         }
@@ -131,15 +131,15 @@ void ZnodeList::StartAlias(std::string strAlias)
     updateMyNodeList(true);
 }
 
-void ZnodeList::StartAll(std::string strCommand)
+void TnodeList::StartAll(std::string strCommand)
 {
     int nCountSuccessful = 0;
     int nCountFailed = 0;
     std::string strFailedHtml;
 
-    BOOST_FOREACH(CZnodeConfig::CZnodeEntry mne, znodeConfig.getEntries()) {
+    BOOST_FOREACH(CTnodeConfig::CTnodeEntry mne, tnodeConfig.getEntries()) {
         std::string strError;
-        CZnodeBroadcast mnb;
+        CTnodeBroadcast mnb;
 
         int32_t nOutputIndex = 0;
         if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
@@ -150,13 +150,13 @@ void ZnodeList::StartAll(std::string strCommand)
 
         if(strCommand == "start-missing" && mnodeman.Has(CTxIn(outpoint))) continue;
 
-        bool fSuccess = CZnodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
+        bool fSuccess = CTnodeBroadcast::Create(mne.getIp(), mne.getPrivKey(), mne.getTxHash(), mne.getOutputIndex(), strError, mnb);
 
         if(fSuccess) {
             nCountSuccessful++;
-            mnodeman.UpdateZnodeList(mnb);
-            mnb.RelayZNode();
-            mnodeman.NotifyZnodeUpdates();
+            mnodeman.UpdateTnodeList(mnb);
+            mnb.RelayTNode();
+            mnodeman.NotifyTnodeUpdates();
         } else {
             nCountFailed++;
             strFailedHtml += "\nFailed to start " + mne.getAlias() + ". Error: " + strError;
@@ -165,7 +165,7 @@ void ZnodeList::StartAll(std::string strCommand)
     pwalletMain->Lock();
 
     std::string returnObj;
-    returnObj = strprintf("Successfully started %d znodes, failed to start %d, total %d", nCountSuccessful, nCountFailed, nCountFailed + nCountSuccessful);
+    returnObj = strprintf("Successfully started %d tnodes, failed to start %d, total %d", nCountSuccessful, nCountFailed, nCountFailed + nCountSuccessful);
     if (nCountFailed > 0) {
         returnObj += strFailedHtml;
     }
@@ -177,13 +177,13 @@ void ZnodeList::StartAll(std::string strCommand)
     updateMyNodeList(true);
 }
 
-void ZnodeList::updateMyZnodeInfo(QString strAlias, QString strAddr, const COutPoint& outpoint)
+void TnodeList::updateMyTnodeInfo(QString strAlias, QString strAddr, const COutPoint& outpoint)
 {
     bool fOldRowFound = false;
     int nNewRow = 0;
 
-    for(int i = 0; i < ui->tableWidgetMyZnodes->rowCount(); i++) {
-        if(ui->tableWidgetMyZnodes->item(i, 0)->text() == strAlias) {
+    for(int i = 0; i < ui->tableWidgetMyTnodes->rowCount(); i++) {
+        if(ui->tableWidgetMyTnodes->item(i, 0)->text() == strAlias) {
             fOldRowFound = true;
             nNewRow = i;
             break;
@@ -191,32 +191,32 @@ void ZnodeList::updateMyZnodeInfo(QString strAlias, QString strAddr, const COutP
     }
 
     if(nNewRow == 0 && !fOldRowFound) {
-        nNewRow = ui->tableWidgetMyZnodes->rowCount();
-        ui->tableWidgetMyZnodes->insertRow(nNewRow);
+        nNewRow = ui->tableWidgetMyTnodes->rowCount();
+        ui->tableWidgetMyTnodes->insertRow(nNewRow);
     }
 
-    znode_info_t infoMn = mnodeman.GetZnodeInfo(CTxIn(outpoint));
+    tnode_info_t infoMn = mnodeman.GetTnodeInfo(CTxIn(outpoint));
     bool fFound = infoMn.fInfoValid;
 
     QTableWidgetItem *aliasItem = new QTableWidgetItem(strAlias);
     QTableWidgetItem *addrItem = new QTableWidgetItem(fFound ? QString::fromStdString(infoMn.addr.ToString()) : strAddr);
     QTableWidgetItem *protocolItem = new QTableWidgetItem(QString::number(fFound ? infoMn.nProtocolVersion : -1));
-    QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(fFound ? CZnode::StateToString(infoMn.nActiveState) : "MISSING"));
+    QTableWidgetItem *statusItem = new QTableWidgetItem(QString::fromStdString(fFound ? CTnode::StateToString(infoMn.nActiveState) : "MISSING"));
     QTableWidgetItem *activeSecondsItem = new QTableWidgetItem(QString::fromStdString(DurationToDHMS(fFound ? (infoMn.nTimeLastPing - infoMn.sigTime) : 0)));
     QTableWidgetItem *lastSeenItem = new QTableWidgetItem(QString::fromStdString(DateTimeStrFormat("%Y-%m-%d %H:%M",
                                                                                                    fFound ? infoMn.nTimeLastPing + GetOffsetFromUtc() : 0)));
     QTableWidgetItem *pubkeyItem = new QTableWidgetItem(QString::fromStdString(fFound ? CBitcoinAddress(infoMn.pubKeyCollateralAddress.GetID()).ToString() : ""));
 
-    ui->tableWidgetMyZnodes->setItem(nNewRow, 0, aliasItem);
-    ui->tableWidgetMyZnodes->setItem(nNewRow, 1, addrItem);
-    ui->tableWidgetMyZnodes->setItem(nNewRow, 2, protocolItem);
-    ui->tableWidgetMyZnodes->setItem(nNewRow, 3, statusItem);
-    ui->tableWidgetMyZnodes->setItem(nNewRow, 4, activeSecondsItem);
-    ui->tableWidgetMyZnodes->setItem(nNewRow, 5, lastSeenItem);
-    ui->tableWidgetMyZnodes->setItem(nNewRow, 6, pubkeyItem);
+    ui->tableWidgetMyTnodes->setItem(nNewRow, 0, aliasItem);
+    ui->tableWidgetMyTnodes->setItem(nNewRow, 1, addrItem);
+    ui->tableWidgetMyTnodes->setItem(nNewRow, 2, protocolItem);
+    ui->tableWidgetMyTnodes->setItem(nNewRow, 3, statusItem);
+    ui->tableWidgetMyTnodes->setItem(nNewRow, 4, activeSecondsItem);
+    ui->tableWidgetMyTnodes->setItem(nNewRow, 5, lastSeenItem);
+    ui->tableWidgetMyTnodes->setItem(nNewRow, 6, pubkeyItem);
 }
 
-void ZnodeList::updateMyNodeList(bool fForce)
+void TnodeList::updateMyNodeList(bool fForce)
 {
     TRY_LOCK(cs_mymnlist, fLockAcquired);
     if(!fLockAcquired) {
@@ -224,7 +224,7 @@ void ZnodeList::updateMyNodeList(bool fForce)
     }
     static int64_t nTimeMyListUpdated = 0;
 
-    // automatically update my znode list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
+    // automatically update my tnode list only once in MY_MASTERNODELIST_UPDATE_SECONDS seconds,
     // this update still can be triggered manually at any time via button click
     int64_t nSecondsTillUpdate = nTimeMyListUpdated + MY_MASTERNODELIST_UPDATE_SECONDS - GetTime();
     ui->secondsLabel->setText(QString::number(nSecondsTillUpdate));
@@ -232,22 +232,22 @@ void ZnodeList::updateMyNodeList(bool fForce)
     if(nSecondsTillUpdate > 0 && !fForce) return;
     nTimeMyListUpdated = GetTime();
 
-    ui->tableWidgetZnodes->setSortingEnabled(false);
-    BOOST_FOREACH(CZnodeConfig::CZnodeEntry mne, znodeConfig.getEntries()) {
+    ui->tableWidgetTnodes->setSortingEnabled(false);
+    BOOST_FOREACH(CTnodeConfig::CTnodeEntry mne, tnodeConfig.getEntries()) {
         int32_t nOutputIndex = 0;
         if(!ParseInt32(mne.getOutputIndex(), &nOutputIndex)) {
             continue;
         }
 
-        updateMyZnodeInfo(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), COutPoint(uint256S(mne.getTxHash()), nOutputIndex));
+        updateMyTnodeInfo(QString::fromStdString(mne.getAlias()), QString::fromStdString(mne.getIp()), COutPoint(uint256S(mne.getTxHash()), nOutputIndex));
     }
-    ui->tableWidgetZnodes->setSortingEnabled(true);
+    ui->tableWidgetTnodes->setSortingEnabled(true);
 
     // reset "timer"
     ui->secondsLabel->setText("0");
 }
 
-void ZnodeList::updateNodeList()
+void TnodeList::updateNodeList()
 {
     TRY_LOCK(cs_mnlist, fLockAcquired);
     if(!fLockAcquired) {
@@ -270,16 +270,16 @@ void ZnodeList::updateNodeList()
 
     QString strToFilter;
     ui->countLabel->setText("Updating...");
-    ui->tableWidgetZnodes->setSortingEnabled(false);
-    ui->tableWidgetZnodes->clearContents();
-    ui->tableWidgetZnodes->setRowCount(0);
-//    std::map<COutPoint, CZnode> mapZnodes = mnodeman.GetFullZnodeMap();
-    std::vector<CZnode> vZnodes = mnodeman.GetFullZnodeVector();
+    ui->tableWidgetTnodes->setSortingEnabled(false);
+    ui->tableWidgetTnodes->clearContents();
+    ui->tableWidgetTnodes->setRowCount(0);
+//    std::map<COutPoint, CTnode> mapTnodes = mnodeman.GetFullTnodeMap();
+    std::vector<CTnode> vTnodes = mnodeman.GetFullTnodeVector();
     int offsetFromUtc = GetOffsetFromUtc();
 
-    BOOST_FOREACH(CZnode & mn, vZnodes)
+    BOOST_FOREACH(CTnode & mn, vTnodes)
     {
-//        CZnode mn = mnpair.second;
+//        CTnode mn = mnpair.second;
         // populate list
         // Address, Protocol, Status, Active Seconds, Last Seen, Pub Key
         QTableWidgetItem *addressItem = new QTableWidgetItem(QString::fromStdString(mn.addr.ToString()));
@@ -300,20 +300,20 @@ void ZnodeList::updateNodeList()
             if (!strToFilter.contains(strCurrentFilter)) continue;
         }
 
-        ui->tableWidgetZnodes->insertRow(0);
-        ui->tableWidgetZnodes->setItem(0, 0, addressItem);
-        ui->tableWidgetZnodes->setItem(0, 1, protocolItem);
-        ui->tableWidgetZnodes->setItem(0, 2, statusItem);
-        ui->tableWidgetZnodes->setItem(0, 3, activeSecondsItem);
-        ui->tableWidgetZnodes->setItem(0, 4, lastSeenItem);
-        ui->tableWidgetZnodes->setItem(0, 5, pubkeyItem);
+        ui->tableWidgetTnodes->insertRow(0);
+        ui->tableWidgetTnodes->setItem(0, 0, addressItem);
+        ui->tableWidgetTnodes->setItem(0, 1, protocolItem);
+        ui->tableWidgetTnodes->setItem(0, 2, statusItem);
+        ui->tableWidgetTnodes->setItem(0, 3, activeSecondsItem);
+        ui->tableWidgetTnodes->setItem(0, 4, lastSeenItem);
+        ui->tableWidgetTnodes->setItem(0, 5, pubkeyItem);
     }
 
-    ui->countLabel->setText(QString::number(ui->tableWidgetZnodes->rowCount()));
-    ui->tableWidgetZnodes->setSortingEnabled(true);
+    ui->countLabel->setText(QString::number(ui->tableWidgetTnodes->rowCount()));
+    ui->tableWidgetTnodes->setSortingEnabled(true);
 }
 
-void ZnodeList::on_filterLineEdit_textChanged(const QString &strFilterIn)
+void TnodeList::on_filterLineEdit_textChanged(const QString &strFilterIn)
 {
     strCurrentFilter = strFilterIn;
     nTimeFilterUpdated = GetTime();
@@ -321,25 +321,25 @@ void ZnodeList::on_filterLineEdit_textChanged(const QString &strFilterIn)
     ui->countLabel->setText(QString::fromStdString(strprintf("Please wait... %d", MASTERNODELIST_FILTER_COOLDOWN_SECONDS)));
 }
 
-void ZnodeList::on_startButton_clicked()
+void TnodeList::on_startButton_clicked()
 {
     std::string strAlias;
     {
         LOCK(cs_mymnlist);
         // Find selected node alias
-        QItemSelectionModel* selectionModel = ui->tableWidgetMyZnodes->selectionModel();
+        QItemSelectionModel* selectionModel = ui->tableWidgetMyTnodes->selectionModel();
         QModelIndexList selected = selectionModel->selectedRows();
 
         if(selected.count() == 0) return;
 
         QModelIndex index = selected.at(0);
         int nSelectedRow = index.row();
-        strAlias = ui->tableWidgetMyZnodes->item(nSelectedRow, 0)->text().toStdString();
+        strAlias = ui->tableWidgetMyTnodes->item(nSelectedRow, 0)->text().toStdString();
     }
 
     // Display message box
-    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm znode start"),
-        tr("Are you sure you want to start znode %1?").arg(QString::fromStdString(strAlias)),
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm tnode start"),
+        tr("Are you sure you want to start tnode %1?").arg(QString::fromStdString(strAlias)),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -359,11 +359,11 @@ void ZnodeList::on_startButton_clicked()
     StartAlias(strAlias);
 }
 
-void ZnodeList::on_startAllButton_clicked()
+void TnodeList::on_startAllButton_clicked()
 {
     // Display message box
-    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm all znodes start"),
-        tr("Are you sure you want to start ALL znodes?"),
+    QMessageBox::StandardButton retval = QMessageBox::question(this, tr("Confirm all tnodes start"),
+        tr("Are you sure you want to start ALL tnodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -383,19 +383,19 @@ void ZnodeList::on_startAllButton_clicked()
     StartAll();
 }
 
-void ZnodeList::on_startMissingButton_clicked()
+void TnodeList::on_startMissingButton_clicked()
 {
 
-    if(!znodeSync.IsZnodeListSynced()) {
+    if(!tnodeSync.IsTnodeListSynced()) {
         QMessageBox::critical(this, tr("Command is not available right now"),
-            tr("You can't use this command until znode list is synced"));
+            tr("You can't use this command until tnode list is synced"));
         return;
     }
 
     // Display message box
     QMessageBox::StandardButton retval = QMessageBox::question(this,
-        tr("Confirm missing znodes start"),
-        tr("Are you sure you want to start MISSING znodes?"),
+        tr("Confirm missing tnodes start"),
+        tr("Are you sure you want to start MISSING tnodes?"),
         QMessageBox::Yes | QMessageBox::Cancel,
         QMessageBox::Cancel);
 
@@ -415,14 +415,14 @@ void ZnodeList::on_startMissingButton_clicked()
     StartAll("start-missing");
 }
 
-void ZnodeList::on_tableWidgetMyZnodes_itemSelectionChanged()
+void TnodeList::on_tableWidgetMyTnodes_itemSelectionChanged()
 {
-    if(ui->tableWidgetMyZnodes->selectedItems().count() > 0) {
+    if(ui->tableWidgetMyTnodes->selectedItems().count() > 0) {
         ui->startButton->setEnabled(true);
     }
 }
 
-void ZnodeList::on_UpdateButton_clicked()
+void TnodeList::on_UpdateButton_clicked()
 {
     updateMyNodeList(true);
 }

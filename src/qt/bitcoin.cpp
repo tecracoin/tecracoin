@@ -19,7 +19,7 @@
 #include "splashscreen.h"
 #include "utilitydialog.h"
 #include "winshutdownmonitor.h"
-#include "znodeconfig.h"
+#include "tnodeconfig.h"
 
 #ifdef ENABLE_WALLET
 #include "paymentserver.h"
@@ -92,7 +92,7 @@ static void InitMessage(const std::string &message)
  */
 static std::string Translate(const char* psz)
 {
-    return QCoreApplication::translate("zcoin-core", psz).toStdString();
+    return QCoreApplication::translate("tecracoin-core", psz).toStdString();
 }
 
 static QString GetLangTerritory()
@@ -628,11 +628,11 @@ int main(int argc, char *argv[])
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
 #ifdef ENABLE_WALLET
-    /// 7a. parse znode.conf
+    /// 7a. parse tnode.conf
     std::string strErr;
-    if(!znodeConfig.read(strErr)) {
-        QMessageBox::critical(0, QObject::tr("Zcoin Core"),
-                              QObject::tr("Error reading znode configuration file: %1").arg(strErr.c_str()));
+    if(!tnodeConfig.read(strErr)) {
+        QMessageBox::critical(0, QObject::tr("TecraCoin Core"),
+                              QObject::tr("Error reading tnode configuration file: %1").arg(strErr.c_str()));
         return EXIT_FAILURE;
     }
 

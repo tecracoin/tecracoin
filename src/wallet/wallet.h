@@ -93,7 +93,7 @@ enum AvailableCoinsType
     ONLY_DENOMINATED = 2,
     ONLY_NOT1000IFMN = 3,
     ONLY_NONDENOMINATED_NOT1000IFMN = 4,
-    ONLY_1000 = 5, // find znode outputs including locked ones (use with caution)
+    ONLY_1000 = 5, // find tnode outputs including locked ones (use with caution)
     ONLY_PRIVATESEND_COLLATERAL = 6
 };
 
@@ -633,7 +633,7 @@ public:
 
     std::set<int64_t> setKeyPool;
     std::map<CKeyID, CKeyMetadata> mapKeyMetadata;
-    //znode
+    //tnode
     int64_t nKeysLeftSinceAutoBackup;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
@@ -725,9 +725,9 @@ public:
     void UnlockAllCoins();
     void ListLockedCoins(std::vector<COutPoint>& vOutpts);
 
-    // znode
-    /// Get 1000 XZC output and keys which can be used for the Znode
-    bool GetZnodeVinAndKeys(CTxIn& txinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
+    // tnode
+    /// Get 1000 TCR output and keys which can be used for the Tnode
+    bool GetTnodeVinAndKeys(CTxIn& txinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
     /// Extract txin information and keys from output
     bool GetVinAndKeysFromOutput(COutput out, CTxIn& txinRet, CPubKey& pubKeyRet, CKey& keyRet);
     bool HasCollateralInputs(bool fOnlyConfirmed = true) const;
@@ -791,7 +791,7 @@ public:
     void ReacceptWalletTransactions();
     void ResendWalletTransactions(int64_t nBestBlockTime);
     std::vector<uint256> ResendWalletTransactionsBefore(int64_t nTime);
-    //znode
+    //tnode
     CAmount GetBalance() const;
     CAmount GetUnconfirmedBalance() const;
     CAmount GetImmatureBalance() const;
@@ -834,14 +834,14 @@ public:
     bool CreateZerocoinMintTransaction(CScript pubCoin, int64_t nValue,
                                        CWalletTx& wtxNew, CReserveKey& reservekey, int64_t& nFeeRet, std::string& strFailReason, const CCoinControl *coinControl=NULL);
     bool CreateZerocoinSpendTransaction(std::string& thirdPartyaddress, int64_t nValue, libzerocoin::CoinDenomination denomination,
-                                        CWalletTx& wtxNew, CReserveKey& reservekey, CBigNum& coinSerial, uint256& txHash, CBigNum& zcSelectedValue, bool& zcSelectedIsUsed,  std::string& strFailReason);
+                                        CWalletTx& wtxNew, CReserveKey& reservekey, CBigNum& coinSerial, uint256& txHash, CBigNum& zcSelectedValue, bool& zcSelectedIsUsed,  std::string& strFailReason, bool forceUsed = false);
     bool CommitZerocoinSpendTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);
     std::string SendMoney(CScript scriptPubKey, int64_t nValue, CWalletTx& wtxNew, bool fAskFee=false);
     std::string SendMoneyToDestination(const CTxDestination &address, int64_t nValue, CWalletTx& wtxNew, bool fAskFee=false);
     std::string MintZerocoin(CScript pubCoin, int64_t nValue, CWalletTx& wtxNew, bool fAskFee=false);
-    std::string SpendZerocoin(std::string& thirdPartyaddress, int64_t nValue, libzerocoin::CoinDenomination denomination, CWalletTx& wtxNew, CBigNum& coinSerial, uint256& txHash, CBigNum& zcSelectedValue, bool& zcSelectedIsUsed);
+    std::string SpendZerocoin(std::string& thirdPartyaddress, int64_t nValue, libzerocoin::CoinDenomination denomination, CWalletTx& wtxNew, CBigNum& coinSerial, uint256& txHash, CBigNum& zcSelectedValue, bool& zcSelectedIsUsed, bool forceUsed = false);
     bool CreateZerocoinMintModel(string &stringError, string denomAmount);
-    bool CreateZerocoinSpendModel(string &stringError, string thirdPartyAddress, string denomAmount);
+    bool CreateZerocoinSpendModel(string &stringError, string thirdPartyAddress, string denomAmount, bool forceUsed = false);
     bool SetZerocoinBook(const CZerocoinEntry& zerocoinEntry);
 
     bool CommitTransaction(CWalletTx& wtxNew, CReserveKey& reservekey);

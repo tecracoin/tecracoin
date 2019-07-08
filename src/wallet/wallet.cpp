@@ -28,8 +28,8 @@
 #include "validation.h"
 #include "darksend.h"
 #include "instantx.h"
-#include "znode.h"
-#include "znode-sync.h"
+#include "tnode.h"
+#include "tnode-sync.h"
 #include "random.h"
 
 #include <assert.h>
@@ -2091,13 +2091,13 @@ void CWallet::AvailableCoins(vector <COutput> &vCoins, bool fOnlyConfirmed, cons
                 if (nCoinType == ONLY_DENOMINATED) {
                     found = IsDenominatedAmount(pcoin->vout[i].nValue);
                 } else if (nCoinType == ONLY_NOT1000IFMN) {
-                    found = !(fZNode && pcoin->vout[i].nValue == ZNODE_COIN_REQUIRED * COIN);
+                    found = !(fTNode && pcoin->vout[i].nValue == TNODE_COIN_REQUIRED * COIN);
                 } else if (nCoinType == ONLY_NONDENOMINATED_NOT1000IFMN) {
                     if (IsCollateralAmount(pcoin->vout[i].nValue)) continue; // do not use collateral amounts
                     found = !IsDenominatedAmount(pcoin->vout[i].nValue);
-                    if (found && fZNode) found = pcoin->vout[i].nValue != ZNODE_COIN_REQUIRED * COIN; // do not use Hot MN funds
+                    if (found && fTNode) found = pcoin->vout[i].nValue != TNODE_COIN_REQUIRED * COIN; // do not use Hot MN funds
                 } else if (nCoinType == ONLY_1000) {
-                    found = pcoin->vout[i].nValue == ZNODE_COIN_REQUIRED * COIN;
+                    found = pcoin->vout[i].nValue == TNODE_COIN_REQUIRED * COIN;
                 } else if (nCoinType == ONLY_PRIVATESEND_COLLATERAL) {
                     found = IsCollateralAmount(pcoin->vout[i].nValue);
                 } else {
@@ -2148,7 +2148,7 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector 
         if (out.tx->vout[out.i].nValue < nValueMin / 10) continue;
         //do not allow collaterals to be selected
         if (IsCollateralAmount(out.tx->vout[out.i].nValue)) continue;
-        if (fZNode && out.tx->vout[out.i].nValue == ZNODE_COIN_REQUIRED * COIN) continue; //znode input
+        if (fTNode && out.tx->vout[out.i].nValue == TNODE_COIN_REQUIRED * COIN) continue; //tnode input
 
         if (nValueRet + out.tx->vout[out.i].nValue <= nValueMax) {
             CTxIn txin = CTxIn(out.tx->GetHash(), out.i);
@@ -2166,7 +2166,7 @@ bool CWallet::SelectCoinsDark(CAmount nValueMin, CAmount nValueMax, std::vector 
     return nValueRet >= nValueMin;
 }
 
-// znode
+// tnode
 bool CWallet::GetCollateralTxIn(CTxIn& txinRet, CAmount& nValueRet) const
 {
     vector<COutput> vCoins;
@@ -2187,7 +2187,7 @@ bool CWallet::GetCollateralTxIn(CTxIn& txinRet, CAmount& nValueRet) const
     return false;
 }
 
-bool CWallet::GetZnodeVinAndKeys(CTxIn &txinRet, CPubKey &pubKeyRet, CKey &keyRet, std::string strTxHash,
+bool CWallet::GetTnodeVinAndKeys(CTxIn &txinRet, CPubKey &pubKeyRet, CKey &keyRet, std::string strTxHash,
                                  std::string strOutputIndex) {
     // wait for reindex and/or import to finish
     if (fImporting || fReindex) return false;
@@ -2196,7 +2196,7 @@ bool CWallet::GetZnodeVinAndKeys(CTxIn &txinRet, CPubKey &pubKeyRet, CKey &keyRe
     std::vector <COutput> vPossibleCoins;
     AvailableCoins(vPossibleCoins, true, NULL, false, ONLY_1000);
     if (vPossibleCoins.empty()) {
-        LogPrintf("CWallet::GetZnodeVinAndKeys -- Could not locate any valid znode vin\n");
+        LogPrintf("CWallet::GetTnodeVinAndKeys -- Could not locate any valid tnode vin\n");
         return false;
     }
 
@@ -2211,7 +2211,7 @@ bool CWallet::GetZnodeVinAndKeys(CTxIn &txinRet, CPubKey &pubKeyRet, CKey &keyRe
     if (out.tx->GetHash() == txHash && out.i == nOutputIndex) // found it!
         return GetVinAndKeysFromOutput(out, txinRet, pubKeyRet, keyRet);
 
-    LogPrintf("CWallet::GetZnodeVinAndKeys -- Could not locate specified znode vin\n");
+    LogPrintf("CWallet::GetTnodeVinAndKeys -- Could not locate specified tnode vin\n");
     return false;
 }
 
@@ -2243,7 +2243,7 @@ bool CWallet::GetVinAndKeysFromOutput(COutput out, CTxIn &txinRet, CPubKey &pubK
     return true;
 }
 
-//[zcoin]
+//[tecracoin]
 void CWallet::ListAvailableCoinsMintCoins(vector <COutput> &vCoins, bool fOnlyConfirmed) const {
     vCoins.clear();
     {
@@ -2625,10 +2625,10 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     std::random_shuffle(vCoins.rbegin(), vCoins.rend(), GetRandInt);
 
     // ( bit on if present )
-    // bit 0 - 100ZCOIN+1
-    // bit 1 - 10ZCOIN+1
-    // bit 2 - 1ZCOIN+1
-    // bit 3 - .1ZCOIN+1
+    // bit 0 - 100TECRACOIN+1
+    // bit 1 - 10TECRACOIN+1
+    // bit 2 - 1TECRACOIN+1
+    // bit 3 - .1TECRACOIN+1
 
     std::vector<int> vecBits;
     if (!darkSendPool.GetDenominationsBits(nDenom, vecBits)) {
@@ -2640,7 +2640,7 @@ bool CWallet::SelectCoinsByDenominations(int nDenom, CAmount nValueMin, CAmount 
     InsecureRand insecureRand;
     BOOST_FOREACH(const COutput &out, vCoins)
     {
-        // znode-like input should not be selected by AvailableCoins now anyway
+        // tnode-like input should not be selected by AvailableCoins now anyway
         //if(out.tx->vout[out.i].nValue == 1000*COIN) continue;
         if (nValueRet + out.tx->vout[out.i].nValue <= nValueMax) {
 
@@ -2748,7 +2748,7 @@ bool CWallet::SelectCoinsGrouppedByAddresses(std::vector <CompactTallyItem> &vec
             if (fAnonymizable) {
                 // ignore collaterals
                 if (IsCollateralAmount(wtx.vout[i].nValue)) continue;
-                if (fZNode && wtx.vout[i].nValue == ZNODE_COIN_REQUIRED * COIN) continue;
+                if (fTNode && wtx.vout[i].nValue == TNODE_COIN_REQUIRED * COIN) continue;
                 // ignore outputs that are 10 times smaller then the smallest denomination
                 // otherwise they will just lead to higher fee / lower priority
                 if (wtx.vout[i].nValue <= vecPrivateSendDenominations.back() / 10) continue;
@@ -2894,9 +2894,9 @@ bool CWallet::CreateTransaction(const vector <CRecipient> &vecSend, CWalletTx &w
                 CAmount nValueIn = 0;
                 if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coinControl)) {
                     if (nCoinType == ONLY_NOT1000IFMN) {
-                        strFailReason = _("Unable to locate enough funds for this transaction that are not equal 1000 XZC.");
+                        strFailReason = _("Unable to locate enough funds for this transaction that are not equal 1000 TCR.");
                     } else if (nCoinType == ONLY_NONDENOMINATED_NOT1000IFMN) {
-                        strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction that are not equal 1000 XZC.");
+                        strFailReason = _("Unable to locate enough PrivateSend non-denominated funds for this transaction that are not equal 1000 TCR.");
                     } else if (nCoinType == ONLY_DENOMINATED) {
                         strFailReason = _("Unable to locate enough PrivateSend denominated funds for this transaction.");
                         strFailReason += _("PrivateSend uses exact denominated amounts to send funds, you might simply need to anonymize some more coins.");
@@ -3172,6 +3172,10 @@ bool CWallet::EraseFromWallet(uint256 hash) {
 
 bool CWallet::CreateZerocoinMintModel(string &stringError, string denomAmount) {
 
+    // temporarily disable zerocoin
+    stringError = "Zerocoin functionality has been disabled.";
+    return false;
+
     if (!fFileBacked)
         return false;
 
@@ -3254,7 +3258,12 @@ bool CWallet::CreateZerocoinMintModel(string &stringError, string denomAmount) {
     }
 }
 
-bool CWallet::CreateZerocoinSpendModel(string &stringError, string thirdPartyAddress, string denomAmount) {
+bool CWallet::CreateZerocoinSpendModel(string &stringError, string thirdPartyAddress, string denomAmount, bool forceUsed) {
+
+    // temporarily disable zerocoin
+    stringError = "Zerocoin functionality has been disabled.";
+    return false;
+
     if (!fFileBacked)
         return false;
 
@@ -3288,7 +3297,7 @@ bool CWallet::CreateZerocoinSpendModel(string &stringError, string thirdPartyAdd
     CBigNum zcSelectedValue;
     bool zcSelectedIsUsed;
 
-    stringError = SpendZerocoin(thirdPartyAddress, nAmount, denomination, wtx, coinSerial, txHash, zcSelectedValue, zcSelectedIsUsed);
+    stringError = SpendZerocoin(thirdPartyAddress, nAmount, denomination, wtx, coinSerial, txHash, zcSelectedValue, zcSelectedIsUsed, forceUsed);
 
     if (stringError != "")
         return false;
@@ -3311,6 +3320,11 @@ bool CWallet::CreateZerocoinMintTransaction(const vector <CRecipient> &vecSend, 
                                             CReserveKey &reservekey,
                                             CAmount &nFeeRet, int &nChangePosInOut, std::string &strFailReason,
                                             const CCoinControl *coinControl, bool sign) {
+
+    // temporarily disable zerocoin
+    strFailReason = "Zerocoin functionality has been disabled.";
+    return false;
+
     CAmount nValue = 0;
     int nChangePosRequest = nChangePosInOut;
     unsigned int nSubtractFeeFromAmount = 0;
@@ -3561,7 +3575,7 @@ bool CWallet::CreateZerocoinMintTransaction(const vector <CRecipient> &vecSend, 
                         break;
                 }
                 int64_t nPayFee = payTxFee.GetFeePerK() * (1 + (int64_t) GetTransactionWeight(txNew) / 1000);
-//                bool fAllowFree = false;					// No free TXs in XZC
+//                bool fAllowFree = false;					// No free TXs in TCR
                 int64_t nMinFee = wtxNew.GetMinFee(1, false, GMF_SEND);
 
                 int64_t nFeeNeeded = nPayFee;
@@ -3641,7 +3655,12 @@ CWallet::CreateZerocoinMintTransaction(CScript pubCoin, int64_t nValue, CWalletT
 bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int64_t nValue, libzerocoin::CoinDenomination denomination,
                                              CWalletTx &wtxNew, CReserveKey &reservekey, CBigNum &coinSerial,
                                              uint256 &txHash, CBigNum &zcSelectedValue, bool &zcSelectedIsUsed,
-                                             std::string &strFailReason) {
+                                             std::string &strFailReason, bool forceUsed) {
+
+    // temporarily disable zerocoin
+    strFailReason = "Zerocoin functionality has been disabled.";
+    return false;
+
     if (nValue <= 0) {
         strFailReason = _("Transaction amounts must be positive");
         return false;
@@ -3668,10 +3687,10 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
 
             	CBitcoinAddress address(thirdPartyaddress);
             	if (!address.IsValid()){
-            		strFailReason = _("Invalid zcoin address");
+            		strFailReason = _("Invalid tecracoin address");
             		return false;
             	}
-            	// Parse Zcoin address
+            	// Parse TecraCoin address
             	scriptChange = GetScriptForDestination(CBitcoinAddress(thirdPartyaddress).Get());
             }
 
@@ -3705,7 +3724,7 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
 
             BOOST_FOREACH(const CZerocoinEntry &minIdPubcoin, listPubCoin) {
                 if (minIdPubcoin.denomination == denomination
-                        && minIdPubcoin.IsUsed == false
+                        && ((minIdPubcoin.IsUsed == false && !forceUsed) || (minIdPubcoin.IsUsed == true && forceUsed))
                         && minIdPubcoin.randomness != 0
                         && minIdPubcoin.serialNumber != 0) {
 
@@ -3730,7 +3749,7 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
             }
 
             if (coinId == INT_MAX){
-                strFailReason = _("it has to have at least two mint coins with at least 6 confirmation in order to spend a coin");
+                strFailReason = _("it has to have at least two mint coins with at least 24 confirmation in order to spend a coin");
                 return false;
             }
 
@@ -3778,13 +3797,12 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
                 txVersion = coinToUse.IsCorrectV2Mint() ? ZEROCOIN_TX_VERSION_2 : ZEROCOIN_TX_VERSION_1_5;
             }
             else {
-                bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET);
                 int nHeight;
                 {
                     LOCK(cs_main);
                     nHeight = chainActive.Height();
                 }
-                if ((!fTestNet && nHeight >= ZC_V1_5_STARTING_BLOCK) || (fTestNet && nHeight >= ZC_V1_5_TESTNET_STARTING_BLOCK))
+                if (nHeight >= Params().nSpendV15StartBlock)
                     txVersion = ZEROCOIN_TX_VERSION_1_5;
             }
 
@@ -3831,7 +3849,7 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
             std::list <CZerocoinSpendEntry> listCoinSpendSerial;
             CWalletDB(strWalletFile).ListCoinSpendSerial(listCoinSpendSerial);
             BOOST_FOREACH(const CZerocoinSpendEntry &item, listCoinSpendSerial){
-                if (spend.getCoinSerialNumber() == item.coinSerial) {
+                if (!forceUsed && spend.getCoinSerialNumber() == item.coinSerial) {
                     // THIS SELECEDTED COIN HAS BEEN USED, SO UPDATE ITS STATUS
                     CZerocoinEntry pubCoinTx;
                     pubCoinTx.nHeight = coinHeight;
@@ -3930,10 +3948,9 @@ bool CWallet::CommitZerocoinSpendTransaction(CWalletTx &wtxNew, CReserveKey &res
  * @return
  */
 string CWallet::MintZerocoin(CScript pubCoin, int64_t nValue, CWalletTx &wtxNew, bool fAskFee) {
-    // Do not allow mint to take place until fully synced
-    // Temporary measure: we can remove this limitation when well after spend v1.5 HF block
-    if (fImporting || fReindex || !znodeSync.IsBlockchainSynced())
-        return _("Not fully synced yet");
+
+    // temporarily disable zerocoin
+    return "Zerocoin functionality has been disabled.";
 
     LogPrintf("MintZerocoin: value = %s\n", nValue);
     // Check amount
@@ -3993,16 +4010,15 @@ string CWallet::MintZerocoin(CScript pubCoin, int64_t nValue, CWalletTx &wtxNew,
  */
 string CWallet::SpendZerocoin(std::string &thirdPartyaddress, int64_t nValue, libzerocoin::CoinDenomination denomination, CWalletTx &wtxNew,
                               CBigNum &coinSerial, uint256 &txHash, CBigNum &zcSelectedValue,
-                              bool &zcSelectedIsUsed) {
+                              bool &zcSelectedIsUsed, bool forceUsed) {
+
+    // temporarily disable zerocoin
+    return "Zerocoin functionality has been disabled.";
+
+
     // Check amount
     if (nValue <= 0)
         return _("Invalid amount");
-
-    // Do not allow spend to take place until fully synced
-    // Temporary measure: we can remove this limitation when well after spend v1.5 HF block
-    if (fImporting || fReindex || !znodeSync.IsBlockchainSynced())
-        return _("Not fully synced yet");
-
 
     CReserveKey reservekey(this);
 
@@ -4014,7 +4030,7 @@ string CWallet::SpendZerocoin(std::string &thirdPartyaddress, int64_t nValue, li
 
     string strError;
     if (!CreateZerocoinSpendTransaction(thirdPartyaddress, nValue, denomination, wtxNew, reservekey, coinSerial, txHash,
-                                        zcSelectedValue, zcSelectedIsUsed, strError)) {
+                                        zcSelectedValue, zcSelectedIsUsed, strError, forceUsed)) {
         LogPrintf("SpendZerocoin() : %s\n", strError.c_str());
         return strError;
     }

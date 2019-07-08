@@ -40,7 +40,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>ZcoinGUI</name>
+    <name>TecraCoinGUI</name>
     <message>
         <source>Synchronizing with network...</source>
         <translation>Sinchroniseer met die netwerk ...</translation>
@@ -78,8 +78,8 @@
         <translation>&amp;Opsies</translation>
     </message>
     <message>
-        <source>Zcoin</source>
-        <translation>Zcoin</translation>
+        <source>TecraCoin</source>
+        <translation>TecraCoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -316,7 +316,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>zcoin-core</name>
+    <name>tecracoin-core</name>
     <message>
         <source>Options:</source>
         <translation>Opsies:</translation>

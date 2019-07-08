@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2018 The TecraCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -10,7 +11,7 @@
 #include "consensus/params.h"
 #include "primitives/block.h"
 #include "protocol.h"
-
+#include "script/script.h"
 #include <vector>
 
 struct CDNSSeedData {
@@ -75,21 +76,24 @@ public:
     const std::vector<unsigned char>& Base58Prefix(Base58Type type) const { return base58Prefixes[type]; }
     const std::vector<SeedSpec6>& FixedSeeds() const { return vFixedSeeds; }
     const CCheckpointData& Checkpoints() const { return checkpointData; }
-    /** znode code from Dash*/
+    /** tnode code from Dash*/
     int64_t MaxTipAge() const { return nMaxTipAge; }
     int PoolMaxTransactions() const { return nPoolMaxTransactions; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     std::string SporkPubKey() const { return strSporkPubKey; }
-    std::string ZnodePaymentPubKey() const { return strZnodePaymentsPubKey; }
+    std::string TnodePaymentPubKey() const { return strTnodePaymentsPubKey; }
 	
 	/** Zerocoin-related block numbers when features are changed */
+    int nCheckBugFixedAtBlock;
 	int nSpendV15StartBlock;
 	int nSpendV2ID_1, nSpendV2ID_10, nSpendV2ID_25, nSpendV2ID_50, nSpendV2ID_100;
 	
 	int nModulusV2StartBlock;
     int nModulusV1MempoolStopBlock;
 	int nModulusV1StopBlock;
-	
+
+    CScript GetFounderScript(unsigned int founderIndex) const;
+
 protected:
     CChainParams() {}
 
@@ -109,12 +113,13 @@ protected:
     bool fTestnetToBeDeprecatedFieldRPC;
     CCheckpointData checkpointData;
 	
-    /** znode params*/
+    /** tnode params*/
     long nMaxTipAge;
     int nPoolMaxTransactions;
     int nFulfilledRequestExpireTime;
     std::string strSporkPubKey;
-    std::string strZnodePaymentsPubKey;
+    std::string strTnodePaymentsPubKey;
+    const char* foundersAddr[4];
 };
 
 /**

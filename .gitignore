@@ -40,7 +40,7 @@ share/setup.nsi
 share/qt/Info.plist
 
 src/univalue/gen
-
+!src/univalue/gen/gen.cpp
 src/qt/*.moc
 src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
@@ -110,8 +110,27 @@ test/cache/*
 src/test/buildenv.py
 
 !src/leveldb*/Makefile
+!depends/Makefile
+!depends/**/*.patch
+!src/tor/src/ext/timeouts/Makefile
 
 /doc/doxygen/
 
 libzcoinconsensus.pc
 contrib/devtools/split-debug.sh
+.idea
+
+libbitcoinconsensus.pc
+qa/pull-tester/run-bitcoind-for-test.sh
+src/tecracoin-cli
+src/qt/tecracoin-qt
+src/tecracoin-tx
+src/tecracoind
+src/test/test_bitcoin
+qa/pull-tester/tests_config.py
+*.pro
+*.user
+*.creator
+*.includes
+*.files
+*.config

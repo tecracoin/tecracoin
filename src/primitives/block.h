@@ -24,7 +24,7 @@ unsigned char GetNfactor(int64_t nTimestamp);
 
 inline int GetZerocoinChainID()
 {
-    return 0x0001; // We are the first :)
+    return 0x2718; // TecraCoin ID :)
 }
 
 class CBlockHeader
@@ -116,12 +116,12 @@ public:
     std::vector<CTransaction> vtx;
 
     // memory only
-    mutable CTxOut txoutZnode; // znode payment
+    mutable CTxOut txoutTnode; // tnode payment
     mutable std::vector<CTxOut> voutSuperblock; // superblock payment
     mutable bool fChecked;
 
     // memory only, zerocoin tx info
-    mutable CZerocoinTxInfo *zerocoinTxInfo;
+    mutable std::shared_ptr<CZerocoinTxInfo> zerocoinTxInfo;
 
     CBlock()
     {
@@ -153,7 +153,7 @@ public:
         ZerocoinClean();
         CBlockHeader::SetNull();
         vtx.clear();
-        txoutZnode = CTxOut();
+        txoutTnode = CTxOut();
         voutSuperblock.clear();
         fChecked = false;
     }
