@@ -244,14 +244,14 @@ public:
         foundersAddr[0] = "TR4GdMfDF2ZW74RRgxFxh4kwWgMaDw3BqH"; //premine
         foundersAddr[1] = "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"; //dev team
         foundersAddr[2] = "TNTkzXXJf8Yw3W1i29iQQgcxVfc3JicS2s"; //science projects
-        foundersAddr[3] = "TD6A1JC3jUT91riUxpQpMQZJVBa4xU2vQC"; //dividends
+        foundersAddr[3] = "TD6A1JC3jUT91riUxpQpMQZJVBa4xU2vQC"; //crypto-interest
 
 
         consensus.rewardsStage2Start = 71000;
-        consensus.rewardsStage3Start = 150000;
-        consensus.rewardsStage4Start = 350000;
-        consensus.rewardsStage5Start = 550000;
-        consensus.rewardsStage6Start = 750000;
+        consensus.rewardsStage3Start = 300000;
+        consensus.rewardsStage4Start = 510000;
+        consensus.rewardsStage5Start = 760000;
+        consensus.rewardsStage6Start = 970000;
     }
 };
 
@@ -406,14 +406,14 @@ public:
         foundersAddr[0] = "GeF15gUcazG8ZVyndvCtZLok11rBWG8Qp2";// premine
         foundersAddr[1] = "GcbaqmHPjnB4JfDAKVhJb3X7g1kCf2e9Pm";// dev team
         foundersAddr[2] = "GXQqws2DWjUydoktzCrFAz3fJG177usYY3";// science projects
-        foundersAddr[3] = "GewZWTVEurJ2eSN4tfWrwDuqwpxkcRSbsR";// dividends
+        foundersAddr[3] = "GewZWTVEurJ2eSN4tfWrwDuqwpxkcRSbsR";// crypto-interest
 
 
         consensus.rewardsStage2Start = 71000;
-        consensus.rewardsStage3Start = 150000;
-        consensus.rewardsStage4Start = 350000;
-        consensus.rewardsStage5Start = 550000;
-        consensus.rewardsStage6Start = 750000;
+        consensus.rewardsStage3Start = 300000;
+        consensus.rewardsStage4Start = 510000;
+        consensus.rewardsStage5Start = 760000;
+        consensus.rewardsStage6Start = 970000;
     }
 };
 

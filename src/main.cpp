@@ -3440,7 +3440,7 @@ CAmount GetTnodePayment(int nHeight, const Consensus::Params &params, bool fMTP)
         return blockValue * 20 / 100;
     }else if(nHeight < Params().GetConsensus().rewardsStage6Start) {
         // T5
-        return blockValue * 25 / 100;
+        return blockValue * 20 / 100;
     }else{
         // T6
         return blockValue * 25 / 100;
