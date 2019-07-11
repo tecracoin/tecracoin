@@ -4,14 +4,21 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "pow.h"
-
+#include "main.h"
 #include "arith_uint256.h"
 #include "chain.h"
 #include "chainparams.h"
 #include "primitives/block.h"
+#include "consensus/consensus.h"
 #include "uint256.h"
+#include <iostream>
 #include "util.h"
-
+#include "chainparams.h"
+#include "libzerocoin/bitcoin_bignum/bignum.h"
+#include "utilstrencodings.h"
+#include "crypto/MerkleTreeProof/mtp.h"
+#include "mtpstate.h"
+#include "fixed.h"
 #include <math.h>
 
 unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params) {
@@ -74,6 +81,24 @@ unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHead
     return DarkGravityWave(pindexLast, pblock, params);
 }
 
+// TecraCoin - MTP
+bool CheckMerkleTreeProof(const CBlockHeader &block, const Consensus::Params &params) {
+    if (!block.IsMTP())
+        return true;
+
+    if (!block.mtpHashData)
+        return false;
+
+    uint256 calculatedMtpHashValue;
+    bool isVerified = mtp::verify(block.nNonce, block, Params().GetConsensus().powLimit, &calculatedMtpHashValue) &&
+                      block.mtpHashValue == calculatedMtpHashValue;
+
+    if(!isVerified)
+        return false;
+
+    return true;
+}
+
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params& params)
 {
     bool fNegative;
@@ -84,11 +109,11 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 
     // Check range
     if (fNegative || bnTarget == 0 || fOverflow || bnTarget > UintToArith256(params.powLimit))
-        return error("CheckProofOfWork(): nBits below minimum work");
+        return false;//error("CheckProofOfWork(): nBits below minimum work");
 
     // Check proof of work matches claimed amount
     if (UintToArith256(hash) > bnTarget)
-        return error("CheckProofOfWork(): hash doesn't match nBits");
+        return false;//error("CheckProofOfWork(): hash doesn't match nBits");
 
     return true;
 }

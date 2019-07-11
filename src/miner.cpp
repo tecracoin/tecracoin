@@ -29,15 +29,18 @@
 #include "wallet/wallet.h"
 #include "definition.h"
 #include "crypto/scrypt.h"
+#include "crypto/MerkleTreeProof/mtp.h"
 #include "crypto/Lyra2Z/Lyra2Z.h"
 #include "crypto/Lyra2Z/Lyra2.h"
 #include "tnode-payments.h"
 #include "tnode-sync.h"
+#include "tnodeman.h"
 #include "zerocoin.h"
 #include <algorithm>
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <queue>
+#include <unistd.h>
 
 using namespace std;
 
@@ -134,7 +137,20 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
 {
     // Create new block
     LogPrintf("BlockAssembler::CreateNewBlock()\n");
-    bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET);
+
+    const Consensus::Params &params = Params().GetConsensus();
+    uint32_t nBlockTime;
+    bool fTestNet = params.IsTestnet();
+    bool fMTP;
+    {
+        LOCK2(cs_main, mempool.cs);
+        nBlockTime = GetAdjustedTime();
+    }
+
+    fMTP = nBlockTime >= params.nMTPSwitchTime;
+    int nFeeReductionFactor = fMTP ? params.nMTPRewardReduction : 1;
+    CAmount coin = COIN / nFeeReductionFactor;
+
     resetBlock();
     auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
     if(!pblocktemplate.get())
@@ -150,7 +166,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     CBlockIndex* pindexPrev = chainActive.Tip();
     const int nHeight = pindexPrev->nHeight + 1;
 
-    const CAmount blockSubsidy = GetBlockSubsidy(nHeight, chainparams.GetConsensus());
+    const CAmount blockSubsidy = GetBlockSubsidy(nHeight, chainparams.GetConsensus(), fMTP);
 
     // To founders and investors
     if (nHeight > 0 && nHeight < Params().GetConsensus().nSubsidyHalvingInterval * 10) {
@@ -255,7 +271,8 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     nBlockMinSize = std::min(nBlockMaxSize, nBlockMinSize);
 
     unsigned int COUNT_SPEND_ZC_TX = 0;
-    unsigned int MAX_SPEND_ZC_TX_PER_BLOCK = 1;
+    unsigned int MAX_SPEND_ZC_TX_PER_BLOCK = 0;
+
 
     // Collect memory pool transactions into the block
     CTxMemPool::setEntries inBlock;
@@ -270,7 +287,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
 
     std::priority_queue<CTxMemPool::txiter, std::vector<CTxMemPool::txiter>, ScoreCompare> clearedTxs;
     bool fPrintPriority = GetBoolArg("-printpriority", DEFAULT_PRINTPRIORITY);
-    uint64_t nBlockSize = 1000;
+    uint64_t nBlockSize = 1500;
     uint64_t nBlockTx = 0;
     unsigned int nBlockSigOps = 100;
     int lastFewTxs = 0;
@@ -278,10 +295,13 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
 
     {
         LOCK2(cs_main, mempool.cs);
-        pblock->nTime = GetAdjustedTime();
+        pblock->nTime = nBlockTime;
         const int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();
 
         pblock->nVersion = ComputeBlockVersion(pindexPrev, chainparams.GetConsensus());
+        if (fMTP)
+            pblock->nVersion |= 0x1000;
+
         // -regtest only: allow overriding block.nVersion with
         // -blockversion=N to test forking scenarios
         if (chainparams.MineBlocksOnDemand())
@@ -394,14 +414,14 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
             }
 
             // temporarily disable zerocoin
-            if (tx.IsZerocoinSpend() || tx.IsZerocoinMint(tx))
+            if (tx.IsZerocoinSpend() || tx.IsZerocoinMint())
                 continue;
 
             if (tx.IsZerocoinSpend()) {
                 LogPrintf("try to include zerocoinspend tx=%s\n", tx.GetHash().ToString());
                 LogPrintf("COUNT_SPEND_ZC_TX =%s\n", COUNT_SPEND_ZC_TX);
                 LogPrintf("MAX_SPEND_ZC_TX_PER_BLOCK =%s\n", MAX_SPEND_ZC_TX_PER_BLOCK);
-                if (COUNT_SPEND_ZC_TX >= MAX_SPEND_ZC_TX_PER_BLOCK) {
+                if ((COUNT_SPEND_ZC_TX + tx.vin.size()) > MAX_SPEND_ZC_TX_PER_BLOCK) {
                     continue;
                 }
 
@@ -439,7 +459,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
                 ++nBlockTx;
                 nBlockSigOpsCost += nTxSigOps;
                 nFees += nTxFees;
-                COUNT_SPEND_ZC_TX++;
+                COUNT_SPEND_ZC_TX += tx.vin.size();
                 inBlock.insert(iter);
                 continue;
             }
@@ -499,7 +519,8 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
         // Update coinbase transaction with additional info about tnode and governance payments,
         // get some info back to pass to getblocktemplate
         if (nHeight >= chainparams.GetConsensus().nTnodePaymentsStartBlock) {
-            CAmount tnodePayment = GetTnodePayment(nHeight, blockSubsidy);
+            const Consensus::Params &params = chainparams.GetConsensus();
+            CAmount tnodePayment = GetTnodePayment(nHeight, params, nHeight > 0 && nBlockTime >= params.nMTPSwitchTime);
             coinbaseTx.vout[0].nValue -= tnodePayment;
             FillBlockPayments(coinbaseTx, nHeight, tnodePayment, pblock->txoutTnode, pblock->voutSuperblock);
         }
@@ -519,13 +540,23 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
         UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
         pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
         pblock->nNonce         = 0;
+
+        // TecraCoin - MTP
+        if (pblock->IsMTP())
+            pblock->mtpHashData = make_shared<CMTPHashData>();
+
         pblocktemplate->vTxSigOpsCost[0] = GetLegacySigOpCount(pblock->vtx[0]);
 
+        //LogPrintf("CreateNewBlock(): AFTER pblocktemplate->vTxSigOpsCost[0] = GetLegacySigOpCount(pblock->vtx[0])\n");
+
         CValidationState state;
+        //LogPrintf("CreateNewBlock(): BEFORE TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)\n");
         if (!TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)) {
             throw std::runtime_error(strprintf("%s: TestBlockValidity failed: %s", __func__, FormatStateMessage(state)));
         }
+        //LogPrintf("CreateNewBlock(): AFTER TestBlockValidity(state, chainparams, *pblock, pindexPrev, false, false)\n");
     }
+    //LogPrintf("CreateNewBlock(): pblocktemplate.release()\n");
     return pblocktemplate.release();
 }
 
@@ -896,12 +927,6 @@ void BlockAssembler::addPriorityTxs()
     typedef std::map<CTxMemPool::txiter, double, CTxMemPool::CompareIteratorByHash>::iterator waitPriIter;
     double actualPriority = -1;
 
-    unsigned int COUNT_SPEND_ZC_TX = 0;
-    unsigned int MAX_SPEND_ZC_TX_PER_BLOCK = 1;
-
-    // Block zerocoin
-    MAX_SPEND_ZC_TX_PER_BLOCK = 0;
-
     vecPriority.reserve(mempool.mapTx.size());
     for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
          mi != mempool.mapTx.end(); ++mi)
@@ -915,11 +940,6 @@ void BlockAssembler::addPriorityTxs()
         if (tx.IsCoinBase() || !CheckFinalTx(tx))
             continue;
         if (tx.IsZerocoinSpend()) {
-
-            if (COUNT_SPEND_ZC_TX >= MAX_SPEND_ZC_TX_PER_BLOCK) {
-                continue;
-            }
-
             //mempool.countZCSpend--;
             // Size limits
             unsigned int nTxSize = ::GetSerializeSize(tx, SER_NETWORK, PROTOCOL_VERSION);
@@ -948,7 +968,6 @@ void BlockAssembler::addPriorityTxs()
             ++nBlockTx;
             nBlockSigOpsCost += nTxSigOps;
             nFees += nTxFees;
-            COUNT_SPEND_ZC_TX++;
             continue;
         }
     }
@@ -1073,7 +1092,7 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
 
     boost::shared_ptr<CReserveScript> coinbaseScript;
     GetMainSignals().ScriptForMining(coinbaseScript);
-    bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET);
+    bool fTestNet = chainparams.GetConsensus().IsTestnet();
     try {
         // Throw an error if no script was provided.  This can happen
         // due to some internal error but also if the keypool is empty.
@@ -1087,13 +1106,26 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
             if (chainparams.MiningRequiresPeers()) {
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
+
+                // Also try to wait for tnode winners unless we're on regtest chain
                 do {
                     bool fvNodesEmpty;
+                    bool fHasTnodesWinnerForNextBlock;
+                    const Consensus::Params &params = chainparams.GetConsensus();
                     {
                         LOCK(cs_vNodes);
                         fvNodesEmpty = vNodes.empty();
                     }
-                    if (!fvNodesEmpty && !IsInitialBlockDownload()) {
+                    // MTP_MERGE:CHECK: here may be problems with tnode syncing, reuben was talking about
+                    {
+                        LOCK2(cs_main, mempool.cs);
+                        int nCount = 0;
+                        fHasTnodesWinnerForNextBlock =
+                                params.IsRegtest() ||
+                                chainActive.Height() < params.nTnodePaymentsStartBlock ||
+                                mnodeman.GetNextTnodeInQueueForPayment(chainActive.Height(), true, nCount);
+                    }
+                    if (!fvNodesEmpty && fHasTnodesWinnerForNextBlock && !IsInitialBlockDownload()) {
                         break;
                     }
                     MilliSleep(1000);
@@ -1107,7 +1139,9 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
             if (pindexPrev) {
                 LogPrintf("loop pindexPrev->nHeight=%s\n", pindexPrev->nHeight);
             }
+            LogPrintf("BEFORE: pblocktemplate\n");
             auto_ptr <CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
+            LogPrintf("AFTER: pblocktemplate\n");
             if (!pblocktemplate.get()) {
                 LogPrintf("Error in TecraCoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
                 return;
@@ -1118,6 +1152,7 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
             LogPrintf("Running TecraCoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
                       ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
+            LogPrintf("BEFORE: search\n");
             //
             // Search
             //
@@ -1129,13 +1164,22 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
             LogPrintf("pblock: %s\n", pblock->ToString());
             LogPrintf("pblock->nVersion: %s\n", pblock->nVersion);
             LogPrintf("pblock->nTime: %s\n", pblock->nTime);
+            LogPrintf("pblock->nNonce: %s\n", &pblock->nNonce);
+            LogPrintf("powLimit: %s\n", Params().GetConsensus().powLimit.ToString());
+
             while (true) {
                 // Check if something found
                 uint256 thash;
 
                 while (true) {
-                    lyra2z_hash(BEGIN(pblock->nVersion), BEGIN(thash));
-
+                    if (pblock->IsMTP()) {
+                        //sleep(60);
+                        LogPrintf("BEFORE: mtp_hash\n");
+                        thash = mtp::hash(*pblock, Params().GetConsensus().powLimit);
+                        pblock->mtpHashValue = thash;
+                    } else {
+                        lyra2z_hash(BEGIN(pblock->nVersion), BEGIN(thash));
+                    }
                     //LogPrintf("*****\nhash   : %s  \ntarget : %s\n", UintToArith256(thash).ToString(), hashTarget.ToString());
 
                     if (UintToArith256(thash) <= hashTarget) {
@@ -1230,3 +1274,4 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     pblock->vtx[0] = txCoinbase;
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 }
+

@@ -5,6 +5,8 @@
 #include "data/tx_invalid.json.h"
 #include "data/tx_valid.json.h"
 #include "test/test_bitcoin.h"
+#include "miner.h"
+#include "noui.h"
 
 #include "clientversion.h"
 #include "checkqueue.h"
@@ -19,6 +21,9 @@
 #include "script/script_error.h"
 #include "script/standard.h"
 #include "utilstrencodings.h"
+#include "tnodeman.h"
+#include "tnode-sync.h"
+#include "tnode-payments.h"
 
 #include <map>
 #include <string>
@@ -31,6 +36,7 @@
 #include <boost/foreach.hpp>
 
 #include <univalue.h>
+#include "zerocoin.h"
 
 using namespace std;
 
@@ -92,6 +98,8 @@ string FormatScriptFlags(unsigned int flags)
     }
     return ret.substr(0, ret.size() - 1);
 }
+
+extern bool AppInit(int argc, char* argv[]);
 
 BOOST_FIXTURE_TEST_SUITE(transaction_tests, BasicTestingSetup)
 

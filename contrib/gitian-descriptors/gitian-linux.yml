@@ -1,5 +1,5 @@
 ---
-name: "tecracoin-linux-1.2.0"
+name: "tecracoin-linux-1.4.0"
 enable_cache: true
 suites:
 - "trusty"

@@ -9,8 +9,10 @@
 /** Dust Hard Limit, ignored as wallet inputs (mininput default) */
 static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 TCR mininput
 
-// There were bugs before this block, don't do some checks on early blocks
 #define ZC_CHECK_BUG_FIXED_AT_BLOCK         0
+
+// Before this block we allowed not paying to the tnodes.
+#define ZC_TNODE_PAYMENT_BUG_FIXED_AT_BLOCK         0
 // Do strict check on duplicate minted public coin value after this block
 #define ZC_CHECK_DUPLICATE_MINT_AT_BLOCK    70000
 
@@ -44,6 +46,9 @@ static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 TCR mininput
 
 #define ZC_MODULUS_V2_BASE_ID			1000
 
+// MTP_MERGE:TODO: SET THIS VALUE FEW BLOCKS AFTER HARD FORK UPDATE RELEASE
+#define ZC_MULTIPLE_SPEND_INPUT_STARTING_BLOCK  0
+
 // Number of coins per id in spend v1/v1.5
 #define ZC_SPEND_V1_COINSPERID			10
 // Number of coins per id in spend v2.0
@@ -56,5 +61,16 @@ static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 TCR mininput
 
 // number of mint confirmations needed to spend coin
 #define ZC_MINT_CONFIRMATIONS               24
+
+// Genesis block timestamp
+#define ZC_GENESIS_BLOCK_TIME               1539907200
+
+//MTP_MERGE:TODO: SET THIS DATE TO PLANNED MTP ROLL OUT
+#define SWITCH_TO_MTP_BLOCK_HEADER 1556998589// Around Sat, 04 May 2019 19:36:29 GMT
+// We don't use it
+#define SWITCH_TO_MTP_5MIN_BLOCK            0
+
+// Number of zerocoin spends allowed per block and per transaction
+#define ZC_SPEND_LIMIT         5
 
 #endif
