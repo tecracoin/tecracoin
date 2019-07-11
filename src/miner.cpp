@@ -176,7 +176,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
             // And give it to the founders
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 79 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
-            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
         } else if(nHeight < Params().GetConsensus().rewardsStage2Start){
             // T1
             // Take some reward away from miners
@@ -185,7 +185,7 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
             // And give it to the founders
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 40 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
-            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
         } else if(nHeight < Params().GetConsensus().rewardsStage3Start){
             // T2
             // Take some reward away from miners
@@ -194,43 +194,43 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
             // And give it to the founders
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 64 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
-            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
         } else if(nHeight < Params().GetConsensus().rewardsStage4Start){
             // T3
             // Take some reward away from miners
-            coinbaseTx.vout[0].nValue = -blockSubsidy * 75 / 100;
+            coinbaseTx.vout[0].nValue = -blockSubsidy * 80 / 100;
 
             // And give it to the founders
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
-            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 50 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
-            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 15 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 55 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 15 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
         } else if(nHeight < Params().GetConsensus().rewardsStage5Start){
             // T4
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue = -blockSubsidy * 70 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 40 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 20 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
+        } else if(nHeight < Params().GetConsensus().rewardsStage6Start){
+            // T5
             // Take some reward away from miners
             coinbaseTx.vout[0].nValue = -blockSubsidy * 65 / 100;
 
             // And give it to the founders
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 35 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
-            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 20 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
-        } else if(nHeight < Params().GetConsensus().rewardsStage6Start){
-            // T5
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 20 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
+        } else {
+            // T6
             // Take some reward away from miners
             coinbaseTx.vout[0].nValue = -blockSubsidy * 55 / 100;
 
             // And give it to the founders
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
             coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 20 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
-            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 25 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
-        } else {
-            // T6
-            // Take some reward away from miners
-            coinbaseTx.vout[0].nValue = -blockSubsidy * 50 / 100;
-
-            // And give it to the founders
-            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
-            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 15 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
-            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 25 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// dividends
+            coinbaseTx.vout.push_back(CTxOut(blockSubsidy * 25 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
         }
     }
 

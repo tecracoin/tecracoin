@@ -390,37 +390,37 @@ bool CheckZerocoinFoundersInputs(const CTransaction &tx, CValidationState &state
             if (nHeight < Params().GetConsensus().nTnodePaymentsStartBlock) {
                 FOUNDER_1_REWARD = blockSubsidy * 10 / 100;// dev team
                 FOUNDER_2_REWARD = blockSubsidy * 79 / 100;// science projects
-                FOUNDER_3_REWARD = blockSubsidy * 10 / 100;// dividends
+                FOUNDER_3_REWARD = blockSubsidy * 10 / 100;// crypto-interest
             } else if(nHeight < Params().GetConsensus().rewardsStage2Start){
                 // T1
                 FOUNDER_1_REWARD = blockSubsidy * 10 / 100;// dev team
                 FOUNDER_2_REWARD = blockSubsidy * 40 / 100;// science projects
-                FOUNDER_3_REWARD = blockSubsidy * 10 / 100;// dividends
+                FOUNDER_3_REWARD = blockSubsidy * 10 / 100;// crypto-interest
             } else if(nHeight < Params().GetConsensus().rewardsStage3Start){
                 // T2
                 FOUNDER_1_REWARD = blockSubsidy * 10 / 100;// dev team
                 FOUNDER_2_REWARD = blockSubsidy * 64 / 100;// science projects
-                FOUNDER_3_REWARD = blockSubsidy * 10 / 100;// dividends
+                FOUNDER_3_REWARD = blockSubsidy * 10 / 100;// crypto-interest
             } else if(nHeight < Params().GetConsensus().rewardsStage4Start){
                 // T3
                 FOUNDER_1_REWARD = blockSubsidy * 10 / 100;// dev team
-                FOUNDER_2_REWARD = blockSubsidy * 50 / 100;// science projects
-                FOUNDER_3_REWARD = blockSubsidy * 15 / 100;// dividends
+                FOUNDER_2_REWARD = blockSubsidy * 55 / 100;// science projects
+                FOUNDER_3_REWARD = blockSubsidy * 15 / 100;// crypto-interest
             } else if(nHeight < Params().GetConsensus().rewardsStage5Start){
                 // T4
                 FOUNDER_1_REWARD = blockSubsidy * 10 / 100;// dev team
-                FOUNDER_2_REWARD = blockSubsidy * 35 / 100;// science projects
-                FOUNDER_3_REWARD = blockSubsidy * 20 / 100;// dividends
+                FOUNDER_2_REWARD = blockSubsidy * 40 / 100;// science projects
+                FOUNDER_3_REWARD = blockSubsidy * 20 / 100;// crypto-interest
             } else if(nHeight < Params().GetConsensus().rewardsStage6Start){
                 // T5
                 FOUNDER_1_REWARD = blockSubsidy * 10 / 100;// dev team
-                FOUNDER_2_REWARD = blockSubsidy * 20 / 100;// science projects
-                FOUNDER_3_REWARD = blockSubsidy * 25 / 100;// dividends
+                FOUNDER_2_REWARD = blockSubsidy * 35 / 100;// science projects
+                FOUNDER_3_REWARD = blockSubsidy * 20 / 100;// crypto-interest
             } else {
                 // T6
                 FOUNDER_1_REWARD = blockSubsidy * 10 / 100;// dev team
-                FOUNDER_2_REWARD = blockSubsidy * 15 / 100;// science projects
-                FOUNDER_3_REWARD = blockSubsidy * 25 / 100;// dividends
+                FOUNDER_2_REWARD = blockSubsidy * 20 / 100;// science projects
+                FOUNDER_3_REWARD = blockSubsidy * 25 / 100;// crypto-interest
             }
 //            LogPrintf("CheckZerocoinFoundersInputs looking for tnodePayment %d\n", tnodePayment);
 
