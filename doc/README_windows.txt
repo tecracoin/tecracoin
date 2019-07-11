@@ -1,4 +1,4 @@
-TecraCoin Core 1.2.0.x
+TecraCoin Core 1.5.0.x
 =====================
 
 Intro
