@@ -139,9 +139,7 @@ public:
         consensus.nModulusV2StartBlock = ZC_MODULUS_V2_START_BLOCK;
         consensus.nModulusV1MempoolStopBlock = ZC_MODULUS_V1_MEMPOOL_STOP_BLOCK;
         consensus.nModulusV1StopBlock = ZC_MODULUS_V1_STOP_BLOCK;
-        //MTP_MERGE:TODO: set this value for some time in the future after deployment of MTP
         consensus.nMultipleSpendInputsInOneTxStartBlock = ZC_MULTIPLE_SPEND_INPUT_STARTING_BLOCK;
-        //MTP_MERGE:TODO: set this value for some time in the future after deployment of MTP
         consensus.nDontAllowDupTxsStartBlock = 0;
 
         // tnode params
@@ -298,8 +296,8 @@ public:
 
         // Deployment of MTP
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].bit = 12;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = 1539172800 - 2*60;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = 1539172800 + consensus.nMinerConfirmationWindow*2 * 5*60;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET - 2*60; // 2 hours leeway
+        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET + consensus.nMinerConfirmationWindow*2 * 5*60;
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000100010");
@@ -331,7 +329,7 @@ public:
         //consensus.nBudgetPaymentsWindowBlocks = 10;
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
 
-        consensus.nMTPSwitchTime = 1556998589;// Around Sat, 04 May 2019 19:36:29 GMT
+        consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET;// Around Sat, 04 May 2019 19:36:29 GMT
         consensus.nMTPFiveMinutesStartBlock = INT_MAX; // NOT USED IN TECRACOIN
         consensus.nDifficultyAdjustStartBlock = 100;// NOT USED IN TECRACOIN
         consensus.nFixedDifficulty = 0x2000ffff; // NOT USED IN TECRACOIN

@@ -540,7 +540,7 @@ static int64_t calculate_and_update_devexodus(unsigned int nTime, int block)
     int64_t devexodus = 0;
     int64_t exodus_delta = 0;
     // spec constants:
-    //MTP_MERGE: should be changed
+    // TCR_EXODUS: should be changed
     const int64_t all_reward = 5631623576222;
     const double seconds_in_one_year = 31556926;
     const double seconds_passed = nTime - 1377993874; // exodus bootstrap deadline
@@ -648,7 +648,7 @@ int exodus::GetEncodingClass(const CTransaction& tx, int nBlock)
      * Perform a string comparison on hex for each scriptPubKey & look directly for Exodus hash160 bytes or exodus marker bytes
      * This allows to drop non-Exodus transactions with less work
      */
-    //TODO: MTP_MERGE:EXODUS strClassC should be changed when GetExMarker changes
+    //TODO: TCR_EXODUS strClassC should be changed when GetExMarker changes
     std::string strClassC = "65786f647573";
     std::string strClassAB = "76a9141c33571f29a185e4dcfde0a1a46c3702b42a9af388ac";
     bool examineClosely = false;
@@ -3982,7 +3982,7 @@ const CBitcoinAddress ExodusAddress()
  */
 const std::vector<unsigned char> GetExMarker()
 {
-    //TODO: MTP_MERGE:EXODUS these values should be changed to something unique before start of exodus
+    //TODO: TCR_EXODUS these values should be changed to something unique before start of exodus
     static unsigned char pch[] = {0x65, 0x78, 0x6f, 0x64, 0x75, 0x73}; // Hex-encoded: "exodus"
 
     return std::vector<unsigned char>(pch, pch + sizeof(pch) / sizeof(pch[0]));
