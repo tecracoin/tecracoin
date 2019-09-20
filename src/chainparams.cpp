@@ -314,8 +314,8 @@ public:
         consensus.nModulusV2StartBlock = ZC_MODULUS_V2_TESTNET_START_BLOCK;
         consensus.nModulusV1MempoolStopBlock = ZC_MODULUS_V1_TESTNET_MEMPOOL_STOP_BLOCK;
         consensus.nModulusV1StopBlock = ZC_MODULUS_V1_TESTNET_STOP_BLOCK;
-        consensus.nMultipleSpendInputsInOneTxStartBlock = 28000;
-        consensus.nDontAllowDupTxsStartBlock = 28000;
+        consensus.nMultipleSpendInputsInOneTxStartBlock = INT_MAX;
+        consensus.nDontAllowDupTxsStartBlock = 0;
 
         // Tnode params testnet
         consensus.nTnodeMinimumConfirmations = 1;
