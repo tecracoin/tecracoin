@@ -584,9 +584,6 @@ CChainParams &Params(const std::string &chain) {
 }
 
 void SelectParams(const std::string &network) {
-    if(network == CBaseChainParams::MAIN){
-        throw runtime_error("This build is testnet only");
-    }
     SelectBaseParams(network);
     pCurrentParams = &Params(network);
 }
