@@ -1,6 +1,9 @@
+#!/usr/bin/env bash
 # Copyright (c) 2016 The Bitcoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
+
+set -x
 
 # What to do
 sign=false
@@ -17,7 +20,7 @@ osx=true
 SIGNER=
 VERSION=
 commit=false
-url=https://github.com/tecracoin/tecracoin
+url=${url:-https://github.com/zcoinofficial/zcoin}
 gsigsUrl=https://github.com/bitcoin-core/gitian.sigs
 detachUrl=https://github.com/bitcoin-core/bitcoin-detached-sigs.git
 proc=2
@@ -41,7 +44,7 @@ version		Version number, commit, or branch to build. If building a commit or bra
 
 Options:
 -c|--commit	Indicate that the version argument is for a commit or branch
--u|--url	Specify the URL of the tecracoin repository. Default is https://github.com/tecracoin/tecracoin.git
+-u|--url	Specify the URL of the tecracoinofficial repository. Default is https://github.com/zcoinofficial/zcoin.git
 -g|--gsigsUrl	Specify the URL of the gitian.sigs repository. Default is https://github.com/bitcoin-core/gitian.sigs
 -d|--detachUrl	Specify the URL of the bitcoin-detached-sigs repository. Default is https://github.com/bitcoin-core/bitcoin-detached-sigs
 -v|--verify 	Verify the Gitian build
@@ -250,12 +253,15 @@ if [[ $commit = false ]]
 then
 	COMMIT="v${VERSION}"
 fi
-echo ${COMMIT}
+
+me=`basename "$0"`
+
+echo "$me Building branch: ${COMMIT}"
 
 # Setup build environment
 if [[ $setup = true ]]
 then
-    sudo apt-get install ruby apache2 git apt-cacher-ng python-vm-builder qemu-kvm qemu-utils
+    sudo apt-get install --assume-yes ruby apache2 git apt-cacher-ng python-vm-builder qemu-kvm qemu-utils
 
     # Only clone valid git repositories
     urlRegex='^(https?:\/\/*|git@*).*'
@@ -274,7 +280,7 @@ then
     pushd ./gitian-builder
     if [[ -n "$USE_LXC" ]]
     then
-        sudo apt-get install lxc
+        sudo apt-get --assume-yes install lxc
         bin/make-base-vm --suite trusty --arch amd64 --lxc
     else
         bin/make-base-vm --suite trusty --arch amd64

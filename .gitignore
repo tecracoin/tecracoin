@@ -134,3 +134,6 @@ qa/pull-tester/tests_config.py
 *.includes
 *.files
 *.config
+
+contrib/docker/node/v*
+contrib/docker/node/tecracoin*

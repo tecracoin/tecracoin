@@ -1,5 +1,5 @@
 ---
-name: "tecracoin-win-1.5.0"
+name: "tecracoin-win-1.4.0"
 enable_cache: true
 suites:
 - "trusty"

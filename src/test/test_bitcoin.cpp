@@ -6,6 +6,7 @@
 
 #include "test_bitcoin.h"
 
+#include "util.h"
 #include "chainparams.h"
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
@@ -32,20 +33,26 @@
 
 extern bool fPrintToConsole;
 extern void noui_connect();
+extern int exodus_shutdown();
 
 BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
 {
-        ECC_Start();
-        SetupEnvironment();
-        SetupNetworking();
-        fPrintToDebugLog = true;
-        fPrintToConsole = !fPrintToDebugLog;
-        fCheckBlockIndex = true;
-        SelectParams(chainName);
-        noui_connect();
-        if(fPrintToDebugLog){
-            OpenDebugLog(true);
-        }
+    SoftSetBoolArg("-dandelion", false);
+    ECC_Start();
+    SetupEnvironment();
+    SoftSetBoolArg("-dandelion", false);
+    SetupNetworking();
+    SoftSetBoolArg("-dandelion", false);
+    fPrintToDebugLog = true;
+    fPrintToConsole = !fPrintToDebugLog;
+    fCheckBlockIndex = true;
+    SoftSetBoolArg("-dandelion", false);
+    SelectParams(chainName);
+    SoftSetBoolArg("-dandelion", false);
+    noui_connect();
+    if(fPrintToDebugLog){
+        OpenDebugLog(true);
+    }
 }
 
 BasicTestingSetup::~BasicTestingSetup()
@@ -86,6 +93,7 @@ TestingSetup::TestingSetup(const std::string& chainName, std::string suf) : Basi
 TestingSetup::~TestingSetup()
 {
         UnregisterNodeSignals(GetNodeSignals());
+        exodus_shutdown();
         threadGroup.interrupt_all();
         threadGroup.join_all();
         UnloadBlockIndex();
@@ -101,7 +109,7 @@ TestingSetup::~TestingSetup()
 			boost::filesystem::remove_all(std::wstring(L"\\\\?\\") + pathTemp.wstring());
 		}
 		catch(...) {
-				
+
 		}
 	}
         bitdb.RemoveDb("wallet_test.dat");

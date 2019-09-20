@@ -15,6 +15,7 @@
 #include "crypto/scrypt.h"
 #include "crypto/Lyra2Z/Lyra2Z.h"
 #include "crypto/Lyra2Z/Lyra2.h"
+#include "crypto/MerkleTreeProof/mtp.h"
 #include "util.h"
 #include <iostream>
 #include <chrono>
@@ -52,6 +53,12 @@ uint256 CBlockHeader::GetHash() const {
     return thash;
 }
 
+bool CBlockHeader::IsMTP() const {
+    // In case if nTime == ZC_GENESIS_BLOCK_TIME we're being called from CChainParams() constructor and
+    // it is not possible to get Params()
+    return nTime > ZC_GENESIS_BLOCK_TIME && nTime >= Params().GetConsensus().nMTPSwitchTime;
+}
+
 uint256 CBlockHeader::GetPoWHash(int nHeight, bool forceCalc) const {
 //    int64_t start = std::chrono::duration_cast<std::chrono::milliseconds>(
 //            std::chrono::system_clock::now().time_since_epoch()).count();
@@ -69,8 +76,13 @@ uint256 CBlockHeader::GetPoWHash(int nHeight, bool forceCalc) const {
         }
     }
     uint256 powHash;
+    // TecraCoin - MTP
     try {
-        lyra2z_hash(BEGIN(nVersion), BEGIN(powHash));
+        if (IsMTP()) {
+            powHash = mtpHashValue;
+        } else {
+            lyra2z_hash(BEGIN(nVersion), BEGIN(powHash));
+        }
     } catch (std::exception &e) {
         LogPrintf("excepetion: %s", e.what());
     }
