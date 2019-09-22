@@ -1,4 +1,4 @@
-TecraCoin Core 1.4.0.x
+TecraCoin Core 1.6.0.x
 =====================
 
 Setup
