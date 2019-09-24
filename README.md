@@ -1,7 +1,7 @@
 TecraCoin v0.13.7.7
 ===============
 
-[![Build Status](https://travis-ci.com/zcoinofficial/zcoin.svg?branch=CI)](https://travis-ci.com/tecracoinofficial/tecracoin)
+[![Build Status](https://travis-ci.com/tecracoin/tecracoin.svg?branch=CI)](https://travis-ci.com/tecracoinofficial/tecracoin)
 
 What is TecraCoin?
 --------------
@@ -10,55 +10,6 @@ What is TecraCoin?
 
 The Zerocoin Protocol is being actively researched and improved, such as removing the trustless setup and reducing proof sizes.
 
-Running with Docker
-===================
-
-If you are already familiar with Docker, then running TecraCoin with Docker might be the the easier method for you. To run TecraCoin using this method, first install [Docker](https://store.docker.com/search?type=edition&offering=community). After this you may
-continue with the following instructions.
-
-Please note that we currently don't support the GUI when running with Docker. Therefore, you can only use RPC (via HTTP or the `tecracoin-cli` utility) to interact with TecraCoin via this method.
-
-Pull our latest official Docker image:
-
-```sh
-docker pull zcoinofficial/zcoind
-```
-
-Start TecraCoin daemon:
-
-```sh
-docker run --detach --name tecracoind zcoinofficial/zcoind
-```
-
-View current block count (this might take a while since the daemon needs to find other nodes and download blocks first):
-
-```sh
-docker exec tecracoind tecracoin-cli getblockcount
-```
-
-View connected nodes:
-
-```sh
-docker exec tecracoind tecracoin-cli getpeerinfo
-```
-
-Stop daemon:
-
-```sh
-docker stop tecracoind
-```
-
-Backup wallet:
-
-```sh
-docker cp tecracoind:/home/tecracoind/.tecracoin/wallet.dat .
-```
-
-Start daemon again:
-
-```sh
-docker start tecracoind
-```
 
 Linux Build Instructions and Notes
 ==================================
