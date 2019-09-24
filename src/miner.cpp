@@ -1116,7 +1116,6 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
                         LOCK(cs_vNodes);
                         fvNodesEmpty = vNodes.empty();
                     }
-                    // MTP_MERGE:CHECK: here may be problems with tnode syncing, reuben was talking about
                     {
                         LOCK2(cs_main, mempool.cs);
                         int nCount = 0;

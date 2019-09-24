@@ -46,8 +46,8 @@ static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 TCR mininput
 
 #define ZC_MODULUS_V2_BASE_ID			1000
 
-// MTP_MERGE:TODO: SET THIS VALUE FEW BLOCKS AFTER HARD FORK UPDATE RELEASE
-#define ZC_MULTIPLE_SPEND_INPUT_STARTING_BLOCK  0
+// TecraCoin never released zerocoin txes with multiple spend inputs
+#define ZC_MULTIPLE_SPEND_INPUT_STARTING_BLOCK INT_MAX
 
 // Number of coins per id in spend v1/v1.5
 #define ZC_SPEND_V1_COINSPERID			10
@@ -65,8 +65,8 @@ static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 TCR mininput
 // Genesis block timestamp
 #define ZC_GENESIS_BLOCK_TIME               1539907200
 
-//MTP_MERGE:TODO: SET THIS DATE TO PLANNED MTP ROLL OUT
-#define SWITCH_TO_MTP_BLOCK_HEADER 1567792800// Around Fri, 06 Sep 2019 18:00:00 +0000
+#define SWITCH_TO_MTP_BLOCK_HEADER 1570183200// Around Friday, 4 October 2019 10:00:00 +0000
+#define SWITCH_TO_MTP_BLOCK_HEADER_TESTNET 1567792800// Around Fri, 06 Sep 2019 18:00:00 +0000
 // We don't use it
 #define SWITCH_TO_MTP_5MIN_BLOCK            0
 
