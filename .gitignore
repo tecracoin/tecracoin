@@ -137,3 +137,4 @@ qa/pull-tester/tests_config.py
 
 contrib/docker/node/v*
 contrib/docker/node/tecracoin*
+cmake-build-debug/
