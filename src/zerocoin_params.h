@@ -65,7 +65,7 @@ static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 TCR mininput
 // Genesis block timestamp
 #define ZC_GENESIS_BLOCK_TIME               1539907200
 
-#define SWITCH_TO_MTP_BLOCK_HEADER 1570442400// Around Monday, October 7, 2019 10:00:00 +0000
+#define SWITCH_TO_MTP_BLOCK_HEADER 1570701600// Around Thursday, October 10, 2019 12:00:00 PM GMT+02:00
 #define SWITCH_TO_MTP_BLOCK_HEADER_TESTNET 1567792800// Around Fri, 06 Sep 2019 18:00:00 +0000
 // We don't use it
 #define SWITCH_TO_MTP_5MIN_BLOCK            0
