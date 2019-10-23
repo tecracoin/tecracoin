@@ -447,7 +447,7 @@ UniValue tnodelist(const UniValue &params, bool fHelp) {
             strMode != "activeseconds" && strMode != "addr" && strMode != "full" &&
             strMode != "lastseen" && strMode != "lastpaidtime" && strMode != "lastpaidblock" &&
             strMode != "protocol" && strMode != "payee" && strMode != "rank" && strMode != "qualify" &&
-            strMode != "status")) {
+            strMode != "status" && strMode != "json")) {
         throw std::runtime_error(
                 "tnodelist ( \"mode\" \"filter\" )\n"
                         "Get a list of tnodes in different modes\n"
@@ -461,6 +461,7 @@ UniValue tnodelist(const UniValue &params, bool fHelp) {
                         "  addr           - Print ip address associated with a tnode (can be additionally filtered, partial match)\n"
                         "  full           - Print info in format 'status protocol payee lastseen activeseconds lastpaidtime lastpaidblock IP'\n"
                         "                   (can be additionally filtered, partial match)\n"
+                        "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
                         "  lastpaidblock  - Print the last block height a node was paid on the network\n"
                         "  lastpaidtime   - Print the last time a node was paid on the network\n"
                         "  lastseen       - Print timestamp of when a tnode was last seen on the network\n"
@@ -517,6 +518,33 @@ UniValue tnodelist(const UniValue &params, bool fHelp) {
                     strOutpoint.find(strFilter) == std::string::npos)
                     continue;
                 obj.push_back(Pair(strOutpoint, strFull));
+            } else if (strMode == "json") {
+                std::ostringstream streamJSON;
+                streamJSON << std::setw(18) <<
+                           mn.GetStatus() << " " <<
+                           mn.nProtocolVersion << " " <<
+                           CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString() << " " <<
+                           (int64_t) mn.lastPing.sigTime << " " << std::setw(8) <<
+                           (int64_t)(mn.lastPing.sigTime - mn.sigTime) << " " << std::setw(10) <<
+                           mn.GetLastPaidTime() << " " << std::setw(6) <<
+                           mn.GetLastPaidBlock() << " " <<
+                           mn.addr.ToString();
+                std::string strJSON = streamJSON.str();
+                if (strFilter != "" && strJSON.find(strFilter) == std::string::npos &&
+                    strOutpoint.find(strFilter) == std::string::npos)
+                    continue;
+
+                UniValue objMN(UniValue::VOBJ);
+                objMN.push_back(Pair("ip", mn.addr.ToStringIP()));
+                objMN.push_back(Pair("port", mn.addr.ToStringPort()));
+                objMN.push_back(Pair("payee", CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString()));
+                objMN.push_back(Pair("status", mn.GetStatus()));
+                objMN.push_back(Pair("protocol", mn.nProtocolVersion));
+                objMN.push_back(Pair("lastseen", (int64_t)mn.lastPing.sigTime));
+                objMN.push_back(Pair("activeseconds", (int64_t)(mn.lastPing.sigTime - mn.sigTime)));
+                objMN.push_back(Pair("lastpaidtime", mn.GetLastPaidTime()));
+                objMN.push_back(Pair("lastpaidblock", mn.GetLastPaidBlock()));
+                obj.push_back(Pair(strOutpoint, objMN));
             } else if (strMode == "lastpaidblock") {
                 if (strFilter != "" && strOutpoint.find(strFilter) == std::string::npos) continue;
                 obj.push_back(Pair(strOutpoint, mn.GetLastPaidBlock()));
