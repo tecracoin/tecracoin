@@ -3422,7 +3422,7 @@ int GetInputAge(const CTxIn &txin) {
 
 CAmount GetTnodePayment(int nHeight, const Consensus::Params &params, bool fMTP) {
     // TecraCoin doesnt use MTP reduction factor
-    CAmount coin = fMTP ? COIN/params.nMTPRewardReduction : COIN;
+    // CAmount coin = fMTP ? COIN/params.nMTPRewardReduction : COIN;
     CAmount blockValue = GetBlockSubsidy(nHeight, params);
     if(nHeight < Params().GetConsensus().nTnodePaymentsStartBlock){
         return 0;

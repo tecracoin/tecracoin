@@ -64,8 +64,9 @@ CreateGenesisBlock(const char *pszTimestamp, const CScript &genesisOutputScript,
  *   vMerkleTree: 4a5e1e
  */
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount &genesisReward,
-                                 std::vector<unsigned char> extraNonce) {
-    const char *pszTimestamp = "The NY Times 2018/07/12 It Came From a Black Hole, and Landed in Antarctica";
+                                 std::vector<unsigned char> extraNonce, bool testnet=false) {
+    const char *pszTimestamp = !testnet? "The NY Times 2018/07/12 It Came From a Black Hole, and Landed in Antarctica":
+    "The NY Times 2020/04/04 Staggered U.S. Braces for More Infections";
     const CScript genesisOutputScript = CScript();
     return CreateGenesisBlock(pszTimestamp, genesisOutputScript, nTime, nNonce, nBits, nVersion, genesisReward,
                               extraNonce);
@@ -126,7 +127,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER + consensus.nMinerConfirmationWindow*2 * 5*60;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000004024b57db");
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000018f9e6703c854ea");
 
         consensus.nCheckBugFixedAtBlock = ZC_CHECK_BUG_FIXED_AT_BLOCK;
         consensus.nTnodePaymentsBugFixedAtBlock = ZC_TNODE_PAYMENT_BUG_FIXED_AT_BLOCK;
@@ -229,9 +230,10 @@ public:
                 boost::assign::map_list_of
                         (0, uint256S("0x000008c721bdb1312f1954156f64828a052e8e8ce5a914f7b301a44eba154989"))
                         (2500, uint256S("0x00000179620d5efd4770d98f43474fd54045d6e4723445cb1907e12b576ee14e"))
-                        (6860, uint256S("0x0000001a85edff4034839d410fd4efc6ed36a4e9b9a92ed399a1343acce44a32")),
-                1541168141, // * UNIX timestamp of last checkpoint block
-                2958,    // * total number of transactions between genesis and last checkpoint
+                        (6860, uint256S("0x0000001a85edff4034839d410fd4efc6ed36a4e9b9a92ed399a1343acce44a32"))
+			(291588, uint256S("a7d8afb46a810bc3a53cd7f036085a4d776f86bd035bf8d64eb82e27dfcbb32b")),
+                1586293269, // * UNIX timestamp of last checkpoint block
+                312580,    // * total number of transactions between genesis and last checkpoint
                 //   (the tx=... number in the SetBestChain debug.log lines)
                 1200.0     // * estimated number of transactions per day after checkpoint
         };
@@ -246,10 +248,10 @@ public:
 
 
         consensus.rewardsStage2Start = 71000;
-        consensus.rewardsStage3Start = 300000;
-        consensus.rewardsStage4Start = 510000;
-        consensus.rewardsStage5Start = 760000;
-        consensus.rewardsStage6Start = 970000;
+        consensus.rewardsStage3Start = 500000;
+        consensus.rewardsStage4Start = 710000;
+        consensus.rewardsStage5Start = 960000;
+        consensus.rewardsStage6Start = 1170000;
     }
 };
 
@@ -281,18 +283,18 @@ public:
         consensus.nRuleChangeActivationThreshold = 1512; // 75% for testchains
         consensus.nMinerConfirmationWindow = 2016; // nPowTargetTimespan / nPowTargetSpacing
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1199145601; // January 1, 2008
-        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1230767999; // December 31, 2008
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = 1586026090; // 04/04/2020
+        consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = 1586476800; // 04/10/2020 @ 12:00am (UTC)
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1456790400; // March 1st, 2016
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1493596800; // May 1st, 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1586476800; // 04/10/2020 @ 12:00am (UTC)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1588204800; // 04/30/2020 @ 12:00am (UTC)
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1462060800; // May 1st 2016
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1493596800; // May 1st 2017
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1586476800; // 04/10/2020 @ 12:00am (UTC)
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1588204800; // 04/30/2020 @ 12:00am (UTC)
 
         // Deployment of MTP
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].bit = 12;
@@ -300,11 +302,11 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET + consensus.nMinerConfirmationWindow*2 * 5*60;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000000100010");
+        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000049e3a1ba"); //1097
 
-        consensus.nSpendV15StartBlock = 0;
-        consensus.nCheckBugFixedAtBlock = 0;
-        consensus.nTnodePaymentsBugFixedAtBlock = 0;
+        consensus.nSpendV15StartBlock = 1;
+        consensus.nCheckBugFixedAtBlock = 1;
+        consensus.nTnodePaymentsBugFixedAtBlock = 100;
 
         consensus.nSpendV2ID_1 = ZC_V2_TESTNET_SWITCH_ID_1;
         consensus.nSpendV2ID_10 = ZC_V2_TESTNET_SWITCH_ID_10;
@@ -315,7 +317,7 @@ public:
         consensus.nModulusV1MempoolStopBlock = ZC_MODULUS_V1_TESTNET_MEMPOOL_STOP_BLOCK;
         consensus.nModulusV1StopBlock = ZC_MODULUS_V1_TESTNET_STOP_BLOCK;
         consensus.nMultipleSpendInputsInOneTxStartBlock = INT_MAX;
-        consensus.nDontAllowDupTxsStartBlock = 0;
+        consensus.nDontAllowDupTxsStartBlock = 1;
 
         // Tnode params testnet
         consensus.nTnodeMinimumConfirmations = 1;
@@ -329,7 +331,7 @@ public:
         //consensus.nBudgetPaymentsWindowBlocks = 10;
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
 
-        consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET;// Around Sat, 04 May 2019 19:36:29 GMT
+        consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET;//  04/10/2020 @ 12:00am (UTC)
         consensus.nMTPFiveMinutesStartBlock = INT_MAX; // NOT USED IN TECRACOIN
         consensus.nDifficultyAdjustStartBlock = 100;// NOT USED IN TECRACOIN
         consensus.nFixedDifficulty = 0x2000ffff; // NOT USED IN TECRACOIN
@@ -347,25 +349,24 @@ public:
         pchMessageStart[2] = 0x18;
         pchMessageStart[3] = 0xef;
 
-        consensus.nDisableZerocoinStartBlock = 23050;
+        consensus.nDisableZerocoinStartBlock = 20;
 
         nDefaultPort = 2818;
         nPruneAfterHeight = 1000;
-        /**
-          * btzc: testnet params
-          * nTime: 1539907200
-          * nNonce: 881474
-          */
+
         std::vector<unsigned char> extraNonce(4);
         extraNonce[0] = 0x5d;
         extraNonce[1] = 0x9a;
         extraNonce[2] = 0x00;
         extraNonce[3] = 0x00;
-        //1539907200
-        genesis = CreateGenesisBlock(ZC_GENESIS_BLOCK_TIME, 881474, 0x1e0ffff0, 2, 0 * COIN, extraNonce);
+
+        genesis = CreateGenesisBlock(1586024828, 73343, 0x1e0ffff0, 2, 0 * COIN, extraNonce, true);
+
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256S("0x000000a981ef35b85a6e3d571c44985cd44f0de1e69f96d419b7c33ea977671f"));
-        assert(genesis.hashMerkleRoot == uint256S("0x2bfd3f82932652f8079a1e35aee1af460b2519eb76a236fda9abc115d8ef9933"));
+
+        assert(consensus.hashGenesisBlock == uint256S("0x00000507375707d9ddd815d2c54aa54e9e29ad0992d51b44155044003e224b78"));
+        assert(genesis.hashMerkleRoot == uint256S("0x2645ab62325df30e5d575394159d646cbcf705a4c737b9a8001a7e0c4e99e8ce"));
+
         vFixedSeeds.clear();
         vSeeds.clear();
 
@@ -391,27 +392,27 @@ public:
 
 
         checkpointData = (CCheckpointData) {
-                boost::assign::map_list_of
-                        (0, uint256S("0x000000a981ef35b85a6e3d571c44985cd44f0de1e69f96d419b7c33ea977671f")),
-                1539907200,
-                0,
-                100.0
+              boost::assign::map_list_of
+                        (1097, uint256S("0x0000083dcce10b707687d6f15074976b541fc7d72d760931292227d0f0ea9122")),
+                1586299345, 	//timestamp of last block
+                1099,		//total number of transactions (tx=...) in UpdateTip log
+		100.0 		//daily trasnactions
         };
 
         /**
          * Testnet founders
          */
-        foundersAddr[0] = "GeF15gUcazG8ZVyndvCtZLok11rBWG8Qp2";// premine
-        foundersAddr[1] = "GcbaqmHPjnB4JfDAKVhJb3X7g1kCf2e9Pm";// dev team
-        foundersAddr[2] = "GXQqws2DWjUydoktzCrFAz3fJG177usYY3";// science projects
-        foundersAddr[3] = "GewZWTVEurJ2eSN4tfWrwDuqwpxkcRSbsR";// crypto-interest
+        foundersAddr[0] = "GKR6SjJxF9HbvMVeZMBstuW9mRFBXCdkH6";// premine
+        foundersAddr[1] = "Gf8XeYLLucQjMS8apuwBTPfbPN7eGd7r5h";// dev team
+        foundersAddr[2] = "Gf3ZcqRci9yqu9ABsEp2SsvEmtvGjp6AoG";// science projects
+        foundersAddr[3] = "GWrM3WGoKUegYJ6yTGHtH4ozmwZx9F8MiK";// crypto-interest
 
 
-        consensus.rewardsStage2Start = 71000;
-        consensus.rewardsStage3Start = 300000;
-        consensus.rewardsStage4Start = 510000;
-        consensus.rewardsStage5Start = 760000;
-        consensus.rewardsStage6Start = 970000;
+        consensus.rewardsStage2Start = 7100;
+        consensus.rewardsStage3Start = 30000;
+        consensus.rewardsStage4Start = 51000;
+        consensus.rewardsStage5Start = 76000;
+        consensus.rewardsStage6Start = 97000;
     }
 };
 

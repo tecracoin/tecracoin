@@ -26,7 +26,7 @@ static const int TNODE_COIN_REQUIRED  = 10000;
 
 static const int TNODE_POSE_BAN_MAX_SCORE          = 5;
 //
-// The Tnode Ping Class : Contains a different serialize method for sending pings from tnodes throughout the network
+// The Tnode Ping Class : Contains a different serialize method for sending pings from tnodes through out the network
 //
 
 class CTnodePing

@@ -1857,20 +1857,23 @@ CAmount CWallet::GetNeedsToBeAnonymizedBalance(CAmount nMinBalance) const {
     return nNeedsToAnonymizeBalance;
 }
 
-CAmount CWallet::GetDenominatedBalance(bool unconfirmed) const {
-    if (fLiteMode) return 0;
+CAmount CWallet::GetDenominatedBalance(bool unconfirmed) const
+{
+    return 0; // everything below is useless as incerasing nTotal is commented
+    /**
+    if (fLiteMode)
+        return 0;
 
     CAmount nTotal = 0;
     {
         LOCK2(cs_main, cs_wallet);
         for (map<uint256, CWalletTx>::const_iterator it = mapWallet.begin(); it != mapWallet.end(); ++it) {
-            const CWalletTx *pcoin = &(*it).second;
-
-//            nTotal += pcoin->GetDenominatedCredit(unconfirmed);
+            const CWalletTx* pcoin = &(*it).second; //unused??
+            // nTotal += pcoin->GetDenominatedCredit(unconfirmed);
         }
     }
 
-    return nTotal;
+    return nTotal; **/
 }
 
 

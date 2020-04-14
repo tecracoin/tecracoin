@@ -148,11 +148,13 @@ CBlockTemplate* BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn)
     }
 
     fMTP = nBlockTime >= params.nMTPSwitchTime;
-    int nFeeReductionFactor = fMTP ? params.nMTPRewardReduction : 1;
-    CAmount coin = COIN / nFeeReductionFactor;
+    
+    // TecraCoin not using fee reduction
+    // int nFeeReductionFactor = fMTP ? params.nMTPRewardReduction : 1;
+    // CAmount coin = COIN / nFeeReductionFactor;
 
     resetBlock();
-    auto_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
+    std::unique_ptr<CBlockTemplate> pblocktemplate(new CBlockTemplate());
     if(!pblocktemplate.get())
         return NULL;
     CBlock *pblock = &pblocktemplate->block; // pointer for convenience
@@ -1139,7 +1141,7 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
                 LogPrintf("loop pindexPrev->nHeight=%s\n", pindexPrev->nHeight);
             }
             LogPrintf("BEFORE: pblocktemplate\n");
-            auto_ptr <CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
+            std::unique_ptr <CBlockTemplate> pblocktemplate(BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript));
             LogPrintf("AFTER: pblocktemplate\n");
             if (!pblocktemplate.get()) {
                 LogPrintf("Error in TecraCoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");

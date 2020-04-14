@@ -395,7 +395,7 @@ bool CheckZerocoinFoundersInputs(const CTransaction &tx, CValidationState &state
 
         // Reduce everything by a factor of two when MTP is in place
         // TecraCoin doesnt use reductionFactor
-        int reductionFactor = fMTP ? params.nMTPRewardReduction : 1;
+        // int reductionFactor = fMTP ? params.nMTPRewardReduction : 1;
 
         bool found_0 = false,
              found_1 = false,
