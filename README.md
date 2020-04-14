@@ -1,4 +1,4 @@
-TecraCoin v1.6.0.1
+TecraCoin v1.6.1.0
 ===============
 
 [![Build Status](https://travis-ci.com/tecracoin/tecracoin.svg?branch=CI)](https://travis-ci.com/tecracoinofficial/tecracoin)

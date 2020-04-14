@@ -412,7 +412,7 @@ UniValue importwallet(const UniValue& params, bool fHelp)
 {
     if (!EnsureWalletIsAvailable(fHelp))
         return NullUniValue;
-    
+
     if (fHelp || params.size() != 1)
         throw runtime_error(
             "importwallet \"filename\"\n"
@@ -590,6 +590,8 @@ UniValue dumpprivkey_tecracoin(const UniValue& params, bool fHelp)
             ;
         throw runtime_error(warning);
     }
+#else
+    if (fHelp) throw runtime_error("dumpprivkey function is disabled\n");
 #endif
 
     UniValue dumpParams;
@@ -727,4 +729,3 @@ UniValue dumpwallet_tecracoin(const UniValue& params, bool fHelp)
 
     return dumpwallet(dumpParams, false);
 }
-

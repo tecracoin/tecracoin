@@ -91,28 +91,26 @@ const Bignum&CoinSpend::getCoinSerialNumber() {
 }
 
 CoinDenomination CoinSpend::getDenomination() const {
-	return static_cast<CoinDenomination>(this->denomination);
+    return static_cast<CoinDenomination>(this->denomination);
 }
 
-bool CoinSpend::Verify(const Accumulator& a, const SpendMetaData &m) const {
+bool CoinSpend::Verify(const Accumulator& a, const SpendMetaData& m) const {
     if (!HasValidSerial())
         return false;
 
-	uint256 metahash = signatureHash(m);
-	// Verify both of the sub-proofs using the given meta-data
-    int ret = (a.getDenomination() == this->denomination)
-                && commitmentPoK.Verify(serialCommitmentToCoinValue, accCommitmentToCoinValue)
-                && accumulatorPoK.Verify(a, accCommitmentToCoinValue)
-                && serialNumberSoK.Verify(coinSerialNumber, serialCommitmentToCoinValue, this->version == ZEROCOIN_TX_VERSION_1_5 ? metahash : uint256());
+    uint256 metahash = signatureHash(m);
+    // Verify both of the sub-proofs using the given meta-data
+    int ret = (a.getDenomination() == this->denomination) 
+				&& commitmentPoK.Verify(serialCommitmentToCoinValue, accCommitmentToCoinValue) 
+				&& accumulatorPoK.Verify(a, accCommitmentToCoinValue) 
+				&& serialNumberSoK.Verify(coinSerialNumber, serialCommitmentToCoinValue, this->version == ZEROCOIN_TX_VERSION_1_5 ? metahash : uint256());
     if (!ret) {
-            return false;
+        return false;
     }
-
 
     if (this->version != 2) {
         return ret;
-    }
-    else {
+    } else {
         // Check if this is a coin that requires a signatures
         if (coinSerialNumber.bitSize() > 160)
             return false;
@@ -142,7 +140,7 @@ bool CoinSpend::Verify(const Accumulator& a, const SpendMetaData &m) const {
 
         return true;
     }
-
+	
 }
 
 bool CoinSpend::HasValidSerial() const { 
