@@ -31,6 +31,7 @@
 
 SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) : QSplashScreen(pixmap, f)
 {
+    /** unused
     // set reference point, paddings
     int paddingLeftCol2         = 232;
     int paddingTopCol2          = 200;
@@ -38,7 +39,7 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) : QSplashSc
     int line2 = 13;
     int line3 = 26;
     int line4 = 39;
-
+    **/
     float fontFactor            = 1.0;
 
     // define text to place

@@ -104,6 +104,7 @@ private:
     QAction *signMessageAction;
     QAction *verifyMessageAction;
     QAction *aboutAction;
+    QAction *tnodeAction;
     QAction *receiveCoinsAction;
     QAction *receiveCoinsMenuAction;
     QAction *optionsAction;
@@ -116,7 +117,6 @@ private:
     QAction *openAction;
     QAction *showHelpMessageAction;
     QAction *zerocoinAction;
-    QAction *tnodeAction;
     QAction *zerocoinMenuAction;
 
     QSystemTrayIcon *trayIcon;
