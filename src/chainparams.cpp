@@ -273,8 +273,8 @@ public:
         consensus.nMinNFactor = 10;
         consensus.nMaxNFactor = 30;
         consensus.nChainStartTime = 1539820800;
-        consensus.BIP34Height = 21111;
-        consensus.BIP34Hash = uint256S("0x0000000023b3a96d3484e5abb3755c413e7d41500f8e2a5c3f0dd01299cd8ef8");
+        consensus.BIP34Height = 2221;
+        consensus.BIP34Hash = uint256S("0x000001fb456c55918c82e7956c07a9e6941385085093db3577ee0d795b444bcc");
         consensus.powLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 60 * 60; // 60 minutes between retargets
         consensus.nPowTargetSpacing = defaultPowTargetSpacing;
@@ -298,8 +298,8 @@ public:
 
         // Deployment of MTP
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].bit = 12;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET - 2*60; // 2 hours leeway
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET + consensus.nMinerConfirmationWindow*2 * 5*60;
+        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = 1586476800; // 04/10/2020 @ 12:00am (UTC)
+        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET //
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000049e3a1ba"); //1097
