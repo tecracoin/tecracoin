@@ -289,18 +289,18 @@ public:
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1586476800; // 04/10/2020 @ 12:00am (UTC)
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1588204800; // 04/30/2020 @ 12:00am (UTC)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1587859200; // 04/26/2020 @ 12:00am (UTC)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1590796800; // 05/30/2020 @ 12:00am (UTC)
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1586476800; // 04/10/2020 @ 12:00am (UTC)
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1588204800; // 04/30/2020 @ 12:00am (UTC)
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1590969600; // 2020-06-01T00:00:00+00:00
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1596240000; // 2020-08-01T00:00:00+00:00
 
         // Deployment of MTP
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].bit = 12;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = 1586476800; // 04/10/2020 @ 12:00am (UTC)
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET; //
+        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = SWITCH_TO_MTP_BLOCK_HEADER - 2*60; //2 minutes
+        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER + consensus.nMinerConfirmationWindow*2*5*60; //enforce
 
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000001623d4d33"); //10572
