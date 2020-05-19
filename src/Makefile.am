@@ -203,7 +203,12 @@ BITCOIN_CORE_H = \
   zerocoin.h \
   zerocoin_params.h \
   mtpstate.h \
-  addresstype.h
+  addresstype.h \
+  komodo_rpcblockcain.h \
+  komodo_validation013.h \
+  komodo_defs_tecra.h \
+  key_io.h \
+  key_io.cpp
 
 obj/build.h: FORCE
 	@$(MKDIR_P) $(builddir)/obj

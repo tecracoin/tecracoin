@@ -26,6 +26,10 @@
 
 #include <boost/thread/thread.hpp> // boost::thread::interrupt
 
+// Komodo dPoW integration
+#include "komodo_rpcblockchain.h"
+//#include "komodo_validation013.h"
+
 using namespace std;
 
 extern void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
@@ -1272,7 +1276,9 @@ static const CRPCCommand commands[] =
     { "blockchain",         "gettxout",               &gettxout,               true  },
     { "blockchain",         "gettxoutsetinfo",        &gettxoutsetinfo,        true  },
     { "blockchain",         "verifychain",            &verifychain,            true  },
-
+// komodo dPoW integration
+    { "blockchain",         "calc_MoM",               &calc_MoM,               true  },
+    { "blockchain",         "height_MoM",             &height_MoM,             true  },
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true  },
     { "hidden",             "reconsiderblock",        &reconsiderblock,        true  },

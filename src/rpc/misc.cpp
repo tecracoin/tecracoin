@@ -28,6 +28,8 @@
 
 #include <univalue.h>
 
+//#include "komodo_validation013.h"
+
 using namespace std;
 
 /**
@@ -97,6 +99,15 @@ UniValue getinfo(const UniValue& params, bool fHelp)
     obj.push_back(Pair("proxy",         (proxy.IsValid() ? proxy.proxy.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("testnet",       Params().TestnetToBeDeprecatedFieldRPC()));
+    int32_t komodo_prevMoMheight();
+    extern uint256 NOTARIZED_HASH,NOTARIZED_DESTTXID,NOTARIZED_MOM;
+    extern int32_t NOTARIZED_HEIGHT,NOTARIZED_MOMDEPTH;
+    obj.pushKV("notarizedhash",         NOTARIZED_HASH.GetHex());
+    obj.pushKV("notarizedtxid",         NOTARIZED_DESTTXID.GetHex());
+    obj.pushKV("notarized",                (int)NOTARIZED_HEIGHT);
+    obj.pushKV("prevMoMheight",                (int)komodo_prevMoMheight());
+    obj.pushKV("notarized_MoMdepth",                (int)NOTARIZED_MOMDEPTH);
+    obj.pushKV("notarized_MoM",         NOTARIZED_MOM.GetHex());
 #ifdef ENABLE_WALLET
     if (pwalletMain) {
         obj.push_back(Pair("keypoololdest", pwalletMain->GetOldestKeyPoolTime()));

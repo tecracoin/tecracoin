@@ -65,6 +65,8 @@
 #include <boost/math/distributions/poisson.hpp>
 #include <boost/thread.hpp>
 
+#include "komodo_validation013.h"
+
 using namespace std;
 
 #if defined(NDEBUG)
@@ -2430,6 +2432,9 @@ static bool ApplyTxInUndo(const CTxInUndo &undo, CCoinsViewCache &view, const CO
 
 bool DisconnectBlock(const CBlock &block, CValidationState &state, const CBlockIndex *pindex, CCoinsViewCache &view,
                      bool *pfClean) {
+
+    komodo_disconnect((CBlockIndex *)pindex,(CBlock *)&block);
+
     assert(pindex->GetBlockHash() == view.GetBestBlock());
 
     if (pfClean)
@@ -2975,6 +2980,7 @@ bool ConnectBlock(const CBlock &block, CValidationState &state, CBlockIndex *pin
             }
         }
     }
+    komodo_connectblock(pindex,*(CBlock *)&block);
 
     int64_t nTime6 = GetTimeMicros();
     nTimeCallbacks += nTime6 - nTime5;
@@ -4302,6 +4308,10 @@ GenerateCoinbaseCommitment(CBlock &block, const CBlockIndex *pindexPrev, const C
 bool
 ContextualCheckBlockHeader(const CBlockHeader &block, CValidationState &state, const Consensus::Params &consensusParams,
                            CBlockIndex *const pindexPrev, int64_t nAdjustedTime, bool isTestBlockValidity) {
+// Komodo dPoW
+    uint256 hash = block.GetHash();
+    int32_t notarized_height;
+
 	// TecraCoin - MTP
     bool fBlockHasMTP = (block.nVersion & 4096) != 0 || (pindexPrev && consensusParams.nMTPSwitchTime == 0);
 
@@ -4326,6 +4336,17 @@ ContextualCheckBlockHeader(const CBlockHeader &block, CValidationState &state, c
             IsSuperMajority(version, pindexPrev, consensusParams.nMajorityRejectBlockOutdated, consensusParams))
             return state.Invalid(false, REJECT_OBSOLETE, strprintf("bad-version(0x%08x)", version - 1),
                                  strprintf("rejected nVersion=0x%08x block", version - 1));
+
+    int nHeight = chainActive.Height();
+    if ( komodo_checkpoint(&notarized_height,(int32_t)nHeight,hash) < 0 )
+    {
+        CBlockIndex *heightblock = chainActive[nHeight];
+        if ( heightblock != 0 && heightblock->GetBlockHash() == hash )
+        {
+            //fprintf(stderr,"got a pre notarization block that matches height.%d\n",(int32_t)nHeight);
+            return true;
+        } else return state.DoS(100, error("%s: forked chain %d older than last notarized (height %d) vs %d", __func__,nHeight, notarized_height));
+    }
 
     return true;
 }
