@@ -127,7 +127,7 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER + consensus.nMinerConfirmationWindow*2 * 5*60;
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000018f9e6703c854ea");
+        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000019acb099d323987"); //block 311766
 
         consensus.nCheckBugFixedAtBlock = ZC_CHECK_BUG_FIXED_AT_BLOCK;
         consensus.nTnodePaymentsBugFixedAtBlock = ZC_TNODE_PAYMENT_BUG_FIXED_AT_BLOCK;
@@ -231,12 +231,12 @@ public:
                         (0, uint256S("0x000008c721bdb1312f1954156f64828a052e8e8ce5a914f7b301a44eba154989"))
                         (2500, uint256S("0x00000179620d5efd4770d98f43474fd54045d6e4723445cb1907e12b576ee14e"))
                         (6860, uint256S("0x0000001a85edff4034839d410fd4efc6ed36a4e9b9a92ed399a1343acce44a32"))
-			(291588, uint256S("a7d8afb46a810bc3a53cd7f036085a4d776f86bd035bf8d64eb82e27dfcbb32b")),
-                1586293269, // * UNIX timestamp of last checkpoint block
-                312580,    // * total number of transactions between genesis and last checkpoint
-                //   (the tx=... number in the SetBestChain debug.log lines)
-                1200.0     // * estimated number of transactions per day after checkpoint
-        };
+                        (291588, uint256S("a7d8afb46a810bc3a53cd7f036085a4d776f86bd035bf8d64eb82e27dfcbb32b"))
+                        (311766, uint256S("7d828dd2b55cef5dfc376177dda08a02e780d9fd5dea3f192671adadbd6632d2")),
+                1589474612, // * UNIX timestamp of last checkpoint block
+                339663,     // * total number of transactions between genesis and last checkpoint
+                            //   (the tx=... number in the SetBestChain debug.log lines)
+                1200.0      // * estimated number of transactions per day after checkpoint        };
 
         /**
          * Mainnet founders
@@ -288,21 +288,21 @@ public:
 
         // Deployment of BIP68, BIP112, and BIP113.
         consensus.vDeployments[Consensus::DEPLOYMENT_CSV].bit = 0;
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1586476800; // 04/10/2020 @ 12:00am (UTC)
-        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1588204800; // 04/30/2020 @ 12:00am (UTC)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nStartTime = 1587859200; // 04/26/2020 @ 12:00am (UTC)
+        consensus.vDeployments[Consensus::DEPLOYMENT_CSV].nTimeout = 1590796800; // 05/30/2020 @ 12:00am (UTC)
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1586476800; // 04/10/2020 @ 12:00am (UTC)
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1588204800; // 04/30/2020 @ 12:00am (UTC)
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1590969600; // 2020-06-01T00:00:00+00:00
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1596240000; // 2020-08-01T00:00:00+00:00
 
         // Deployment of MTP
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].bit = 12;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = 1586476800; // 04/10/2020 @ 12:00am (UTC)
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET //
+        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = SWITCH_TO_MTP_BLOCK_HEADER - 2*60; //2 minutes
+        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER + consensus.nMinerConfirmationWindow*2*5*60; //enforce
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x0000000000000000000000000000000000000000000000000000000049e3a1ba"); //1097
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000001623d4d33"); //10572
 
         consensus.nSpendV15StartBlock = 1;
         consensus.nCheckBugFixedAtBlock = 1;
@@ -393,11 +393,11 @@ public:
 
         checkpointData = (CCheckpointData) {
               boost::assign::map_list_of
-                        (1097, uint256S("0x0000083dcce10b707687d6f15074976b541fc7d72d760931292227d0f0ea9122")),
-                1586299345, 	//timestamp of last block
-                1099,		//total number of transactions (tx=...) in UpdateTip log
-		100.0 		//daily trasnactions
-        };
+                        (1097, uint256S("0x0000083dcce10b707687d6f15074976b541fc7d72d760931292227d0f0ea9122"))
+                        (10572, uint256S("0x00065ba00de7f8b4f3dbf085b8e3ed25fa396692e816f7f2953a851c904626f3")),
+                1589473621,    //timestamp of last block
+                10577,         //total number of transactions (tx=...) in UpdateTip log
+                100.0          //daily trasnactions        };
 
         /**
          * Testnet founders
