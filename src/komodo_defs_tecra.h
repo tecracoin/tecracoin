@@ -25,14 +25,10 @@
 //extern char ASSETCHAINS_SYMBOL[KOMODO_ASSETCHAIN_MAXLEN];
 const char ASSETCHAINS_SYMBOL[65]={"TCR"};
 
-//from komodo_globals.h
-//nStakedDecemberHardforkTimestamp = 1576840000;    //December 2019 hardfork 12/20/2019 @ 11:06am (UTC)
-//nDecemberHardforkHeight = 1670000;                //December 2019 hardfork
-//nS4Timestamp = 1592146800;                        //dPoW Season 4 2020 hardfork Sunday, June 14th, 2020 03:00:00 PM UTC
-//nS4HardforkHeight = 1922000;                      //dPoW Season 4 2020 hardfork Sunday, June 14th, 2020
-
-static const uint32_t KMD_SEASON_TIMESTAMPS[NUM_KMD_SEASONS] = {1525132800, 1563148800, 1576840000, 1592146800, 1751328000};
-static const int32_t KMD_SEASON_HEIGHTS[NUM_KMD_SEASONS] = {814000, 1444000, 1670000, 1922000, 7113400};
+// first season had no third party coins, so it ends at block 0. 
+// second season ends at approx block 335564, estimate date approximately 06/26/2020 @ 10:00am (UTC)
+// third season ending height is unknown so it set to very very far in future.
+static const int32_t KMD_SEASON_HEIGHTS[NUM_KMD_SEASONS] = {0, 335564, 99999999};
 
 // Era array of pubkeys. Add extra seasons to bottom as requried, after adding appropriate info above.
 static const char *notaries_elected[NUM_KMD_SEASONS][NUM_KMD_NOTARIES][2] =
