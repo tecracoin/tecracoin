@@ -126,10 +126,27 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-            ++pblock->nNonce;
-            --nMaxTries;
+
+        if (pblock->IsMTP()){
+            LogPrintf("Generate: Trynig to mine MTP block on CPU...\n");
+            while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount){
+                uint256 thash = mtp::hash(*pblock, Params().GetConsensus().powLimit);
+                pblock->mtpHashValue = thash;
+                if (UintToArith256(thash)<= arith_uint256().SetCompact(pblock->nBits)){
+                    LogPrintf("Generate: Block found!\n");
+                    break;
+                }
+                ++pblock->nNonce;
+                --nMaxTries;
+            }
         }
+        else{
+            while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+                ++pblock->nNonce;
+                --nMaxTries;
+            }
+        }
+
         if (nMaxTries == 0) {
             break;
         }

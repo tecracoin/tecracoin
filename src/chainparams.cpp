@@ -294,8 +294,8 @@ public:
 
         // Deployment of SegWit (BIP141, BIP143, and BIP147)
         consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].bit = 1;
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = 1590969600; // 2020-06-01T00:00:00+00:00
-        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = 1596240000; // 2020-08-01T00:00:00+00:00
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nStartTime = consensus.nChainStartTime; //we do not want segwit (for now?)
+        consensus.vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout = consensus.nChainStartTime;
 
         // Deployment of MTP
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].bit = 12;
@@ -396,9 +396,9 @@ public:
               boost::assign::map_list_of
                         (1097, uint256S("0x0000083dcce10b707687d6f15074976b541fc7d72d760931292227d0f0ea9122"))
                         (10572, uint256S("0x00065ba00de7f8b4f3dbf085b8e3ed25fa396692e816f7f2953a851c904626f3")),
-                1589473621, 	//timestamp of last block
-                10577,		//total number of transactions (tx=...) in UpdateTip log
-                100.0 		//daily trasnactions
+                1589473621,    //timestamp of last block
+                10577,         //total number of transactions (tx=...) in UpdateTip log
+                100.0          //daily trasnactions
         };
 
         /**
