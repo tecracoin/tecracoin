@@ -1158,9 +1158,30 @@ if test x$need_bundled_univalue = xyes; then
   AC_CONFIG_SUBDIRS([src/univalue])
 fi
 
-AX_SUBDIRS_CONFIGURE([src/secp256k1], [[--disable-shared], [--with-pic], [--with-bignum=no], [--enable-module-recovery], [--enable-experimental], [--enable-module-ecdh]])
-AX_SUBDIRS_CONFIGURE([src/tor], [[--disable-unittests], [--disable-system-torrc], [--disable-systemd], [--disable-lzma], [--disable-zstd], [--disable-asciidoc], [--with-openssl-dir=$($PKG_CONFIG --variable=libdir openssl)], [CFLAGS=$($PKG_CONFIG --cflags openssl) -O2]])
+PKG_CHECK_MODULES([ZSTD],
+                  [libzstd >= 1.1],
+                  have_zstd=yes,
+                  have_zstd=no)
 
+if test "x$have_zstd" = "xno" ; then
+    AC_MSG_WARN([Unable to find libzstd.])
+fi
+
+if test "x$have_zstd" = "xyes"; then
+    AC_DEFINE(HAVE_ZSTD,1,[Have Zstd])
+    LIBZSTD="${ZSTD_LIBS}"
+
+    dnl now check for zstd functions
+    save_LIBS="$LIBS"
+    LIBS="$LIBS $ZSTD_LIBS"
+    AC_CHECK_FUNCS(ZSTD_estimateCStreamSize \
+                   ZSTD_estimateDCtxSize)
+    LIBS="$save_LIBS"
+fi
+AC_SUBST(LIBZSTD)
+
+AX_SUBDIRS_CONFIGURE([src/secp256k1], [[--disable-shared], [--with-pic], [--with-bignum=no], [--enable-module-recovery], [--enable-experimental], [--enable-module-ecdh]])
+AX_SUBDIRS_CONFIGURE([src/tor], [[--disable-system-torrc], [--disable-systemd], [--disable-lzma], [--disable-asciidoc], [--disable-libscrypt]])
 
 AC_OUTPUT
 
