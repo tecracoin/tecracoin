@@ -289,7 +289,7 @@ BITCOIN_QT_H = \
   qt/metadexcanceldialog.h \
   qt/tradehistorydialog.h \
   qt/sendmpdialog.h \
-  qt/elysium_qtutils.h \
+  qt/exodus_qtutils.h \
   qt/zc2sigmapage.h \
   qt/zc2sigmamodel.h
 
@@ -440,7 +440,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/zc2sigmapage.cpp \
   qt/zc2sigmamodel.cpp
 
-ZCOIN_QT_ELYSIUM_CPP = \
+ZCOIN_QT_EXODUS_CPP = \
   qt/exoassetsdialog.cpp \
   qt/lookupaddressdialog.cpp \
   qt/lookupspdialog.cpp \
@@ -458,8 +458,8 @@ endif
 if ENABLE_WALLET
 BITCOIN_QT_CPP += $(BITCOIN_QT_WALLET_CPP)
 endif
-if ENABLE_ELYSIUM
-BITCOIN_QT_CPP += $(ZCOIN_QT_ELYSIUM_CPP)
+if ENABLE_EXODUS
+BITCOIN_QT_CPP += $(ZCOIN_QT_EXODUS_CPP)
 endif
 
 RES_IMAGES = \
