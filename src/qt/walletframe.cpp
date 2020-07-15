@@ -115,12 +115,12 @@ void WalletFrame::gotoOverviewPage()
         i.value()->gotoOverviewPage();
 }
 
-#ifdef ENABLE_ELYSIUM
-void WalletFrame::gotoElyAssetsPage()
+#ifdef ENABLE_EXODUS
+void WalletFrame::gotoExoAssetsPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoElyAssetsPage();
+        i.value()->gotoExoAssetsPage();
 }
 #endif
 
@@ -131,12 +131,12 @@ void WalletFrame::gotoHistoryPage()
         i.value()->gotoHistoryPage();
 }
 
-#ifdef ENABLE_ELYSIUM
-void WalletFrame::gotoElysiumHistoryTab()
+#ifdef ENABLE_EXODUS
+void WalletFrame::gotoExodusHistoryTab()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoElysiumHistoryTab();
+        i.value()->gotoExodusHistoryTab();
 }
 #endif
 
@@ -147,7 +147,7 @@ void WalletFrame::gotoBitcoinHistoryTab()
         i.value()->gotoBitcoinHistoryTab();
 }
 
-#ifdef ENABLE_ELYSIUM
+#ifdef ENABLE_EXODUS
 void WalletFrame::gotoToolboxPage()
 {
     QMap<QString, WalletView*>::const_iterator i;
@@ -156,11 +156,32 @@ void WalletFrame::gotoToolboxPage()
 }
 #endif
 
-void WalletFrame::gotoZnodePage()
+void WalletFrame::gotoTnodePage()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoZnodePage();
+        i.value()->gotoExodusHistoryTab();
+}
+
+void WalletFrame::gotoBitcoinHistoryTab()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoBitcoinHistoryTab();
+}
+
+void WalletFrame::gotoToolboxPage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoToolboxPage();
+}
+
+void WalletFrame::gotoTnodePage()
+{
+    QMap<QString, WalletView*>::const_iterator i;
+    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
+        i.value()->gotoTnodePage();
 }
 
 void WalletFrame::gotoMasternodePage()

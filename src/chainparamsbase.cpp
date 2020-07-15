@@ -32,7 +32,7 @@ class CBaseMainParams : public CBaseChainParams
 public:
     CBaseMainParams()
     {
-        nRPCPort = 8888;
+        nRPCPort = 9045;
     }
 };
 static CBaseMainParams mainParams;
@@ -45,7 +45,7 @@ class CBaseTestNetParams : public CBaseChainParams
 public:
     CBaseTestNetParams()
     {
-        nRPCPort = 18888;
+        nRPCPort = 2353;
         strDataDir = "testnet3";
     }
 };
@@ -59,7 +59,7 @@ class CBaseRegTestParams : public CBaseChainParams
 public:
     CBaseRegTestParams()
     {
-        nRPCPort = 28888;
+        nRPCPort = 6028;
         strDataDir = "regtest";
     }
 };
@@ -92,14 +92,14 @@ void SelectBaseParams(const std::string& chain)
 
 std::string ChainNameFromCommandLine()
 {
-    bool fRegTest = GetBoolArg("-regtest", false);
-    bool fTestNet = GetBoolArg("-testnet", false);
+    boost::optional<bool> regTest = GetOptBoolArg("-regtest")
+        , testNet = GetOptBoolArg("-testnet");
 
-    if (fTestNet && fRegTest)
+    if (testNet && regTest && *testNet && *regTest)
         throw std::runtime_error("Invalid combination of -regtest and -testnet.");
-    if (fRegTest)
+    if (regTest && *regTest)
         return CBaseChainParams::REGTEST;
-    if (fTestNet)
+    if (testNet && *testNet)
         return CBaseChainParams::TESTNET;
     return CBaseChainParams::MAIN;
 }

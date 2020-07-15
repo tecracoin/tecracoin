@@ -28,4 +28,7 @@ bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&
 // Zcoin - MTP
 bool CheckMerkleTreeProof(const CBlockHeader &block, const Consensus::Params &params);
 
+// TecraCoin - MTP
+bool CheckMerkleTreeProof(const CBlockHeader &block, const Consensus::Params &params);
+
 #endif // BITCOIN_POW_H

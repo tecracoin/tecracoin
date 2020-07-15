@@ -39,7 +39,7 @@
 #include <boost/interprocess/streams/bufferstream.hpp>
 
 #include <ios>
-
+#define MTP_MALFORMED_TESTS_INITIAL_SUBSIDY 112.5
 BOOST_FIXTURE_TEST_SUITE(mtp_malformed_tests, MtpMalformedTestingSetup)
 
 BOOST_AUTO_TEST_CASE(mtp_malformed)
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(mtp_malformed)
     previousHeight = chainActive.Height();
     memset(bMtp.mtpHashData->hashRootMTP, 0, sizeof(bMtp.mtpHashData->hashRootMTP));
     memset(bMtp.mtpHashData->nBlockMTP, 0, sizeof(bMtp.mtpHashData->nBlockMTP));
-    for(unsigned int i = 0; i < 192; i++)
+    for(unsigned int i = 0; i < 48; i++)
         for(unsigned int j = 0; j < bMtp.mtpHashData->nProofMTP[i].size(); j++)
             for(unsigned int k = 0; k < bMtp.mtpHashData->nProofMTP[i][j].size(); k++)
                 bMtp.mtpHashData->nProofMTP[i][j][k] = 0;
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(mtp_malformed)
 
 
     bMtp = CreateBlock(scriptPubKey, mtp);
-    for(unsigned int i = 0; i < 192; i++)
+    for(unsigned int i = 0; i < 48; i++)
         for(unsigned int j = 0; j < bMtp.mtpHashData->nProofMTP[i].size(); j++)
             for(unsigned int k = 0; k < bMtp.mtpHashData->nProofMTP[i][j].size(); k++)
                 bMtp.mtpHashData->nProofMTP[i][j][k] = 0;
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(mtp_malformed)
     for(unsigned int i = 0; i < mtp::MTP_L*2; i++)
         for(unsigned int j = 0; j < 128; j++)
         bMtp.mtpHashData->nBlockMTP[i][j] = rand();
-    for(unsigned int i = 0; i < 192; i++)
+    for(unsigned int i = 0; i < 48; i++)
         for(unsigned int j = 0; j < bMtp.mtpHashData->nProofMTP[i].size(); j++)
             for(unsigned int k = 0; k < bMtp.mtpHashData->nProofMTP[i][j].size(); k++)
                 bMtp.mtpHashData->nProofMTP[i][j][k] = rand()%256;
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(mtp_malformed)
 
     bMtp = CreateBlock(scriptPubKey, mtp);
     previousHeight = chainActive.Height();
-    for(unsigned int i = 0; i < 192; i++)
+    for(unsigned int i = 0; i < 48; i++)
         for(unsigned int j = 0; j < bMtp.mtpHashData->nProofMTP[i].size(); j++)
             bMtp.mtpHashData->nProofMTP[i][j].resize(bMtp.mtpHashData->nProofMTP[i][j].size()/2);
     ProcessBlock(bMtp);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(mtp_malformed)
         == 0, "Serialize does not match unserialize");
     BOOST_CHECK_MESSAGE(memcmp(outh.nBlockMTP, bMtp.mtpHashData->nBlockMTP, sizeof(outh.nBlockMTP))
         == 0, "Serialize does not match unserialize");
-    for(unsigned int i = 0; i < 192; i++)
+    for(unsigned int i = 0; i < 48; i++)
         for(unsigned int j = 0; j < bMtp.mtpHashData->nProofMTP[i].size(); j++)
             for(unsigned int k = 0; k < bMtp.mtpHashData->nProofMTP[i][j].size(); k++)
                 BOOST_CHECK_MESSAGE(outh.nProofMTP[i][j][k] == bMtp.mtpHashData->nProofMTP[i][j][k],

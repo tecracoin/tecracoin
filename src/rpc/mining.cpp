@@ -1,5 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2018 The TecraCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -19,7 +20,7 @@
 #include "rpc/server.h"
 #include "txmempool.h"
 #include "util.h"
-#include "znodesync-interface.h"
+#include "tnodesync-interface.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 
@@ -142,6 +143,13 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
                 pblock->cachedPoWHash.SetNull();
             }
         }
+        else{
+            while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
+                ++pblock->nNonce;
+                --nMaxTries;
+            }
+        }
+
         if (nMaxTries == 0) {
             break;
         }
@@ -431,7 +439,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "  \"coinbaseaux\" : {                 (json object) data that should be included in the coinbase's scriptSig content\n"
             "      \"flags\" : \"xx\"                  (string) key name is to be ignored, and value included in scriptSig\n"
             "  },\n"
-            "  \"coinbasevalue\" : n,              (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in Satoshis)\n"
+            "  \"coinbasevalue\" : n,                (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in Satoshis)\n"
+            "  \"coinbasesubsidy\" : n,              (numeric) maximum allowable input to coinbase transaction, including the generation award and excluding transaction fees (in Satoshis)\n"
             "  \"coinbasetxn\" : { ... },          (json object) information for coinbase transaction\n"
             "  \"target\" : \"xxxx\",                (string) The hash target\n"
             "  \"mintime\" : xxx,                  (numeric) The minimum timestamp appropriate for next block time in seconds since epoch (Jan 1 1970 GMT)\n"
@@ -446,15 +455,15 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "  \"curtime\" : ttt,                  (numeric) current timestamp in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"bits\" : \"xxxxxxxx\",              (string) compressed target of next block\n"
             "  \"height\" : n                      (numeric) The height of the next block\n"
-            "  \"znode\" : [                       (array) required znode payments that must be included in the next block\n"
+            "  \"tnode\" : [                       (array) required tnode payments that must be included in the next block\n"
             "      {\n"
             "         \"payee\" : \"xxxx\",          (string) payee address\n"
             "         \"script\" : \"xxxx\",         (string) payee scriptPubKey\n"
             "         \"amount\": n                (numeric) required amount to pay\n"
             "      }\n"
             "  },\n"
-            "  \"znode_payments_started\" :  true|false, (boolean) true, if znode payments started\n"
-            "  \"znode_payments_enforced\" : true|false, (boolean) true, if znode payments are enforced\n"
+            "  \"tnode_payments_started\" :  true|false, (boolean) true, if tnode payments started\n"
+            "  \"tnode_payments_enforced\" : true|false, (boolean) true, if tnode payments are enforced\n"
             "  \"coinbase_payload\" : \"xxxxxxxx\"    (string) coinbase transaction payload data encoded in hexadecimal\n"
             "}\n"
 
@@ -535,14 +544,17 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_P2P_DISABLED, "Error: Peer-to-peer functionality missing or disabled");
 
     if (g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0)
-        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Zcoin is not connected!");
+        throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Tecracoin is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Zcoin is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Tecacoin is downloading blocks...");
 
-    if (Params().GetConsensus().IsMain() && !znodeSyncInterface.IsSynced())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Zcoin Core is syncing with network...");
+    if (Params().GetConsensus().IsMain() && !tnodeSyncInterface.IsSynced())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Tecacoin Core is syncing with network...");
 
+    if (!tnodeSync.IsSynced()){
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "TecraCoin Core is syncing with network...");
+    }
     static unsigned int nTransactionsUpdatedLast;
     if (!lpval.isNull())
     {
@@ -647,7 +659,8 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         uint256 txHash = tx.GetHash();
         setTxIndex[txHash] = i++;
 
-        if (tx.IsCoinBase())
+        //We process coinbase tx, only if we create it(scenario: cpu/solo mining), not miner(scenario: gpu/pool)
+        if (tx.IsCoinBase() && !coinbasetxn){
             continue;
 
         UniValue entry(UniValue::VOBJ);
@@ -674,7 +687,12 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         entry.push_back(Pair("sigops", nTxSigOps));
         entry.push_back(Pair("weight", GetTransactionWeight(tx)));
 
-        transactions.push_back(entry);
+        if(tx.IsCoinBase()){
+            txCoinbase = entry;
+            entry.push_back(Pair("required", true));// coinbase IS required
+        }else{
+            transactions.push_back(entry);
+        }
     }
 
     UniValue aux(UniValue::VOBJ);
@@ -793,22 +811,22 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             masternodeObj.push_back(obj);
         }
 
-        result.push_back(Pair("znode", masternodeObj));
-        result.push_back(Pair("znode_payments_started", true));
-        result.push_back(Pair("znode_payments_enforced", true));
+        result.push_back(Pair("tnode", masternodeObj));
+        result.push_back(Pair("tnode_payments_started", true));
+        result.push_back(Pair("tnode_payments_enforced", true));
     }
     else {
-        UniValue znodeObj(UniValue::VOBJ);
+        UniValue tnodeObj(UniValue::VOBJ);
         if(pblock->txoutZnode != CTxOut()) {
             CTxDestination address1;
             ExtractDestination(pblock->txoutZnode.scriptPubKey, address1);
             CBitcoinAddress address2(address1);
-            znodeObj.push_back(Pair("payee", address2.ToString().c_str()));
-            znodeObj.push_back(Pair("script", HexStr(pblock->txoutZnode.scriptPubKey.begin(), pblock->txoutZnode.scriptPubKey.end())));
-            znodeObj.push_back(Pair("amount", pblock->txoutZnode.nValue));
+            tnodeObj.push_back(Pair("payee", address2.ToString().c_str()));
+            tnodeObj.push_back(Pair("script", HexStr(pblock->txoutZnode.scriptPubKey.begin(), pblock->txoutZnode.scriptPubKey.end())));
+            tnodeObj.push_back(Pair("amount", pblock->txoutZnode.nValue));
         }
-        result.push_back(Pair("znode", znodeObj));
-        result.push_back(Pair("znode_payments_started", pindexPrev->nHeight + 1 > Params().GetConsensus().nZnodePaymentsStartBlock));
+        result.push_back(Pair("tnode", tnodeObj));
+        result.push_back(Pair("tnode_payments_started", pindexPrev->nHeight + 1 > Params().GetConsensus().nZnodePaymentsStartBlock));
     }
 
     if (pindexPrev->nHeight+1 >= Params().GetConsensus().DIP0003Height) {

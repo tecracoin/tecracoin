@@ -220,7 +220,7 @@
     </message>
 </context>
 <context>
-    <name>ZcoinGUI</name>
+    <name>TecraCoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>簽署訊息... &amp;m</translation>
@@ -310,8 +310,8 @@
         <translation>正在為磁碟區塊重建索引...</translation>
     </message>
     <message>
-        <source>Send coins to a Zcoin address</source>
-        <translation>付款至一個 Zcoin 位址</translation>
+        <source>Send coins to a TecraCoin address</source>
+        <translation>付款至一個 TecraCoin 位址</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -334,8 +334,8 @@
         <translation>驗證訊息... &amp;V</translation>
     </message>
     <message>
-        <source>Zcoin</source>
-        <translation>Zcoin</translation>
+        <source>TecraCoin</source>
+        <translation>TecraCoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -652,7 +652,7 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>zcoin-core</name>
+    <name>tecracoin-core</name>
     <message>
         <source>Information</source>
         <translation>資訊</translation>

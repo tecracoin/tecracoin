@@ -96,7 +96,7 @@ LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
 LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
-LIBBITCOINQT=qt/libzcoinqt.a
+LIBBITCOINQT=qt/libtecracoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
 LIBZCOIN_SIGMA=libsigma.a
@@ -105,7 +105,7 @@ if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
 endif
 if BUILD_BITCOIN_LIBS
-LIBBITCOINCONSENSUS=libbitcoinconsensus.la
+LIBBITCOINCONSENSUS=libtecracoinconsensus.la
 endif
 if ENABLE_WALLET
 LIBBITCOIN_WALLET=libbitcoin_wallet.a
@@ -135,17 +135,17 @@ TESTS =
 BENCHMARKS =
 
 if BUILD_BITCOIND
-  bin_PROGRAMS += zcoind
+  bin_PROGRAMS += tecracoind
 endif
 
 if BUILD_BITCOIN_UTILS
-  bin_PROGRAMS += zcoin-cli zcoin-tx
+  bin_PROGRAMS += tecracoin-cli tecracoin-tx
 endif
 
 .PHONY: FORCE check-symbols check-security
 # bitcoin core #
 BITCOIN_CORE_H = \
-  activeznode.h \
+  activetnode.h \
   activemasternode.h \
   addressindex.h \
   spentindex.h \
@@ -194,12 +194,12 @@ BITCOIN_CORE_H = \
   dbwrapper.h \
   limitedmap.h \
   threadinterrupt.h \
-  znode.h \
-  znode-payments.h \
-  znode-sync.h \
-  masternode-utils.h \
-  znodeman.h \
-  znodeconfig.h \
+  tnode.h \
+  tnode-payments.h \
+  tnode-sync.h \
+  tnode-utils.h \
+  tnodeman.h \
+  tnodeconfig.h \
   mbstring.h \
   memusage.h \
   merkleblock.h \
@@ -282,10 +282,10 @@ BITCOIN_CORE_H = \
   addresstype.h \
   mtpstate.h \
   messagesigner.h \
-  masternode-meta.h \
-  masternode-payments.h \
-  masternode-sync.h \
-  znodesync-interface.h \
+  tnode-meta.h \
+  tnode-payments.h \
+  tnode-sync.h \
+  tnodesync-interface.h \
   saltedhasher.h \
   unordered_lru_cache.h \
   llmq/quorums.h \
@@ -426,7 +426,7 @@ libbitcoin_server_a_SOURCES = \
   rpc/misc.cpp \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
-  rpc/rpcznode.cpp \
+  rpc/rpctnode.cpp \
   rpc/server.cpp \
   rpc/rpcevo.cpp \
   rpc/rpcquorums.cpp \
@@ -456,22 +456,22 @@ libbitcoin_zmq_a_SOURCES = \
 endif
 
 
-# wallet: shared between zcoind and zcoin-qt, but only linked
+# wallet: shared between tecracoind and tecracoin-qt, but only linked
 # when wallet enabled
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(LIBBLSSIG_INCLUDES)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
-  activeznode.cpp \
+  activetnode.cpp \
   activemasternode.cpp \
   darksend.cpp \
   hdmint/hdmint.cpp \
-  znode.cpp \
-  znode-payments.cpp \
-  znode-sync.cpp \
-  masternode-sync.cpp \
-  znodesync-interface.cpp \
-  znodeconfig.cpp \
-  znodeman.cpp \
+  tnode.cpp \
+  tnode-payments.cpp \
+  tnode-sync.cpp \
+  tnode-sync.cpp \
+  tnodesync-interface.cpp \
+  tnodeconfig.cpp \
+  tnodeman.cpp \
   hdmint/mintpool.cpp \
   hdmint/wallet.cpp \
   sigma.cpp \
@@ -577,7 +577,7 @@ libbitcoin_consensus_a_SOURCES = \
   crypto/MerkleTreeProof/ref.c \
   crypto/MerkleTreeProof/blake2/blake2b.c
 
-# common: shared between zcoind, and zcoin-qt and non-server tools
+# common: shared between tecracoind, and tecracoin-qt and non-server tools
 libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
@@ -694,7 +694,7 @@ libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
 AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
-# cli: shared between zcoin-cli and zcoin-qt
+# cli: shared between tecracoin-cli and tecracoin-qt
 libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_cli_a_SOURCES = \
@@ -705,17 +705,17 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 #
 
 # bitcoind binary #
-zcoind_SOURCES = bitcoind.cpp
-zcoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-zcoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-zcoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-EXTRA_zcoind_DEPENDENCIES = $(LIBBLSSIG_LIBS)
+tecracoind_SOURCES = bitcoind.cpp
+tecracoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+tecracoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+tecracoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+EXTRA_tecracoind_DEPENDENCIES = $(LIBBLSSIG_LIBS)
 
 if TARGET_WINDOWS
-zcoind_SOURCES += bitcoind-res.rc
+tecracoind_SOURCES += bitcoind-res.rc
 endif
 
-zcoind_LDADD = \
+tecracoind_LDADD = \
   $(LIBBITCOIN_SERVER) \
   $(LIBBITCOIN_COMMON) \
   $(LIBUNIVALUE) \
@@ -726,43 +726,42 @@ zcoind_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBBLSSIG_LIBS)
 
-zcoind_LDADD += $(TOR_LIBS) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBBLSSIG_DEPENDS) -lz
+tecracoind_LDADD += $(TOR_LIBS) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBBLSSIG_DEPENDS) -lz
 
 # bitcoin-cli binary #
-zcoin_cli_SOURCES = bitcoin-cli.cpp
-zcoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
-zcoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-zcoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+tecracoin_cli_SOURCES = bitcoin-cli.cpp
+tecracoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
+tecracoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+tecracoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-zcoin_cli_SOURCES += bitcoin-cli-res.rc
+tecracoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-zcoin_cli_LDADD = \
+tecracoin_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-zcoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+tecracoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
-zcoin_tx_SOURCES = bitcoin-tx.cpp
-zcoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
-zcoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-zcoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+tecracoin_tx_SOURCES = bitcoin-tx.cpp
+tecracoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+tecracoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+tecracoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
-zcoin_tx_SOURCES += bitcoin-tx-res.rc
+tecracoin_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
-zcoin_tx_LDADD = \
+tecracoin_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -770,27 +769,26 @@ zcoin_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-zcoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+tecracoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # bitcoinconsensus library #
 if BUILD_BITCOIN_LIBS
 include_HEADERS = script/bitcoinconsensus.h
-libbitcoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
+libtecracoinconsensus_la_SOURCES = $(crypto_libbitcoin_crypto_a_SOURCES) $(libbitcoin_consensus_a_SOURCES)
 
 if GLIBC_BACK_COMPAT
-  libbitcoinconsensus_la_SOURCES += compat/glibc_compat.cpp
+  libtecracoinconsensus_la_SOURCES += compat/glibc_compat.cpp
 endif
 
-libbitcoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(LIBBLSSIG_LIBS) $(LIBBLSSIG_DEPENDS)
-libbitcoinconsensus_la_LIBADD = $(LIBSECP256K1)
-libbitcoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(LIBBLSSIG_INCLUDES) -DBUILD_BITCOIN_INTERNAL
-libbitcoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-EXTRA_libbitcoinconsensus_la_DEPENDENCIES = $(LIBBLSSIG_LIBS)
+libtecracoinconsensus_la_LDFLAGS = $(AM_LDFLAGS) -no-undefined $(RELDFLAGS) $(LIBBLSSIG_LIBS) $(LIBBLSSIG_DEPENDS)
+libtecracoinconsensus_la_LIBADD = $(LIBSECP256K1)
+libtecracoinconsensus_la_CPPFLAGS = $(AM_CPPFLAGS) -I$(builddir)/obj -I$(srcdir)/secp256k1/include $(LIBBLSSIG_INCLUDES) -DBUILD_BITCOIN_INTERNAL
+libtecracoinconsensus_la_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+EXTRA_libtecracoinconsensus_la_DEPENDENCIES = $(LIBBLSSIG_LIBS)
 
 endif
 #
-
 CTAES_DIST =  crypto/ctaes/bench.c
 CTAES_DIST += crypto/ctaes/ctaes.c
 CTAES_DIST += crypto/ctaes/ctaes.h
@@ -877,6 +875,6 @@ check-local:
 	$(error Please rerun configure with tests enabling flag)
 endif
 
-if ENABLE_ELYSIUM
-include Makefile.elysium.include
+if ENABLE_EXODUS
+include Makefile.exodus.include
 endif

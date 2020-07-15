@@ -1,28 +1,28 @@
-Zcoin Core 0.14.8.x
+TecraCoin Core 1.6.0.x
 =====================
 
 Setup
 ---------------------
-[Zcoin Core] (https://zcoin.io/get-zcoin/) is the original Zcoin client and it builds the backbone of the network. However, it downloads and stores the entire history of Zcoin transactions (which is currently several hundreds MBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+[TecraCoin Core] (https://tecracoin.io/get-tecracoin/) is the original TecraCoin client and it builds the backbone of the network. However, it downloads and stores the entire history of TecraCoin transactions (which is currently several hundreds MBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
 
 Running
 ---------------------
-The following are some helpful notes on how to run Zcoin on your native platform.
+The following are some helpful notes on how to run TecraCoin on your native platform.
 
 ### Unix
 
 Unpack the files into a directory and run:
 
-- `bin/zcoin-qt` (GUI) or
-- `bin/zcoind` (headless)
+- `bin/tecracoin-qt` (GUI) or
+- `bin/tecracoind` (headless)
 
 ### Windows
 
-Unpack the files into a directory, and then run zcoin-qt.exe.
+Unpack the files into a directory, and then run tecracoin-qt.exe.
 
 ### OS X
 
-Drag Zcoin-Core to your applications folder, and then run Zcoin-Core.
+Drag TecraCoin-Core to your applications folder, and then run TecraCoin-Core.
 
 ### Need Help?
 
@@ -33,7 +33,7 @@ for help and more information.
 
 Building
 ---------------------
-The following are developer notes on how to build Zcoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The following are developer notes on how to build TecraCoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [OS X Build Notes](build-osx.md)
 - [Unix Build Notes](build-unix.md)
@@ -43,7 +43,7 @@ The following are developer notes on how to build Zcoin on your native platform.
 
 Development
 ---------------------
-The Zcoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+The TecraCoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
 - [Release Notes](release-notes.md)

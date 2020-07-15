@@ -2,8 +2,8 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-bin_PROGRAMS += qt/zcoin-qt
-EXTRA_LIBRARIES += qt/libzcoinqt.a
+bin_PROGRAMS += qt/tecracoin-qt
+EXTRA_LIBRARIES += qt/libtecracoinqt.a
 
 # bitcoin qt core #
 QT_TS = \
@@ -105,7 +105,7 @@ QT_FORMS_UI = \
   qt/forms/manualmintdialog.ui \
   qt/forms/editaddressdialog.ui \
   qt/forms/helpmessagedialog.ui \
-  qt/forms/znodelist.ui \
+  qt/forms/tnodelist.ui \
   qt/forms/masternodelist.ui \
   qt/forms/intro.ui \
   qt/forms/modaloverlay.ui \
@@ -129,7 +129,7 @@ QT_FORMS_UI = \
   qt/forms/metadexcanceldialog.ui \
   qt/forms/metadexdialog.ui \
   qt/forms/tradehistorydialog.ui \
-  qt/forms/elyassetsdialog.ui \
+  qt/forms/exoassetsdialog.ui \
   qt/forms/zc2sigmapage.ui
 
 QT_MOC_CPP = \
@@ -156,7 +156,7 @@ QT_MOC_CPP = \
   qt/moc_notifymnemonic.cpp \
   qt/moc_macdockiconhandler.cpp \
   qt/moc_macnotificationhandler.cpp \
-  qt/moc_znodelist.cpp \
+  qt/moc_tnodelist.cpp \
   qt/moc_masternodelist.cpp \
   qt/moc_modaloverlay.cpp \
   qt/moc_notificator.cpp \
@@ -191,7 +191,7 @@ QT_MOC_CPP = \
   qt/moc_lookupspdialog.cpp \
   qt/moc_lookuptxdialog.cpp \
   qt/moc_txhistorydialog.cpp \
-  qt/moc_elyassetsdialog.cpp \
+  qt/moc_axoassetsdialog.cpp \
   qt/moc_metadexdialog.cpp \
   qt/moc_metadexcanceldialog.cpp \
   qt/moc_tradehistorydialog.cpp \
@@ -244,7 +244,7 @@ BITCOIN_QT_H = \
   qt/notifyznodewarning.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
-  qt/znodelist.h \
+  qt/tnodelist.h \
   qt/masternodelist.h \
   qt/modaloverlay.h \
   qt/networkstyle.h \
@@ -284,7 +284,7 @@ BITCOIN_QT_H = \
   qt/lookupspdialog.h \
   qt/lookuptxdialog.h \
   qt/txhistorydialog.h \
-  qt/elyassetsdialog.h \
+  qt/exoassetsdialog.h \
   qt/metadexdialog.h \
   qt/metadexcanceldialog.h \
   qt/tradehistorydialog.h \
@@ -302,10 +302,10 @@ RES_ICONS = \
   qt/res/icons/bitcoin.ico \
   qt/res/icons/bitcoin_testnet.ico \
   qt/res/icons/bitcoin.png \
-  qt/res/icons/zcoin.png \
+  qt/res/icons/tecracoin.png \
   qt/res/icons/zerocoin.png \
   qt/res/icons/sigma.png \
-  qt/res/icons/znodes.png \
+  qt/res/icons/tnodes.png \
   qt/res/icons/qrcode.png \
   qt/res/icons/chevron.png \
   qt/res/icons/clock1.png \
@@ -344,11 +344,11 @@ RES_ICONS = \
   qt/res/icons/meta_partcancelled.png \
   qt/res/icons/meta_partfilled.png \
   qt/res/icons/meta_pending.png \
-  qt/res/icons/elysium_in.png \
-  qt/res/icons/elysium_inout.png \
-  qt/res/icons/elysium_invalid.png \
-  qt/res/icons/elysium_out.png \
-  qt/res/icons/elysium_hourglass.png \
+  qt/res/icons/exodus_in.png \
+  qt/res/icons/exodus_inout.png \
+  qt/res/icons/exodus_invalid.png \
+  qt/res/icons/exodus_out.png \
+  qt/res/icons/exodus_hourglass.png \
   qt/res/icons/network_disabled.png \
   qt/res/icons/open.png \
   qt/res/icons/overview.png \
@@ -400,7 +400,7 @@ BITCOIN_QT_BASE_CPP = \
   qt/splashscreen.cpp \
   qt/trafficgraphwidget.cpp \
   qt/utilitydialog.cpp \
-  qt/elysium_qtutils.cpp
+  qt/exodus_qtutils.cpp
 
 BITCOIN_QT_WINDOWS_CPP = qt/winshutdownmonitor.cpp
 
@@ -434,14 +434,14 @@ BITCOIN_QT_WALLET_CPP = \
   qt/walletframe.cpp \
   qt/walletmodel.cpp \
   qt/walletmodeltransaction.cpp \
-  qt/znodelist.cpp \
+  qt/tnodelist.cpp \
   qt/masternodelist.cpp \
   qt/walletview.cpp \
   qt/zc2sigmapage.cpp \
   qt/zc2sigmamodel.cpp
 
 ZCOIN_QT_ELYSIUM_CPP = \
-  qt/elyassetsdialog.cpp \
+  qt/exoassetsdialog.cpp \
   qt/lookupaddressdialog.cpp \
   qt/lookupspdialog.cpp \
   qt/lookuptxdialog.cpp \
@@ -473,14 +473,14 @@ BITCOIN_RC = qt/res/bitcoin-qt-res.rc
 BITCOIN_QT_INCLUDES = -I$(builddir)/qt -I$(srcdir)/qt -I$(srcdir)/qt/forms \
   -I$(builddir)/qt/forms -DQT_NO_KEYWORDS
 
-qt_libzcoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
+qt_libtecracoinqt_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) \
   $(QT_INCLUDES) $(QT_DBUS_INCLUDES) $(LIBBLSSIG_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
-qt_libzcoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_libtecracoinqt_a_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
-qt_libzcoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
+qt_libtecracoinqt_a_SOURCES = $(BITCOIN_QT_CPP) $(BITCOIN_QT_H) $(QT_FORMS_UI) \
   $(QT_QRC) $(QT_QRC_LOCALE) $(QT_TS) $(PROTOBUF_PROTO) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES)
 
-nodist_qt_libzcoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
+nodist_qt_libtecracoinqt_a_SOURCES = $(QT_MOC_CPP) $(QT_MOC) $(PROTOBUF_CC) \
   $(PROTOBUF_H) $(QT_QRC_CPP) $(QT_QRC_LOCALE_CPP)
 
 # forms/foo.h -> forms/ui_foo.h
@@ -489,7 +489,7 @@ QT_FORMS_H=$(join $(dir $(QT_FORMS_UI)),$(addprefix ui_, $(notdir $(QT_FORMS_UI:
 # Most files will depend on the forms and moc files as includes. Generate them
 # before anything else.
 $(QT_MOC): $(QT_FORMS_H)
-$(qt_libzcoinqt_a_OBJECTS) $(qt_zcoin_qt_OBJECTS) : | $(QT_MOC)
+$(qt_libtecracoinqt_a_OBJECTS) $(qt_tecracoin_qt_OBJECTS) : | $(QT_MOC)
 
 #Generating these with a half-written protobuf header leads to wacky results.
 #This makes sure it's done.
@@ -497,27 +497,27 @@ $(QT_MOC): $(PROTOBUF_H)
 $(QT_MOC_CPP): $(PROTOBUF_H)
 
 # bitcoin-qt binary #
-qt_zcoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) $(LIBBLSSIG_INCLUDES) \
+qt_tecracoin_qt_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(BITCOIN_QT_INCLUDES) $(LIBBLSSIG_INCLUDES) \
   $(QT_INCLUDES) $(PROTOBUF_CFLAGS) $(QR_CFLAGS)
-qt_zcoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
+qt_tecracoin_qt_CXXFLAGS = $(AM_CXXFLAGS) $(QT_PIE_FLAGS)
 
-qt_zcoin_qt_SOURCES = qt/bitcoin.cpp
+qt_tecracoin_qt_SOURCES = qt/bitcoin.cpp
 if TARGET_DARWIN
-  qt_zcoin_qt_SOURCES += $(BITCOIN_MM)
+  qt_tecracoin_qt_SOURCES += $(BITCOIN_MM)
 endif
 if TARGET_WINDOWS
-  qt_zcoin_qt_SOURCES += $(BITCOIN_RC)
+  qt_tecracoin_qt_SOURCES += $(BITCOIN_RC)
 endif
-qt_zcoin_qt_LDADD = qt/libzcoinqt.a $(LIBBITCOIN_SERVER)
+qt_tecracoin_qt_LDADD = qt/libtecracoinqt.a $(LIBBITCOIN_SERVER)
 
 if ENABLE_WALLET
-qt_zcoin_qt_LDADD += $(LIBBITCOIN_WALLET)
+qt_tecracoin_qt_LDADD += $(LIBBITCOIN_WALLET)
 endif
 if ENABLE_ZMQ
-qt_zcoin_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
+qt_tecracoin_qt_LDADD += $(LIBBITCOIN_ZMQ) $(ZMQ_LIBS)
 endif
 
-qt_zcoin_qt_LDADD += tor/src/core/libtor-app.a \
+qt_tecracoin_qt_LDADD += tor/src/core/libtor-app.a \
     tor/src/lib/libtor-meminfo.a \
     tor/src/lib/libtor-term.a \
     tor/src/lib/libtor-osinfo.a \
@@ -558,17 +558,17 @@ qt_zcoin_qt_LDADD += tor/src/core/libtor-app.a \
 	tor/src/ext/ed25519/ref10/libed25519_ref10.a \
 	tor/src/ext/keccak-tiny/libkeccak-tiny.a
 
-qt_zcoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) \
+qt_tecracoin_qt_LDADD += $(LIBBITCOIN_CLI) $(LIBBITCOIN_COMMON) $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CONSENSUS) $(LIBBITCOIN_CRYPTO) $(LIBZCOIN_SIGMA) \
-  $(LIBUNIVALUE) $(LIBLEVELDB)  $(LIBLEVELDB_SSE42) $(LIBMEMENV) $(BOOST_LIBS) $(QT_LIBS) \
+  $(LIBUNIVALUE) $(LIBLEVELDB) $(LIBMEMENV) $(BOOST_LIBS) $(QT_LIBS) \
   $(QT_DBUS_LIBS) $(QR_LIBS) $(PROTOBUF_LIBS) $(BDB_LIBS) $(SSL_LIBS) \
   $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(LIBSECP256K1) $(LIBBLSSIG_LIBS) $(LIBBLSSIG_DEPENDS) \
   $(ZLIB_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS)
 
-EXTRA_qt_zcoin_qt_DEPENDENCIES = $(LIBBLSSIG_LIBS)
+EXTRA_qt_tecracoin_qt_DEPENDENCIES = $(LIBBLSSIG_LIBS)
 
-qt_zcoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
-qt_zcoin_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
+qt_tecracoin_qt_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(QT_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+qt_tecracoin_qt_LIBTOOLFLAGS = $(AM_LIBTOOLFLAGS) --tag CXX
 
 #locale/foo.ts -> locale/foo.qm
 QT_QM=$(QT_TS:.ts=.qm)
@@ -595,14 +595,14 @@ $(QT_QRC_CPP): $(QT_QRC) $(QT_FORMS_H) $(RES_ICONS) $(RES_IMAGES) $(RES_MOVIES) 
 	$(AM_V_GEN) QT_SELECT=$(QT_SELECT) $(RCC) -name bitcoin $< | \
 	  $(SED) -e '/^\*\*.*Created:/d' -e '/^\*\*.*by:/d' > $@
 
-CLEAN_QT = $(nodist_qt_libzcoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
+CLEAN_QT = $(nodist_qt_libtecracoinqt_a_SOURCES) $(QT_QM) $(QT_FORMS_H) qt/*.gcda qt/*.gcno
 
 CLEANFILES += $(CLEAN_QT)
 
-zcoin_qt_clean: FORCE
-	rm -f $(CLEAN_QT) $(qt_libzcoinqt_a_OBJECTS) $(qt_zcoin_qt_OBJECTS) qt/zcoin-qt$(EXEEXT) $(LIBBITCOINQT)
+tecracoin_qt_clean: FORCE
+	rm -f $(CLEAN_QT) $(qt_libtecracoinqt_a_OBJECTS) $(qt_tecracoin_qt_OBJECTS) qt/tecracoin-qt$(EXEEXT) $(LIBBITCOINQT)
 
-zcoin_qt : qt/zcoin-qt$(EXEEXT)
+tecracoin_qt : qt/tecracoin-qt$(EXEEXT)
 
 ui_%.h: %.ui
 	@test -f $(UIC)

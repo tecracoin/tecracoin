@@ -16,6 +16,7 @@
 #include "checkpoints.h"
 #include "compat/sanity.h"
 #include "consensus/validation.h"
+#include "exodus/exodus.h"
 #include "httpserver.h"
 #include "httprpc.h"
 #include "key.h"
@@ -62,8 +63,8 @@
 #include "evo/deterministicmns.h"
 #include "llmq/quorums_init.h"
 
-#ifdef ENABLE_ELYSIUM
-#include "elysium/elysium.h"
+#ifdef ENABLE_EXODUS
+#include "exodus/exodus.h"
 #endif
 
 #include <stdint.h>
@@ -94,11 +95,11 @@
 #include <event2/util.h>
 #include <event2/event.h>
 #include <event2/thread.h>
-#include "activeznode.h"
-#include "znode-payments.h"
-#include "znode-sync.h"
-#include "znodeman.h"
-#include "znodeconfig.h"
+#include "activetnode.h"
+#include "tnode-payments.h"
+#include "tnode-sync.h"
+#include "tnodeman.h"
+#include "tnodeconfig.h"
 #include "netfulfilledman.h"
 #include "flat-database.h"
 #include "instantx.h"
@@ -271,9 +272,9 @@ void Shutdown()
     zwalletMain = NULL;
 #endif
     GenerateBitcoins(false, 0, Params());
-    CFlatDB<CZnodeMan> flatdb1("zncache.dat", "magicZnodeCache");
+    CFlatDB<CZnodeMan> flatdb1("tncache.dat", "magicTnodeCache");
     flatdb1.Dump(mnodeman);
-    CFlatDB<CZnodePayments> flatdb2("znpayments.dat", "magicZnodePaymentsCache");
+    CFlatDB<CZnodePayments> flatdb2("tnpayments.dat", "magicTnodePaymentsCache");
     flatdb2.Dump(znpayments);
     
     MapPort(false);
@@ -283,7 +284,7 @@ void Shutdown()
 
    if (!fLiteMode) {
         // STORE DATA CACHES INTO SERIALIZED DAT FILES
-        CFlatDB<CMasternodeMetaMan> flatdb1("evozncache.dat", "magicMasternodeCache");
+        CFlatDB<CMasternodeMetaMan> flatdb1("evotncache.dat", "magicMasternodeCache");
         flatdb1.Dump(mmetaman);
 /*        CFlatDB<CGovernanceManager> flatdb3("governance.dat", "magicGovernanceCache");
         flatdb3.Dump(governance); */
@@ -335,9 +336,9 @@ void Shutdown()
         evoDb = NULL;
     }
 
-#ifdef ENABLE_ELYSIUM
-    if (isElysiumEnabled()) {
-        elysium_shutdown();
+#ifdef ENABLE_EXODUS
+    if (isExodusEnabled()) {
+        exodus_shutdown();
     }
 #endif
 
@@ -397,7 +398,7 @@ void HandleSIGTERM(int)
 void HandleSIGHUP(int)
 {
     fReopenDebugLog = true;
-    fReopenElysiumLog = true;
+    fReopenExodusLog = true;
 }
 
 bool static Bind(CConnman& connman, const CService &addr, unsigned int flags) {
@@ -622,32 +623,31 @@ std::string HelpMessage(HelpMessageMode mode)
         strUsage += HelpMessageOpt("-rpcforceutf8", strprintf("Replace invalid UTF-8 encoded characters with question marks in RPC response (default: %d)", 1));
     }
 
-#ifdef ENABLE_ELYSIUM
-    strUsage += HelpMessageGroup("Elysium options:");
-    strUsage += HelpMessageOpt("-elysium", "Enable Elysium");
-    strUsage += HelpMessageOpt("-startclean", "Clear all persistence files on startup; triggers reparsing of Elysium transactions");
-    strUsage += HelpMessageOpt("-elysiumtxcache=<num>", "The maximum number of transactions in the input transaction cache (default: 500000)");
-    strUsage += HelpMessageOpt("-elysiumprogressfrequency=<seconds>", "Time in seconds after which the initial scanning progress is reported (default: 30)");
-    strUsage += HelpMessageOpt("-elysiumdebug=<category>", "Enable or disable log categories, can be \"all\" or \"none\"");
+#ifdef ENABLE_EXODUS
+    strUsage += HelpMessageGroup("Exodus options:");
+    strUsage += HelpMessageOpt("-exodus", "Enable Exodus");
+    strUsage += HelpMessageOpt("-startclean", "Clear all persistence files on startup; triggers reparsing of Exodus transactions");
+    strUsage += HelpMessageOpt("-exodustxcache=<num>", "The maximum number of transactions in the input transaction cache (default: 500000)");
+    strUsage += HelpMessageOpt("-exodusprogressfrequency=<seconds>", "Time in seconds after which the initial scanning progress is reported (default: 30)");
+    strUsage += HelpMessageOpt("-exodusdebug=<category>", "Enable or disable log categories, can be \"all\" or \"none\"");
     strUsage += HelpMessageOpt("-autocommit=<flag>", "Enable or disable broadcasting of transactions, when creating transactions (default: 1)");
     strUsage += HelpMessageOpt("-overrideforcedshutdown=<flag>", "Disable force shutdown when error (default: 0)");
-    strUsage += HelpMessageOpt("-elysiumalertallowsender=<addr>", "Whitelist senders of alerts, can be \"any\")");
-    strUsage += HelpMessageOpt("-elysiumalertignoresender=<addr>", "Ignore senders of alerts");
-    strUsage += HelpMessageOpt("-elysiumactivationignoresender=<addr>", "Ignore senders of activations");
-    strUsage += HelpMessageOpt("-elysiumactivationallowsender=<addr>", "Whitelist senders of activations");
-    strUsage += HelpMessageOpt("-elysiumuiwalletscope=<number>", "Max. transactions to show in trade and transaction history (default: 65535)");
-    strUsage += HelpMessageOpt("-elysiumshowblockconsensushash=<number>", "Calculate and log the consensus hash for the specified block");
+    strUsage += HelpMessageOpt("-exodusalertallowsender=<addr>", "Whitelist senders of alerts, can be \"any\")");
+    strUsage += HelpMessageOpt("-exodusalertignoresender=<addr>", "Ignore senders of alerts");
+    strUsage += HelpMessageOpt("-exodusactivationignoresender=<addr>", "Ignore senders of activations");
+    strUsage += HelpMessageOpt("-exodusactivationallowsender=<addr>", "Whitelist senders of activations");
+    strUsage += HelpMessageOpt("-exodusuiwalletscope=<number>", "Max. transactions to show in trade and transaction history (default: 65535)");
+    strUsage += HelpMessageOpt("-exodusshowblockconsensushash=<number>", "Calculate and log the consensus hash for the specified block");
 #endif
-
     return strUsage;
 }
 
 std::string LicenseInfo()
 {
-    const std::string URL_SOURCE_CODE = "<https://github.com/zcoinofficial/zcoin>";
-    const std::string URL_WEBSITE = "<https://zcoin.io/>";
+    const std::string URL_SOURCE_CODE = "<https://github.com/tecracoin/tecracoin>";
+    const std::string URL_WEBSITE = "<https://tecracoin.io/>";
     // todo: remove urls from translations on next change
-    return CopyrightHolders(strprintf(_("Copyright (C) %i-%i"), 2009, COPYRIGHT_YEAR) + " ") + "\n" +
+    return CopyrightHolders(_("Copyright (C)"), 2018, COPYRIGHT_YEAR) + "\n" +
            "\n" +
            strprintf(_("Please contribute if you find %s useful. "
                        "Visit %s for further information about the software."),
@@ -1017,7 +1017,7 @@ void RunTor(){
 	argv.push_back("--HiddenServiceDir");
 	argv.push_back((tor_dir / "onion").string());
 	argv.push_back("--HiddenServicePort");
-	argv.push_back("8168");
+	argv.push_back("2718");
 
 	if (clientTransportPlugin) {
 		printf("Using OBFS4.\n");
@@ -1087,7 +1087,7 @@ void InitLogging() {
     fLogIPs = GetBoolArg("-logips", DEFAULT_LOGIPS);
 
     LogPrintf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
-    LogPrintf("Zcoin version %s\n", FormatFullVersion());
+    LogPrintf("TecraCoin version %s\n", FormatFullVersion());
 }
 
 namespace { // Variables internal to initialization process only
@@ -1234,6 +1234,8 @@ bool AppInitParameterInteraction()
     int ratio = std::min<int>(std::max<int>(GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     if (ratio != 0) {
         mempool.setSanityCheck(1.0 / ratio);
+        // Changes to mempool should also be made to Dandelion stempool
+        stempool.setSanityCheck(1.0 / ratio);
     }
     fCheckBlockIndex = GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
     fCheckpointsEnabled = GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
@@ -1697,6 +1699,8 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 7b: load block chain
 
     fReindex = GetBoolArg("-reindex", false);
+    //tecrafork: force reindex on every start
+//    fReindex = GetBoolArg("-reindex", true);
     bool fReindexChainState = GetBoolArg("-reindex-chainstate", false);
 
     boost::filesystem::create_directories(GetDataDir() / "blocks");
@@ -1919,20 +1923,20 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     LogPrintf("No wallet support compiled in!\n");
 #endif // !ENABLE_WALLET
 
-    // ********************************************************* Step 8.5: load elysium
+    // ********************************************************* Step 8.5: load exodus
 
-#ifdef ENABLE_ELYSIUM
-    if (isElysiumEnabled()) {
+#ifdef ENABLE_EXODUS
+    if (isExodusEnabled()) {
         if (!fTxIndex) {
             // ask the user if they would like us to modify their config file for them
             std::string msg = _("Disabled transaction index detected.\n\n"
-                                "Elysium requires an enabled transaction index. To enable "
+                                "Exodus requires an enabled transaction index. To enable "
                                 "transaction indexing, please use the \"-txindex\" option as "
                                 "command line argument or add \"txindex=1\" to your client "
                                 "configuration file within your data directory.\n\n"
                                 "Configuration file"); // allow translation of main text body while still allowing differing config file string
             msg += ": " + GetConfigFile("").string() + "\n\n";
-            msg += _("Would you like Elysium to attempt to update your configuration file accordingly?");
+            msg += _("Would you like Exodus to attempt to update your configuration file accordingly?");
             bool fRet = uiInterface.ThreadSafeMessageBox(msg, "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL | CClientUIInterface::BTN_ABORT);
             if (fRet) {
                 // add txindex=1 to config file in GetConfigFile()
@@ -1942,7 +1946,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     std::string failMsg = _("Unable to update configuration file at");
                     failMsg += ":\n" + GetConfigFile("").string() + "\n\n";
                     failMsg += _("The file may be write protected or you may not have the required permissions to edit it.\n");
-                    failMsg += _("Please add txindex=1 to your configuration file manually.\n\nElysium will now shutdown.");
+                    failMsg += _("Please add txindex=1 to your configuration file manually.\n\nExodus will now shutdown.");
                     return InitError(failMsg);
                 }
                 fprintf(fp, "\ntxindex=1\n");
@@ -1950,7 +1954,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 fclose(fp);
                 std::string strUpdated = _(
                         "Your configuration file has been updated.\n\n"
-                        "Elysium will now shutdown - please restart the client for your new configuration to take effect.");
+                        "Exodus will now shutdown - please restart the client for your new configuration to take effect.");
                 uiInterface.ThreadSafeMessageBox(strUpdated, "", CClientUIInterface::MSG_INFORMATION | CClientUIInterface::BTN_OK | CClientUIInterface::MODAL);
                 return false;
             } else {
@@ -1958,10 +1962,10 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             }
         }
 
-        uiInterface.InitMessage(_("Parsing Elysium transactions..."));
-        elysium_init();
+        uiInterface.InitMessage(_("Parsing Exodus transactions..."));
+        exodus_init();
 
-        // Elysium code should be initialized and wallet should now be loaded, perform an initial populate
+        // Exodus code should be initialized and wallet should now be loaded, perform an initial populate
         CheckWalletUpdate();
     }
 #endif
@@ -1992,54 +1996,54 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     // ********************************************************* Step 10a: Prepare znode related stuff
-    fMasternodeMode = GetBoolArg("-znode", false);
-    if (fMasternodeMode)
+    fTnode = GetBoolArg("-tnode", false);
+    if (fTnode)
         // turn off dandelion for znodes
         ForceSetArg("-dandelion", "0");
 
-    LogPrintf("fMasternodeMode = %s\n", fMasternodeMode);
-    LogPrintf("znodeConfig.getCount(): %s\n", znodeConfig.getCount());
+    LogPrintf("fTnode = %s\n", fTnode);
+    LogPrintf("tnodeConfig.getCount(): %s\n", tnodeConfig.getCount());
 
-    if(fLiteMode && fMasternodeMode) {
+    if(fLiteMode && fTnode) {
         return InitError(_("You can not start a masternode in lite mode."));
     }
 
-    if ((fMasternodeMode || znodeConfig.getCount() > 0) && !fTxIndex) {
-        return InitError("Enabling Znode support requires turning on transaction indexing."
+    if ((fTnode || tnodeConfig.getCount() > 0) && !fTxIndex) {
+        return InitError("Enabling Tnode support requires turning on transaction indexing."
                                  "Please add txindex=1 to your configuration and start with -reindex");
     }
 
     // Legacy znode system
-    if (fMasternodeMode) {
-        LogPrintf("ZNODE:\n");
+    if (fTnode) {
+        LogPrintf("TNODE:\n");
 
-        if (!GetArg("-znodeaddr", "").empty()) {
-            // Hot Znode (either local or remote) should get its address in
-            // CActiveZnode::ManageState() automatically and no longer relies on Znodeaddr.
-            return InitError(_("znodeaddr option is deprecated. Please use znode.conf to manage your remote znodes."));
+        if (!GetArg("-tnodeaddr", "").empty()) {
+            // Hot Tnode (either local or remote) should get its address in
+            // CActiveTnode::ManageState() automatically and no longer relies on Tnodeaddr.
+            return InitError(_("tnodeaddr option is deprecated. Please use tnode.conf to manage your remote tnodes."));
         }
 
-        std::string strZnodePrivKey = GetArg("-znodeprivkey", "");
-        if (!strZnodePrivKey.empty()) {
-            if (!darkSendSigner.GetKeysFromSecret(strZnodePrivKey, activeZnode.keyZnode,
-                                                  activeZnode.pubKeyZnode))
-                return InitError(_("Invalid znodeprivkey. Please see documentation."));
+        std::string strTnodePrivKey = GetArg("-tnodeprivkey", "");
+        if (!strTnodePrivKey.empty()) {
+            if (!darkSendSigner.GetKeysFromSecret(strTnodePrivKey, activeTnode.keyTnode,
+                                                  activeTnode.pubKeyTnode))
+                return InitError(_("Invalid tnodeprivkey. Please see documentation."));
 
-            LogPrintf("  pubKeyZnode: %s\n", CBitcoinAddress(activeZnode.pubKeyZnode.GetID()).ToString());
+            LogPrintf("  pubKeyTnode: %s\n", CBitcoinAddress(activeTnode.pubKeyTnode.GetID()).ToString());
         } else {
             return InitError(
-                    _("You must specify a znodeprivkey in the configuration. Please see documentation for help."));
+                    _("You must specify a tnodeprivkey in the configuration. Please see documentation for help."));
         }
     }
 
-    LogPrintf("Using Znode config file %s\n", GetZnodeConfigFile().string());
+    LogPrintf("Using Tnode config file %s\n", GetTnodeConfigFile().string());
 
-    if (GetBoolArg("-znconflock", true) && pwalletMain && (znodeConfig.getCount() > 0)) {
+    if (GetBoolArg("-znconflock", true) && pwalletMain && (tnodeConfig.getCount() > 0)) {
         LOCK(pwalletMain->cs_wallet);
-        LogPrintf("Locking Znodes:\n");
+        LogPrintf("Locking Tnodes:\n");
         uint256 mnTxHash;
         int outputIndex;
-        BOOST_FOREACH(CZnodeConfig::CZnodeEntry mne, znodeConfig.getEntries()) {
+        BOOST_FOREACH(CTnodeConfig::CTnodeEntry mne, tnodeConfig.getEntries()) {
             mnTxHash.SetHex(mne.getTxHash());
             outputIndex = boost::lexical_cast<unsigned int>(mne.getOutputIndex());
             COutPoint outpoint = COutPoint(mnTxHash, outputIndex);
@@ -2054,14 +2058,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     // evo znode system
-    if(fLiteMode && fMasternodeMode) {
-        return InitError(_("You can not start a znode in lite mode."));
+    if(fLiteMode && fTnode) {
+        return InitError(_("You can not start a tnode in lite mode."));
     }
 
-    if(fMasternodeMode) {
+    if(fTnode) {
         LogPrintf("ZNODE:\n");
 
-        std::string strMasterNodeBLSPrivKey = GetArg("-znodeblsprivkey", "");
+        std::string strMasterNodeBLSPrivKey = GetArg("-tnodeblsprivkey", "");
         if(!strMasterNodeBLSPrivKey.empty()) {
             auto binKey = ParseHex(strMasterNodeBLSPrivKey);
             CBLSSecretKey keyOperator;
@@ -2071,11 +2075,11 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>(activeMasternodeInfo.blsKeyOperator->GetPublicKey());
                 LogPrintf("  blsPubKeyOperator: %s\n", keyOperator.GetPublicKey().ToString());
             } else {
-                return InitError(_("Invalid znodeblsprivkey. Please see documentation."));
+                return InitError(_("Invalid tnodeblsprivkey. Please see documentation."));
             }
         } else {
             // TODO: uncomment when switch to evo znodes is done
-            //return InitError(_("You must specify a masternodeblsprivkey in the configuration. Please see documentation for help."));
+            //return InitError(_("You must specify a trnodeblsprivkey in the configuration. Please see documentation for help."));
         }
 
         // Create and register activeMasternodeManager, will init later in ThreadImport
@@ -2114,36 +2118,36 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 10c: Load cache data
 
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
-    bool fIgnoreCacheFiles = !GetBoolArg("-persistentznodestate", true) || fLiteMode || fReindex || fReindexChainState;
+    bool fIgnoreCacheFiles = !GetBoolArg("-persistenttnodestate", true) || fLiteMode || fReindex || fReindexChainState;
     if (!fIgnoreCacheFiles) {
         // Legacy znodes cache
-        uiInterface.InitMessage(_("Loading znode cache..."));
-        CFlatDB<CZnodeMan> flatdb1("zncache.dat", "magicZnodeCache");
+        uiInterface.InitMessage(_("Loading tnode cache..."));
+        CFlatDB<CTnodeMan> flatdb1("tncache.dat", "magicTnodeCache");
         if (!flatdb1.Load(mnodeman)) {
-            return InitError("Failed to load znode cache from zncache.dat");
+            return InitError("Failed to load tnode cache from tncache.dat");
         }
 
         if (mnodeman.size()) {
-            uiInterface.InitMessage(_("Loading Znode payment cache..."));
-            CFlatDB<CZnodePayments> flatdb2("znpayments.dat", "magicZnodePaymentsCache");
-            if (!flatdb2.Load(znpayments)) {
-                return InitError("Failed to load znode payments cache from znpayments.dat");
+            uiInterface.InitMessage(_("Loading Tnode payment cache..."));
+            CFlatDB<CTnodePayments> flatdb2("tnpayments.dat", "magicTnodePaymentsCache");
+            if (!flatdb2.Load(tnpayments)) {
+                return InitError("Failed to load tnode payments cache from tnpayments.dat");
             }
         } else {
-            uiInterface.InitMessage(_("Znode cache is empty, skipping payments cache..."));
+            uiInterface.InitMessage(_("Tnode cache is empty, skipping payments cache..."));
         }
     }
 
     if (!fIgnoreCacheFiles) {
-        // Evo znode cache
+        // Evo tnode cache
         boost::filesystem::path pathDB = GetDataDir();
         std::string strDBName;
 
-        strDBName = "evozncache.dat";
-        uiInterface.InitMessage(_("Loading znode cache..."));
+        strDBName = "evotncache.dat";
+        uiInterface.InitMessage(_("Loading tnode cache..."));
         CFlatDB<CMasternodeMetaMan> flatdb1(strDBName, "magicMasternodeCache");
         if(!flatdb1.Load(mmetaman)) {
-            return InitError(_("Failed to load znode cache from") + "\n" + (pathDB / strDBName).string());
+            return InitError(_("Failed to load tnode cache from") + "\n" + (pathDB / strDBName).string());
         }
 
         /*

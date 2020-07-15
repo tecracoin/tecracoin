@@ -17,7 +17,7 @@ osx=true
 SIGNER=
 VERSION=
 commit=false
-url=${url:-https://github.com/zcoinofficial/zcoin}
+url=${url:-https://github.com/tecracoin/tecracoin}
 gsigsUrl=https://github.com/bitcoin-core/gitian.sigs
 detachUrl=https://github.com/bitcoin-core/bitcoin-detached-sigs.git
 proc=2
@@ -41,7 +41,7 @@ version		Version number, commit, or branch to build. If building a commit or bra
 
 Options:
 -c|--commit	Indicate that the version argument is for a commit or branch
--u|--url	Specify the URL of the zcoinofficial repository. Default is https://github.com/zcoinofficial/zcoin.git
+-u|--url	Specify the URL of the tecracoin repository. Default is https://github.com/tecracoin/tecracoin.git
 -g|--gsigsUrl	Specify the URL of the gitian.sigs repository. Default is https://github.com/bitcoin-core/gitian.sigs
 -d|--detachUrl	Specify the URL of the bitcoin-detached-sigs repository. Default is https://github.com/bitcoin-core/bitcoin-detached-sigs
 -v|--verify 	Verify the Gitian build
@@ -285,7 +285,7 @@ then
 fi
 
 # Set up build
-pushd ./zcoin
+pushd ./tecracoin
 git fetch
 git checkout ${COMMIT}
 popd
@@ -294,7 +294,7 @@ popd
 if [[ $build = true ]]
 then
 	# Make output folder
-	mkdir -p ./zcoin-binaries/${VERSION}
+	mkdir -p ./tecracoin-binaries/${VERSION}
 
 	# Build Dependencies
 	echo ""
@@ -304,7 +304,7 @@ then
 	mkdir -p inputs
 	wget -N -P inputs $osslPatchUrl
 	wget -N -P inputs $osslTarUrl
-	make -C ../zcoin/depends download SOURCES_PATH=`pwd`/cache/common
+	make -C ../tecracoin/depends download SOURCES_PATH=`pwd`/cache/common
 
 	# Linux
 	if [[ $linux = true ]]
@@ -312,9 +312,9 @@ then
 	    echo ""
 	    echo "Compiling ${VERSION} Linux"
 	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit zcoin=${COMMIT} --url zcoin=${url} ../zcoin/contrib/gitian-descriptors/gitian-linux.yml
-	    ./bin/gsign -p "${signProg}" --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../zcoin/contrib/gitian-descriptors/gitian-linux.yml
-	    mv build/out/zcoin-*.tar.gz build/out/src/zcoin-*.tar.gz ../zcoin-binaries/${VERSION}
+	    ./bin/gbuild -j ${proc} -m ${mem} --commit tecracoin=${COMMIT} --url tecracoin=${url} ../tecracoin/contrib/gitian-descriptors/gitian-linux.yml
+	    ./bin/gsign -p "${signProg}" --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs/ ../tecracoin/contrib/gitian-descriptors/gitian-linux.yml
+	    mv build/out/tecracoin-*.tar.gz build/out/src/tecracoin-*.tar.gz ../tecracoin-binaries/${VERSION}
 	fi
 	# Windows
 	if [[ $windows = true ]]
@@ -322,10 +322,10 @@ then
 	    echo ""
 	    echo "Compiling ${VERSION} Windows"
 	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit zcoin=${COMMIT} --url zcoin=${url} ../zcoin/contrib/gitian-descriptors/gitian-win.yml
-	    ./bin/gsign -p "${signProg}" --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../zcoin/contrib/gitian-descriptors/gitian-win.yml
-	    mv build/out/zcoin-*-win-unsigned.tar.gz inputs/zcoin-win-unsigned.tar.gz
-	    mv build/out/zcoin-*.zip build/out/zcoin-*.exe ../zcoin-binaries/${VERSION}
+	    ./bin/gbuild -j ${proc} -m ${mem} --commit tecracoin=${COMMIT} --url tecracoin=${url} ../tecracoin/contrib/gitian-descriptors/gitian-win.yml
+	    ./bin/gsign -p "${signProg}" --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../tecracoin/contrib/gitian-descriptors/gitian-win.yml
+	    mv build/out/tecracoin-*-win-unsigned.tar.gz inputs/tecracoin-win-unsigned.tar.gz
+	    mv build/out/tecracoin-*.zip build/out/tecracoin-*.exe ../tecracoin-binaries/${VERSION}
 	fi
 	# Mac OSX
 	if [[ $osx = true ]]
@@ -333,10 +333,10 @@ then
 	    echo ""
 	    echo "Compiling ${VERSION} Mac OSX"
 	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit zcoin=${COMMIT} --url zcoin=${url} ../zcoin/contrib/gitian-descriptors/gitian-osx.yml
-	    ./bin/gsign -p "${signProg}" --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../zcoin/contrib/gitian-descriptors/gitian-osx.yml
-	    mv build/out/zcoin-*-osx-unsigned.tar.gz inputs/zcoin-osx-unsigned.tar.gz
-	    mv build/out/zcoin-*.tar.gz build/out/zcoin-*.dmg ../zcoin-binaries/${VERSION}
+	    ./bin/gbuild -j ${proc} -m ${mem} --commit tecracoin=${COMMIT} --url tecracoin=${url} ../tecracoin/contrib/gitian-descriptors/gitian-osx.yml
+	    ./bin/gsign -p "${signProg}" --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../tecracoin/contrib/gitian-descriptors/gitian-osx.yml
+	    mv build/out/tecracoin-*-osx-unsigned.tar.gz inputs/tecracoin-osx-unsigned.tar.gz
+	    mv build/out/tecracoin-*.tar.gz build/out/tecracoin-*.dmg ../tecracoin-binaries/${VERSION}
 	fi
 	popd
 
@@ -363,27 +363,27 @@ then
 	echo ""
 	echo "Verifying v${VERSION} Linux"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../zcoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../tecracoin/contrib/gitian-descriptors/gitian-linux.yml
 	# Windows
 	echo ""
 	echo "Verifying v${VERSION} Windows"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../zcoin/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../tecracoin/contrib/gitian-descriptors/gitian-win.yml
 	# Mac OSX
 	echo ""
 	echo "Verifying v${VERSION} Mac OSX"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../zcoin/contrib/gitian-descriptors/gitian-osx.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../tecracoin/contrib/gitian-descriptors/gitian-osx.yml
 	# Signed Windows
 	echo ""
 	echo "Verifying v${VERSION} Signed Windows"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../zcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../tecracoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	# Signed Mac OSX
 	echo ""
 	echo "Verifying v${VERSION} Signed Mac OSX"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../zcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../tecracoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	popd
 fi
 
@@ -398,10 +398,10 @@ then
 	    echo ""
 	    echo "Signing ${VERSION} Windows"
 	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} --url signature=${detachUrl} ../zcoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	    ./bin/gsign -p "${signProg}" --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../zcoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	    mv build/out/zcoin-*win64-setup.exe ../zcoin-binaries/${VERSION}
-	    mv build/out/zcoin-*win32-setup.exe ../zcoin-binaries/${VERSION}
+	    ./bin/gbuild -i --commit signature=${COMMIT} --url signature=${detachUrl} ../tecracoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	    ./bin/gsign -p "${signProg}" --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../tecracoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	    mv build/out/tecracoin-*win64-setup.exe ../tecracoin-binaries/${VERSION}
+	    mv build/out/tecracoin-*win32-setup.exe ../tecracoin-binaries/${VERSION}
 	fi
 	# Sign Mac OSX
 	if [[ $osx = true ]]
@@ -409,9 +409,9 @@ then
 	    echo ""
 	    echo "Signing ${VERSION} Mac OSX"
 	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} --url signature=${detachUrl} ../zcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    ./bin/gsign -p "${signProg}" --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../zcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    mv build/out/zcoin-osx-signed.dmg ../zcoin-binaries/${VERSION}/zcoin-${VERSION}-osx.dmg
+	    ./bin/gbuild -i --commit signature=${COMMIT} --url signature=${detachUrl} ../tecracoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	    ./bin/gsign -p "${signProg}" --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../tecracoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	    mv build/out/tecracoin-osx-signed.dmg ../tecracoin-binaries/${VERSION}/tecracoin-${VERSION}-osx.dmg
 	fi
 	popd
 

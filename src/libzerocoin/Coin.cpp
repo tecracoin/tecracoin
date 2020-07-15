@@ -243,7 +243,9 @@ Bignum PrivateCoin::serialNumberFromSerializedPublicKey(secp256k1_context *conte
     };
 
     // We use secp256k1_ecdh instead of secp256k1_serialize_pubkey to avoid a timing channel.
-    secp256k1_ecdh(context, pubkey_hash.data(), pubkey, &one[0]);
+    if (secp256k1_ecdh(context, pubkey_hash.data(), pubkey, &one[0]) != 1){
+		throw ZerocoinException("secp256k1_ecdh: scalar was invalid (zero or overflow)");
+	}
 
 	std::string zpts(ZEROCOIN_PUBLICKEY_TO_SERIALNUMBER);
 	std::vector<unsigned char> pre(zpts.begin(), zpts.end());

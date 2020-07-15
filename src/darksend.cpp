@@ -9,9 +9,9 @@
 //#include "governance.h"
 #include "init.h"
 #include "instantx.h"
-#include "znode-payments.h"
-#include "znode-sync.h"
-#include "znodeman.h"
+#include "tnode-payments.h"
+#include "tnode-sync.h"
+#include "tnodeman.h"
 #include "script/sign.h"
 #include "txmempool.h"
 #include "util.h"
@@ -62,7 +62,7 @@ void CDarksendPool::InitDenominations() {
 void CDarksendPool::ResetPool() {
     nCachedLastSuccessBlock = 0;
     txMyCollateral = CMutableTransaction();
-    vecZnodesUsed.clear();
+    vecTnodesUsed.clear();
     UnlockCoins();
     SetNull();
 }
@@ -74,7 +74,7 @@ void CDarksendPool::SetNull() {
     // Client side
     nEntriesCount = 0;
     fLastEntryAccepted = false;
-    pSubmittedToZnode = NULL;
+    pSubmittedToTnode = NULL;
 
     // Both sides
     nState = POOL_STATE_IDLE;
@@ -129,7 +129,7 @@ std::string CDarksendPool::GetStatus() {
     nStatusMessageProgress += 10;
     std::string strSuffix = "";
 
-    if ((pCurrentBlockIndex && pCurrentBlockIndex->nHeight - nCachedLastSuccessBlock < nMinBlockSpacing) || !znodeSync.IsBlockchainSynced())
+    if ((pCurrentBlockIndex && pCurrentBlockIndex->nHeight - nCachedLastSuccessBlock < nMinBlockSpacing) || !tnodeSync.IsBlockchainSynced())
         return strAutoDenomResult;
 
     switch (nState) {
@@ -139,7 +139,7 @@ std::string CDarksendPool::GetStatus() {
             if (nStatusMessageProgress % 70 <= 30) strSuffix = ".";
             else if (nStatusMessageProgress % 70 <= 50) strSuffix = "..";
             else if (nStatusMessageProgress % 70 <= 70) strSuffix = "...";
-            return strprintf(_("Submitted to znode, waiting in queue %s"), strSuffix);;
+            return strprintf(_("Submitted to tnode, waiting in queue %s"), strSuffix);;
         case POOL_STATE_ACCEPTING_ENTRIES:
             if (nEntriesCount == 0) {
                 nStatusMessageProgress = 0;
@@ -151,11 +151,11 @@ std::string CDarksendPool::GetStatus() {
                 }
                 return _("PrivateSend request complete:") + " " + _("Your transaction was accepted into the pool!");
             } else {
-                if (nStatusMessageProgress % 70 <= 40) return strprintf(_("Submitted following entries to znode: %u / %d"), nEntriesCount, GetMaxPoolTransactions());
+                if (nStatusMessageProgress % 70 <= 40) return strprintf(_("Submitted following entries to tnode: %u / %d"), nEntriesCount, GetMaxPoolTransactions());
                 else if (nStatusMessageProgress % 70 <= 50) strSuffix = ".";
                 else if (nStatusMessageProgress % 70 <= 60) strSuffix = "..";
                 else if (nStatusMessageProgress % 70 <= 70) strSuffix = "...";
-                return strprintf(_("Submitted to znode, waiting for more entries ( %u / %d ) %s"), nEntriesCount, GetMaxPoolTransactions(), strSuffix);
+                return strprintf(_("Submitted to tnode, waiting for more entries ( %u / %d ) %s"), nEntriesCount, GetMaxPoolTransactions(), strSuffix);
             }
         case POOL_STATE_SIGNING:
             if (nStatusMessageProgress % 70 <= 40) return _("Found enough users, signing ...");
@@ -173,10 +173,10 @@ std::string CDarksendPool::GetStatus() {
 }
 
 //
-// Check the mixing progress and send client updates if a Znode
+// Check the mixing progress and send client updates if a Tnode
 //
 void CDarksendPool::CheckPool() {
-    if (fMasternodeMode) {
+    if (fTNode) {
         LogPrint("privatesend", "CDarksendPool::CheckPool -- entries count %lu\n", GetEntriesCount());
 
         // If entries are full, create finalized transaction
@@ -525,15 +525,15 @@ std::string CDarksendPool::GetMessageByID(PoolMessage nMessageID) {
         case ERR_MAXIMUM:
             return _("Value more than PrivateSend pool maximum allows.");
         case ERR_MN_LIST:
-            return _("Not in the Znode list.");
+            return _("Not in the Tnode list.");
         case ERR_MODE:
             return _("Incompatible mode.");
         case ERR_NON_STANDARD_PUBKEY:
             return _("Non-standard public key detected.");
         case ERR_NOT_A_MN:
-            return _("This is not a Znode.");
+            return _("This is not a Tnode.");
         case ERR_QUEUE_FULL:
-            return _("Znode queue is full.");
+            return _("Tnode queue is full.");
         case ERR_RECENT:
             return _("Last PrivateSend was too recent.");
         case ERR_SESSION:
@@ -561,7 +561,7 @@ bool CDarkSendSigner::IsVinAssociatedWithPubkey(const CTxIn &txin, const CPubKey
     uint256 hash;
     if (GetTransaction(txin.prevout.hash, tx, Params().GetConsensus(), hash, true)) {
         BOOST_FOREACH(CTxOut out, tx->vout)
-        if (out.nValue == ZNODE_COIN_REQUIRED * COIN && out.scriptPubKey == payee) return true;
+        if (out.nValue == TNODE_COIN_REQUIRED * COIN && out.scriptPubKey == payee) return true;
     }
     return false;
 }
@@ -624,24 +624,24 @@ bool CDarkSendEntry::AddScriptSig(const CTxIn &txin) {
 }
 
 bool CDarksendQueue::Sign() {
-    if (!fMasternodeMode) return false;
+    if (!fTNode) return false;
 
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
 
-    if (!darkSendSigner.SignMessage(strMessage, vchSig, activeZnode.keyZnode)) {
+    if (!darkSendSigner.SignMessage(strMessage, vchSig, activeTnode.keyTnode)) {
         LogPrintf("CDarksendQueue::Sign -- SignMessage() failed, %s\n", ToString());
         return false;
     }
 
-    return CheckSignature(activeZnode.pubKeyZnode);
+    return CheckSignature(activeTnode.pubKeyTnode);
 }
 
-bool CDarksendQueue::CheckSignature(const CPubKey &pubKeyZnode) {
+bool CDarksendQueue::CheckSignature(const CPubKey &pubKeyTnode) {
     std::string strMessage = vin.ToString() + boost::lexical_cast<std::string>(nDenom) + boost::lexical_cast<std::string>(nTime) + boost::lexical_cast<std::string>(fReady);
     std::string strError = "";
 
-    if (!darkSendSigner.VerifyMessage(pubKeyZnode, vchSig, strMessage, strError)) {
-        LogPrintf("CDarksendQueue::CheckSignature -- Got bad Znode queue signature: %s; error: %s\n", ToString(), strError);
+    if (!darkSendSigner.VerifyMessage(pubKeyTnode, vchSig, strMessage, strError)) {
+        LogPrintf("CDarksendQueue::CheckSignature -- Got bad Tnode queue signature: %s; error: %s\n", ToString(), strError);
         return false;
     }
 
@@ -653,23 +653,23 @@ bool CDarksendQueue::Relay() {
 }
 
 bool CDarksendBroadcastTx::Sign() {
-    if (!fMasternodeMode) return false;
+    if (!fTNode) return false;
 
     std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
 
-    if (!darkSendSigner.SignMessage(strMessage, vchSig, activeZnode.keyZnode)) {
+    if (!darkSendSigner.SignMessage(strMessage, vchSig, activeTnode.keyTnode)) {
         LogPrintf("CDarksendBroadcastTx::Sign -- SignMessage() failed\n");
         return false;
     }
 
-    return CheckSignature(activeZnode.pubKeyZnode);
+    return CheckSignature(activeTnode.pubKeyTnode);
 }
 
-bool CDarksendBroadcastTx::CheckSignature(const CPubKey &pubKeyZnode) {
+bool CDarksendBroadcastTx::CheckSignature(const CPubKey &pubKeyTnode) {
     std::string strMessage = tx.GetHash().ToString() + boost::lexical_cast<std::string>(sigTime);
     std::string strError = "";
 
-    if (!darkSendSigner.VerifyMessage(pubKeyZnode, vchSig, strMessage, strError)) {
+    if (!darkSendSigner.VerifyMessage(pubKeyTnode, vchSig, strMessage, strError)) {
         LogPrintf("CDarksendBroadcastTx::CheckSignature -- Got bad dstx signature, error: %s\n", strError);
         return false;
     }

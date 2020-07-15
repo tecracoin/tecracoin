@@ -10,12 +10,12 @@
 #endif
 
 #include "amount.h"
-#include "znodelist.h"
+#include "tnodelist.h"
 #include "masternodelist.h"
 #include "sigmadialog.h"
 
-#ifdef ENABLE_ELYSIUM
-#include "elyassetsdialog.h"
+#ifdef ENABLE_EXODUS
+#include "exoassetsdialog.h"
 #endif
 
 #include <QStackedWidget>
@@ -79,7 +79,7 @@ public:
 private:
     void setupTransactionPage();
     void setupSendCoinPage();
-#ifdef ENABLE_ELYSIUM
+#ifdef ENABLE_EXODUS
     void setupToolboxPage();
 #endif
     void setupSigmaPage();
@@ -89,12 +89,12 @@ private:
     WalletModel *walletModel;
 
     OverviewPage *overviewPage;
-#ifdef ENABLE_ELYSIUM
-    ElyAssetsDialog *elyAssetsPage;
+#ifdef ENABLE_EXODUS
+    ExoAssetsDialog *exoAssetsPage;
     QWidget *toolboxPage;
-    TXHistoryDialog *elysiumTransactionsView;
+    TXHistoryDialog *exodusTransactionsView;
     QTabWidget *transactionTabs;
-    SendMPDialog *sendElysiumView;
+    SendMPDialog *sendExodusView;
     QTabWidget *sendCoinsTabs;
 #endif
     QWidget *transactionsPage;
@@ -103,7 +103,7 @@ private:
     AddressBookPage *usedSendingAddressesPage;
     AddressBookPage *usedReceivingAddressesPage;
     QWidget *sendCoinsPage;
-    SendCoinsDialog *sendZcoinView;
+    SendCoinsDialog *sendTecracoinView;
     TradeHistoryDialog *tradeHistoryTab;
     MetaDExDialog *metaDExTab;
     MetaDExCancelDialog *cancelTab;
@@ -112,26 +112,29 @@ private:
     BlankSigmaDialog *blankSigmaView;
     QWidget *sigmaPage;
     Zc2SigmaPage *zc2SigmaPage;
-    TransactionView *zcoinTransactionList;
-    QWidget *zcoinTransactionsView;
-    ZnodeList *znodeListPage;
+    TransactionView *tecracoinTransactionList;
+    QWidget *tecracoinTransactionsView;
+    TnodeList *tnodeListPage;
     MasternodeList *masternodeListPage;
 
     QProgressDialog *progressDialog;
     const PlatformStyle *platformStyle;
 
+    QTabWidget *transactionTabs;
+    QTabWidget *sendCoinsTabs;
+
 public Q_SLOTS:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
-#ifdef ENABLE_ELYSIUM
+#ifdef ENABLE_EXODUS
     /** Switch to ExoAssets page */
-    void gotoElyAssetsPage();
+    void gotoExoAssetsPage();
     /** Switch to utility page */
     void gotoToolboxPage();
-    /** Switch specifically to elysium tx history tab */
-    void gotoElysiumHistoryTab();
-    /** Switch to elysium tx history tab and focus on specific transaction */
-    void focusElysiumTransaction(const uint256& txid);
+    /** Switch specifically to exodus tx history tab */
+    void gotoExodusHistoryTab();
+    /** Switch to exodus tx history tab and focus on specific transaction */
+    void focusExodusTransaction(const uint256& txid);
 #endif
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
@@ -140,7 +143,7 @@ public Q_SLOTS:
     /** Switch to bitcoin tx history tab and focus on specific transaction */
     void focusBitcoinHistoryTab(const QModelIndex &idx);
     /** Switch to znode page */
-    void gotoZnodePage();
+    void gotoTnodePage();
     /** Switch to masternode page */
     void gotoMasternodePage();
     /** Switch to receive coins page */

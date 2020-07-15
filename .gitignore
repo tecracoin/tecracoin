@@ -6,14 +6,6 @@
 *.tar.gz
 
 *.exe
-src/zcoin
-src/zcoind
-src/zcoin-cli
-src/zcoin-tx
-src/test/test_bitcoin_fuzzy
-src/test/test_zcoin
-src/test/test_zcoin_fuzzy
-src/qt/test/test_zcoin-qt
 
 # autoreconf
 Makefile.in
@@ -43,7 +35,7 @@ share/setup.nsi
 share/qt/Info.plist
 
 src/univalue/gen
-
+!src/univalue/gen/gen.cpp
 src/qt/*.moc
 src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
@@ -83,12 +75,11 @@ src/tor/src/or
 *.qm
 /Makefile
 /src/Makefile
-zcoin-qt
-Zcoin-Qt.app
+tecracoin-qt
+Tecracoin-Qt.app
 
 # Unit-tests
 Makefile.test
-zcoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -101,7 +92,6 @@ build
 *.gcno
 *.gcda
 /*.info
-test_zcoin.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -117,22 +107,40 @@ qa/pull-tester/tests_config.py
 qa/cache/*
 
 !src/leveldb*/Makefile
+!depends/Makefile
+!depends/**/*.patch
+!src/tor/src/ext/timeouts/Makefile
 
 doc/doxygen/
 doc/man/Makefile
 
-libzcoinconsensus.pc
 contrib/devtools/split-debug.sh
 
 src/test/test_bitcoin
 
-libbitcoinconsensus.pc
 qa/pull-tester/run-bitcoind-for-test.sh
 qa/pull-tester/tests_config.py
 
+.idea
+
+libtecracoinconsensus.pc
+qa/pull-tester/run-bitcoind-for-test.sh
+src/tecracoin-cli
+src/qt/tecracoin-qt
+src/tecracoin-tx
+src/tecracoind
+src/test/test_bitcoin
+qa/pull-tester/tests_config.py
+
 # Qt Creator project files
-zcoin.config
-zcoin.creator
-zcoin.creator.user
-zcoin.files
-zcoin.includes
+*.pro
+*.user
+*.creator
+*.includes
+*.files
+*.config
+
+contrib/docker/node/v*
+contrib/docker/node/tecracoin*
+cmake-build-debug/
+.vscode/*

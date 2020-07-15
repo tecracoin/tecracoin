@@ -18,7 +18,7 @@
 #include "httpserver.h"
 #include "httprpc.h"
 #include "utilstrencodings.h"
-#include "znodeconfig.h"
+#include "tnodeconfig.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -87,7 +87,7 @@ bool AppInit(int argc, char* argv[])
         else
         {
             strUsage += "\n" + _("Usage:") + "\n" +
-                  "  zcoind [options]                     " + strprintf(_("Start %s Daemon"), _(PACKAGE_NAME)) + "\n";
+                  "  tecracoind [options]                     " + strprintf(_("Start %s Daemon"), _(PACKAGE_NAME)) + "\n";
 
             strUsage += "\n" + HelpMessage(HMM_BITCOIND);
         }
@@ -118,10 +118,10 @@ bool AppInit(int argc, char* argv[])
             return false;
         }
 
-        // parse znode.conf
+        // parse tnode.conf
         std::string strErr;
-        if(!znodeConfig.read(strErr)) {
-            fprintf(stderr,"Error reading znode configuration file: %s\n", strErr.c_str());
+        if(!tnodeConfig.read(strErr)) {
+            fprintf(stderr,"Error reading tnode configuration file: %s\n", strErr.c_str());
             // TODO: ignore the error after switch to evo znodes
             return false;
         }
@@ -129,12 +129,12 @@ bool AppInit(int argc, char* argv[])
         // Command-line RPC
         bool fCommandLine = false;
         for (int i = 1; i < argc; i++)
-            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "zcoin:"))
+            if (!IsSwitchChar(argv[i][0]) && !boost::algorithm::istarts_with(argv[i], "tecracoin:"))
                 fCommandLine = true;
 
         if (fCommandLine)
         {
-            fprintf(stderr, "Error: There is no RPC client functionality in zcoind anymore. Use the zcoin-cli utility instead.\n");
+            fprintf(stderr, "Error: There is no RPC client functionality in tecracoind anymore. Use the tecracoin-cli utility instead.\n");
             exit(EXIT_FAILURE);
         }
         // -server defaults to true for bitcoind but not for the GUI so do this here
@@ -160,7 +160,7 @@ bool AppInit(int argc, char* argv[])
         if (GetBoolArg("-daemon", false))
         {
 #if HAVE_DECL_DAEMON
-            fprintf(stdout, "Zcoin server starting\n");
+            fprintf(stdout, "TecraCoin server starting\n");
 
             // Daemonize
             if (daemon(1, 0)) { // don't chdir (1), do close FDs (0)

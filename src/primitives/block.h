@@ -34,10 +34,10 @@ unsigned char GetNfactor(int64_t nTimestamp);
 
 inline int GetZerocoinChainID()
 {
-    return 0x0001; // We are the first :)
+    return 0x2718; // TecraCoin ID :)
 }
 
-// Zcoin - MTP
+// TecraCoin - MTP
 class CMTPHashData {
 public:
     uint8_t hashRootMTP[16]; // 16 is 128 bit of blake2b
@@ -99,7 +99,7 @@ public:
     uint32_t nBits;
     uint32_t nNonce;
 
-    // Zcoin - MTP
+    // TecraCoin - MTP
     int32_t nVersionMTP = 0x1000;
     uint256 mtpHashValue;
 
@@ -132,7 +132,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-        // Zcoin - MTP
+        // Tecracoin - MTP
         // On read: allocate and read. On write: write only if already allocated
         if (IsMTP()) {
             READWRITE(nVersionMTP);
@@ -176,7 +176,7 @@ public:
         nNonce = 0;
         cachedPoWHash.SetNull();
 
-        // Zcoin - MTP
+        // Tecracoin - MTP
         mtpHashData.reset();
         mtpHashValue.SetNull();
         reserved[0].SetNull();
@@ -215,7 +215,7 @@ public:
     std::vector<CTransactionRef> vtx;
 
     // memory only
-    mutable CTxOut txoutZnode; // znode payment
+    mutable CTxOut txoutTnode; // tnode payment
     mutable std::vector<CTxOut> voutSuperblock; // superblock payment
     mutable bool fChecked;
 
@@ -260,7 +260,7 @@ public:
         ZerocoinClean();
         CBlockHeader::SetNull();
         vtx.clear();
-        txoutZnode = CTxOut();
+        txoutTnode = CTxOut();
         voutSuperblock.clear();
         fChecked = false;
     }

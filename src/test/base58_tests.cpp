@@ -23,28 +23,30 @@
 
 extern UniValue read_json(const std::string& jsondata);
 
-std::string bitcoin_address_to_zcoin(const std::string address) {
+std::string bitcoin_address_to_tecracoin(const std::string address) {
     std::vector<unsigned char> vchTemp;
     if(DecodeBase58(address.c_str(), vchTemp) && vchTemp.size() > 4) {
         vchTemp.resize(vchTemp.size() - 4);
+        // values for these magic numbers could be taken like that: Params(CBaseChainParams::MAIN).Base58Prefix(CChainParams::Base58Type::PUBKEY_ADDRESS)
+        // but this functions is used before chain params are intialized
         switch (vchTemp[0]) {
         case 0:
-            vchTemp[0] = 82;
+            vchTemp[0] = 65; //Params(CBaseChainParams::MAIN).Base58Prefix(CChainParams::Base58Type::PUBKEY_ADDRESS)[0];
             break;
         case 5:
-            vchTemp[0] = 7;
+            vchTemp[0] = 27; //Params(CBaseChainParams::MAIN).Base58Prefix(CChainParams::Base58Type::SCRIPT_ADDRESS)[0];
             break;
         case 128:
-            vchTemp[0] = 210;
+            vchTemp[0] = 58; //Params(CBaseChainParams::MAIN).Base58Prefix(CChainParams::Base58Type::SECRET_KEY)[0];
             break;
         case 111:
-            vchTemp[0] = 65;
+            vchTemp[0] = 38; //Params(CBaseChainParams::TESTNET).Base58Prefix(CChainParams::Base58Type::PUBKEY_ADDRESS)[0];
             break;
         case 196:
-            vchTemp[0] = 178;
+            vchTemp[0] = 216; //Params(CBaseChainParams::TESTNET).Base58Prefix(CChainParams::Base58Type::SCRIPT_ADDRESS)[0];
             break;
         case 239:
-            vchTemp[0] = 185;
+            vchTemp[0] = 218; //Params(CBaseChainParams::TESTNET).Base58Prefix(CChainParams::Base58Type::SECRET_KEY)[0];
             break;
         }
         return EncodeBase58Check(vchTemp);
@@ -177,21 +179,21 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_parse)
             bool isCompressed = find_value(metadata, "isCompressed").get_bool();
             // Must be valid private key
             // Note: CBitcoinSecret::SetString tests isValid, whereas CBitcoinAddress does not!
-            BOOST_CHECK_MESSAGE(secret.SetString(bitcoin_address_to_zcoin(exp_base58string)), "!SetString:"+ strTest);
+            BOOST_CHECK_MESSAGE(secret.SetString(bitcoin_address_to_tecracoin(exp_base58string)), "!SetString:"+ strTest);
             BOOST_CHECK_MESSAGE(secret.IsValid(), "!IsValid:" + strTest);
             CKey privkey = secret.GetKey();
             BOOST_CHECK_MESSAGE(privkey.IsCompressed() == isCompressed, "compressed mismatch:" + strTest);
             BOOST_CHECK_MESSAGE(privkey.size() == exp_payload.size() && std::equal(privkey.begin(), privkey.end(), exp_payload.begin()), "key mismatch:" + strTest);
 
             // Private key must be invalid public key
-            addr.SetString(bitcoin_address_to_zcoin(exp_base58string));
+            addr.SetString(bitcoin_address_to_tecracoin(exp_base58string));
             BOOST_CHECK_MESSAGE(!addr.IsValid(), "IsValid privkey as pubkey:" + strTest);
         }
         else
         {
             std::string exp_addrType = find_value(metadata, "addrType").get_str(); // "script" or "pubkey"
             // Must be valid public key
-            BOOST_CHECK_MESSAGE(addr.SetString(bitcoin_address_to_zcoin(exp_base58string)), "SetString:" + strTest);
+            BOOST_CHECK_MESSAGE(addr.SetString(bitcoin_address_to_tecracoin(exp_base58string)), "SetString:" + strTest);
             BOOST_CHECK_MESSAGE(addr.IsValid(), "!IsValid:" + strTest);
             BOOST_CHECK_MESSAGE(addr.IsScript() == (exp_addrType == "script"), "isScript mismatch" + strTest);
             CTxDestination dest = addr.Get();
@@ -234,7 +236,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
             assert(key.IsValid());
             CBitcoinSecret secret;
             secret.SetKey(key);
-            BOOST_CHECK_MESSAGE(secret.ToString() == bitcoin_address_to_zcoin(exp_base58string), "result mismatch: " + strTest);
+            BOOST_CHECK_MESSAGE(secret.ToString() == bitcoin_address_to_tecracoin(exp_base58string), "result mismatch: " + strTest);
         }
         else
         {
@@ -259,7 +261,7 @@ BOOST_AUTO_TEST_CASE(base58_keys_valid_gen)
             }
             CBitcoinAddress addrOut;
             BOOST_CHECK_MESSAGE(addrOut.Set(dest), "encode dest: " + strTest);
-            BOOST_CHECK_MESSAGE(addrOut.ToString() == bitcoin_address_to_zcoin(exp_base58string), "mismatch: " + strTest);
+            BOOST_CHECK_MESSAGE(addrOut.ToString() == bitcoin_address_to_tecracoin(exp_base58string), "mismatch: " + strTest);
         }
     }
 

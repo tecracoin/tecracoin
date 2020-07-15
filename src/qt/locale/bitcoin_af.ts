@@ -228,7 +228,7 @@
     </message>
 </context>
 <context>
-    <name>ZcoinGUI</name>
+    <name>TecraCoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Teken &amp;boodskap...</translation>
@@ -330,8 +330,8 @@
         <translation>Besig met herindeksering van blokke op hardeskyf...</translation>
     </message>
     <message>
-        <source>Send coins to a Zcoin address</source>
-        <translation>Stuur munte na 'n Zcoin adres</translation>
+        <source>Send coins to a TecraCoin address</source>
+        <translation>Stuur munte na 'n TecraCoin adres</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -350,8 +350,8 @@
         <translation>Maak ontfouting en diagnostiese konsole oop</translation>
     </message>
     <message>
-        <source>Zcoin</source>
-        <translation>Zcoin</translation>
+        <source>TecraCoin</source>
+        <translation>TecraCoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -378,12 +378,12 @@
         <translation>Kodifiseer die private sleutes wat aan jou beursie gekoppel is.</translation>
     </message>
     <message>
-        <source>Sign messages with your Zcoin addresses to prove you own them</source>
-        <translation>Onderteken boodskappe met u Zcoin adresse om u eienaarskap te bewys</translation>
+        <source>Sign messages with your TecraCoin addresses to prove you own them</source>
+        <translation>Onderteken boodskappe met u TecraCoin adresse om u eienaarskap te bewys</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Zcoin addresses</source>
-        <translation>Verifieër boodskappe om seker te maak dat dit met die gespesifiseerde Zcoin adresse</translation>
+        <source>Verify messages to ensure they were signed with specified TecraCoin addresses</source>
+        <translation>Verifieër boodskappe om seker te maak dat dit met die gespesifiseerde TecraCoin adresse</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -398,8 +398,8 @@
         <translation>Orebalk</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and zcoin: URIs)</source>
-        <translation>Versoek betalings (genereer QR-kodes en zcoin: URI's)</translation>
+        <source>Request payments (generates QR codes and tecracoin: URIs)</source>
+        <translation>Versoek betalings (genereer QR-kodes en tecracoin: URI's)</translation>
     </message>
     <message>
         <source>Show the list of used sending addresses and labels</source>
@@ -410,8 +410,8 @@
         <translation>Vertoon die lys van gebruikte ontvangers-adresse en etikette</translation>
     </message>
     <message>
-        <source>Open a zcoin: URI or payment request</source>
-        <translation>Skep 'n zcoin: URI of betalingsversoek</translation>
+        <source>Open a tecracoin: URI or payment request</source>
+        <translation>Skep 'n tecracoin: URI of betalingsversoek</translation>
     </message>
     <message>
         <source>Indexing blocks on disk...</source>
@@ -946,10 +946,10 @@
     </message>
     </context>
 <context>
-    <name>zcoin-core</name>
+    <name>tecracoin-core</name>
     <message>
-        <source>Zcoin Core</source>
-        <translation>Zcoin Kern</translation>
+        <source>TecraCoin Core</source>
+        <translation>TecraCoin Kern</translation>
     </message>
     <message>
         <source>Information</source>

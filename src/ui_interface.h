@@ -119,16 +119,16 @@ public:
     boost::signals2::signal<void (double nSyncProgress)> NotifyAdditionalDataSyncProgressChanged;
 
     /** Elysium balances have been updated. */
-    boost::signals2::signal<void ()> ElysiumBalanceChanged;
+    boost::signals2::signal<void ()> ExodusBalanceChanged;
 
     /** Elysium state has been changed. */
-    boost::signals2::signal<void ()> ElysiumStateChanged;
+    boost::signals2::signal<void ()> ExodusStateChanged;
 
     /** Elysium pending status has been changed */
-    boost::signals2::signal<void (bool pending)> ElysiumPendingChanged;
+    boost::signals2::signal<void (bool pending)> ExodusPendingChanged;
 
     /** Elysium state has been invalidated due to a reorg */
-    boost::signals2::signal<void ()> ElysiumStateInvalidated;
+    boost::signals2::signal<void ()> ExodusStateInvalidated;
 };
 
 /** Show warning message **/

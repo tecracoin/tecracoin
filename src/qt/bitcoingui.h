@@ -87,20 +87,21 @@ private:
     QLabel *labelWalletHDStatusIcon;
     QLabel *connectionsControl;
     QLabel *labelBlocksIcon;
-    QLabel *labelElysiumPendingIcon;
-    QLabel *labelElysiumPendingText;
+    QLabel *labelExodusPendingIcon;
+    QLabel *labelExodusPendingText;
     QLabel *progressBarLabel;
     QProgressBar *progressBar;
     QProgressDialog *progressDialog;
 
     QMenuBar *appMenuBar;
     QAction *overviewAction;
-#ifdef ENABLE_ELYSIUM
-    QAction *elyAssetsAction;
+#ifdef ENABLE_EXODUS
+    QAction *exoAssetsAction;
     QAction *toolboxAction;
 #endif
     QAction *historyAction;
     QAction *quitAction;
+    QAction *toolboxAction;
     QAction *sendCoinsAction;
     QAction *sendCoinsMenuAction;
     QAction *usedSendingAddressesAction;
@@ -108,6 +109,7 @@ private:
     QAction *signMessageAction;
     QAction *verifyMessageAction;
     QAction *aboutAction;
+    QAction *tnodeAction;
     QAction *receiveCoinsAction;
     QAction *receiveCoinsMenuAction;
     QAction *optionsAction;
@@ -121,7 +123,7 @@ private:
     QAction *showHelpMessageAction;
     QAction *sigmaAction;
     QAction *zc2SigmaAction;
-    QAction *znodeAction;
+    QAction *tnodeAction;
     QAction *masternodeAction;
 
     QSystemTrayIcon *trayIcon;
@@ -195,8 +197,8 @@ public Q_SLOTS:
     */
     void setEncryptionStatus(int status);
 
-    /** Set the Elysium pending transactions label **/
-    void setElysiumPendingStatus(bool pending);
+    /** Set the Exodus pending transactions label **/
+    void setExodusPendingStatus(bool pending);
     /** Set the hd-enabled status as shown in the UI.
      @param[in] status            current hd enabled status
      @see WalletModel::EncryptionStatus
@@ -213,20 +215,20 @@ private Q_SLOTS:
 #ifdef ENABLE_WALLET
     /** Switch to overview (home) page */
     void gotoOverviewPage();
-#ifdef ENABLE_ELYSIUM
-    /** Switch to ElyAssets page */
-    void gotoElyAssetsPage();
+#ifdef ENABLE_EXODUS
+    /** Switch to ExoAssets page */
+    void gotoExoAssetsPage();
     /** Switch to utility page */
     void gotoToolboxPage();
-    /** Switch directly to Elysium history tab */
-    void gotoElysiumHistoryTab();
+    /** Switch directly to Exodus history tab */
+    void gotoExodusHistoryTab();
 #endif
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
     /** Switch directly to Zcoin history tab */
     void gotoBitcoinHistoryTab();
-    /** Switch to znode page */
-    void gotoZnodePage();
+    /** Switch to tnode page */
+    void gotoTnodePage();
     /** Switch to masternode page */
     void gotoMasternodePage();
     /** Switch to receive coins page */
@@ -271,7 +273,7 @@ private Q_SLOTS:
 
     /** Show progress dialog e.g. for verifychain */
     void showProgress(const QString &title, int nProgress);
-    
+
     /** When hideTrayIcon setting is changed in OptionsModel hide or show the icon accordingly. */
     void setTrayIconVisible(bool);
 

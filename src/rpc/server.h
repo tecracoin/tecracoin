@@ -209,10 +209,10 @@ extern UniValue getaddressbalance(const JSONRPCRequest &request);
 
 extern UniValue getpoolinfo(const JSONRPCRequest &request);
 extern UniValue spork(const JSONRPCRequest &request);
-extern UniValue znode(const JSONRPCRequest &request);
-extern UniValue znodelist(const JSONRPCRequest &request);
-extern UniValue znodebroadcast(const JSONRPCRequest &request);
-extern UniValue znsync(const JSONRPCRequest &request);
+extern UniValue tnode(const JSONRPCRequest &request);
+extern UniValue tnodelist(const JSONRPCRequest &request);
+extern UniValue tnodebroadcast(const JSONRPCRequest &request);
+extern UniValue tnsync(const JSONRPCRequest &request);
 
 bool StartRPC();
 void InterruptRPC();

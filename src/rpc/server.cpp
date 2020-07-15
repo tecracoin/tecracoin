@@ -310,11 +310,11 @@ UniValue stop(const JSONRPCRequest& jsonRequest)
     if (jsonRequest.fHelp || jsonRequest.params.size() > 1)
         throw runtime_error(
             "stop\n"
-            "\nStop Zcoin server.");
+            "\nStop TecraCoin server.");
     // Event loop will exit after current HTTP requests have been handled, so
     // this reply will get back to the client.
     StartShutdown();
-    return "Zcoin server stopping";
+    return "TecraCoin server stopping";
 }
 
 /**
@@ -333,10 +333,10 @@ static const CRPCCommand vRPCCommands[] =
     { "addressindex",       "getaddresstxids",        &getaddresstxids,        false },
     { "addressindex",       "getaddressbalance",      &getaddressbalance,      false },
         /* Zcoin features */
-    { "zcoin",               "znode",                 &znode,                  true  },
-    { "zcoin",               "znsync",                &znsync,                 true  },
-    { "zcoin",               "znodelist",             &znodelist,              true  },
-    { "zcoin",               "znodebroadcast",        &znodebroadcast,         true  },
+    { "zcoin",               "tnode",                 &tnode,                  true  },
+    { "zcoin",               "tnsync",                &tnsync,                 true  },
+    { "zcoin",               "tnodelist",             &tnodelist,              true  },
+    { "zcoin",               "tnodebroadcast",        &tnodebroadcast,         true  },
     { "zcoin",               "getpoolinfo",           &getpoolinfo,            true  },
 };
 
@@ -574,7 +574,7 @@ std::vector<std::string> CRPCTable::listCommands() const
 
 std::string HelpExampleCli(const std::string& methodname, const std::string& args)
 {
-    return "> zcoin-cli " + methodname + " " + args + "\n";
+    return "> tecracoin-cli " + methodname + " " + args + "\n";
 }
 
 std::string HelpExampleRpc(const std::string& methodname, const std::string& args)

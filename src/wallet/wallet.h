@@ -98,9 +98,9 @@ const uint32_t BIP44_INDEX = 0x2C;
 const uint32_t BIP44_TEST_INDEX = 0x1;   // https://github.com/satoshilabs/slips/blob/master/slip-0044.md#registered-coin-types
 const uint32_t BIP44_ZCOIN_INDEX = 0x88; // https://github.com/satoshilabs/slips/blob/master/slip-0044.md#registered-coin-types
 const uint32_t BIP44_MINT_INDEX = 0x2;
-#ifdef ENABLE_ELYSIUM
-const uint32_t BIP44_ELYSIUM_MINT_INDEX_V0 = 0x3;
-const uint32_t BIP44_ELYSIUM_MINT_INDEX_V1 = 0x4;
+#ifdef ENABLE_EXODUS
+const uint32_t BIP44_EXODUS_MINT_INDEX_V0 = 0x3;
+const uint32_t BIP44_EXODUS_MINT_INDEX_V1 = 0x4;
 #endif
 
 class CBlockIndex;
@@ -744,7 +744,7 @@ public:
     // Map from Key ID (for regular keys) or Script ID (for watch-only keys) to
     // key metadata.
     std::map<CTxDestination, CKeyMetadata> mapKeyMetadata;
-    //znode
+    //tnode
     int64_t nKeysLeftSinceAutoBackup;
 
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
@@ -833,9 +833,9 @@ public:
 
     bool HasMasternode();
 
-    // znode
-    /// Get 1000 XZC output and keys which can be used for the Znode
-    bool GetZnodeVinAndKeys(CTxIn& txinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
+    // tnode
+    /// Get 1000 TCR output and keys which can be used for the Tnode
+    bool GetTnodeVinAndKeys(CTxIn& txinRet, CPubKey& pubKeyRet, CKey& keyRet, std::string strTxHash = "", std::string strOutputIndex = "");
     /// Extract txin information and keys from output
     bool GetVinAndKeysFromOutput(COutput out, CTxIn& txinRet, CPubKey& pubKeyRet, CKey& keyRet);
 
@@ -1166,12 +1166,10 @@ public:
 
     void Inventory(const uint256 &hash) override
     {
-        {
-            LOCK(cs_wallet);
-            std::map<uint256, int>::iterator mi = mapRequestCount.find(hash);
-            if (mi != mapRequestCount.end())
-                (*mi).second++;
-        }
+        LOCK(cs_wallet);
+        std::map<uint256, int>::iterator mi = mapRequestCount.find(hash);
+        if (mi != mapRequestCount.end())
+            (*mi).second++;
     }
 
     void GetScriptForMining(boost::shared_ptr<CReserveScript> &script) override;

@@ -36,9 +36,9 @@ SerialNumberSignatureOfKnowledge::SerialNumberSignatureOfKnowledge(const Params*
 
 	CHashWriter hasher(0,0);
 	hasher << *params << commitmentToCoin.getCommitmentValue() << coin.getSerialNumber();
-    if (!msghash.IsNull())
+    if (!msghash.IsNull()) {
         hasher << msghash;
-
+	}
 	vector<Bignum> r(params->zkp_iterations);
 	vector<Bignum> v(params->zkp_iterations);
 	vector<Bignum> c(params->zkp_iterations);
@@ -127,9 +127,9 @@ bool SerialNumberSignatureOfKnowledge::Verify(const Bignum& coinSerialNumber, co
 
 	CHashWriter hasher(0,0);
 	hasher << *params << valueOfCommitmentToCoin <<coinSerialNumber;
-    if (!msghash.IsNull())
+    if (!msghash.IsNull()) {
         hasher << msghash;
-
+	}
 	vector<CBigNum> tprime(params->zkp_iterations);
 	unsigned char *hashbytes = (unsigned char*) &this->hash;
 

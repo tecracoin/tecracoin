@@ -48,7 +48,15 @@ unsigned char GetNfactor(int64_t nTimestamp) {
 }
 
 uint256 CBlockHeader::GetHash() const {
-    return SerializeHash(*this);
+    uint256 thash;
+    lyra2z_hash(BEGIN(nVersion), BEGIN(thash));
+    return thash;
+}
+
+bool CBlockHeader::IsMTP() const {
+    // In case if nTime == ZC_GENESIS_BLOCK_TIME we're being called from CChainParams() constructor and
+    // it is not possible to get Params()
+    return nTime > ZC_GENESIS_BLOCK_TIME && nTime >= Params().GetConsensus().nMTPSwitchTime;
 }
 
 bool CBlockHeader::IsMTP() const {
@@ -62,17 +70,10 @@ uint256 CBlockHeader::GetPoWHash(int nHeight) const {
         return cachedPoWHash;
 
     uint256 powHash;
-    if (IsMTP()) {
-        // MTP processing is the same across all the types on networks
-        powHash = mtpHashValue;
-    }
-    else if (nHeight == 0) {
-        // genesis block
-        scrypt_N_1_1_256(BEGIN(nVersion), BEGIN(powHash), GetNfactor(nTime));
-    }
-    else if (Params().GetConsensus().IsMain()) {
-        if (nHeight >= 20500) {
-            // Lyra2Z
+    // TecraCoin - MTP
+        if (IsMTP()) {
+            powHash = mtpHashValue;
+        } else {
             lyra2z_hash(BEGIN(nVersion), BEGIN(powHash));
         }
         else if (nHeight > 0) {
@@ -89,7 +90,6 @@ uint256 CBlockHeader::GetPoWHash(int nHeight) const {
              * }
              */
         }
-    }
     else {
         // regtest - use simple block hash
         // current testnet is MTP since block 1, shouldn't get here

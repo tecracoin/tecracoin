@@ -442,7 +442,7 @@ private:
     CNode* FindNode(const CService& addr);
 
     bool AttemptToEvictConnection();
-    // fAllowLocal flag is for legacy znodes only, remove it when network moves to evo znodes
+    // fAllowLocal flag is for legacy tnodes only, remove it when network moves to evo tnodes
     CNode* ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool fAllowLocal=false);
     bool IsWhitelistedRange(const CNetAddr &addr);
 
@@ -769,8 +769,8 @@ public:
 
     bool fSupportsDandelion = false;
     NodeId id;
-    // znode from dash
-    bool fZnode;
+    // tnode from dash
+    bool fTnode;
 
     const uint64_t nKeyedNetGroup;
     std::atomic_bool fPauseRecv;
@@ -969,6 +969,7 @@ public:
     void PushInventory(const CInv& inv)
     {
         LOCK(cs_inventory);
+        // LogPrintf("Pushing inventory %s to %s.\n", inv.ToString(), addr.ToString());
         if (inv.type == MSG_TX) {
             if (!filterInventoryKnown.contains(inv.hash)) {
                 setInventoryTxToSend.insert(inv.hash);

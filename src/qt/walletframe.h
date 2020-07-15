@@ -68,20 +68,20 @@ private:
 public Q_SLOTS:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
-#ifdef ENABLE_ELYSIUM
-    /** Switch to ElyAssets page */
-    void gotoElyAssetsPage();
+#ifdef ENABLE_EXODUS
+    /** Switch to ExoAssets page */
+    void gotoExoAssetsPage();
     /** Switch to utility page */
     void gotoToolboxPage();
-    /** Switch directory to Elysium tx history tab */
-    void gotoElysiumHistoryTab();
+    /** Switch directory to Exodus tx history tab */
+    void gotoExodusHistoryTab();
 #endif
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
     /** Switch directory to bitcoin tx history tab */
     void gotoBitcoinHistoryTab();
     /** Switch to znode page */
-    void gotoZnodePage();
+    void gotoTnodePage();
     /** Switch to masternode page */
     void gotoMasternodePage();
     /** Switch to receive coins page */

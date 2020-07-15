@@ -11,20 +11,21 @@
 #include <stdint.h>
 
 // HF constants
-static const int HF_LYRA2VAR_HEIGHT = 500;
-static const int HF_LYRA2_HEIGHT = 8192;
-static const int HF_LYRA2Z_HEIGHT = 20500;
-static const int HF_ZNODE_HEIGHT = 66550;
-static const int HF_ZNODE_PAYMENT_START = HF_ZNODE_HEIGHT + 150; // 66700 - about 25h after HF
-static const int HF_MTP_HEIGHT = 88888;
+//static const int HF_LYRA2VAR_HEIGHT = 500;
+//static const int HF_LYRA2_HEIGHT = 8192;
+//static const int HF_LYRA2Z_HEIGHT = 20500;
+static const int HF_TNODE_HEIGHT = 0;
+//MTP is not determined by block height so this constant is useless
+//static const int HF_MTP_HEIGHT = 70000;
 
-static const int HF_LYRA2VAR_HEIGHT_TESTNET = 10;
-static const int HF_LYRA2_HEIGHT_TESTNET = 25; // for consistent purpose since the algo hash is so low
-static const int HF_LYRA2Z_HEIGHT_TESTNET = 30;
-static const int HF_ZNODE_HEIGHT_TESTNET = 500;
-static const int HF_MTP_HEIGHT_TESTNET = 9999;
+//static const int HF_LYRA2VAR_HEIGHT_TESTNET = 10;
+//static const int HF_LYRA2_HEIGHT_TESTNET = 25; // for consistent purpose since the algo hash is so low
+//static const int HF_LYRA2Z_HEIGHT_TESTNET = 30;
+//static const int HF_TNODE_HEIGHT_TESTNET = 500;
+//MTP is not determined by block height so this constant is useless
+//static const int HF_MTP_HEIGHT_TESTNET = 30;
 
-static const int HF_ZEROSPEND_FIX = 22000;
+//static const int HF_ZEROSPEND_FIX = 22000;
 
 /** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
 static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 2000000;
@@ -37,7 +38,7 @@ static const int64_t MAX_BLOCK_SIGOPS_COST = 400000;
 /** The maximum allowed size of version 3 extra payload */
 static const unsigned int MAX_TX_EXTRA_PAYLOAD = 10000;
 /** Coinbase transaction outputs can only be spent after this number of new blocks (network rule) */
-static const int COINBASE_MATURITY = 100;
+static const int COINBASE_MATURITY = 400;
 
 /** Flags for nSequence and nLockTime locks */
 enum {

@@ -5,24 +5,24 @@
 #include "metadexdialog.h"
 #include "ui_metadexdialog.h"
 
-#include "elysium_qtutils.h"
+#include "exodus_qtutils.h"
 
 #include "clientmodel.h"
 #include "walletmodel.h"
 
-#include "elysium/createpayload.h"
-#include "elysium/errors.h"
-#include "elysium/mdex.h"
-#include "elysium/elysium.h"
-#include "elysium/parse_string.h"
-#include "elysium/pending.h"
-#include "elysium/rules.h"
-#include "elysium/rpctxobject.h"
-#include "elysium/sp.h"
-#include "elysium/tally.h"
-#include "elysium/utilsbitcoin.h"
-#include "elysium/wallettxs.h"
-#include "elysium/uint256_extensions.h"
+#include "exodus/createpayload.h"
+#include "exodus/errors.h"
+#include "exodus/mdex.h"
+#include "exodus/exodus.h"
+#include "exodus/parse_string.h"
+#include "exodus/pending.h"
+#include "exodus/rules.h"
+#include "exodus/rpctxobject.h"
+#include "exodus/sp.h"
+#include "exodus/tally.h"
+#include "exodus/utilsbitcoin.h"
+#include "exodus/wallettxs.h"
+#include "exodus/uint256_extensions.h"
 #include "amount.h"
 #include "sync.h"
 #include "uint256.h"
@@ -50,7 +50,7 @@
 using std::ostringstream;
 using std::string;
 
-using namespace elysium;
+using namespace exodus;
 
 MetaDExDialog::MetaDExDialog(QWidget *parent) :
     QDialog(parent),
@@ -114,15 +114,15 @@ void MetaDExDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if (NULL != model) {
-        connect(model, SIGNAL(refreshElysiumState()), this, SLOT(UpdateOffers()));
-        connect(model, SIGNAL(refreshElysiumBalance()), this, SLOT(BalanceOrderRefresh()));
-        connect(model, SIGNAL(reinitElysiumState()), this, SLOT(FullRefresh()));
+        connect(model, SIGNAL(refreshExodusState()), this, SLOT(UpdateOffers()));
+        connect(model, SIGNAL(refreshExodusBalance()), this, SLOT(BalanceOrderRefresh()));
+        connect(model, SIGNAL(reinitExodusState()), this, SLOT(FullRefresh()));
     }
 }
 
 void MetaDExDialog::setWalletModel(WalletModel *model)
 {
-    // use wallet model to get visibility into XZC balance changes for fees
+    // use wallet model to get visibility into TCR balance changes for fees
     this->walletModel = model;
     if (model != NULL) {
        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(UpdateBalances()));
@@ -554,7 +554,7 @@ void MetaDExDialog::sendTrade()
         if (!autoCommit) {
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
-            PendingAdd(txid, strFromAddress, ELYSIUM_TYPE_METADEX_TRADE, GetPropForSale(), amountForSale);
+            PendingAdd(txid, strFromAddress, EXODUS_TYPE_METADEX_TRADE, GetPropForSale(), amountForSale);
             PopulateTXSentDialog(txid.GetHex());
         }
     }

@@ -11,7 +11,7 @@ Install the macOS command line tools:
 
 When the popup appears, click `Install`.
 
-Then install [Homebrew](http://brew.sh).
+Then install [Homebrew](https://brew.sh).
 
 Dependencies
 ----------------------
@@ -24,7 +24,7 @@ In case you want to build the disk image with `make deploy` (.dmg / optional), y
       
 Berkley DB
 ------------------------
-It is recommended to use Berkeley DB 4.8. If you have to build it yourself, you can use [the installation script included in contrib/](https://github.com/bitcoin/bitcoin/blob/master/contrib/install_db4.sh) like so:
+It is recommended to use Berkeley DB 4.8. If you have to build it yourself, you can use [the installation script included in contrib/] (https://github.com/bitcoin/bitcoin/blob/master/contrib/install_db4.sh)like so:
     ./contrib/install_db4.sh .
 
 from the root of the repository.
@@ -32,21 +32,21 @@ from the root of the repository.
 Note: You only need Berkeley DB if the wallet is enabled (see Disable-wallet mode).
       
       
-Build Zcoin Core
+Build TecraCoin Core
 ------------------------
-1.  Build Zcoin-core:
+1.  Build TecraCoin-core:
 
-    Configure and build the headless Zcoin binaries as well as the GUI (if Qt is found).
+    Configure and build the headless tecracoin binaries as well as the GUI (if Qt is found).
     
     In case you want to build the disk image with `make deploy` (.dmg / optional), by passing `--with-gui` to configure.
     
     You can disable the GUI build by passing `--without-gui` to configure.
-        
+
         ./autogen.sh
         ./configure
         make
 
-2.  It is recommended to build and run the unit tests:
+3.  It is recommended to build and run the unit tests:
 
        ` make check`
         
@@ -54,30 +54,29 @@ Build Zcoin Core
 
        ` make deploy`
 
-
 Running
 -------
 
-Zcoin Core is now available at `./src/zcoind`
+TecraCoin Core is now available at `./src/tecracoind`
 
 Before running, it's recommended you create an RPC configuration file.
 
-    echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/zcoin/zcoin.conf"
+    echo -e "rpcuser=bitcoinrpc\nrpcpassword=$(xxd -l 16 -p /dev/urandom)" > "/Users/${USER}/Library/Application Support/tecracoin/tecracoin.conf"
 
-    chmod 600 "/Users/${USER}/Library/Application Support/zcoin/zcoin.conf"
+    chmod 600 "/Users/${USER}/Library/Application Support/tecracoin/tecracoin.conf"
 
-The first time you run zcoind, it will start downloading the blockchain. This process could take several hours.
+The first time you run tecracoind, it will start downloading the blockchain. This process could take several hours.
 
 You can monitor the download process by looking at the debug.log file:
 
-    tail -f $HOME/Library/Application\ Support/zcoin/debug.log
+    tail -f $HOME/Library/Application\ Support/tecracoin/debug.log
 
 Other commands:
 -------
 
-    ./src/zcoind -daemon # Starts the Zcoin daemon.
-    ./src/zcoin-cli --help # Outputs a list of command-line options.
-    ./src/zcoin-cli help # Outputs a list of RPC commands when the daemon is running.
+    ./src/tecracoind -daemon # Starts the tecracoin daemon.
+    ./src/tecracoin-cli --help # Outputs a list of command-line options.
+    ./src/tecracoin-cli help # Outputs a list of RPC commands when the daemon is running.
 
 Using Qt Creator as IDE
 ------------------------
@@ -86,9 +85,9 @@ Download and install the community edition of [Qt Creator](https://www.qt.io/dow
 Uncheck everything except Qt Creator during the installation process.
 
 1. Make sure you installed everything through Homebrew mentioned above
-2. Do a proper `./configure --enable-debug`
+2. Do a proper ./configure --enable-debug
 3. In Qt Creator do "New Project" -> Import Project -> Import Existing Project
-4. Enter "bitcoin-qt" as project name, enter `src/qt` as location
+4. Enter "bitcoin-qt" as project name, enter src/qt as location
 5. Leave the file selection as it is
 6. Confirm the "summary page"
 7. In the "Projects" tab select "Manage Kits..."

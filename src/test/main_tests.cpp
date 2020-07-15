@@ -10,13 +10,17 @@
 
 #include <boost/signals2/signal.hpp>
 #include <boost/test/unit_test.hpp>
+#include <miner.h>
+
+#define MAIN_TESTS_INITIAL_SUBSIDY 112.5
+#define MAIN_TESTS_PREMINE_SUBSIDY 21000000
 
 BOOST_FIXTURE_TEST_SUITE(main_tests, TestingSetup)
 
 static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
     int maxHalvings = 64;
-    CAmount nInitialSubsidy = 50 * COIN;
+    CAmount nInitialSubsidy = MAIN_TESTS_INITIAL_SUBSIDY * COIN;
 
     BOOST_CHECK_EQUAL(GetBlockSubsidy(1, consensusParams, consensusParams.nMTPSwitchTime-1000), nInitialSubsidy);
     nInitialSubsidy /= consensusParams.nMTPRewardReduction;
@@ -34,6 +38,24 @@ static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
         nPreviousSubsidy = nPreviousSubsidy / 2;
     }
     BOOST_CHECK_EQUAL(GetBlockSubsidy(consensusParams.nSubsidyHalvingStopBlock, consensusParams), 0);
+}
+
+static void TestRewardsStageStarts(const Consensus::Params &consensus){
+    // Tnode payments must start before rewards2StageStart for proper founders rewards logic
+    BOOST_CHECK(consensus.nTnodePaymentsStartBlock < consensus.rewardsStage2Start);
+    BOOST_CHECK(consensus.rewardsStage2Start < consensus.rewardsStage3Start);
+    BOOST_CHECK(consensus.rewardsStage3Start < consensus.rewardsStage4Start);
+}
+
+BOOST_AUTO_TEST_CASE(founders_reward_test)
+{
+    // Check premine
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1, Params(CBaseChainParams::MAIN).GetConsensus()), MAIN_TESTS_PREMINE_SUBSIDY * COIN);
+
+    // Check rewards stages
+    TestRewardsStageStarts(Params(CBaseChainParams::MAIN).GetConsensus());
+    TestRewardsStageStarts(Params(CBaseChainParams::TESTNET).GetConsensus());
+    TestRewardsStageStarts(Params(CBaseChainParams::REGTEST).GetConsensus());
 }
 
 BOOST_AUTO_TEST_CASE(block_subsidy_test)
@@ -70,6 +92,55 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
     }
     BOOST_CHECK_EQUAL(nSum, 2095751201171875ULL);
 }
+
+//MTP_MERGE: accomodate MTP tests
+//BOOST_AUTO_TEST_CASE(subsidy_limit_test)
+//{
+//        Consensus::Params consensusParams = Params(CBaseChainParams::MAIN).GetConsensus();
+//        CAmount nSum = 0;
+//        int const mtpReleaseHeight = 110725
+//        //The MTP switch time is December 10th at 12:00 UTC.
+//        //The block height of MTP switch cannot be calculated firmly, but can only be approximated.
+//        //Below is one of such approximations which is used for this test only.
+//        //This approximation influences the check at the end of the test.
+//        , mtpActivationHeight = 117560;
+//
+//        int nHeight = 0;
+//        int step = 1;
+//
+//        consensusParams.nSubsidyHalvingInterval = 210000;
+//        for(; nHeight < mtpReleaseHeight; nHeight += step)
+//        {
+//            CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
+//            if(nHeight == 0)
+//                nSubsidy = 50 * COIN;
+//            BOOST_CHECK(nSubsidy <= 50 * COIN);
+//            nSum += nSubsidy * step;
+//            BOOST_CHECK(MoneyRange(nSum));
+//        }
+//        BOOST_CHECK_EQUAL(nSum, 553625000000000ULL);
+//
+//        consensusParams.nSubsidyHalvingInterval = 305000;
+//        for(; nHeight < mtpActivationHeight; nHeight += step)
+//        {
+//            CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams);
+//            BOOST_CHECK(nSubsidy <= 50 * COIN);
+//            nSum += nSubsidy * step;
+//            BOOST_CHECK(MoneyRange(nSum));
+//        }
+//        BOOST_CHECK_EQUAL(nSum, 587800000000000ULL);
+//
+//        step = 1000;
+//        for(; nHeight < 14000000; nHeight += step)
+//        {
+//            CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams, consensusParams.nMTPSwitchTime);
+//            BOOST_CHECK(nSubsidy <= 50 * COIN);
+//            nSum += nSubsidy * step;
+//            BOOST_CHECK(MoneyRange(nSum));
+//        }
+//        //The final check value is changed due to the approximation of mtpActivationHeight
+//        BOOST_CHECK_EQUAL(nSum, 1820299996645000ULL);
+//}
 
 bool ReturnFalse() { return false; }
 bool ReturnTrue() { return true; }

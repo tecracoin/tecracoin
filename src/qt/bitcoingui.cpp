@@ -36,17 +36,17 @@
 #include "ui_interface.h"
 #include "util.h"
 
-#include "znode.h"
+#include "tnode.h"
 #include "evo/deterministicmns.h"
-#include "znodesync-interface.h"
-#include "znodelist.h"
+#include "tnodesync-interface.h"
+#include "tnodelist.h"
 #include "masternodelist.h"
 #include "notifyznodewarning.h"
-#include "elysium_qtutils.h"
+#include "exodus_qtutils.h"
 #include "zc2sigmapage.h"
 
-#ifdef ENABLE_ELYSIUM
-#include "../elysium/elysium.h"
+#ifdef ENABLE_EXODUS
+#include "../exodus/exodus.h"
 #endif
 
 #include <iostream>
@@ -104,19 +104,20 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     labelWalletHDStatusIcon(0),
     connectionsControl(0),
     labelBlocksIcon(0),
-    labelElysiumPendingIcon(0),
-    labelElysiumPendingText(0),
+    labelExodusPendingIcon(0),
+    labelExodusPendingText(0),
     progressBarLabel(0),
     progressBar(0),
     progressDialog(0),
     appMenuBar(0),
     overviewAction(0),
-#ifdef ENABLE_ELYSIUM
-    elyAssetsAction(0),
+#ifdef ENABLE_EXODUS
+    exoAssetsAction(0),
     toolboxAction(0),
 #endif
     historyAction(0),
     quitAction(0),
+    toolboxAction(0),
     sendCoinsAction(0),
     sendCoinsMenuAction(0),
     usedSendingAddressesAction(0),
@@ -136,7 +137,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     openAction(0),
     showHelpMessageAction(0),
     zc2SigmaAction(0),
-    znodeAction(0),
+    tnodeAction(0),
     masternodeAction(0),
     trayIcon(0),
     trayIconMenu(0),
@@ -248,13 +249,13 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     framePendingLayout->setContentsMargins(3,0,3,0);
     framePendingLayout->setSpacing(3);
     framePendingLayout->addStretch();
-    labelElysiumPendingIcon = new QLabel();
-    labelElysiumPendingText = new QLabel("You have Elysium transactions awaiting confirmation.");
-    framePendingLayout->addWidget(labelElysiumPendingIcon);
-    framePendingLayout->addWidget(labelElysiumPendingText);
+    labelExodusPendingIcon = new QLabel();
+    labelExodusPendingText = new QLabel("You have Exodus transactions awaiting confirmation.");
+    framePendingLayout->addWidget(labelExodusPendingIcon);
+    framePendingLayout->addWidget(labelExodusPendingText);
     framePendingLayout->addStretch();
-    labelElysiumPendingIcon->hide();
-    labelElysiumPendingText->hide();
+    labelExodusPendingIcon->hide();
+    labelExodusPendingText->hide();
 
     // Progress bar and label for blocks download
     progressBarLabel = new QLabel();
@@ -318,6 +319,7 @@ void BitcoinGUI::createActions()
 {
     size_t key = Qt::Key_1;
 	QActionGroup *tabGroup = new QActionGroup(this);
+    bool exodusEnabled = isExodusEnabled();
 
 	overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
 	overviewAction->setStatusTip(tr("Show general overview of wallet"));
@@ -327,7 +329,7 @@ void BitcoinGUI::createActions()
 	tabGroup->addAction(overviewAction);
 
 	sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
-	sendCoinsAction->setStatusTip(tr("Send coins to a Zcoin address"));
+	sendCoinsAction->setStatusTip(tr(exodusEnabled ? "Send Exodus and TecraCoin transactions" : "Send coins to a TecraCoin address"));
 	sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
 	sendCoinsAction->setCheckable(true);
 	sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + key++));
@@ -338,7 +340,7 @@ void BitcoinGUI::createActions()
 	sendCoinsMenuAction->setToolTip(sendCoinsMenuAction->statusTip());
 
 	receiveCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/receiving_addresses"), tr("&Receive"), this);
-	receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and zcoin: URIs)"));
+	receiveCoinsAction->setStatusTip(tr("Request payments (generates QR codes and tecracoin: URIs)"));
 	receiveCoinsAction->setToolTip(receiveCoinsAction->statusTip());
 	receiveCoinsAction->setCheckable(true);
 	receiveCoinsAction->setShortcut(QKeySequence(Qt::ALT + key++));
@@ -357,7 +359,7 @@ void BitcoinGUI::createActions()
 
     sigmaAction = new QAction(platformStyle->SingleColorIcon(":/icons/sigma"), tr("Si&gma"), this);
     sigmaAction->setStatusTip(tr("Anonymize your coins and perform private transfers using Sigma"));
-    sigmaAction->setToolTip(sigmaAction->statusTip());
+    exoaAction->setToolTip(sigmaAction->statusTip());
     sigmaAction->setCheckable(true);
     sigmaAction->setShortcut(QKeySequence(Qt::ALT +  key++));
     tabGroup->addAction(sigmaAction);
@@ -374,39 +376,39 @@ void BitcoinGUI::createActions()
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
-    znodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/znodes"), tr("&Znodes"), this);
-    znodeAction->setStatusTip(tr("Browse Znodes"));
-    znodeAction->setToolTip(znodeAction->statusTip());
-    znodeAction->setCheckable(true);
+    tnodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/znodes"), tr("&Znodes"), this);
+    tnodeAction->setStatusTip(tr("Browse Znodes"));
+    tnodeAction->setToolTip(tnodeAction->statusTip());
+    tnodeAction->setCheckable(true);
 
     masternodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/znodes"), tr("&Znodes"), this);
     masternodeAction->setStatusTip(tr("Browse Znodes"));
     masternodeAction->setToolTip(masternodeAction->statusTip());
     masternodeAction->setCheckable(true);
 #ifdef Q_OS_MAC
-    znodeAction->setShortcut(QKeySequence(Qt::CTRL + key++));
+    tnodeAction->setShortcut(QKeySequence(Qt::CTRL + key++));
     masternodeAction->setShortcut(QKeySequence(Qt::CTRL + key++));
 #else
-    znodeAction->setShortcut(QKeySequence(Qt::ALT +  key++));
+    tnodeAction->setShortcut(QKeySequence(Qt::ALT +  key++));
     masternodeAction->setShortcut(QKeySequence(Qt::ALT +  key++));
 #endif
-    tabGroup->addAction(znodeAction);
+    tabGroup->addAction(tnodeAction);
     tabGroup->addAction(masternodeAction);
 #endif
 
-#ifdef ENABLE_ELYSIUM
-    bool elysiumEnabled = isElysiumEnabled();
+#ifdef ENABLE_EXODUS
+    bool elysiumEnabled = isExodusEnabled();
 
     if (elysiumEnabled) {
         elyAssetsAction = new QAction(platformStyle->SingleColorIcon(":/icons/balances"), tr("E&lyAssets"), this);
-        elyAssetsAction->setStatusTip(tr("Show Elysium balances"));
+        elyAssetsAction->setStatusTip(tr("Show Exodus balances"));
         elyAssetsAction->setToolTip(elyAssetsAction->statusTip());
         elyAssetsAction->setCheckable(true);
         elyAssetsAction->setShortcut(QKeySequence(Qt::ALT + key++));
         tabGroup->addAction(elyAssetsAction);
 
         toolboxAction = new QAction(platformStyle->SingleColorIcon(":/icons/tools"), tr("&Toolbox"), this);
-        toolboxAction->setStatusTip(tr("Tools to obtain varions Elysium information and transaction information"));
+        toolboxAction->setStatusTip(tr("Tools to obtain varions Exodus information and transaction information"));
         toolboxAction->setToolTip(toolboxAction->statusTip());
         toolboxAction->setCheckable(true);
         toolboxAction->setShortcut(QKeySequence(Qt::ALT + key++));
@@ -415,8 +417,8 @@ void BitcoinGUI::createActions()
 #endif
 
 #ifdef ENABLE_WALLET
-    connect(znodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-    connect(znodeAction, SIGNAL(triggered()), this, SLOT(gotoZnodePage()));
+    connect(tnodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+    connect(tnodeAction, SIGNAL(triggered()), this, SLOT(gotoTnodePage()));
     connect(masternodeAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
     connect(masternodeAction, SIGNAL(triggered()), this, SLOT(gotoMasternodePage()));
 	connect(overviewAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
@@ -434,10 +436,10 @@ void BitcoinGUI::createActions()
 	connect(sigmaAction, SIGNAL(triggered()), this, SLOT(gotoSigmaPage()));
         connect(zc2SigmaAction, SIGNAL(triggered()), this, SLOT(gotoZc2SigmaPage()));
 
-#ifdef ENABLE_ELYSIUM
-    if (elysiumEnabled) {
-        connect(elyAssetsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(elyAssetsAction, SIGNAL(triggered()), this, SLOT(gotoElyAssetsPage()));
+#ifdef ENABLE_EXODUS
+    if (exodusEnabled) {
+        connect(exoAssetsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(exoAssetsAction, SIGNAL(triggered()), this, SLOT(gotoElyAssetsPage()));
         connect(toolboxAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
         connect(toolboxAction, SIGNAL(triggered()), this, SLOT(gotoToolboxPage()));
     }
@@ -470,9 +472,9 @@ void BitcoinGUI::createActions()
     changePassphraseAction = new QAction(platformStyle->TextColorIcon(":/icons/key"), tr("&Change Passphrase..."), this);
     changePassphraseAction->setStatusTip(tr("Change the passphrase used for wallet encryption"));
     signMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/edit"), tr("Sign &message..."), this);
-    signMessageAction->setStatusTip(tr("Sign messages with your Zcoin addresses to prove you own them"));
+    signMessageAction->setStatusTip(tr("Sign messages with your TecraCoin addresses to prove you own them"));
     verifyMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/verify"), tr("&Verify message..."), this);
-    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified Zcoin addresses"));
+    verifyMessageAction->setStatusTip(tr("Verify messages to ensure they were signed with specified TecraCoin addresses"));
 
     openRPCConsoleAction = new QAction(platformStyle->TextColorIcon(":/icons/debugwindow"), tr("&Debug window"), this);
     openRPCConsoleAction->setStatusTip(tr("Open debugging and diagnostic console"));
@@ -485,11 +487,11 @@ void BitcoinGUI::createActions()
     usedReceivingAddressesAction->setStatusTip(tr("Show the list of used receiving addresses and labels"));
 
     openAction = new QAction(platformStyle->TextColorIcon(":/icons/open"), tr("Open &URI..."), this);
-    openAction->setStatusTip(tr("Open a zcoin: URI or payment request"));
+    openAction->setStatusTip(tr("Open a tecracoin: URI or payment request"));
 
     showHelpMessageAction = new QAction(platformStyle->TextColorIcon(":/icons/info"), tr("&Command-line options"), this);
     showHelpMessageAction->setMenuRole(QAction::NoRole);
-    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible Zcoin command-line options").arg(tr(PACKAGE_NAME)));
+    showHelpMessageAction->setStatusTip(tr("Show the %1 help message to get a list with possible TecraCoin command-line options").arg(tr(PACKAGE_NAME)));
 
     connect(quitAction, SIGNAL(triggered()), qApp, SLOT(quit()));
     connect(aboutAction, SIGNAL(triggered()), this, SLOT(aboutClicked()));
@@ -569,6 +571,7 @@ void BitcoinGUI::createToolBars()
     if(walletFrame)
     {
         QToolBar *toolbar = addToolBar(tr("Tabs toolbar"));
+
         toolbar->setMovable(false);
         toolbar->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         toolbar->addAction(overviewAction);
@@ -577,17 +580,22 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(historyAction);
         toolbar->addAction(sigmaAction);
         toolbar->addAction(zc2SigmaAction);
-        toolbar->addAction(znodeAction);
+        toolbar->addAction(tnodeAction);
         toolbar->addAction(masternodeAction);
 
-#ifdef ENABLE_ELYSIUM
-        if (isElysiumEnabled()) {
-            toolbar->addAction(elyAssetsAction);
+#ifdef ENABLE_EXODUS
+        if (isExodusEnabled()) {
+            toolbar->addAction(exoAssetsAction);
             toolbar->addAction(toolboxAction);
         }
 #endif
 
         overviewAction->setChecked(true);
+
+//        toolbar->setStyleSheet("QToolBar {background: #1d2475; border: none} "
+//                               "QToolButton { color: white; }"
+//                               "QToolButton::checked { background: #2c53b1; color: white; }"
+//                               "QToolButton::focus { background: #2c53b1; color: white; }");
     }
 }
 
@@ -617,8 +625,8 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         // Show progress dialog
         connect(_clientModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
 
-        // Update Elysium pending status
-        connect(_clientModel, SIGNAL(refreshElysiumPending(bool)), this, SLOT(setElysiumPendingStatus(bool)));
+        // Update Exodus pending status
+        connect(_clientModel, SIGNAL(refreshExodusPending(bool)), this, SLOT(setExodusPendingStatus(bool)));
 
         rpcConsole->setClientModel(_clientModel);
 #ifdef ENABLE_WALLET
@@ -634,7 +642,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
         {
             // be aware of the tray icon disable state change reported by the OptionsModel object.
             connect(optionsModel,SIGNAL(hideTrayIconChanged(bool)),this,SLOT(setTrayIconVisible(bool)));
-        
+
             // initialize the disable state of the tray icon with the current value in the model.
             setTrayIconVisible(optionsModel->getHideTrayIcon());
         }
@@ -694,7 +702,7 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
     sigmaAction->setEnabled(enabled);
-    znodeAction->setEnabled(enabled);
+    tnodeAction->setEnabled(enabled);
     masternodeAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -705,8 +713,8 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     usedReceivingAddressesAction->setEnabled(enabled);
     openAction->setEnabled(enabled);
 
-#ifdef ENABLE_ELYSIUM
-    if (isElysiumEnabled()) {
+#ifdef ENABLE_EXODUS
+    if (isExodusEnabled()) {
         elyAssetsAction->setEnabled(enabled);
         toolboxAction->setEnabled(enabled);
     }
@@ -827,7 +835,7 @@ void BitcoinGUI::gotoOverviewPage()
     if (walletFrame) walletFrame->gotoOverviewPage();
 }
 
-#ifdef ENABLE_ELYSIUM
+#ifdef ENABLE_EXODUS
 void BitcoinGUI::gotoElyAssetsPage()
 {
     elyAssetsAction->setChecked(true);
@@ -841,11 +849,11 @@ void BitcoinGUI::gotoHistoryPage()
     if (walletFrame) walletFrame->gotoHistoryPage();
 }
 
-#ifdef ENABLE_ELYSIUM
-void BitcoinGUI::gotoElysiumHistoryTab()
+#ifdef ENABLE_EXODUS
+void BitcoinGUI::gotoExodusHistoryTab()
 {
     historyAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoElysiumHistoryTab();
+    if (walletFrame) walletFrame->gotoExodusHistoryTab();
 }
 #endif
 
@@ -855,7 +863,7 @@ void BitcoinGUI::gotoBitcoinHistoryTab()
     if (walletFrame) walletFrame->gotoBitcoinHistoryTab();
 }
 
-#ifdef ENABLE_ELYSIUM
+#ifdef ENABLE_EXODUS
 void BitcoinGUI::gotoToolboxPage()
 {
     toolboxAction->setChecked(true);
@@ -863,11 +871,11 @@ void BitcoinGUI::gotoToolboxPage()
 }
 #endif
 
-void BitcoinGUI::gotoZnodePage()
+void BitcoinGUI::gotoTnodePage()
 {
     QSettings settings;
-    znodeAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoZnodePage();
+    tnodeAction->setChecked(true);
+    if (walletFrame) walletFrame->gotoTnodePage();
 }
 
 void BitcoinGUI::gotoMasternodePage()
@@ -1130,7 +1138,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
 
 void BitcoinGUI::message(const QString &title, const QString &message, unsigned int style, bool *ret)
 {
-    QString strTitle = tr("Zcoin"); // default title
+    QString strTitle = tr("TecraCoin"); // default title
     // Default to information icon
     int nMBoxIcon = QMessageBox::Information;
     int nNotifyIcon = Notificator::Information;
@@ -1156,7 +1164,7 @@ void BitcoinGUI::message(const QString &title, const QString &message, unsigned 
             break;
         }
     }
-    // Append title to "Zcoin - "
+    // Append title to "TecraCoin - "
     if (!msgType.isEmpty())
         strTitle += " - " + msgType;
 
@@ -1297,16 +1305,16 @@ bool BitcoinGUI::handlePaymentRequest(const SendCoinsRecipient& recipient)
     return false;
 }
 
-void BitcoinGUI::setElysiumPendingStatus(bool pending)
+void BitcoinGUI::setExodusPendingStatus(bool pending)
 {
     if (!pending) {
-        labelElysiumPendingIcon->hide();
-        labelElysiumPendingText->hide();
+        labelExodusPendingIcon->hide();
+        labelExodusPendingText->hide();
     } else {
-        labelElysiumPendingIcon->show();
-        labelElysiumPendingText->show();
-        labelElysiumPendingIcon->setPixmap(QIcon(":/icons/elysium_hourglass").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
-        labelElysiumPendingIcon->setToolTip(tr("You have Elysium transactions awaiting confirmation."));
+        labelExodusPendingIcon->show();
+        labelExodusPendingText->show();
+        labelExodusPendingIcon->setPixmap(QIcon(":/icons/exodus_hourglass").pixmap(STATUSBAR_ICONSIZE,STATUSBAR_ICONSIZE));
+        labelExodusPendingIcon->setToolTip(tr("You have Exodus transactions awaiting confirmation."));
     }
 }
 
@@ -1471,17 +1479,17 @@ void BitcoinGUI::checkZnodeVisibility(int numBlocks) {
     const Consensus::Params& params = ::Params().GetConsensus();
     // Before legacy window
     if(numBlocks < params.DIP0003Height){
-        znodeAction->setVisible(true);
+        tnodeAction->setVisible(true);
         masternodeAction->setVisible(false);
     } // during legacy window
     else if(numBlocks < params.DIP0003EnforcementHeight){
-        znodeAction->setText(tr("&Znodes (legacy)"));
-        znodeAction->setStatusTip(tr("Browse legacy Znodes"));
-        znodeAction->setVisible(true);
+        tnodeAction->setText(tr("&Znodes (legacy)"));
+        tnodeAction->setStatusTip(tr("Browse legacy Znodes"));
+        tnodeAction->setVisible(true);
         masternodeAction->setVisible(true);
     } // DIP0003 Enforcement
     else {
-        znodeAction->setVisible(false);
+        tnodeAction->setVisible(false);
         masternodeAction->setVisible(true);
     }
 

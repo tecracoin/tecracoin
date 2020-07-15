@@ -16,8 +16,8 @@ extern CNetFulfilledRequestManager netfulfilledman;
 // and from being banned for doing so too often.
 class CNetFulfilledRequestManager
 {
-    // Temporary measure, remove after switch to evo znodes
-    friend class CZnodeSync;
+    // Temporary measure, remove after switch to evo tnodes
+    friend class CTnodeSync;
 private:
     typedef std::map<std::string, int64_t> fulfilledreqmapentry_t;
     typedef std::map<CService, fulfilledreqmapentry_t> fulfilledreqmap_t;

@@ -5,11 +5,11 @@
 #include "lookuptxdialog.h"
 #include "ui_lookuptxdialog.h"
 
-#include "elysium/errors.h"
-#include "elysium/rpc.h"
-#include "elysium/rpctxobject.h"
+#include "exodus/errors.h"
+#include "exodus/rpc.h"
+#include "exodus/rpctxobject.h"
 
-#include "elysium_qtutils.h"
+#include "exodus_qtutils.h"
 
 #include "uint256.h"
 
@@ -24,7 +24,7 @@
 #include <QWidget>
 
 using std::string;
-using namespace elysium;
+using namespace exodus;
 
 LookupTXDialog::LookupTXDialog(QWidget *parent) :
     QDialog(parent),
@@ -67,7 +67,7 @@ void LookupTXDialog::searchTX()
         std::string strText = "The transaction hash entered is ";
         switch(populateResult) {
             case MP_TX_NOT_FOUND:
-                strText += "not a valid Zcoin or Elysium transaction.  Please check the transaction hash "
+                strText += "not a valid Tecracoin or Exodus transaction.  Please check the transaction hash "
                            "entered and try again.";
             break;
             case MP_TX_UNCONFIRMED:
@@ -75,14 +75,14 @@ void LookupTXDialog::searchTX()
                            "confirmed transactions.\n\nTip: You can view your own outgoing unconfirmed "
                            "transactions in the transactions tab.";
             break;
-            case MP_TX_IS_NOT_ELYSIUM_PROTOCOL:
-                strText += "a Zcoin transaction only.\n\nTip: You can use the debug console "
-                           "'gettransaction' command to lookup specific Zcoin transactions.";
+            case MP_TX_IS_NOT_EXODUS_PROTOCOL:
+                strText += "a Tecracoin transaction only.\n\nTip: You can use the debug console "
+                           "'gettransaction' command to lookup specific Tecracoin transactions.";
             break;
 
             default:
                 strText += "of an unknown type.  If you are seeing this message please raise a bug report "
-                           "with the transaction hash at github.com/zcoinofficial/zcoin/issues.";
+                           "with the transaction hash at github.com/tecracoin/tecracoin/issues.";
             break;
         }
         QString strQText = QString::fromStdString(strText);

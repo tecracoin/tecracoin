@@ -14,7 +14,7 @@ namespace mtp
 {
 
 /** L parameter for the MTP hash */
-constexpr int8_t MTP_L = 64;
+constexpr int8_t MTP_L = 16;
 
 /** Solve the hash problem
  *

@@ -43,7 +43,7 @@ public:
     /** Translate a message to the native language of the user. */
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
-extern bool fMasternodeMode;
+extern bool fTNode;
 extern bool fLiteMode;
 extern int nWalletBackups;
 
@@ -58,8 +58,8 @@ extern bool fLogIPs;
 extern std::atomic<bool> fReopenDebugLog;
 extern CTranslationInterface translationInterface;
 
-/** Flag to indicate, whether the Elysium log file should be reopened. */
-extern std::atomic<bool> fReopenElysiumLog;
+/** Flag to indicate, whether the Exodus log file should be reopened. */
+extern std::atomic<bool> fReopenExodusLog;
 
 extern const char * const BITCOIN_CONF_FILENAME;
 extern const char * const BITCOIN_PID_FILENAME;
@@ -123,7 +123,7 @@ const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 const boost::filesystem::path &GetBackupsDir();
 void ClearDatadirCache();
 boost::filesystem::path GetConfigFile(const std::string& confPath);
-boost::filesystem::path GetZnodeConfigFile();
+boost::filesystem::path GetTnodeConfigFile();
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
@@ -132,7 +132,7 @@ void ReadConfigFile(const std::string& confPath);
 #ifdef WIN32
 boost::filesystem::path GetSpecialFolderPath(int nFolder, bool fCreate = true);
 #endif
-void OpenDebugLog();
+void OpenDebugLog(bool force = false);
 void ShrinkDebugFile();
 void runCommand(const std::string& strCommand);
 
@@ -271,6 +271,6 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
     }
 }
 
-std::string CopyrightHolders(const std::string& strPrefix);
+std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYear, unsigned int nEndYear);
 
 #endif // BITCOIN_UTIL_H

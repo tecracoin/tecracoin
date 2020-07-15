@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The TecraCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -120,6 +121,15 @@ enum ChainType {
 };
 
 /**
+ * Type of chain
+ */
+enum ChainType {
+    chainMain,
+    chainTestnet,
+    chainRegtest
+};
+
+/**
  * Parameters that influence chain consensus.
  */
 struct Params {
@@ -163,26 +173,22 @@ struct Params {
     //int nBudgetPaymentsStartBlock;
     //int nBudgetPaymentsCycleBlocks;
     //int nBudgetPaymentsWindowBlocks;
-    int nZnodeMinimumConfirmations;
-    int nZnodePaymentsStartBlock;
-    //int nZnodePaymentsIncreaseBlock;
-    //int nZnodePaymentsIncreasePeriod; // in blocks
+    int nTnodeMinimumConfirmations;
+    int nTnodePaymentsStartBlock;
+    int64_t nPremineSubsidy;
+    //int nTnodePaymentsIncreaseBlock;
+    //int nTnodePaymentsIncreasePeriod; // in blocks
     //int nSuperblockStartBlock;
 
-    int nInstantSendConfirmationsRequired; // in blocks
-    int nInstantSendKeepLock; // in blocks
-    int nInstantSendSigsRequired;
-    int nInstantSendSigsTotal;
-
-	/** Zerocoin-related block numbers when features are changed */
+    /** Zerocoin-related block numbers when features are changed */
     int nCheckBugFixedAtBlock;
-    int nZnodePaymentsBugFixedAtBlock;
-	int nSpendV15StartBlock;
-	int nSpendV2ID_1, nSpendV2ID_10, nSpendV2ID_25, nSpendV2ID_50, nSpendV2ID_100;
+    int nTnodePaymentsBugFixedAtBlock;
+    int nSpendV15StartBlock;
+    int nSpendV2ID_1, nSpendV2ID_10, nSpendV2ID_25, nSpendV2ID_50, nSpendV2ID_100;
 
-	int nModulusV2StartBlock;
+    int nModulusV2StartBlock;
     int nModulusV1MempoolStopBlock;
-	int nModulusV1StopBlock;
+    int nModulusV1StopBlock;
 
     int nMultipleSpendInputsInOneTxStartBlock;
 

@@ -1,5 +1,6 @@
-Zcoin
-===============
+
+## TODO!!!
+
 
 [![Financial Contributors on Open Collective](https://opencollective.com/zcoin/all/badge.svg?label=financial+contributors)](https://opencollective.com/zcoin) [![latest-release](https://img.shields.io/github/release/zcoinofficial/zcoin)](https://github.com/zcoinofficial/zcoin/releases)
 [![GitHub last-release](https://img.shields.io/github/release-date/zcoinofficial/zcoin)](https://github.com/zcoinofficial/zcoin/releases)
@@ -71,6 +72,19 @@ Start daemon again:
 ```sh
 docker start zcoind
 ```
+=======
+TecraCoin v1.7.0.1
+===============
+
+[![Build Status](https://travis-ci.com/tecracoin/tecracoin.svg?branch=CI)](https://travis-ci.com/tecracoinofficial/tecracoin)
+
+What is TecraCoin?
+--------------
+
+[TecraCoin](https://tecracoin.io) is the first full implementation of the Zerocoin Protocol, which allows users to have complete privacy via Zero-Knowledge cryptographic proofs. It is worth noting that TecraCoin is unrelated to other cryptocurrencies utilizing the Zerocash Protocol. Although Zerocash is a development from Zerocoin, their respective implementations are not simple forks of each other, but rely on different cryptographic assumptions with various tradeoffs. Both approaches supplement each other quite nicely, and a good way to describe them would be sibling projects.
+
+The Zerocoin Protocol is being actively researched and improved, such as removing the trustless setup and reducing proof sizes.
+
 
 Linux Build Instructions and Notes
 ==================================
@@ -101,11 +115,11 @@ Build
 ----------------------
 1.  Clone the source:
 
-        git clone https://github.com/zcoinofficial/zcoin
+        git clone https://github.com/tecracoin/tecracoin
 
-2.  Build Zcoin-core:
+2.  Build TecraCoin-core:
 
-    Configure and build the headless Zcoin binaries as well as the GUI (if Qt is found).
+    Configure and build the headless TecraCoin binaries as well as the GUI (if Qt is found).
 
     You can disable the GUI build by passing `--without-gui` to configure.
         

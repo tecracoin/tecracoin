@@ -86,10 +86,10 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw runtime_error(
-            "importprivkey \"zcoinprivkey\" ( \"label\" ) ( rescan )\n"
+            "importprivkey \"tecracoinprivkey\" ( \"label\" rescan )\n"
             "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
             "\nArguments:\n"
-            "1. \"zcoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
+            "1. \"tecracoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
             "2. \"label\"            (string, optional, default=\"\") An optional label\n"
             "3. rescan               (boolean, optional, default=true) Rescan the wallet for transactions\n"
             "\nNote: This call can take minutes to complete if rescan is true.\n"
@@ -114,7 +114,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
     const CHDChain& chain = pwallet->GetHDChain();
     if(chain.nVersion == chain.VERSION_WITH_BIP39){
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets and private keys is disabled for mnemonic-enabled wallets."
-                                             "To import your dump file, create a non-mnemonic wallet by setting \"usemnemonic=0\" in your zcoin.conf file, after backing up and removing your existing wallet.");
+                                             "To import your dump file, create a non-mnemonic wallet by setting \"usemnemonic=0\" in your tecracoin.conf file, after backing up and removing your existing wallet.");
     }
 
     string strSecret = request.params[0].get_str();
@@ -260,7 +260,7 @@ UniValue importaddress(const JSONRPCRequest& request)
         std::vector<unsigned char> data(ParseHex(request.params[0].get_str()));
         ImportScript(pwallet, CScript(data.begin(), data.end()), strLabel, fP2SH);
     } else {
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Zcoin address or script");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid tecracoin address or script");
     }
 
     if (fRescan)
@@ -463,7 +463,7 @@ UniValue importwallet(const JSONRPCRequest& request)
     const CHDChain& chain = pwallet->GetHDChain();
     if(chain.nVersion == chain.VERSION_WITH_BIP39){
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets and private keys is disabled for mnemonic-enabled wallets."
-                                             "To import your dump file, create a non-mnemonic wallet by setting \"usemnemonic=0\" in your zcoin.conf file, after backing up and removing your existing wallet.");
+                                             "To import your dump file, create a non-mnemonic wallet by setting \"usemnemonic=0\" in your tecracoin.conf file, after backing up and removing your existing wallet.");
     }
 
 
@@ -617,7 +617,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
             "\nReveals the private key corresponding to 'address'.\n"
             "Then the importprivkey can be used with this output\n"
             "\nArguments:\n"
-            "1. \"address\"   (string, required) The Zcoin address for the private key\n"
+            "1. \"address\"   (string, required) The Tecracoin address for the private key\n"
             "\nResult:\n"
             "\"key\"                (string) The private key\n"
             "\nExamples:\n"
@@ -633,7 +633,7 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     string strAddress = request.params[0].get_str();
     CBitcoinAddress address;
     if (!address.SetString(strAddress))
-        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Zcoin address");
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid Tecracoin address");
     CKeyID keyID;
     if (!address.GetKeyID(keyID))
         throw JSONRPCError(RPC_TYPE_ERROR, "Address does not refer to a key");
@@ -644,16 +644,16 @@ UniValue dumpprivkey(const JSONRPCRequest& request)
     return CBitcoinSecret(vchSecret).ToString();
 }
 
-UniValue dumpprivkey_zcoin(const JSONRPCRequest& request)
+UniValue dumpprivkey_tecracoin(const JSONRPCRequest& request)
 {
 #ifndef UNSAFE_DUMPPRIVKEY
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
         throw runtime_error(
-            "dumpprivkey \"zcoinaddress\"\n"
-            "\nReveals the private key corresponding to 'zcoinaddress'.\n"
+            "dumpprivkey \"tecracoinaddress\"\n"
+            "\nReveals the private key corresponding to 'tecracoinaddress'.\n"
             "Then the importprivkey can be used with this output\n"
             "\nArguments:\n"
-            "1. \"zcoinaddress\"   (string, required) The Zcoin address for the private key\n"
+            "1. \"tecracoinaddress\"   (string, required) The Tecracoin address for the private key\n"
             "2. \"one-time-auth-code\"   (string, optional) A one time authorization code received from a previous call of dumpprivkey"
             "\nResult:\n"
             "\"key\"                (string) The private key\n"
@@ -671,12 +671,12 @@ UniValue dumpprivkey_zcoin(const JSONRPCRequest& request)
             "WARNING! Your one time authorization code is: " + AuthorizationHelper::inst().generateAuthorizationCode(__FUNCTION__ + request.params[0].get_str()) + "\n"
             "This command exports your wallet private key. Anyone with this key has complete control over your funds. \n"
             "If someone asked you to type in this command, chances are they want to steal your coins. \n"
-            "Zcoin team members will never ask for this command's output and it is not needed for Znode setup or diagnosis!\n"
+            "Tecracoin team members will never ask for this command's output and it is not needed for Znode setup or diagnosis!\n"
             "\n"
             " Please seek help on one of our public channels. \n"
-            " Telegram: https://t.me/zcoinproject \n"
+            " Telegram: https://t.me/tecracoinproject \n"
             " Discord: https://discordapp.com/invite/4FjnQ2q\n"
-            " Reddit: https://www.reddit.com/r/zcoin/\n"
+            " Reddit: https://www.reddit.com/r/tecracoin/\n"
             "\n"
             ;
         throw runtime_error(warning);
@@ -733,7 +733,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     std::sort(vKeyBirth.begin(), vKeyBirth.end());
 
     // produce output
-    file << strprintf("# Wallet dump created by Zcoin %s\n", CLIENT_BUILD);
+    file << strprintf("# Wallet dump created by Tecracoin %s\n", CLIENT_BUILD);
     file << strprintf("# * Created on %s\n", EncodeDumpTime(GetTime()));
     file << strprintf("# * Best block at time of backup was %i (%s),\n", chainActive.Height(), chainActive.Tip()->GetBlockHash().ToString());
     file << strprintf("#   mined on %s\n", EncodeDumpTime(chainActive.Tip()->GetBlockTime()));
@@ -849,7 +849,7 @@ UniValue dumpwallet(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
-UniValue dumpwallet_zcoin(const JSONRPCRequest& request)
+UniValue dumpwallet_tecracoin(const JSONRPCRequest& request)
 {
 #ifndef UNSAFE_DUMPPRIVKEY
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 2)
@@ -872,12 +872,12 @@ UniValue dumpwallet_zcoin(const JSONRPCRequest& request)
             "WARNING! Your one time authorization code is: " + AuthorizationHelper::inst().generateAuthorizationCode(__FUNCTION__ + request.params[0].get_str()) + "\n"
             "This command exports all your private keys. Anyone with these keys has complete control over your funds. \n"
             "If someone asked you to type in this command, chances are they want to steal your coins. \n"
-            "Zcoin team members will never ask for this command's output and it is not needed for Znode setup or diagnosis!\n"
+            "Tecracoin team members will never ask for this command's output and it is not needed for Znode setup or diagnosis!\n"
             "\n"
             " Please seek help on one of our public channels. \n"
-            " Telegram: https://t.me/zcoinproject \n"
+            " Telegram: https://t.me/tecracoinproject \n"
             " Discord: https://discordapp.com/invite/4FjnQ2q\n"
-            " Reddit: https://www.reddit.com/r/zcoin/\n"
+            " Reddit: https://www.reddit.com/r/tecracoin/\n"
             "\n"
             ;
         throw runtime_error(warning);

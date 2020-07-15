@@ -54,10 +54,10 @@ static int AppInitRawTx(int argc, char* argv[])
     if (argc<2 || IsArgSet("-?") || IsArgSet("-h") || IsArgSet("-help"))
     {
         // First part of help message is specific to this utility
-        std::string strUsage = strprintf(_("%s zcoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n\n" +
+        std::string strUsage = strprintf(_("%s tecracoin-tx utility version"), _(PACKAGE_NAME)) + " " + FormatFullVersion() + "\n\n" +
             _("Usage:") + "\n" +
-              "  zcoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded Zcoin transaction") + "\n" +
-              "  zcoin-tx [options] -create [commands]   " + _("Create hex-encoded Zcoin transaction") + "\n" +
+              "  tecracoin-tx [options] <hex-tx> [commands]  " + _("Update hex-encoded tecracoin transaction") + "\n" +
+              "  tecracoin-tx [options] -create [commands]   " + _("Create hex-encoded tecracoin transaction") + "\n" +
               "\n";
 
         fprintf(stdout, "%s", strUsage.c_str());

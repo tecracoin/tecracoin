@@ -1,5 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The TecraCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -31,9 +32,9 @@
 #include "crypto/MerkleTreeProof/mtp.h"
 #include "crypto/Lyra2Z/Lyra2Z.h"
 #include "crypto/Lyra2Z/Lyra2.h"
-#include "znode-payments.h"
-#include "znode-sync.h"
-#include "znodeman.h"
+#include "tnode-payments.h"
+#include "tnode-sync.h"
+#include "tnodeman.h"
 #include "zerocoin.h"
 #include "sigma.h"
 #include "sigma/remint.h"
@@ -779,6 +780,8 @@ void BlockAssembler::addPriorityTxs()
     fNeedSizeAccounting = fSizeAccounting;
 }
 
+
+//Tecrcoin: TODO!
 void BlockAssembler::FillFoundersReward(CMutableTransaction &coinbaseTx, bool fMTP) {
     auto &params = chainparams.GetConsensus();
     CAmount coin = COIN / (fMTP ? params.nMTPRewardReduction : 1);
@@ -927,7 +930,7 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
     {
         LOCK(cs_main);
         if (pblock->hashPrevBlock != chainActive.Tip()->GetBlockHash())
-            return error("ZcoinMiner: generated block is stale");
+            return error("ProcessBlockFound: generated block is stale");
     }
 
     // Inform about the new block
@@ -935,14 +938,14 @@ static bool ProcessBlockFound(const CBlock* pblock, const CChainParams& chainpar
 
     // Process this block the same as if we had received it from another node
     if (!ProcessNewBlock(chainparams, std::shared_ptr<const CBlock>(new CBlock(*pblock)), true, NULL))
-        return error("ZcoinMiner: ProcessNewBlock, block not accepted");
+        return error("ProcessBlockFound: ProcessNewBlock, block not accepted");
 
     return true;
 }
 
-void static ZcoinMiner(const CChainParams &chainparams) {
+void static TecraCoinMiner(const CChainParams &chainparams) {
     SetThreadPriority(THREAD_PRIORITY_LOWEST);
-    RenameThread("zcoin-miner");
+    RenameThread("tecracoin-miner");
 
     unsigned int nExtraNonce = 0;
 
@@ -954,7 +957,7 @@ void static ZcoinMiner(const CChainParams &chainparams) {
         // due to some internal error but also if the keypool is empty.
         // In the latter case, already the pointer is NULL.
         if (!coinbaseScript || coinbaseScript->reserveScript.empty()) {
-            LogPrintf("ZcoinMiner stop here coinbaseScript=%s, coinbaseScript->reserveScript.empty()=%s\n", coinbaseScript, coinbaseScript->reserveScript.empty());
+            LogPrintf("TecraCoinMiner stop here coinbaseScript=%s, coinbaseScript->reserveScript.empty()=%s\n", coinbaseScript, coinbaseScript->reserveScript.empty());
             throw std::runtime_error("No coinbase script available (mining requires a wallet)");
         }
 
@@ -966,7 +969,7 @@ void static ZcoinMiner(const CChainParams &chainparams) {
                 // Also try to wait for znode winners unless we're on regtest chain
                 do {
                     bool fvNodesEmpty = g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0;
-                    bool fHasZnodesWinnerForNextBlock;
+                    bool fHasTnodesWinnerForNextBlock;
                     const Consensus::Params &params = chainparams.GetConsensus();
                     {
                         LOCK2(cs_main, mempool.cs);
@@ -995,13 +998,13 @@ void static ZcoinMiner(const CChainParams &chainparams) {
             std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(Params()).CreateNewBlock(coinbaseScript->reserveScript, {});
             LogPrintf("AFTER: pblocktemplate\n");
             if (!pblocktemplate.get()) {
-                LogPrintf("Error in ZcoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
+                LogPrintf("Error in TecraCoinMiner: Keypool ran out, please call keypoolrefill before restarting the mining thread\n");
                 return;
             }
             CBlock *pblock = &pblocktemplate->block;
             IncrementExtraNonce(pblock, pindexPrev, nExtraNonce);
 
-            LogPrintf("Running ZcoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
+            LogPrintf("Running TecraCoinMiner with %u transactions in block (%u bytes)\n", pblock->vtx.size(),
                       ::GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION));
 
             LogPrintf("BEFORE: search\n");
@@ -1029,28 +1032,8 @@ void static ZcoinMiner(const CChainParams &chainparams) {
                         LogPrintf("BEFORE: mtp_hash\n");
                         thash = mtp::hash(*pblock, Params().GetConsensus().powLimit);
                         pblock->mtpHashValue = thash;
-                    } else if (!fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2Z_HEIGHT) {
-                        lyra2z_hash(BEGIN(pblock->nVersion), BEGIN(thash));
-                    } else if (!fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2_HEIGHT) {
-                        LYRA2(BEGIN(thash), 32, BEGIN(pblock->nVersion), 80, BEGIN(pblock->nVersion), 80, 2, 8192, 256);
-                    } else if (!fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2VAR_HEIGHT) {
-                        LYRA2(BEGIN(thash), 32, BEGIN(pblock->nVersion), 80, BEGIN(pblock->nVersion), 80, 2,
-                              pindexPrev->nHeight + 1, 256);
-                    } else if (fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2Z_HEIGHT_TESTNET) { // testnet
-                        lyra2z_hash(BEGIN(pblock->nVersion), BEGIN(thash));
-                    } else if (fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2_HEIGHT_TESTNET) { // testnet
-                        LYRA2(BEGIN(thash), 32, BEGIN(pblock->nVersion), 80, BEGIN(pblock->nVersion), 80, 2, 8192, 256);
-                    } else if (fTestNet && pindexPrev->nHeight + 1 >= HF_LYRA2VAR_HEIGHT_TESTNET) { // testnet
-                        LYRA2(BEGIN(thash), 32, BEGIN(pblock->nVersion), 80, BEGIN(pblock->nVersion), 80, 2, pindexPrev->nHeight + 1, 256);
                     } else {
-                        unsigned long int scrypt_scratpad_size_current_block =
-                                ((1 << (GetNfactor(pblock->nTime) + 1)) * 128) + 63;
-                        char *scratchpad = (char *) malloc(scrypt_scratpad_size_current_block * sizeof(char));
-                        scrypt_N_1_1_256_sp_generic(BEGIN(pblock->nVersion), BEGIN(thash), scratchpad,
-                                                    GetNfactor(pblock->nTime));
-//                        LogPrintf("scrypt thash: %s\n", thash.ToString().c_str());
-//                        LogPrintf("hashTarget: %s\n", hashTarget.ToString().c_str());
-                        free(scratchpad);
+                        lyra2z_hash(BEGIN(pblock->nVersion), BEGIN(thash));
                     }
 
                     boost::this_thread::interruption_point();
@@ -1062,7 +1045,7 @@ void static ZcoinMiner(const CChainParams &chainparams) {
                         LogPrintf("Found a solution. Hash: %s", UintToArith256(thash).ToString());
                         SetThreadPriority(THREAD_PRIORITY_NORMAL);
 //                        CheckWork(pblock, *pwallet, reservekey);
-                        LogPrintf("ZcoinMiner:\n");
+                        LogPrintf("TecraCoinMiner:\n");
                         LogPrintf("proof-of-work found  \n  hash: %s  \ntarget: %s\n", UintToArith256(thash).ToString(), hashTarget.ToString());
                         ProcessBlockFound(pblock, chainparams);
                         SetThreadPriority(THREAD_PRIORITY_LOWEST);
@@ -1098,11 +1081,11 @@ void static ZcoinMiner(const CChainParams &chainparams) {
         }
     }
     catch (const boost::thread_interrupted &) {
-        LogPrintf("ZcoinMiner terminated\n");
+        LogPrintf("TecraCoinMiner terminated\n");
         throw;
     }
     catch (const std::runtime_error &e) {
-        LogPrintf("ZcoinMiner runtime error: %s\n", e.what());
+        LogPrintf("TecraCoinMiner runtime error: %s\n", e.what());
         return;
     }
 }
@@ -1126,7 +1109,7 @@ void GenerateBitcoins(bool fGenerate, int nThreads, const CChainParams& chainpar
 
     minerThreads = new boost::thread_group();
     for (int i = 0; i < nThreads; i++)
-        minerThreads->create_thread(boost::bind(&ZcoinMiner, boost::cref(chainparams)));
+        minerThreads->create_thread(boost::bind(&TecraCoinMiner, boost::cref(chainparams)));
 }
 
 void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned int& nExtraNonce)
@@ -1147,3 +1130,4 @@ void IncrementExtraNonce(CBlock* pblock, const CBlockIndex* pindexPrev, unsigned
     pblock->vtx[0] = MakeTransactionRef(std::move(txCoinbase));
     pblock->hashMerkleRoot = BlockMerkleRoot(*pblock);
 }
+

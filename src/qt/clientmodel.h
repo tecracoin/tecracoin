@@ -93,9 +93,9 @@ public:
     mutable std::atomic<int> cachedBestHeaderHeight;
     mutable std::atomic<int64_t> cachedBestHeaderTime;
     
-    // Try to avoid Elysium queuing too many messages
-    bool tryLockElysiumStateChanged();
-    bool tryLockElysiumBalanceChanged();
+    // Try to avoid Exodus queuing too many messages
+    bool tryLockExodusStateChanged();
+    bool tryLockExodusBalanceChanged();
 
 private:
     OptionsModel *optionsModel;
@@ -113,9 +113,9 @@ private:
     void subscribeToCoreSignals();
     void unsubscribeFromCoreSignals();
 
-    // Locks for Elysium state changes
-    bool lockedElysiumStateChanged;
-    bool lockedElysiumBalanceChanged;
+    // Locks for Exodus state changes
+    bool lockedExodusStateChanged;
+    bool lockedExodusBalanceChanged;
 
 Q_SIGNALS:
     void numConnectionsChanged(int count);
@@ -127,11 +127,17 @@ Q_SIGNALS:
     void bytesChanged(quint64 totalBytesIn, quint64 totalBytesOut);
     void additionalDataSyncProgressChanged(double nSyncProgress);
 
-    // Additional Elysium signals
-    void reinitElysiumState();
-    void refreshElysiumState();
-    void refreshElysiumBalance();
-    void refreshElysiumPending(bool pending);
+    // Additional Exodus signals
+    void reinitExodusState();
+    void refreshExodusState();
+    void refreshExodusBalance();
+    void refreshExodusPending(bool pending);
+
+    // Additional Exodus signals
+    void reinitExodusState();
+    void refreshExodusState();
+    void refreshExodusBalance();
+    void refreshExodusPending(bool pending);
 
     //! Fired when a message should be reported to the user
     void message(const QString &title, const QString &message, unsigned int style);
@@ -146,11 +152,11 @@ public Q_SLOTS:
     void updateAlert();
     void updateBanlist();
 
-    // Additional Elysium slots
-    void invalidateElysiumState();
-    void updateElysiumState();
-    void updateElysiumBalance();
-    void updateElysiumPending(bool pending);
+    // Additional Exodus slots
+    void invalidateExodusState();
+    void updateExodusState();
+    void updateExodusBalance();
+    void updateExodusPending(bool pending);
 };
 
 #endif // BITCOIN_QT_CLIENTMODEL_H

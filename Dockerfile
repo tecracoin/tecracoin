@@ -1,4 +1,4 @@
-# This is a Dockerfile for zcoind.
+# This is a Dockerfile for tecracoind.
 FROM debian:stretch
 
 # Install required system packages
@@ -39,18 +39,18 @@ RUN curl -L https://github.com/zeromq/libzmq/releases/download/v4.3.1/zeromq-4.3
     cd / && rm -rf /tmp/zeromq-4.3.1/
 
 # Create user to run daemon
-RUN useradd -m -U zcoind
+RUN useradd -m -U tecracoind
 
 # Build Zcoin
-COPY . /tmp/zcoin/
+COPY . /tmp/tecracoin/
 
-RUN cd /tmp/zcoin && \
+RUN cd /tmp/tecracoin && \
     ./autogen.sh && \
     ./configure --without-gui --prefix=/usr && \
     make -j$(nproc) && \
     make check && \
     make install && \
-    cd / && rm -rf /tmp/zcoin
+    cd / && rm -rf /tmp/tecracoin
 
 # Remove unused packages
 RUN apt-get remove -y \
@@ -65,22 +65,14 @@ RUN apt-get remove -y \
     libzmq3-dev \
     make
 
-# Start Zcoin Daemon
-USER zcoind
+# Start TecraCoin Daemon
+USER tecracoind
 
-RUN mkdir /home/zcoind/.zcoin
-VOLUME [ "/home/zcoind/.zcoin" ]
+RUN mkdir /home/tecracoind/.tecracoin
+VOLUME [ "/home/tecracoind/.tecracoin" ]
 
-# Main network ports
 EXPOSE 8168
 EXPOSE 8888
-
-# Test network ports
-EXPOSE 18168
-EXPOSE 18888
-
-# Regression test network ports
 EXPOSE 18444
-EXPOSE 28888
 
-ENTRYPOINT [ "/usr/bin/zcoind" ]
+ENTRYPOINT [ "/usr/bin/tecracoind" ]

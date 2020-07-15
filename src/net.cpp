@@ -67,6 +67,20 @@
 #endif
 #endif
 
+extern CTxMemPool mempool;
+
+// Function body is in main.cpp
+bool AcceptToMemoryPool(
+        CTxMemPool& pool,
+        CValidationState &state,
+        const CTransaction &tx,
+        bool fCheckInputs,
+        bool fLimitFree,
+        bool* pfMissingInputs,
+        bool fOverrideMempoolLimit=false,
+        const CAmount nAbsurdFee=0,
+        bool isCheckWalletTransaction = false,
+        bool markTecraCoinSpendTransactionSerial = true);
 
 namespace {
     const int MAX_OUTBOUND_CONNECTIONS = 8;
@@ -109,6 +123,30 @@ CNode* CNode::localDandelionDestination = nullptr;
 // All txn are put in the stempool in stem phase.
 // After getting relayed they are moved to mempool.
 extern CTxPoolAggregate txpools;
+
+// Public Dandelion fields.
+
+// All transactions embargoed by dandelion.
+std::map<uint256, int64_t> CNode::mDandelionEmbargo;
+
+// Inbound connections. Transactions from each connection
+// are broadcast to one of 2 dandelion destinations.
+std::vector<CNode*> CNode::vDandelionInbound;
+
+// All of our outbound destinations.
+std::vector<CNode*> CNode::vDandelionOutbound;
+std::vector<CNode*> CNode::vDandelionDestination;
+
+// Dandelion routes, showing txn from which peer must go to which destination.
+std::map<CNode*, CNode*> CNode::mDandelionRoutes;
+
+// Destination node to which are stem-ed all local transactions.
+CNode* CNode::localDandelionDestination = nullptr;
+CThreadInterrupt CNode::interruptNet;
+
+// All txn are put in the stempool in stem phase.
+// After getting relayed they are moved to mempool.
+extern CTxMemPool stempool;
 
 /** Services this node implementation cares about */
 ServiceFlags nRelevantServices = NODE_NETWORK;
@@ -1189,7 +1227,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr *) &sockaddr, &len);
     CAddress addr;
     int nInbound = 0;
-    int nVerifiedInboundMasternodes = 0;
+    int nVerifiedInboundTnodes = 0;
     int nMaxInbound = nMaxConnections - (nMaxOutbound + nMaxFeeler);
 
     if (hSocket != INVALID_SOCKET)
@@ -1203,7 +1241,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
             if (pnode->fInbound) {
                 nInbound++;
                 if (!pnode->verifiedProRegTxHash.IsNull()) {
-                    nVerifiedInboundMasternodes++;
+                    nVerifiedInboundTnodes++;
                 }
             }
         }
@@ -1265,7 +1303,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     pnode->fWhitelisted = whitelisted;
     GetNodeSignals().InitializeNode(pnode, *this);
 
-    LogPrint("net", "connection from %s accepted\n", addr.ToString());
+    LogPrintf("Connection from %s accepted\n", addr.ToString());
 
     {
         LOCK(cs_vNodes);
@@ -1677,10 +1715,6 @@ void CConnman::WakeMessageHandler()
 }
 
 
-
-
-
-
 #ifdef USE_UPNP
 void ThreadMapPort()
 {
@@ -2037,6 +2071,7 @@ void CConnman::ThreadOpenConnections()
         {
             CAddrInfo addr = addrman.Select(fFeeler);
 
+//            LogPrintf("[net:open_connections] trying: %s\n",addr.ToString());
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
                 break;
@@ -2048,16 +2083,21 @@ void CConnman::ThreadOpenConnections()
             if (nTries > 100)
                 break;
 
-            if (IsLimited(addr))
+            if (IsLimited(addr)){
+//                LogPrintf("[net:open_connections] denied, reason: limited: %s\n",addr.ToString());
                 continue;
-
+}
             // only connect to full nodes
-            if ((addr.nServices & REQUIRED_SERVICES) != REQUIRED_SERVICES)
+            if ((addr.nServices & REQUIRED_SERVICES) != REQUIRED_SERVICES){
+//                LogPrintf("[net:open_connections] denied, reason: services: %s\n",addr.ToString());
                 continue;
+            }
 
             // only consider very recently tried nodes after 30 failed attempts
-            if (nANow - addr.nLastTry < 600 && nTries < 30)
+            if (nANow - addr.nLastTry < 600 && nTries < 30){
+//                LogPrintf("[net:open_connections] denied, reason: time_try %s\n",addr.ToString());
                 continue;
+        }
 
             // only consider nodes missing relevant services after 40 failed attempts and only if less than half the outbound are up.
             ServiceFlags nRequiredServices = nRelevantServices;
@@ -2270,7 +2310,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 }
 
 // if successful, this moves the passed grant to the constructed node
-bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode, bool fConnectToMasternode)
+bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode, bool fConnectToTnode)
 {
     //
     // Initiate outbound network connection
@@ -2281,7 +2321,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (!fNetworkActive) {
         return false;
     }
-    bool fAllowLocal = fMasternodeMode;
+    bool fAllowLocal = fTnodeMode;
     if (!pszDest) {
         // banned or exact match?
         if (IsBanned(addrConnect) || FindNode(addrConnect.ToStringIPPort()))
@@ -2292,7 +2332,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     } else if (FindNode(std::string(pszDest)))
         return false;
 
-    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, fMasternodeMode);
+    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, fTnodeMode);
 
     if (!pnode)
         return false;
@@ -2302,7 +2342,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         pnode->fOneShot = true;
     if (fFeeler)
         pnode->fFeeler = true;
-    if (fConnectToMasternode)
+    if (fConnectToTnode)
         pnode->fZnode = true;
 
     // Martun: if dandelion is enabled, then send a special transaction
@@ -2333,10 +2373,28 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         vNodes.push_back(pnode);
     }
 
+    // Martun: if dandelion is enabled, then send a special transaction
+    // to the new peer to check, if the peer supports dandelion or not.
+    if (GetBoolArg("-dandelion", true)) {
+        LOCK(cs_vNodes);
+        // Dandelion: new outbound connection
+        CNode::vDandelionOutbound.push_back(pnode);
+        if (CNode::vDandelionDestination.size() < DANDELION_MAX_DESTINATIONS) {
+            CNode::vDandelionDestination.push_back(pnode);
+        }
+        //LogPrintf("Added outbound Dandelion connection:\n%s",
+        //          CNode::GetDandelionRoutingDataDebugString());
+        // Dandelion service discovery
+        uint256 dummyHash;
+        dummyHash.SetHex("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
+        CInv dummyInv(MSG_DANDELION_TX, dummyHash);
+        pnode->PushInventory(dummyInv);
+    }
+
     return true;
 }
 
-bool CConnman::OpenMasternodeConnection(const CAddress &addrConnect) {
+bool CConnman::OpenTnodeConnection(const CAddress &addrConnect) {
     return OpenNetworkConnection(addrConnect, false, NULL, NULL, false, false, false, true);
 }
 
@@ -3471,7 +3529,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     lastSentFeeFilter = 0;
     nextSendTimeFeeFilter = 0;
     // znode
-    fZnode = false;
+    fTnode = false;
     fPauseRecv = false;
     fPauseSend = false;
     nProcessQueueSize = 0;
@@ -3722,4 +3780,3 @@ bool CNode::removeDandelionEmbargo(const uint256& hash) {
     }
     return false;
 }
-

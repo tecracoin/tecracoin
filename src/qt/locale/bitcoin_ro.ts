@@ -76,7 +76,7 @@
     </message>
 </context>
 <context>
-    <name>ZcoinGUI</name>
+    <name>TecraCoinGUI</name>
     <message>
         <source>Sign &amp;message...</source>
         <translation>Semnează &amp;mesajul...</translation>
@@ -142,8 +142,8 @@
         <translation>Deschide &amp;URI...</translation>
     </message>
     <message>
-        <source>Send coins to a Zcoin address</source>
-        <translation>Trimite monedele către o adresă Zcoin</translation>
+        <source>Send coins to a TecraCoin address</source>
+        <translation>Trimite monedele către o adresă TecraCoin</translation>
     </message>
     <message>
         <source>Backup wallet to another location</source>
@@ -166,8 +166,8 @@
         <translation>&amp;Verifică mesajul...</translation>
     </message>
     <message>
-        <source>Zcoin</source>
-        <translation>Zcoin</translation>
+        <source>TecraCoin</source>
+        <translation>TecraCoin</translation>
     </message>
     <message>
         <source>Wallet</source>
@@ -194,12 +194,12 @@
         <translation>Criptează cheile private care aparțin portofelului tău.</translation>
     </message>
     <message>
-        <source>Sign messages with your Zcoin addresses to prove you own them</source>
-        <translation>Semnează mesajele cu adresa ta de Zcoin pentru a face dovada că îți aparțin.</translation>
+        <source>Sign messages with your TecraCoin addresses to prove you own them</source>
+        <translation>Semnează mesajele cu adresa ta de TecraCoin pentru a face dovada că îți aparțin.</translation>
     </message>
     <message>
-        <source>Verify messages to ensure they were signed with specified Zcoin addresses</source>
-        <translation>Verifică mesajele cu scopul de a asigura faptul că au fost semnate cu adresa de Zcoin specificată.</translation>
+        <source>Verify messages to ensure they were signed with specified TecraCoin addresses</source>
+        <translation>Verifică mesajele cu scopul de a asigura faptul că au fost semnate cu adresa de TecraCoin specificată.</translation>
     </message>
     <message>
         <source>&amp;File</source>
@@ -214,12 +214,12 @@
         <translation>&amp;Ajutor</translation>
     </message>
     <message>
-        <source>Request payments (generates QR codes and zcoin: URIs)</source>
-        <translation>Cerere plată (generează coduri QR și zcoin: URIs)</translation>
+        <source>Request payments (generates QR codes and tecracoin: URIs)</source>
+        <translation>Cerere plată (generează coduri QR și tecracoin: URIs)</translation>
     </message>
     <message>
-        <source>Open a zcoin: URI or payment request</source>
-        <translation>Deschide un zcoin: URI sau cerere de plată</translation>
+        <source>Open a tecracoin: URI or payment request</source>
+        <translation>Deschide un tecracoin: URI sau cerere de plată</translation>
     </message>
     <message>
         <source>%1 behind</source>
@@ -746,10 +746,10 @@
     <name>WalletView</name>
     </context>
 <context>
-    <name>zcoin-core</name>
+    <name>tecracoin-core</name>
     <message>
-        <source>Zcoin Core</source>
-        <translation>Zcoin Core</translation>
+        <source>TecraCoin Core</source>
+        <translation>TecraCoin Core</translation>
     </message>
     <message>
         <source>Information</source>

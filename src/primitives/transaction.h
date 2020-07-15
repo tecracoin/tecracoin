@@ -238,7 +238,7 @@ public:
     bool IsDust(const CFeeRate &minRelayTxFee) const
     {
 //        return (nValue < GetDustThreshold(minRelayTxFee));
-        //zcoin: disable dust
+        //tecracoin: disable dust
         return false;
     }
 

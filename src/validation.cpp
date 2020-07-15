@@ -51,17 +51,17 @@
 #include "mtpstate.h"
 
 #include "instantx.h"
-#include "znode-payments.h"
-#include "znode-sync.h"
-#include "znodeman.h"
+#include "tnode-payments.h"
+#include "tnode-sync.h"
+#include "tnodeman.h"
 #include "coins.h"
 
 #include "sigma/coinspend.h"
 #include "sigma/remint.h"
 #include "warnings.h"
 
-#ifdef ENABLE_ELYSIUM
-#include "elysium/elysium.h"
+#ifdef ENABLE_EXODUS
+#include "exodus/exodus.h"
 #endif
 
 #include "masternode-payments.h"
@@ -2964,13 +2964,13 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     }
 #endif
 
-#ifdef ENABLE_ELYSIUM
-    //! Elysium: begin block disconnect notification
-    auto fElysium = isElysiumEnabled();
+#ifdef ENABLE_EXODUS
+    //! Exodus: begin block disconnect notification
+    auto fExodus = isExodusEnabled();
 
-    if (fElysium) {
-        LogPrint("handler", "Elysium handler: block disconnect begin [height: %d, reindex: %d]\n", GetHeight(), (int)fReindex);
-        elysium_handler_disc_begin(GetHeight(), pindexDelete);
+    if (fExodus) {
+        LogPrint("handler", "Exodus handler: block disconnect begin [height: %d, reindex: %d]\n", GetHeight(), (int)fReindex);
+        exodus_handler_disc_begin(GetHeight(), pindexDelete);
     }
 #endif
 
@@ -2980,11 +2980,11 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
         GetMainSignals().SyncTransaction(*tx, pindexDelete->pprev, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
     }
 
-#ifdef ENABLE_ELYSIUM
-    //! Elysium: end of block disconnect notification
-    if (fElysium) {
-        LogPrint("handler", "Elysium handler: block disconnect end [height: %d, reindex: %d]\n", GetHeight(), (int)fReindex);
-        elysium_handler_disc_end(GetHeight(), pindexDelete);
+#ifdef ENABLE_EXODUS
+    //! Exodus: end of block disconnect notification
+    if (fExodus) {
+        LogPrint("handler", "Exodus handler: block disconnect end [height: %d, reindex: %d]\n", GetHeight(), (int)fReindex);
+        exodus_handler_disc_end(GetHeight(), pindexDelete);
     }
 #endif
 
@@ -3059,18 +3059,18 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     int64_t nTime5 = GetTimeMicros(); nTimeChainState += nTime5 - nTime4;
     LogPrint("bench", "  - Writing chainstate: %.2fms [%.2fs]\n", (nTime5 - nTime4) * 0.001, nTimeChainState * 0.000001);
 
-#ifdef ENABLE_ELYSIUM
-    bool fElysium = isElysiumEnabled();
+#ifdef ENABLE_EXODUS
+    bool fExodus = isExodusEnabled();
 
-    //! Elysium: transaction position within the block
+    //! Exodus: transaction position within the block
     unsigned int nTxIdx = 0;
-    //! Elysium: number of meta transactions found
+    //! Exodus: number of meta transactions found
     unsigned int nNumMetaTxs = 0;
 
-    //! Elysium: begin block connect notification
-    if (fElysium) {
-        LogPrint("handler", "Elysium handler: block connect begin [height: %d]\n", GetHeight());
-        elysium_handler_block_begin(GetHeight(), pindexNew);
+    //! Exodus: begin block connect notification
+    if (fExodus) {
+        LogPrint("handler", "Exodus handler: block connect begin [height: %d]\n", GetHeight());
+        exodus_handler_block_begin(GetHeight(), pindexNew);
     }
 #endif
 
@@ -3080,12 +3080,12 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     // Update chainActive & related variables.
     UpdateTip(pindexNew, chainparams);
 
-#ifdef ENABLE_ELYSIUM
-        //! Elysium: new confirmed transaction notification
-    if (fElysium) {
+#ifdef ENABLE_EXODUS
+        //! Exodus: new confirmed transaction notification
+    if (fExodus) {
         BOOST_FOREACH(CTransactionRef tx, blockConnecting.vtx) {
-                LogPrint("handler", "Elysium handler: new confirmed transaction [height: %d, idx: %u]\n", GetHeight(), nTxIdx);
-                if (elysium_handler_tx(*tx, GetHeight(), nTxIdx++, pindexNew)) ++nNumMetaTxs;
+                LogPrint("handler", "Exodus handler: new confirmed transaction [height: %d, idx: %u]\n", GetHeight(), nTxIdx);
+                if (exodus_handler_tx(*tx, GetHeight(), nTxIdx++, pindexNew)) ++nNumMetaTxs;
             }
     }
 #endif
@@ -3106,11 +3106,11 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
     }
 #endif
 
-#ifdef ENABLE_ELYSIUM
-    //! Elysium: end of block connect notification
-    if (fElysium) {
-        LogPrint("handler", "Elysium handler: block connect end [new height: %d, found: %u txs]\n", GetHeight(), nNumMetaTxs);
-        elysium_handler_block_end(GetHeight(), pindexNew, nNumMetaTxs);
+#ifdef ENABLE_EXODUS
+    //! Exodus: end of block connect notification
+    if (fExodus) {
+        LogPrint("handler", "Exodus handler: block connect end [new height: %d, found: %u txs]\n", GetHeight(), nNumMetaTxs);
+        exodus_handler_block_end(GetHeight(), pindexNew, nNumMetaTxs);
     }
 #endif
 

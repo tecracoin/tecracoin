@@ -33,8 +33,8 @@
 #include "wallet/wallet.h"
 #include <memory>
 
-#ifdef ENABLE_ELYSIUM
-#include "../elysium/elysium.h"
+#ifdef ENABLE_EXODUS
+#include "../exodus/exodus.h"
 #endif
 
 #include <boost/filesystem.hpp>
@@ -98,7 +98,6 @@ TestingSetup::TestingSetup(const std::string& chainName, std::string suf) : Basi
         pwalletMain = new CWallet(string("wallet_test.dat"));
         static bool fFirstRun = true;
         pwalletMain->LoadWallet(fFirstRun);
-
         InitBlockIndex(chainparams);
         {
             CValidationState state;
@@ -136,8 +135,8 @@ TestingSetup::~TestingSetup()
 {
     UnregisterNodeSignals(GetNodeSignals());
     llmq::InterruptLLMQSystem();
-#ifdef ENABLE_ELYSIUM
-    elysium_shutdown();
+#ifdef ENABLE_EXODUS
+    exodus_shutdown();
 #endif
     threadGroup.interrupt_all();
     threadGroup.join_all();
@@ -219,7 +218,10 @@ CBlock TestChain100Setup::CreateBlock(const std::vector<CMutableTransaction>& tx
     unsigned int extraNonce = 0;
     IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())) ++block.nNonce;
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())){
+
+        ++block.nNonce;
+
 
     CBlock result = block;
     return result;
