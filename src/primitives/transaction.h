@@ -364,7 +364,7 @@ class CTransaction
 {
 public:
     // Default transaction version.
-    // TODO: confirm Exodus works with transaction v2 and change it to 2 here
+    // TODO: confirm Elysium works with transaction v2 and change it to 2 here
     static const int32_t CURRENT_VERSION=1;
 
     // Changing the default transaction version requires a two step process: first

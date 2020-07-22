@@ -305,144 +305,144 @@ public:
     template<class MintPool>
     bool ReadElysiumMintPoolV0(MintPool &mintPool)
     {
-        return Read(std::string("exodus_mint_pool"), mintPool);
+        return Read(std::string("elysium_mint_pool"), mintPool);
     }
 
     template<class MintPool>
     bool WriteElysiumMintPoolV0(MintPool const &mintPool)
     {
-        return Write(std::string("exodus_mint_pool"), mintPool, true);
+        return Write(std::string("elysium_mint_pool"), mintPool, true);
     }
 
     bool HasElysiumMintPoolV0()
     {
-        return Exists(std::string("exodus_mint_pool"));
+        return Exists(std::string("elysium_mint_pool"));
     }
 
     template<class Key, class MintID>
     bool ReadElysiumMintIdV0(const Key& k, MintID &id)
     {
-        return Read(std::make_pair(std::string("exodus_mint_id"), k), id);
+        return Read(std::make_pair(std::string("elysium_mint_id"), k), id);
     }
 
     template<class Key, class MintID>
     bool WriteElysiumMintIdV0(const Key& k, const MintID &id)
     {
-        return Write(std::make_pair(std::string("exodus_mint_id"), k), id);
+        return Write(std::make_pair(std::string("elysium_mint_id"), k), id);
     }
 
     template<class Key>
     bool HasElysiumMintIdV0(const Key& k)
     {
-        return Exists(std::make_pair(std::string("exodus_mint_id"), k));
+        return Exists(std::make_pair(std::string("elysium_mint_id"), k));
     }
 
     template<class Key>
     bool EraseElysiumMintIdV0(const Key& k)
     {
-        return Erase(std::make_pair(std::string("exodus_mint_id"), k));
+        return Erase(std::make_pair(std::string("elysium_mint_id"), k));
     }
 
     template<class K, class V>
     bool ReadElysiumMintV0(const K& k, V& v)
     {
-        return Read(std::make_pair(std::string("exodus_mint"), k), v);
+        return Read(std::make_pair(std::string("elysium_mint"), k), v);
     }
 
     template<class K>
     bool HasElysiumMintV0(const K& k)
     {
-        return Exists(std::make_pair(std::string("exodus_mint"), k));
+        return Exists(std::make_pair(std::string("elysium_mint"), k));
     }
 
     template<class K, class V>
     bool WriteElysiumMintV0(const K &k, const V &v)
     {
-        return Write(std::make_pair(std::string("exodus_mint"), k), v, true);
+        return Write(std::make_pair(std::string("elysium_mint"), k), v, true);
     }
 
     template<class K>
     bool EraseElysiumMintV0(const K& k)
     {
-        return Erase(std::make_pair(std::string("exodus_mint"), k));
+        return Erase(std::make_pair(std::string("elysium_mint"), k));
     }
 
     template<typename K, typename V, typename InsertF>
     void ListElysiumMintsV0(InsertF insertF)
     {
-        ListEntries<K, V, InsertF>(string("exodus_mint"), insertF);
+        ListEntries<K, V, InsertF>(string("elysium_mint"), insertF);
     }
 
     // version 1
     template<class MintPool>
     bool ReadElysiumMintPoolV1(MintPool &mintPool)
     {
-        return Read(std::string("exodus_mint_pool_v1"), mintPool);
+        return Read(std::string("elysium_mint_pool_v1"), mintPool);
     }
 
     template<class MintPool>
     bool WriteElysiumMintPoolV1(MintPool const &mintPool)
     {
-        return Write(std::string("exodus_mint_pool_v1"), mintPool, true);
+        return Write(std::string("elysium_mint_pool_v1"), mintPool, true);
     }
 
     bool HasElysiumMintPoolV1()
     {
-        return Exists(std::string("exodus_mint_pool_v1"));
+        return Exists(std::string("elysium_mint_pool_v1"));
     }
 
     template<class Key, class MintID>
     bool ReadElysiumMintIdV1(const Key& k, MintID &id)
     {
-        return Read(std::make_pair(std::string("exodus_mint_id_v1"), k), id);
+        return Read(std::make_pair(std::string("elysium_mint_id_v1"), k), id);
     }
 
     template<class Key, class MintID>
     bool WriteElysiumMintIdV1(const Key& k, const MintID &id)
     {
-        return Write(std::make_pair(std::string("exodus_mint_id_v1"), k), id);
+        return Write(std::make_pair(std::string("elysium_mint_id_v1"), k), id);
     }
 
     template<class Key>
     bool HasElysiumMintIdV1(const Key& k)
     {
-        return Exists(std::make_pair(std::string("exodus_mint_id_v1"), k));
+        return Exists(std::make_pair(std::string("elysium_mint_id_v1"), k));
     }
 
     template<class Key>
     bool EraseElysiumMintIdV1(const Key& k)
     {
-        return Erase(std::make_pair(std::string("exodus_mint_id_v1"), k));
+        return Erase(std::make_pair(std::string("elysium_mint_id_v1"), k));
     }
 
     template<class K, class V>
     bool ReadElysiumMintV1(const K& k, V& v)
     {
-        return Read(std::make_pair(std::string("exodus_mint_v1"), k), v);
+        return Read(std::make_pair(std::string("elysium_mint_v1"), k), v);
     }
 
     template<class K>
     bool HasElysiumMintV1(const K& k)
     {
-        return Exists(std::make_pair(std::string("exodus_mint_v1"), k));
+        return Exists(std::make_pair(std::string("elysium_mint_v1"), k));
     }
 
     template<class K, class V>
     bool WriteElysiumMintV1(const K &k, const V &v)
     {
-        return Write(std::make_pair(std::string("exodus_mint_v1"), k), v, true);
+        return Write(std::make_pair(std::string("elysium_mint_v1"), k), v, true);
     }
 
     template<class K>
     bool EraseElysiumMintV1(const K& k)
     {
-        return Erase(std::make_pair(std::string("exodus_mint_v1"), k));
+        return Erase(std::make_pair(std::string("elysium_mint_v1"), k));
     }
 
     template<typename K, typename V, typename InsertF>
     void ListElysiumMintsV1(InsertF insertF)
     {
-        ListEntries<K, V, InsertF>(string("exodus_mint_v1"), insertF);
+        ListEntries<K, V, InsertF>(string("elysium_mint_v1"), insertF);
     }
 
 #endif

@@ -14,7 +14,7 @@
 #include "masternodelist.h"
 #include "sigmadialog.h"
 
-#ifdef ENABLE_EXODUS
+#ifdef ENABLE_ELYSIUM
 #include "exoassetsdialog.h"
 #endif
 
@@ -79,7 +79,7 @@ public:
 private:
     void setupTransactionPage();
     void setupSendCoinPage();
-#ifdef ENABLE_EXODUS
+#ifdef ENABLE_ELYSIUM
     void setupToolboxPage();
 #endif
     void setupSigmaPage();
@@ -89,12 +89,12 @@ private:
     WalletModel *walletModel;
 
     OverviewPage *overviewPage;
-#ifdef ENABLE_EXODUS
-    ExoAssetsDialog *exoAssetsPage;
+#ifdef ENABLE_ELYSIUM
+    ElyAssetsDialog *exoAssetsPage;
     QWidget *toolboxPage;
-    TXHistoryDialog *exodusTransactionsView;
+    TXHistoryDialog *elysiumTransactionsView;
     QTabWidget *transactionTabs;
-    SendMPDialog *sendExodusView;
+    SendMPDialog *sendElysiumView;
     QTabWidget *sendCoinsTabs;
 #endif
     QWidget *transactionsPage;
@@ -126,15 +126,15 @@ private:
 public Q_SLOTS:
     /** Switch to overview (home) page */
     void gotoOverviewPage();
-#ifdef ENABLE_EXODUS
-    /** Switch to ExoAssets page */
-    void gotoExoAssetsPage();
+#ifdef ENABLE_ELYSIUM
+    /** Switch to ElyAssets page */
+    void gotoElyAssetsPage();
     /** Switch to utility page */
     void gotoToolboxPage();
-    /** Switch specifically to exodus tx history tab */
-    void gotoExodusHistoryTab();
-    /** Switch to exodus tx history tab and focus on specific transaction */
-    void focusExodusTransaction(const uint256& txid);
+    /** Switch specifically to elysium tx history tab */
+    void gotoElysiumHistoryTab();
+    /** Switch to elysium tx history tab and focus on specific transaction */
+    void focusElysiumTransaction(const uint256& txid);
 #endif
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
