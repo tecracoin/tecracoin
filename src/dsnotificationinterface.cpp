@@ -8,7 +8,7 @@
 //#include "governance.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
-#include "znodesync-interface.h"
+#include "tnodesync-interface.h"
 #include "validation.h"
 #include "spork.h"
 

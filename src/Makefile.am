@@ -400,7 +400,7 @@ libbitcoin_server_a_SOURCES = \
   masternode-meta.cpp \
   masternode-payments.cpp \
   masternode-sync.cpp \
-  znodesync-interface.cpp \
+  tnodesync-interface.cpp \
   masternode-utils.cpp \
   httprpc.cpp \
   httpserver.cpp \

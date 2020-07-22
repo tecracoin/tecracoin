@@ -78,15 +78,6 @@ static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 TCR mininput
 // Number of zerocoin spends allowed per block and per transaction
 #define ZC_SPEND_LIMIT         5
 
-// Genesis block timestamp
-#define ZC_GENESIS_BLOCK_TIME               1414776286
-
-#define SWITCH_TO_MTP_BLOCK_HEADER 1544443200 // 2018 December 10th 12:00 UTC
-#define SWITCH_TO_MTP_5MIN_BLOCK            118600
-
-// Number of zerocoin spends allowed per block and per transaction
-#define ZC_SPEND_LIMIT         5
-
 // Value of sigma spends allowed per block
 #define ZC_SIGMA_VALUE_SPEND_LIMIT_PER_BLOCK  (600 * COIN)
 
