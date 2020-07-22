@@ -426,8 +426,8 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
 CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool fAllowLocal)
 {
     if (pszDest == NULL) {
-        // we clean znode connections in CZnodeMan::ProcessZnodeConnections()
-        // so should be safe to skip this and connect to local Hot MN on CActiveZnode::ManageState()
+        // we clean znode connections in CTnodeMan::ProcessTnodeConnections()
+        // so should be safe to skip this and connect to local Hot MN on CActiveTnode::ManageState()
         if (!fAllowLocal && IsLocal(addrConnect))
             return NULL;
         LOCK(cs_vNodes);
@@ -1058,7 +1058,7 @@ bool CConnman::AttemptToEvictConnection()
             if (node->fDisconnect)
                 continue;
 
-            if (fMasternodeMode) {
+            if (fTnodeMode) {
                 // This handles eviction protected nodes. Nodes are always protected for a short time after the connection
                 // was accepted. This short time is meant for the VERSION/VERACK exchange and the possible MNAUTH that might
                 // follow when the incoming connection is from another masternode. When another message then MNAUTH
@@ -2343,7 +2343,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (fFeeler)
         pnode->fFeeler = true;
     if (fConnectToTnode)
-        pnode->fZnode = true;
+        pnode->fTnode = true;
 
     // Martun: if dandelion is enabled, then send a special transaction
     // to the new peer to check, if the peer supports dandelion or not.
@@ -2807,7 +2807,7 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     }
     if (semMasternodeOutbound == NULL) {
         // initialize semaphore
-        semMasternodeOutbound = new CSemaphore(fMasternodeMode ? MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN : MAX_OUTBOUND_MASTERNODE_CONNECTIONS);
+        semMasternodeOutbound = new CSemaphore(fTnodeMode ? MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN : MAX_OUTBOUND_MASTERNODE_CONNECTIONS);
     }
 
     //
@@ -2891,7 +2891,7 @@ void CConnman::Interrupt()
     }
 
     if (semMasternodeOutbound) {
-        int nMaxMasternodeOutbound = fMasternodeMode ? MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN : MAX_OUTBOUND_MASTERNODE_CONNECTIONS;
+        int nMaxMasternodeOutbound = fTnodeMode ? MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN : MAX_OUTBOUND_MASTERNODE_CONNECTIONS;
         for (int i = 0; i < nMaxMasternodeOutbound; i++) {
             semMasternodeOutbound->post();
         }
@@ -3708,7 +3708,7 @@ void CConnman::ReleaseNodeVector(const std::vector<CNode*>& vecNodes)
 
 bool CConnman::IsMasternodeOrDisconnectRequested(const CService& addr) {
     return ForNode(addr, AllNodes, [](CNode* pnode){
-        return pnode->fZnode || pnode->fDisconnect;
+        return pnode->fTnode || pnode->fDisconnect;
     });
 }
 

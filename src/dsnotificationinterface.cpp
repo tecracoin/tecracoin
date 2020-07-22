@@ -45,7 +45,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     deterministicMNManager->UpdatedBlockTip(pindexNew);
 
     masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
-    znodeSyncInterface.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
+    tnodeSyncInterface.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
 
     // Update global DIP0001 activation status
     //fDIP0001ActiveAtTip = pindexNew->nHeight >= Params().GetConsensus().DIP0001Height;
@@ -78,7 +78,7 @@ void CDSNotificationInterface::NotifyMasternodeListChanged(bool undo, const CDet
 {
     CMNAuth::NotifyMasternodeListChanged(undo, oldMNList, diff);
     //governance.CheckMasternodeOrphanObjects(connman);
-    //governance.CheckMasternodeOrphanVotes(connman);
+    //governance.CheckTnodeOrphanVotes(connman);
     //governance.UpdateCachesAndClean();
 }
 

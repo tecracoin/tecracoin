@@ -16,7 +16,7 @@ private:
 public:
     CTnodeSyncInterface() : fEvoTnodes(false) {}
 
-    bool IsFailed() { return GetAssetID() == TNODE_SYNC_FAILED; }
+    bool IsFailed() { return GetAssetID() == MASTERNODE_SYNC_FAILED; }
     bool IsBlockchainSynced();
     bool IsSynced();
 

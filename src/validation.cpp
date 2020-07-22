@@ -2521,11 +2521,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     }
     else {
         // legacy znodes
-        if (!IsZnodeBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
+        if (!IsTnodeBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
             return state.DoS(0, error("ConnectBlock(): %s", strError), REJECT_INVALID, "bad-cb-amount");
         }
 
-        if (!IsZnodeBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, block.IsMTP())) {
+        if (!IsTnodeBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, block.IsMTP())) {
             mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
             return state.DoS(0, error("ConnectBlock(): couldn't find znode or superblock payments"),
                             REJECT_INVALID, "bad-cb-payee");
@@ -3139,11 +3139,11 @@ int GetInputAge(const CTxIn &txin) {
     }
 }
 
-CAmount GetZnodePayment(const Consensus::Params &params, bool fMTP) {
+CAmount GetTnodePayment(const Consensus::Params &params, bool fMTP) {
 //    CAmount ret = blockValue * 30/100 ; // start at 30%
-//    int nMNPIBlock = Params().GetConsensus().nZnodePaymentsStartBlock;
-////    int nMNPIBlock = Params().GetConsensus().nZnodePaymentsIncreaseBlock;
-//    int nMNPIPeriod = Params().GetConsensus().nZnodePaymentsIncreasePeriod;
+//    int nMNPIBlock = Params().GetConsensus().nTnodePaymentsStartBlock;
+////    int nMNPIBlock = Params().GetConsensus().nTnodePaymentsIncreaseBlock;
+//    int nMNPIPeriod = Params().GetConsensus().nTnodePaymentsIncreasePeriod;
 //
 //    // mainnet:
 //    if (nHeight > nMNPIBlock) ret += blockValue / 20; // 158000 - 25.0% - 2014-10-24

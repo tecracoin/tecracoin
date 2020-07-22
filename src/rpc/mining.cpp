@@ -817,16 +817,16 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     }
     else {
         UniValue tnodeObj(UniValue::VOBJ);
-        if(pblock->txoutZnode != CTxOut()) {
+        if(pblock->txoutTnode != CTxOut()) {
             CTxDestination address1;
-            ExtractDestination(pblock->txoutZnode.scriptPubKey, address1);
+            ExtractDestination(pblock->txoutTnode.scriptPubKey, address1);
             CBitcoinAddress address2(address1);
             tnodeObj.push_back(Pair("payee", address2.ToString().c_str()));
-            tnodeObj.push_back(Pair("script", HexStr(pblock->txoutZnode.scriptPubKey.begin(), pblock->txoutZnode.scriptPubKey.end())));
-            tnodeObj.push_back(Pair("amount", pblock->txoutZnode.nValue));
+            tnodeObj.push_back(Pair("script", HexStr(pblock->txoutTnode.scriptPubKey.begin(), pblock->txoutTnode.scriptPubKey.end())));
+            tnodeObj.push_back(Pair("amount", pblock->txoutTnode.nValue));
         }
         result.push_back(Pair("tnode", tnodeObj));
-        result.push_back(Pair("tnode_payments_started", pindexPrev->nHeight + 1 > Params().GetConsensus().nZnodePaymentsStartBlock));
+        result.push_back(Pair("tnode_payments_started", pindexPrev->nHeight + 1 > Params().GetConsensus().nTnodePaymentsStartBlock));
     }
 
     if (pindexPrev->nHeight+1 >= Params().GetConsensus().DIP0003Height) {

@@ -42,14 +42,14 @@
 extern CCriticalSection cs_main;
 using namespace std;
 
-CScript scriptPubKeyZnode;
+CScript scriptPubKeyTnode;
 
 
-struct ZnodeTestingSetup : public TestingSetup {
+struct TnodeTestingSetup : public TestingSetup {
 
     static constexpr int initialHeight = 150;
 
-    ZnodeTestingSetup() : TestingSetup(CBaseChainParams::REGTEST)
+    TnodeTestingSetup() : TestingSetup(CBaseChainParams::REGTEST)
     {
         CPubKey newKey;
         BOOST_CHECK(pwalletMain->GetKeyFromPool(newKey));
@@ -58,13 +58,13 @@ struct ZnodeTestingSetup : public TestingSetup {
         pwalletMain->SetAddressBook(CBitcoinAddress(strAddress).Get(), "",
                                ( "receive"));
 
-        scriptPubKeyZnode = CScript() <<  ToByteVector(newKey/*coinbaseKey.GetPubKey()*/) << OP_CHECKSIG;
+        scriptPubKeyTnode = CScript() <<  ToByteVector(newKey/*coinbaseKey.GetPubKey()*/) << OP_CHECKSIG;
         bool mtp = false;
         CBlock b;
         for (int i = 0; i < initialHeight; i++)
         {
             std::vector<CMutableTransaction> noTxns;
-            b = CreateAndProcessBlock(noTxns, scriptPubKeyZnode, mtp);
+            b = CreateAndProcessBlock(noTxns, scriptPubKeyTnode, mtp);
             coinbaseTxns.push_back(*b.vtx[0]);
             LOCK(cs_main);
             {
@@ -75,9 +75,9 @@ struct ZnodeTestingSetup : public TestingSetup {
     }
 
     CBlock CreateBlock(const std::vector<CMutableTransaction>& txns,
-                       const CScript& scriptPubKeyZnode, bool mtp = false) {
+                       const CScript& scriptPubKeyTnode, bool mtp = false) {
         const CChainParams& chainparams = Params();
-        std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKeyZnode);
+        std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKeyTnode);
         CBlock block = pblocktemplate->block;
 
         // Replace mempool-selected txns with just coinbase plus passed-in txns:
@@ -114,11 +114,11 @@ struct ZnodeTestingSetup : public TestingSetup {
     }
 
     // Create a new block with just given transactions, coinbase paying to
-    // scriptPubKeyZnode, and try to add it to the current chain.
+    // scriptPubKeyTnode, and try to add it to the current chain.
     CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
-                                 const CScript& scriptPubKeyZnode, bool mtp = false){
+                                 const CScript& scriptPubKeyTnode, bool mtp = false){
 
-        CBlock block = CreateBlock(txns, scriptPubKeyZnode, mtp);
+        CBlock block = CreateBlock(txns, scriptPubKeyTnode, mtp);
         BOOST_CHECK_MESSAGE(ProcessBlock(block), "Processing block failed");
         return block;
     }
@@ -127,13 +127,13 @@ struct ZnodeTestingSetup : public TestingSetup {
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
 };
 
-BOOST_FIXTURE_TEST_SUITE(znode_tests, ZnodeTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(znode_tests, TnodeTestingSetup)
 
-BOOST_AUTO_TEST_CASE(Test_EnforceZnodePayment)
+BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
 {
 
     std::vector<CMutableTransaction> noTxns;
-    CBlock b = CreateAndProcessBlock(noTxns, scriptPubKeyZnode, false);
+    CBlock b = CreateAndProcessBlock(noTxns, scriptPubKeyTnode, false);
     const CChainParams& chainparams = Params();
 
     CMutableTransaction tx = *b.vtx[0];
@@ -159,15 +159,15 @@ BOOST_AUTO_TEST_CASE(Test_EnforceZnodePayment)
 
     ///////////////////////////////////////////////////////////////////////////
     // Paying to the best payee
-    CZnodePayee payee1(tx.vout[1].scriptPubKey, uint256());
+    CTnodePayee payee1(tx.vout[1].scriptPubKey, uint256());
     // Emulates 6 votes for the payee
     for(size_t i =0; i < 5; ++i)
         payee1.AddVoteHash(uint256());
 
-    CZnodeBlockPayees payees;
+    CTnodeBlockPayees payees;
     payees.vecPayees.push_back(payee1);
 
-    znpayments.mapZnodeBlocks[after_block] = payees;
+    znpayments.mapTnodeBlocks[after_block] = payees;
 
     b.fChecked = false;
     b.hashMerkleRoot = BlockMerkleRoot(b, &mutated);
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(Test_EnforceZnodePayment)
 
     ///////////////////////////////////////////////////////////////////////////
     // Paying to a completely wrong payee
-    size_t const znodeOutput = FindZnodeOutput(tx);
+    size_t const znodeOutput = FindTnodeOutput(tx);
     CMutableTransaction txCopy = tx;
     txCopy.vout[znodeOutput].scriptPubKey = txCopy.vout[0].scriptPubKey;
     b.vtx[0] = MakeTransactionRef(txCopy);
@@ -227,12 +227,12 @@ BOOST_AUTO_TEST_CASE(Test_EnforceZnodePayment)
     for(size_t i =0; i < 4; ++i)
         znodeSync.SwitchToNextAsset();
 
-    CZnodePayee payee2(tx.vout[0].scriptPubKey, uint256());
+    CTnodePayee payee2(tx.vout[0].scriptPubKey, uint256());
     // Emulates 9 votes for the payee
     for(size_t i =0; i < 8; ++i)
         payee2.AddVoteHash(uint256());
 
-    znpayments.mapZnodeBlocks[after_block].vecPayees.insert(znpayments.mapZnodeBlocks[after_block].vecPayees.begin(), payee2);
+    znpayments.mapTnodeBlocks[after_block].vecPayees.insert(znpayments.mapTnodeBlocks[after_block].vecPayees.begin(), payee2);
 
     txCopy.vout[1].scriptPubKey = payee1.GetPayee();
     b.vtx[0] = MakeTransactionRef(txCopy);

@@ -291,14 +291,14 @@ class DIP3Test(BitcoinTestFramework):
         while tm < 30:
             s = node.evoznsync('next')
             if s == 'sync updated to MASTERNODE_SYNC_FINISHED' \
-                    or s == 'sync updated to ZNODE_SYNC_FINISHED':
+                    or s == 'sync updated to MASTERNODE_SYNC_FINISHED':
                 break
             time.sleep(0.1)
             tm += 0.1
 
     def force_finish_mnsync_list(self, node):
         if node.evoznsync('status')['AssetName'] == 'MASTERNODE_SYNC_WAITING'\
-                or node.evoznsync('status')['AssetName'] == 'ZNODE_SYNC_WAITING':
+                or node.evoznsync('status')['AssetName'] == 'MASTERNODE_SYNC_WAITING':
             node.evoznsync('next')
 
         tm = 0

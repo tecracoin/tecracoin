@@ -287,10 +287,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     else {
         // Update coinbase transaction with additional info about znode and governance payments,
         // get some info back to pass to getblocktemplate
-        if (nHeight >= params.nZnodePaymentsStartBlock) {
-            CAmount znodePayment = GetZnodePayment(chainparams.GetConsensus(), fMTP);
+        if (nHeight >= params.nTnodePaymentsStartBlock) {
+            CAmount znodePayment = GetTnodePayment(chainparams.GetConsensus(), fMTP);
             coinbaseTx.vout[0].nValue -= znodePayment;
-            FillZnodeBlockPayments(coinbaseTx, nHeight, znodePayment, pblock->txoutZnode, pblock->voutSuperblock);
+            FillTnodeBlockPayments(coinbaseTx, nHeight, znodePayment, pblock->txoutTnode, pblock->voutSuperblock);
         }
     }
 
@@ -793,7 +793,7 @@ void BlockAssembler::FillFoundersReward(CMutableTransaction &coinbaseTx, bool fM
         CScript FOUNDER_3_SCRIPT;
         CScript FOUNDER_4_SCRIPT;
         CScript FOUNDER_5_SCRIPT;
-        if (nHeight < params.nZnodePaymentsStartBlock) {
+        if (nHeight < params.nTnodePaymentsStartBlock) {
             // Take some reward away from us
             coinbaseTx.vout[0].nValue -= 10 * coin;
 
@@ -823,7 +823,7 @@ void BlockAssembler::FillFoundersReward(CMutableTransaction &coinbaseTx, bool fM
             coinbaseTx.vout.push_back(CTxOut(2 * coin, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));
             coinbaseTx.vout.push_back(CTxOut(2 * coin, CScript(FOUNDER_4_SCRIPT.begin(), FOUNDER_4_SCRIPT.end())));
             coinbaseTx.vout.push_back(CTxOut(2 * coin, CScript(FOUNDER_5_SCRIPT.begin(), FOUNDER_5_SCRIPT.end())));
-        } else if (nHeight >= Params().GetConsensus().nZnodePaymentsStartBlock) {
+        } else if (nHeight >= Params().GetConsensus().nTnodePaymentsStartBlock) {
             // Take some reward away from us
             coinbaseTx.vout[0].nValue -= 7 * coin;
 
@@ -974,13 +974,13 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
                     {
                         LOCK2(cs_main, mempool.cs);
                         int nCount = 0;
-                        fHasZnodesWinnerForNextBlock =
+                        fHasTnodesWinnerForNextBlock =
                                 params.IsRegtest() ||
                                 chainActive.Height()+1 >= chainparams.GetConsensus().DIP0003EnforcementHeight ||
-                                chainActive.Height() < params.nZnodePaymentsStartBlock ||
-                                mnodeman.GetNextZnodeInQueueForPayment(chainActive.Height(), true, nCount);
+                                chainActive.Height() < params.nTnodePaymentsStartBlock ||
+                                mnodeman.GetNextTnodeInQueueForPayment(chainActive.Height(), true, nCount);
                     }
-                    if (!fvNodesEmpty && fHasZnodesWinnerForNextBlock && !IsInitialBlockDownload()) {
+                    if (!fvNodesEmpty && fHasTnodesWinnerForNextBlock && !IsInitialBlockDownload()) {
                         break;
                     }
                     MilliSleep(1000);

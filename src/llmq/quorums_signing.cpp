@@ -747,7 +747,7 @@ bool CSigningManager::AsyncSignIfMember(Consensus::LLMQType llmqType, const uint
 {
     auto& params = Params().GetConsensus().llmqs.at(llmqType);
 
-    if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
+    if (!fTnodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
         return false;
     }
 

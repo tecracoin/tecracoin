@@ -5,7 +5,7 @@
 from collections import namedtuple
 
 from test_framework.mininode import *
-from test_framework.test_framework import EvoZnodeTestFramework
+from test_framework.test_framework import EvoTnodeTestFramework
 from test_framework.util import *
 from time import *
 
@@ -37,7 +37,7 @@ class TestNode(SingleNodeConnCB):
         return self.last_mnlistdiff
 
 
-class LLMQCoinbaseCommitmentsTest(EvoZnodeTestFramework):
+class LLMQCoinbaseCommitmentsTest(EvoTnodeTestFramework):
     def __init__(self):
         super().__init__(6, 5, None)
 

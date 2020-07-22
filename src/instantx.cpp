@@ -224,7 +224,7 @@ void CInstantSend::Vote(const uint256& txHash, CConnman& connman)
 
 void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
 {
-    if (!fMasternodeMode) return;
+    if (!fTnodeMode) return;
     if (!llmq::IsOldInstantSendEnabled()) return;
 
     AssertLockHeld(cs_main);
@@ -808,7 +808,7 @@ void CInstantSend::Clear()
     mapTxLockCandidates.clear();
     mapVotedOutpoints.clear();
     mapLockedOutpoints.clear();
-    mapMasternodeOrphanVotes.clear();
+    mapTnodeOrphanVotes.clear();
     nCachedBlockHeight = 0;
 }
 
@@ -1043,17 +1043,17 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
         return false;
     }
 
-    // Verify that masternodeProTxHash belongs to the same MN referred by the collateral
+    // Verify that tnodeProTxHash belongs to the same MN referred by the collateral
     // This is a leftover from the legacy non-deterministic MN list where we used the collateral to identify MNs
     // TODO eventually remove the collateral from CTxLockVote
-    if (!masternodeProTxHash.IsNull()) {
-        auto dmn = mnList.GetValidMN(masternodeProTxHash);
+    if (!tnodeProTxHash.IsNull()) {
+        auto dmn = mnList.GetValidMN(tnodeProTxHash);
         if (!dmn || dmn->collateralOutpoint != outpointTnode) {
-            LogPrint("instantsend", "CTxLockVote::IsValid -- invalid masternodeProTxHash %s\n", masternodeProTxHash.ToString());
+            LogPrint("instantsend", "CTxLockVote::IsValid -- invalid tnodeProTxHash %s\n", tnodeProTxHash.ToString());
             return false;
         }
     } else {
-        LogPrint("instantsend", "CTxLockVote::IsValid -- missing masternodeProTxHash\n");
+        LogPrint("instantsend", "CTxLockVote::IsValid -- missing tnodeProTxHash\n");
         return false;
     }
 
@@ -1082,11 +1082,11 @@ bool CTxLockVote::IsValid(CNode* pnode, CConnman& connman) const
         return false;
     }
 
-    LogPrint("instantsend", "CTxLockVote::IsValid -- Znode %s, rank=%d\n", outpointTnode.ToStringShort(), nRank);
+    LogPrint("instantsend", "CTxLockVote::IsValid -- Tnode %s, rank=%d\n", outpointTnode.ToStringShort(), nRank);
 
     int nSignaturesTotal = Params().GetConsensus().nInstantSendSigsTotal;
     if (nRank > nSignaturesTotal) {
-        LogPrint("instantsend", "CTxLockVote::IsValid -- Znode %s is not in the top %d (%d), vote hash=%s\n",
+        LogPrint("instantsend", "CTxLockVote::IsValid -- Tnode %s is not in the top %d (%d), vote hash=%s\n",
                 outpointTnode.ToStringShort(), nSignaturesTotal, nRank, GetHash().ToString());
         return false;
     }

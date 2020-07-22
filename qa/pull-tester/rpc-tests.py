@@ -198,7 +198,7 @@ testScripts = [
     'znode_check_payments.py',
     'znode_check_status.py',
 
-    # Evo Znodes
+    # Evo Tnodes
     'dip3-deterministicmns.py'
 
     # Unstable tests

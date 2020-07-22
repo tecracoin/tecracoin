@@ -661,19 +661,19 @@ bool CheckZerocoinFoundersInputs(const CTransaction &tx, CValidationState &state
             }
 
             if (nHeight < params.DIP0003EnforcementHeight) {
-                bool validZnodePayment;
+                bool validTnodePayment;
 
-                if (nHeight > params.nZnodePaymentsBugFixedAtBlock) {
+                if (nHeight > params.nTnodePaymentsBugFixedAtBlock) {
                     if (!znodeSync.IsSynced()) {
-                        validZnodePayment = true;
+                        validTnodePayment = true;
                     } else {
-                        validZnodePayment = znpayments.IsTransactionValid(tx, nHeight, fMTP);
+                        validTnodePayment = znpayments.IsTransactionValid(tx, nHeight, fMTP);
                     }
                 } else {
-                    validZnodePayment = total_payment_tx <= 1;
+                    validTnodePayment = total_payment_tx <= 1;
                 }
 
-                if (!validZnodePayment) {
+                if (!validTnodePayment) {
                     return state.DoS(100, false, REJECT_INVALID_ZNODE_PAYMENT,
                                     "CTransaction::CheckTransaction() : invalid znode payment");
                 }

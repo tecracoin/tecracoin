@@ -74,7 +74,7 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
 #endif // ENABLE_WALLET
 
     connman.ForEachNode(CConnman::AllNodes, [&](CNode* pnode) {
-        if (pnode->fZnode && !connman.IsMasternodeQuorumNode(pnode)) {
+        if (pnode->fTnode && !connman.IsMasternodeQuorumNode(pnode)) {
 #ifdef ENABLE_WALLET
             bool fFound = false;
             for (const auto& dmn : vecDmns) {
@@ -85,7 +85,7 @@ void CMasternodeUtils::ProcessMasternodeConnections(CConnman& connman)
             }
             if (fFound) return; // do NOT disconnect mixing masternodes
 #endif // ENABLE_WALLET
-            LogPrintf("Closing Znode connection: peer=%d, addr=%s\n", pnode->id, pnode->addr.ToString());
+            LogPrintf("Closing Tnode connection: peer=%d, addr=%s\n", pnode->id, pnode->addr.ToString());
             pnode->fDisconnect = true;
         }
     });

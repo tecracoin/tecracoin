@@ -272,9 +272,9 @@ void Shutdown()
     zwalletMain = NULL;
 #endif
     GenerateBitcoins(false, 0, Params());
-    CFlatDB<CZnodeMan> flatdb1("tncache.dat", "magicTnodeCache");
+    CFlatDB<CTnodeMan> flatdb1("tncache.dat", "magicTnodeCache");
     flatdb1.Dump(mnodeman);
-    CFlatDB<CZnodePayments> flatdb2("tnpayments.dat", "magicTnodePaymentsCache");
+    CFlatDB<CTnodePayments> flatdb2("tnpayments.dat", "magicTnodePaymentsCache");
     flatdb2.Dump(znpayments);
     
     MapPort(false);
@@ -362,7 +362,7 @@ void Shutdown()
         delete pdsNotificationInterface;
         pdsNotificationInterface = NULL;
     }
-    if (fMasternodeMode) {
+    if (fTnodeMode) {
         UnregisterValidationInterface(activeMasternodeManager);
     }
 
@@ -827,7 +827,7 @@ void ThreadImport(std::vector <boost::filesystem::path> vImportFiles) {
     // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
     pdsNotificationInterface->InitializeCurrentBlockTip();
 
-    if (fMasternodeMode) {
+    if (fTnodeMode) {
         assert(activeMasternodeManager);
         activeMasternodeManager->Init();
     }
@@ -2268,9 +2268,9 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     // ********************************************************* Step 13a: update block tip in Zcoin modules
 
-    bool fEvoZnodes = chainActive.Height() >= chainparams.GetConsensus().DIP0003EnforcementHeight;
+    bool fEvoTnodes = chainActive.Height() >= chainparams.GetConsensus().DIP0003EnforcementHeight;
 
-    if (!fEvoZnodes) {
+    if (!fEvoTnodes) {
         // force UpdatedBlockTip to initialize pCurrentBlockIndex for DS, MN payments and budgets
         // but don't call it directly to prevent triggering of other listeners like zmq etc.
         // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
@@ -2284,7 +2284,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // ********************************************************* Step 13b: start legacy znodes thread
 
     // TODO: remove this code after switch to evo is done
-    if (!fEvoZnodes)
+    if (!fEvoTnodes)
     {
         threadGroup.create_thread([] {
 
@@ -2320,15 +2320,15 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                     // check if we should activate or ping every few minutes,
                     // slightly postpone first run to give net thread a chance to connect to some peers
                     if (nTick % ZNODE_MIN_MNP_SECONDS == 15)
-                        activeZnode.ManageState();
+                        activeTnode.ManageState();
 
                     if (nTick % 60 == 0) {
-                        mnodeman.ProcessZnodeConnections();
+                        mnodeman.ProcessTnodeConnections();
                         mnodeman.CheckAndRemove();
                         znpayments.CheckAndRemove();
                         instantsend.CheckAndRemove();
                     }
-                    if (fMasternodeMode && (nTick % (60 * 5) == 0)) {
+                    if (fTnodeMode && (nTick % (60 * 5) == 0)) {
                         mnodeman.DoFullVerificationStep();
                     }
                 }

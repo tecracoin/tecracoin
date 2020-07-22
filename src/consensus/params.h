@@ -277,7 +277,7 @@ struct Params {
     /** block to start using chainlocks */
     int DIP0008Height;
 
-    int nEvoZnodeMinimumConfirmations;
+    int nEvoTnodeMinimumConfirmations;
 
     std::map<LLMQType, LLMQParams> llmqs;
     LLMQType llmqChainLocks;

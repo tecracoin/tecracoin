@@ -106,5 +106,5 @@ struct TestMemPoolEntryHelper
 };
 
 std::string bitcoin_address_to_tecracoin(const std::string address);
-size_t FindZnodeOutput(CTransaction const & tx);
+size_t FindTnodeOutput(CTransaction const & tx);
 #endif

@@ -326,7 +326,7 @@ bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, CAmount blockRew
         ExtractDestination(txout.scriptPubKey, address1);
         CBitcoinAddress address2(address1);
 
-        LogPrintf("CMasternodePayments::%s -- Znode payment %lld to %s\n", __func__, txout.nValue, address2.ToString());
+        LogPrintf("CMasternodePayments::%s -- Tnode payment %lld to %s\n", __func__, txout.nValue, address2.ToString());
     }
 
     return true;

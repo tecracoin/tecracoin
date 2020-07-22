@@ -1323,7 +1323,7 @@ static const CRPCCommand commands[] =
     { "addressindex",       "getaddressbalance",      &getaddressbalance,      false },
     { "addressindex",       "gettotalsupply",         &gettotalsupply,         false },
 
-    /* Znode features */
+    /* Tnode features */
     { "zcoin",              "evoznsync",              &mnsync,                 true,  {} },
 
     /* Not shown in help */

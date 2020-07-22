@@ -183,7 +183,7 @@ def sync_znodes(rpc_connections, *, timeout=60):
         if all(stat["IsSynced"] == True for stat in statuses):
             return
         cur_time = time.time()
-    raise AssertionError("Znode sync failed.")
+    raise AssertionError("Tnode sync failed.")
 
 def sync_chain(rpc_connections, *, wait=1, timeout=60):
     """

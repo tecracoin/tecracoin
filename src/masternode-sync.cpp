@@ -173,7 +173,7 @@ void CMasternodeSync::ProcessTick(CConnman& connman)
         // they are temporary and should be considered unreliable for a sync process.
         // Inbound connection this early is most likely a "masternode" connection
         // initiated from another node, so skip it too.
-        if(pnode->fZnode || (fMasternodeMode && pnode->fInbound)) continue;
+        if(pnode->fTnode || (fTnodeMode && pnode->fInbound)) continue;
 
         // QUICK MODE (REGTEST ONLY!)
         if(Params().NetworkIDString() == CBaseChainParams::REGTEST)
@@ -400,7 +400,7 @@ void CMasternodeSync::UpdatedBlockTip(const CBlockIndex *pindexNew, bool fInitia
             }
 
             if (verifiedProRegTxHash.IsNull() && pendingMNVerification) {
-                LogPrint("mnsync", "CMasternodeSync::UpdatedBlockTip -- reverifying znode connection to node id=%d\n", pnode->id);
+                LogPrint("mnsync", "CMasternodeSync::UpdatedBlockTip -- reverifying tnode connection to node id=%d\n", pnode->id);
                 CMNAuth::ProcessMNAUTH(pnode, *pendingMNVerification, *g_connman);
             }
 

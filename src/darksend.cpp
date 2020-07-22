@@ -241,8 +241,8 @@ void CDarksendPool::CommitFinalTransaction() {
 // a client submits a transaction then refused to sign, there must be a cost. Otherwise they
 // would be able to do this over and over again and bring the mixing to a hault.
 //
-// How does this work? Messages to Znodes come in via NetMsgType::DSVIN, these require a valid collateral
-// transaction for the client to be able to enter the pool. This transaction is kept by the Znode
+// How does this work? Messages to Tnodes come in via NetMsgType::DSVIN, these require a valid collateral
+// transaction for the client to be able to enter the pool. This transaction is kept by the Tnode
 // until the transaction is either complete or fails.
 //
 void CDarksendPool::ChargeFees() {
@@ -303,20 +303,20 @@ bool CDarksendPool::IsSignaturesComplete() {
 }
 
 //
-// Execute a mixing denomination via a Znode.
+// Execute a mixing denomination via a Tnode.
 // This is only ran from clients
 //
 bool CDarksendPool::SendDenominate(const std::vector <CTxIn> &vecTxIn, const std::vector <CTxOut> &vecTxOut) {
     return true;
 }
 
-// Incoming message from Znode updating the progress of mixing
+// Incoming message from Tnode updating the progress of mixing
 bool CDarksendPool::CheckPoolStateUpdate(PoolState nStateNew, int nEntriesCountNew, PoolStatusUpdate nStatusUpdate, PoolMessage nMessageID, int nSessionIDNew) {
     return false;
 }
 
 //
-// After we receive the finalized transaction from the Znode, we must
+// After we receive the finalized transaction from the Tnode, we must
 // check it to make sure it's what we want, then sign it if we agree.
 // If we refuse to sign, it's possible we'll be charged collateral
 //

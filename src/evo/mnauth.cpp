@@ -16,7 +16,7 @@
 
 void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
 {
-    if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
+    if (!fTnodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
         return;
     }
 
@@ -109,7 +109,7 @@ void CMNAuth::ProcessMNAUTH(CNode* pnode, const CMNAuth &mnauth, CConnman& connm
 
     connman.ForEachNode([&](CNode* pnode2) {
         if (pnode2->verifiedProRegTxHash == mnauth.proRegTxHash) {
-            LogPrint("net", "CMNAuth::ProcessMessage -- Znode %s has already verified as peer %d, dropping old connection. peer=%d\n",
+            LogPrint("net", "CMNAuth::ProcessMessage -- Tnode %s has already verified as peer %d, dropping old connection. peer=%d\n",
                     mnauth.proRegTxHash.ToString(), pnode2->id, pnode->id);
             pnode2->fDisconnect = true;
         }

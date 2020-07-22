@@ -109,7 +109,7 @@ public:
         READWRITE(mapTxLockCandidates);
         READWRITE(mapVotedOutpoints);
         READWRITE(mapLockedOutpoints);
-        READWRITE(mapMasternodeOrphanVotes);
+        READWRITE(mapTnodeOrphanVotes);
         READWRITE(nCachedBlockHeight);
 
         if(ser_action.ForRead() && (strVersion != SERIALIZATION_VERSION_STRING)) {
@@ -236,7 +236,7 @@ private:
     // TODO remove this member (not needed anymore after DIP3 has been deployed)
     COutPoint outpointTnode;
     uint256 quorumModifierHash;
-    uint256 masternodeProTxHash;
+    uint256 tnodeProTxHash;
     std::vector<unsigned char> vchTnodeSignature;
     // local memory only
     int nConfirmedHeight; ///< When corresponding tx is 0-confirmed or conflicted, nConfirmedHeight is -1
@@ -254,7 +254,7 @@ public:
         nTimeCreated(GetTime())
         {}
 
-    CTxLockVote(const uint256& txHashIn, const COutPoint& outpointIn, const COutPoint& outpointTnodeIn, const uint256& quorumModifierHashIn, const uint256& trnodeProTxHashIn) :
+    CTxLockVote(const uint256& txHashIn, const COutPoint& outpointIn, const COutPoint& outpointTnodeIn, const uint256& quorumModifierHashIn, const uint256& tnodeProTxHashIn) :
         txHash(txHashIn),
         outpoint(outpointIn),
         outpointTnode(outpointTnodeIn),

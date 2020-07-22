@@ -376,13 +376,13 @@ void BitcoinGUI::createActions()
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
-    tnodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/znodes"), tr("&Znodes"), this);
-    tnodeAction->setStatusTip(tr("Browse Znodes"));
+    tnodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/znodes"), tr("&Tnodes"), this);
+    tnodeAction->setStatusTip(tr("Browse Tnodes"));
     tnodeAction->setToolTip(tnodeAction->statusTip());
     tnodeAction->setCheckable(true);
 
-    masternodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/znodes"), tr("&Znodes"), this);
-    masternodeAction->setStatusTip(tr("Browse Znodes"));
+    masternodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/znodes"), tr("&Tnodes"), this);
+    masternodeAction->setStatusTip(tr("Browse Tnodes"));
     masternodeAction->setToolTip(masternodeAction->statusTip());
     masternodeAction->setCheckable(true);
 #ifdef Q_OS_MAC
@@ -647,7 +647,7 @@ void BitcoinGUI::setClientModel(ClientModel *_clientModel)
             setTrayIconVisible(optionsModel->getHideTrayIcon());
         }
         checkZc2SigmaVisibility(clientModel->getNumBlocks());
-        checkZnodeVisibility(clientModel->getNumBlocks());
+        checkTnodeVisibility(clientModel->getNumBlocks());
     } else {
         // Disable possibility to show main window via action
         toggleHideAction->setEnabled(false);
@@ -1032,7 +1032,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     }
 #endif // ENABLE_WALLET
 
-    if (!znodeSyncInterface.IsBlockchainSynced())
+    if (!tnodeSyncInterface.IsBlockchainSynced())
     {
         QString timeBehindText = GUIUtil::formatNiceTimeOffset(secs);
 
@@ -1076,7 +1076,7 @@ void BitcoinGUI::setNumBlocks(int count, const QDateTime& blockDate, double nVer
     progressBar->setToolTip(tooltip);
 
     checkZc2SigmaVisibility(count);
-    checkZnodeVisibility(count);
+    checkTnodeVisibility(count);
 }
 
 
@@ -1086,7 +1086,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         return;
 
     // No additional data sync should be happening while blockchain is not synced, nothing to update
-    if(!znodeSyncInterface.IsBlockchainSynced())
+    if(!tnodeSyncInterface.IsBlockchainSynced())
         return;
 
     // Prevent orphan statusbar messages (e.g. hover Quit in main menu, wait until chain-sync starts -> garbelled text)
@@ -1103,13 +1103,13 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         walletFrame->showOutOfSyncWarning(false);
 #endif // ENABLE_WALLET
 
-    if(znodeSyncInterface.IsSynced()) {
+    if(tnodeSyncInterface.IsSynced()) {
         progressBarLabel->setVisible(false);
         progressBar->setVisible(false);
         labelBlocksIcon->setPixmap(platformStyle->SingleColorIcon(":/icons/synced").pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
-        //also check for Znode warning here
-        if(NotifyZnodeWarning::shouldShow()){
-            NotifyZnodeWarning::notify();
+        //also check for Tnode warning here
+        if(NotifyTnodeWarning::shouldShow()){
+            NotifyTnodeWarning::notify();
         }
     } else {
 
@@ -1123,7 +1123,7 @@ void BitcoinGUI::setAdditionalDataSyncProgress(double nSyncProgress)
         progressBar->setValue(nSyncProgress * 1000000000.0 + 0.5);
     }
 
-    strSyncStatus = QString(znodeSyncInterface.GetSyncStatus().c_str());
+    strSyncStatus = QString(tnodeSyncInterface.GetSyncStatus().c_str());
     progressBarLabel->setText(strSyncStatus);
     tooltip = strSyncStatus + QString("<br>") + tooltip;
 
@@ -1474,7 +1474,7 @@ void BitcoinGUI::checkZc2SigmaVisibility(int numBlocks) {
     }
 }
 
-void BitcoinGUI::checkZnodeVisibility(int numBlocks) {
+void BitcoinGUI::checkTnodeVisibility(int numBlocks) {
 
     const Consensus::Params& params = ::Params().GetConsensus();
     // Before legacy window
@@ -1483,8 +1483,8 @@ void BitcoinGUI::checkZnodeVisibility(int numBlocks) {
         masternodeAction->setVisible(false);
     } // during legacy window
     else if(numBlocks < params.DIP0003EnforcementHeight){
-        tnodeAction->setText(tr("&Znodes (legacy)"));
-        tnodeAction->setStatusTip(tr("Browse legacy Znodes"));
+        tnodeAction->setText(tr("&Tnodes (legacy)"));
+        tnodeAction->setStatusTip(tr("Browse legacy Tnodes"));
         tnodeAction->setVisible(true);
         masternodeAction->setVisible(true);
     } // DIP0003 Enforcement
@@ -1493,9 +1493,9 @@ void BitcoinGUI::checkZnodeVisibility(int numBlocks) {
         masternodeAction->setVisible(true);
     }
 
-    //also check for Znode warning here
-    if(NotifyZnodeWarning::shouldShow())
-        NotifyZnodeWarning::notify();
+    //also check for Tnode warning here
+    if(NotifyTnodeWarning::shouldShow())
+        NotifyTnodeWarning::notify();
 }
 
 void BitcoinGUI::toggleNetworkActive()

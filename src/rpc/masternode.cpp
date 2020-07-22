@@ -249,7 +249,7 @@ UniValue masternode_status(const JSONRPCRequest& request)
     if (request.fHelp)
         masternode_status_help();
 
-    if (!fMasternodeMode)
+    if (!fTnodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a znode");
 
     UniValue mnObj(UniValue::VOBJ);

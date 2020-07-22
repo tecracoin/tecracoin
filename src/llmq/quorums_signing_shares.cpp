@@ -233,7 +233,7 @@ void CSigSharesManager::InterruptWorkerThread()
 void CSigSharesManager::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
     // non-masternodes are not interested in sigshares
-    if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
+    if (!fTnodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
         return;
     }
 

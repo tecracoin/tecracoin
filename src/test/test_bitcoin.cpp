@@ -276,7 +276,7 @@ CTxMemPoolEntry TestMemPoolEntryHelper::FromTx(const CTransaction &txn, CTxMemPo
                            inChainValue, spendsCoinbase, sigOpCost, lp);
 }
 
-size_t FindZnodeOutput(CTransaction const & tx) {
+size_t FindTnodeOutput(CTransaction const & tx) {
     static std::vector<CScript> const founders {
         GetScriptForDestination(CBitcoinAddress("TDk19wPKYq91i18qmY6U9FeTdTxwPeSveo").Get()),
         GetScriptForDestination(CBitcoinAddress("TWZZcDGkNixTAMtRBqzZkkMHbq1G6vUTk5").Get()),
@@ -289,11 +289,11 @@ size_t FindZnodeOutput(CTransaction const & tx) {
     for(size_t i = 0; i < tx.vout.size(); ++i) {
         CTxOut const & out = tx.vout[i];
          if(std::find(founders.begin(), founders.end(), out.scriptPubKey) == founders.end()) {
-            if(out.nValue == GetZnodePayment(Params().GetConsensus(), false))
+            if(out.nValue == GetTnodePayment(Params().GetConsensus(), false))
                 return i;
         }
     }
-    throw std::runtime_error("Cannot find the Znode output");
+    throw std::runtime_error("Cannot find the Tnode output");
 }
 
 /*

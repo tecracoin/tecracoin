@@ -341,12 +341,12 @@ class ElysiumTestFramework(BitcoinTestFramework):
         assert_equal(expected, actual)
 
 #
-# Znode tests support
+# Tnode tests support
 #
 
 ZNODE_COLLATERAL = 1000
 
-class ZnodeCollateral(object):
+class TnodeCollateral(object):
     def __init__(self):
         self.tx_id = None
         self.n = -1
@@ -361,7 +361,7 @@ class ZnodeCollateral(object):
                 self.n = vout["n"]
         return self
 
-class ZnodeTestFramework(BitcoinTestFramework):
+class TnodeTestFramework(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
         self.znode_priv_keys = dict()
@@ -401,10 +401,10 @@ class ZnodeTestFramework(BitcoinTestFramework):
     def send_znode_collateral(self, znode, collateral_provider=None):
         if collateral_provider is None:
             collateral_provider = self.num_nodes - 1
-        znode_address = self.nodes[znode].getaccountaddress("Znode")
+        znode_address = self.nodes[znode].getaccountaddress("Tnode")
         tx_id = self.nodes[collateral_provider].sendtoaddress(znode_address, ZNODE_COLLATERAL)
         tx_text = self.nodes[collateral_provider].getrawtransaction(tx_id, 1)
-        collateral = ZnodeCollateral()
+        collateral = TnodeCollateral()
         return collateral.parse_collateral_output(znode_address, tx_text, tx_id)
 
     def send_mature_znode_collateral(self, znode, collateral_provider=None):
@@ -443,7 +443,7 @@ class ZnodeTestFramework(BitcoinTestFramework):
             wait_to_sync_znodes(self.nodes[i])
 
     def znode_start(self, znode):
-        assert_equal("Znode successfully started", self.nodes[znode].znode("start"))
+        assert_equal("Tnode successfully started", self.nodes[znode].znode("start"))
 
     def configure_znode(self, znode, master_znode=None ):
         self.generate_znode_privkey(znode, master_znode)
@@ -473,7 +473,7 @@ def get_znode_service(znode):
     znode_port_str = str(p2p_port(znode))
     return znode_ip_str + ":" + znode_port_str
 
-class ZnodeInfo:
+class TnodeInfo:
     def __init__(self, proTxHash, ownerAddr, votingAddr, pubKeyOperator, keyOperator, collateral_address, collateral_txid, collateral_vout, priv_key):
         self.proTxHash = proTxHash
         self.ownerAddr = ownerAddr
@@ -485,7 +485,7 @@ class ZnodeInfo:
         self.collateral_vout = collateral_vout
         self.priv_key = priv_key
 
-class EvoZnodeTestFramework(BitcoinTestFramework):
+class EvoTnodeTestFramework(BitcoinTestFramework):
     def __init__(self, num_nodes, masterodes_count, extra_args=None):
         super().__init__()
         self.mn_count = masterodes_count
@@ -539,7 +539,7 @@ class EvoZnodeTestFramework(BitcoinTestFramework):
             proTxHash = self.nodes[0].protx('register', txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
         self.nodes[0].generate(1)
 
-        self.mninfo.append(ZnodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout, self.nodes[0].znode("genkey")))
+        self.mninfo.append(TnodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout, self.nodes[0].znode("genkey")))
         self.sync_all()
 
     def remove_mastermode(self, idx):

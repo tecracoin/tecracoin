@@ -15,9 +15,9 @@
 #include "wallet/wallet.h"
 #endif
 
-bool NotifyZnodeWarning::nConsidered = false;
+bool NotifyTnodeWarning::nConsidered = false;
 
-void NotifyZnodeWarning::notify()
+void NotifyTnodeWarning::notify()
 {
     const Consensus::Params& params = ::Params().GetConsensus();
     float numBlocksToEnforcement = params.DIP0003EnforcementHeight - chainActive.Tip()->nHeight;
@@ -26,7 +26,7 @@ void NotifyZnodeWarning::notify()
     float daysToEnforcement = floor(daysDecimal);
     float hoursToEnforcement = floor((daysDecimal > 0 ? (daysDecimal - daysToEnforcement) : 0) * 24);
 
-    std::string strWarning = strprintf(_("WARNING: Legacy znodes detected. You should migrate to the new Znode layout before it becomes enforced (approximately %i days and %i hours). For details on how to migrate, go to https://zcoin.io/znode-migration"),
+    std::string strWarning = strprintf(_("WARNING: Legacy znodes detected. You should migrate to the new Tnode layout before it becomes enforced (approximately %i days and %i hours). For details on how to migrate, go to https://zcoin.io/znode-migration"),
         (int)daysToEnforcement,
         (int)hoursToEnforcement);
 
@@ -34,29 +34,29 @@ void NotifyZnodeWarning::notify()
     uiInterface.NotifyAlertChanged();
 }
 
-bool NotifyZnodeWarning::shouldShow()
+bool NotifyTnodeWarning::shouldShow()
 {
 #ifdef ENABLE_WALLET
     if(nConsidered ||                                         // already fully considered warning
        znodeConfig.getCount() == 0 ||                         // no legacy znodes detected
-       !CZnode::IsLegacyWindow(chainActive.Tip()->nHeight) || // outside of legacy window
+       !CTnode::IsLegacyWindow(chainActive.Tip()->nHeight) || // outside of legacy window
        !pwalletMain ||                                        // wallet not yet loaded
-       !znodeSyncInterface.IsSynced())                        // znode state not yet synced
+       !tnodeSyncInterface.IsSynced())                        // znode state not yet synced
         return false;
 
-    // get Znode entries.
+    // get Tnode entries.
     std::vector<COutPoint> vOutpts;
     bool nGotProReg = false;
     uint256 mnTxHash;
     int outputIndex;
-    BOOST_FOREACH(CZnodeConfig::CZnodeEntry mne, znodeConfig.getEntries()) {
+    BOOST_FOREACH(CTnodeConfig::CTnodeEntry mne, znodeConfig.getEntries()) {
       
-        CZnode* mn = mnodeman.Find(mne.getTxHash(), mne.getOutputIndex());
-        // in the case that the Znode has dissapeared from the network, was never initialized, or it's outpoint has been spent (disabled Znode).
+        CTnode* mn = mnodeman.Find(mne.getTxHash(), mne.getOutputIndex());
+        // in the case that the Tnode has dissapeared from the network, was never initialized, or it's outpoint has been spent (disabled Tnode).
         if(mn==NULL || mn->IsOutpointSpent())
             continue;
 
-        // So we have a valid legacy Znode. get ProReg transactions, look for the same collateral.
+        // So we have a valid legacy Tnode. get ProReg transactions, look for the same collateral.
         if(!nGotProReg){
             LOCK2(cs_main, pwalletMain->cs_wallet);
             pwalletMain->ListProTxCoins(vOutpts);

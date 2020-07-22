@@ -1068,7 +1068,7 @@ void CTnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStrea
         }
 
         if(vin == CTxIn()) {
-            g_connman->PushMessage(pfrom, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::SYNCSTATUSCOUNT, ZNODE_SYNC_LIST, nInvCount));
+            g_connman->PushMessage(pfrom, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::SYNCSTATUSCOUNT, TNODE_SYNC_LIST, nInvCount));
             LogPrintf("DSEG -- Sent %d Tnode invs to peer %d\n", nInvCount, pfrom->id);
             return;
         }
@@ -1177,7 +1177,7 @@ void CTnodeMan::DoFullVerificationStep()
         PrepareVerifyRequest(addr, *g_connman);
     }
 
-    LogPrint("tnode", "CZnodeMan::DoFullVerificationStep -- Sent verification requests to %d tnodes\n", nCount);
+    LogPrint("tnode", "CTnodeMan::DoFullVerificationStep -- Sent verification requests to %d tnodes\n", nCount);
 }
 
 // This function tries to find tnodes with the same addr,
@@ -1657,7 +1657,7 @@ bool CTnodeMan::CheckMnbAndUpdateTnodeList(CNode* pfrom, CTnodeBroadcast mnb, in
         Add(mnb);
         tnodeSync.AddedTnodeList();
         // if it matches our Tnode privkey...
-        if(fMasternodeMode && mnb.pubKeyTnode == activeTnode.pubKeyTnode) {
+        if(fTnodeMode && mnb.pubKeyTnode == activeTnode.pubKeyTnode) {
             mnb.nPoSeBanScore = -TNODE_POSE_BAN_MAX_SCORE;
             if(mnb.nProtocolVersion == LEGACY_TNODES_PROTOCOL_VERSION) {
                 // ... and PROTOCOL_VERSION, then we've been remotely activated ...
@@ -1667,7 +1667,7 @@ bool CTnodeMan::CheckMnbAndUpdateTnodeList(CNode* pfrom, CTnodeBroadcast mnb, in
             } else {
                 // ... otherwise we need to reactivate our node, do not add it to the list and do not relay
                 // but also do not ban the node we get this message from
-                LogPrintf("CTnodeMan::CheckMnbAndUpdateZnodeList -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", mnb.nProtocolVersion, LEGACY_TNODES_PROTOCOL_VERSION);
+                LogPrintf("CTnodeMan::CheckMnbAndUpdateTnodeList -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", mnb.nProtocolVersion, LEGACY_TNODES_PROTOCOL_VERSION);
                 return false;
             }
         }

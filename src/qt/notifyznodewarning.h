@@ -1,11 +1,11 @@
 #ifndef ZCOIN_NOTIFYZNODEWARNING_H
 #define ZCOIN_NOTIFYZNODEWARNING_H
 
-class NotifyZnodeWarning
+class NotifyTnodeWarning
 {
 public:
 
-    ~NotifyZnodeWarning();
+    ~NotifyTnodeWarning();
 
     static void notify();
     static bool shouldShow();

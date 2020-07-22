@@ -43,9 +43,9 @@ std::string CActiveMasternodeManager::GetStatus() const
     case MASTERNODE_WAITING_FOR_PROTX:
         return "Waiting for ProTx to appear on-chain";
     case MASTERNODE_POSE_BANNED:
-        return "Znode was PoSe banned";
+        return "Tnode was PoSe banned";
     case MASTERNODE_REMOVED:
-        return "Znode removed from list";
+        return "Tnode removed from list";
     case MASTERNODE_OPERATOR_KEY_CHANGED:
         return "Operator key changed or revoked";
     case MASTERNODE_PROTX_IP_CHANGED:
@@ -63,7 +63,7 @@ void CActiveMasternodeManager::Init()
 {
     LOCK(cs_main);
 
-    if (!fMasternodeMode) return;
+    if (!fTnodeMode) return;
 
     if (!deterministicMNManager->IsDIP3Enforced()) return;
 
@@ -71,7 +71,7 @@ void CActiveMasternodeManager::Init()
     if (!fListen) {
         // listen option is probably overwritten by smth else, no good
         state = MASTERNODE_ERROR;
-        strError = "Znode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
+        strError = "Tnode must accept connections from outside. Make sure listen configuration option is not overwritten by some another parameter.";
         LogPrintf("CActiveDeterministicMasternodeManager::Init -- ERROR: %s\n", strError);
         return;
     }
@@ -131,7 +131,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 {
     LOCK(cs_main);
 
-    if (!fMasternodeMode) return;
+    if (!fTnodeMode) return;
 
     if (!deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
 

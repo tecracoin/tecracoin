@@ -242,9 +242,9 @@ public:
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
         
         // znode params
-        consensus.nZnodePaymentsStartBlock = HF_ZNODE_PAYMENT_START; // not true, but it's ok as long as it's less then nZnodePaymentsIncreaseBlock
-        // consensus.nZnodePaymentsIncreaseBlock = 680000; // actual historical value // not used for now, probably later
-        // consensus.nZnodePaymentsIncreasePeriod = 576*30; // 17280 - actual historical value // not used for now, probably later
+        consensus.nTnodePaymentsStartBlock = HF_ZNODE_PAYMENT_START; // not true, but it's ok as long as it's less then nTnodePaymentsIncreaseBlock
+        // consensus.nTnodePaymentsIncreaseBlock = 680000; // actual historical value // not used for now, probably later
+        // consensus.nTnodePaymentsIncreasePeriod = 576*30; // 17280 - actual historical value // not used for now, probably later
         // consensus.nSuperblockStartBlock = 614820;
         // consensus.nBudgetPaymentsStartBlock = 328008; // actual historical value
         // consensus.nBudgetPaymentsCycleBlocks = 16616; // ~(60*24*30)/2.6, actual number of blocks per month is 200700 / 12 = 16725
@@ -254,7 +254,7 @@ public:
         consensus.DIP0003Height = 278300; // Approximately June 22 2020, 12:00 UTC
         consensus.DIP0003EnforcementHeight = 284400; // Approximately July 13 2020, 12:00 UTC
         consensus.DIP0008Height = INT_MAX;
-        consensus.nEvoZnodeMinimumConfirmations = 15;
+        consensus.nEvoTnodeMinimumConfirmations = 15;
 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_50_60] = llmq50_60;
@@ -499,7 +499,7 @@ public:
         consensus.DIP0003Height = 3340; // TODO!
         consensus.DIP0003EnforcementHeight = 3800;
         consensus.DIP0008Height = INT_MAX;
-        consensus.nEvoZnodeMinimumConfirmations = 0;
+        consensus.nEvoTnodeMinimumConfirmations = 0;
 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_10_70] = llmq10_70;
@@ -660,7 +660,7 @@ public:
         consensus.nPowTargetSpacing = 1;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
-        consensus.nZnodePaymentsStartBlock = 120;
+        consensus.nTnodePaymentsStartBlock = 120;
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -716,7 +716,7 @@ public:
         consensus.nMTPRewardReduction = 1; // NOT USED IN TECRACOIN
 
         consensus.nCheckBugFixedAtBlock = 120;
-        consensus.nZnodePaymentsBugFixedAtBlock = 1;
+        consensus.nTnodePaymentsBugFixedAtBlock = 1;
         consensus.nSpendV15StartBlock = 1;
         consensus.nSpendV2ID_1 = 2;
         consensus.nSpendV2ID_10 = 3;
@@ -733,7 +733,7 @@ public:
         consensus.DIP0003Height = 500;
         consensus.DIP0003EnforcementHeight = 550;
         consensus.DIP0008Height = INT_MAX;
-        consensus.nEvoZnodeMinimumConfirmations = 1;
+        consensus.nEvoTnodeMinimumConfirmations = 1;
 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_5_60] = llmq5_60;

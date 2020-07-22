@@ -2,10 +2,10 @@
 import time
 from decimal import *
 
-from test_framework.test_framework import ZnodeTestFramework
+from test_framework.test_framework import TnodeTestFramework
 from test_framework.util import *
 
-class ZnodeCheckPayments(ZnodeTestFramework):
+class TnodeCheckPayments(TnodeTestFramework):
     def __init__(self):
         super().__init__()
         self.num_nodes = 4
@@ -60,4 +60,4 @@ class ZnodeCheckPayments(ZnodeTestFramework):
         self.nodes[0] = start_node(0,self.options.tmpdir)
         
 if __name__ == '__main__':
-    ZnodeCheckPayments().main()
+    TnodeCheckPayments().main()
