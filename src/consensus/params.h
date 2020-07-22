@@ -121,15 +121,6 @@ enum ChainType {
 };
 
 /**
- * Type of chain
- */
-enum ChainType {
-    chainMain,
-    chainTestnet,
-    chainRegtest
-};
-
-/**
  * Parameters that influence chain consensus.
  */
 struct Params {
