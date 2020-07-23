@@ -43,7 +43,7 @@ public:
     /** Translate a message to the native language of the user. */
     boost::signals2::signal<std::string (const char* psz)> Translate;
 };
-extern bool fTNode;
+extern bool fTnodeMode;
 extern bool fLiteMode;
 extern int nWalletBackups;
 

@@ -651,7 +651,7 @@ bool CTnodePaymentVote::IsValid(CNode *pnode, int nValidationHeight, std::string
 
     // Only tnodes should try to check tnode rank for old votes - they need to pick the right winner for future blocks.
     // Regular clients (miners included) need to verify tnode rank for future block votes only.
-    if (!fTNode && nBlockHeight < nValidationHeight) return true;
+    if (!fTnodeMode && nBlockHeight < nValidationHeight) return true;
 
     int nRank = mnodeman.GetTnodeRank(vinTnode, nBlockHeight - 101, nMinRequiredProtocol, false);
 
@@ -682,7 +682,7 @@ bool CTnodePayments::ProcessBlock(int nBlockHeight) {
 
     // DETERMINE IF WE SHOULD BE VOTING FOR THE NEXT PAYEE
 
-    if (fLiteMode || !fTNode) {
+    if (fLiteMode || !fTnodeMode) {
         return false;
     }
 
