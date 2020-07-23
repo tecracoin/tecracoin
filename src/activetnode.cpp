@@ -370,6 +370,6 @@ void CActiveTnode::ManageStateLocal() {
 
         //send to all peers
         LogPrintf("CActiveTnode::ManageStateLocal -- Relay broadcast, vin=%s\n", vin.ToString());
-        mnb.RelayZNode();
+        mnb.RelayTNode();
     }
 }

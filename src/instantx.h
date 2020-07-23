@@ -66,7 +66,7 @@ private:
     std::map<COutPoint, uint256> mapLockedOutpoints; ///< UTXO - Tx hash
 
     /// Track masternodes who voted with no txlockrequest (for DOS protection)
-    std::map<COutPoint, int64_t> mapTnodeOrphanVotes; ///< MN outpoint - Time
+    std::map<COutPoint, int64_t> mapMasternodeOrphanVotes; ///< MN outpoint - Time
 
     bool CreateTxLockCandidate(const CTxLockRequest& txLockRequest);
     void CreateEmptyTxLockCandidate(const uint256& txHash);
@@ -78,7 +78,7 @@ private:
     void UpdateVotedOutpoints(const CTxLockVote& vote, CTxLockCandidate& txLockCandidate);
     bool ProcessOrphanTxLockVote(const CTxLockVote& vote);
     void ProcessOrphanTxLockVotes();
-    int64_t GetAverageTnodeOrphanVoteTime();
+    int64_t GetAverageMasternodeOrphanVoteTime();
 
     void TryToFinalizeLockCandidate(const CTxLockCandidate& txLockCandidate);
     void LockTransactionInputs(const CTxLockCandidate& txLockCandidate);
@@ -109,7 +109,7 @@ public:
         READWRITE(mapTxLockCandidates);
         READWRITE(mapVotedOutpoints);
         READWRITE(mapLockedOutpoints);
-        READWRITE(mapTnodeOrphanVotes);
+        READWRITE(mapMasternodeOrphanVotes);
         READWRITE(nCachedBlockHeight);
 
         if(ser_action.ForRead() && (strVersion != SERIALIZATION_VERSION_STRING)) {
@@ -234,10 +234,10 @@ private:
     uint256 txHash;
     COutPoint outpoint;
     // TODO remove this member (not needed anymore after DIP3 has been deployed)
-    COutPoint outpointTnode;
+    COutPoint outpointMasternode;
     uint256 quorumModifierHash;
-    uint256 tnodeProTxHash;
-    std::vector<unsigned char> vchTnodeSignature;
+    uint256 masternodeProTxHash;
+    std::vector<unsigned char> vchMasternodeSignature;
     // local memory only
     int nConfirmedHeight; ///< When corresponding tx is 0-confirmed or conflicted, nConfirmedHeight is -1
     int64_t nTimeCreated;
@@ -246,21 +246,21 @@ public:
     CTxLockVote() :
         txHash(),
         outpoint(),
-        outpointTnode(),
+        outpointMasternode(),
         quorumModifierHash(),
-        tnodeProTxHash(),
-        vchTnodeSignature(),
+        masternodeProTxHash(),
+        vchMasternodeSignature(),
         nConfirmedHeight(-1),
         nTimeCreated(GetTime())
         {}
 
-    CTxLockVote(const uint256& txHashIn, const COutPoint& outpointIn, const COutPoint& outpointTnodeIn, const uint256& quorumModifierHashIn, const uint256& tnodeProTxHashIn) :
+    CTxLockVote(const uint256& txHashIn, const COutPoint& outpointIn, const COutPoint& outpointMasternodeIn, const uint256& quorumModifierHashIn, const uint256& masternodeProTxHashIn) :
         txHash(txHashIn),
         outpoint(outpointIn),
-        outpointTnode(outpointTnodeIn),
+        outpointMasternode(outpointMasternodeIn),
         quorumModifierHash(quorumModifierHashIn),
-        tnodeProTxHash(tnodeProTxHashIn),
-        vchTnodeSignature(),
+        masternodeProTxHash(masternodeProTxHashIn),
+        vchMasternodeSignature(),
         nConfirmedHeight(-1),
         nTimeCreated(GetTime())
         {}
@@ -271,11 +271,11 @@ public:
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(txHash);
         READWRITE(outpoint);
-        READWRITE(outpointTnode);
+        READWRITE(outpointMasternode);
         READWRITE(quorumModifierHash);
-        READWRITE(tnodeProTxHash);
+        READWRITE(masternodeProTxHash);
         if (!(s.GetType() & SER_GETHASH)) {
-            READWRITE(vchTnodeSignature);
+            READWRITE(vchMasternodeSignature);
         }
     }
 
@@ -284,7 +284,7 @@ public:
 
     uint256 GetTxHash() const { return txHash; }
     COutPoint GetOutpoint() const { return outpoint; }
-    COutPoint GetTnodeOutpoint() const { return outpointTnode; }
+    COutPoint GetMasternodeOutpoint() const { return outpointMasternode; }
 
     bool IsValid(CNode* pnode, CConnman& connman) const;
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }
@@ -305,7 +305,7 @@ class COutPointLock
 {
 private:
     COutPoint outpoint; ///< UTXO
-    std::map<COutPoint, CTxLockVote> mapTnodeVotes; ///< tnode outpoint - vote
+    std::map<COutPoint, CTxLockVote> mapMasternodeVotes; ///< Masternode outpoint - vote
     bool fAttacked = false;
 
 public:
@@ -313,7 +313,7 @@ public:
 
     COutPointLock(const COutPoint& outpointIn) :
         outpoint(outpointIn),
-        mapTnodeVotes()
+        mapMasternodeVotes()
         {}
 
     COutPoint GetOutpoint() const { return outpoint; }
@@ -323,14 +323,14 @@ public:
     template <typename Stream, typename Operation>
     inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(outpoint);
-        READWRITE(mapTnodeVotes);
+        READWRITE(mapMasternodeVotes);
         READWRITE(fAttacked);
     }
 
     bool AddVote(const CTxLockVote& vote);
     std::vector<CTxLockVote> GetVotes() const;
-    bool HasTnodeVoted(const COutPoint& outpointTnodeIn) const;
-    int CountVotes() const { return fAttacked ? 0 : mapTnodeVotes.size(); }
+    bool HasMasternodeVoted(const COutPoint& outpointMasternodeIn) const;
+    int CountVotes() const { return fAttacked ? 0 : mapMasternodeVotes.size(); }
     bool IsReady() const;
     void MarkAsAttacked() { fAttacked = true; }
 
@@ -379,7 +379,7 @@ public:
     bool AddVote(const CTxLockVote& vote);
     bool IsAllOutPointsReady() const;
 
-    bool HasTnodeVoted(const COutPoint& outpointIn, const COutPoint& outpointTnodeIn);
+    bool HasMasternodeVoted(const COutPoint& outpointIn, const COutPoint& outpointMasternodeIn);
     int CountVotes() const;
 
     void SetConfirmedHeight(int nConfirmedHeightIn) { nConfirmedHeight = nConfirmedHeightIn; }

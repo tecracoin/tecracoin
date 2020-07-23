@@ -19,8 +19,6 @@
 #include <stdio.h>
 #include "utilstrencodings.h"
 
-#include "elysium/mbstring.h" // SanitizeInvalidUTF8
-
 #include <boost/algorithm/string.hpp> // boost::trim
 #include <boost/foreach.hpp> //BOOST_FOREACH
 

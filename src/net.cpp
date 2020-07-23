@@ -67,20 +67,6 @@
 #endif
 #endif
 
-extern CTxMemPool mempool;
-
-// Function body is in main.cpp
-bool AcceptToMemoryPool(
-        CTxMemPool& pool,
-        CValidationState &state,
-        const CTransaction &tx,
-        bool fCheckInputs,
-        bool fLimitFree,
-        bool* pfMissingInputs,
-        bool fOverrideMempoolLimit=false,
-        const CAmount nAbsurdFee=0,
-        bool isCheckWalletTransaction = false,
-        bool markTecraCoinSpendTransactionSerial = true);
 
 namespace {
     const int MAX_OUTBOUND_CONNECTIONS = 8;
@@ -402,7 +388,7 @@ bool CConnman::CheckIncomingNonce(uint64_t nonce)
 CNode* CConnman::ConnectNode(CAddress addrConnect, const char *pszDest, bool fCountFailure, bool fAllowLocal)
 {
     if (pszDest == NULL) {
-        // we clean znode connections in CTnodeMan::ProcessTnodeConnections()
+        // we clean tnode connections in CTnodeMan::ProcessTnodeConnections()
         // so should be safe to skip this and connect to local Hot MN on CActiveTnode::ManageState()
         if (!fAllowLocal && IsLocal(addrConnect))
             return NULL;
@@ -1203,7 +1189,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     SOCKET hSocket = accept(hListenSocket.socket, (struct sockaddr *) &sockaddr, &len);
     CAddress addr;
     int nInbound = 0;
-    int nVerifiedInboundTnodes = 0;
+    int nVerifiedInboundMasternodes = 0;
     int nMaxInbound = nMaxConnections - (nMaxOutbound + nMaxFeeler);
 
     if (hSocket != INVALID_SOCKET)
@@ -1217,7 +1203,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
             if (pnode->fInbound) {
                 nInbound++;
                 if (!pnode->verifiedProRegTxHash.IsNull()) {
-                    nVerifiedInboundTnodes++;
+                    nVerifiedInboundMasternodes++;
                 }
             }
         }
@@ -1279,7 +1265,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
     pnode->fWhitelisted = whitelisted;
     GetNodeSignals().InitializeNode(pnode, *this);
 
-    LogPrintf("Connection from %s accepted\n", addr.ToString());
+    LogPrint("net", "connection from %s accepted\n", addr.ToString());
 
     {
         LOCK(cs_vNodes);
@@ -1691,6 +1677,10 @@ void CConnman::WakeMessageHandler()
 }
 
 
+
+
+
+
 #ifdef USE_UPNP
 void ThreadMapPort()
 {
@@ -2047,7 +2037,6 @@ void CConnman::ThreadOpenConnections()
         {
             CAddrInfo addr = addrman.Select(fFeeler);
 
-//            LogPrintf("[net:open_connections] trying: %s\n",addr.ToString());
             // if we selected an invalid address, restart
             if (!addr.IsValid() || setConnected.count(addr.GetGroup()) || IsLocal(addr))
                 break;
@@ -2059,21 +2048,16 @@ void CConnman::ThreadOpenConnections()
             if (nTries > 100)
                 break;
 
-            if (IsLimited(addr)){
-//                LogPrintf("[net:open_connections] denied, reason: limited: %s\n",addr.ToString());
+            if (IsLimited(addr))
                 continue;
-}
+
             // only connect to full nodes
-            if ((addr.nServices & REQUIRED_SERVICES) != REQUIRED_SERVICES){
-//                LogPrintf("[net:open_connections] denied, reason: services: %s\n",addr.ToString());
+            if ((addr.nServices & REQUIRED_SERVICES) != REQUIRED_SERVICES)
                 continue;
-            }
 
             // only consider very recently tried nodes after 30 failed attempts
-            if (nANow - addr.nLastTry < 600 && nTries < 30){
-//                LogPrintf("[net:open_connections] denied, reason: time_try %s\n",addr.ToString());
+            if (nANow - addr.nLastTry < 600 && nTries < 30)
                 continue;
-        }
 
             // only consider nodes missing relevant services after 40 failed attempts and only if less than half the outbound are up.
             ServiceFlags nRequiredServices = nRelevantServices;
@@ -2286,7 +2270,7 @@ void CConnman::ThreadOpenMasternodeConnections()
 }
 
 // if successful, this moves the passed grant to the constructed node
-bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode, bool fConnectToTnode)
+bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFailure, CSemaphoreGrant *grantOutbound, const char *pszDest, bool fOneShot, bool fFeeler, bool fAddnode, bool fConnectToMasternode)
 {
     //
     // Initiate outbound network connection
@@ -2318,7 +2302,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         pnode->fOneShot = true;
     if (fFeeler)
         pnode->fFeeler = true;
-    if (fConnectToTnode)
+    if (fConnectToMasternode)
         pnode->fTnode = true;
 
     // Martun: if dandelion is enabled, then send a special transaction
@@ -2349,28 +2333,10 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
         vNodes.push_back(pnode);
     }
 
-    // Martun: if dandelion is enabled, then send a special transaction
-    // to the new peer to check, if the peer supports dandelion or not.
-    if (GetBoolArg("-dandelion", true)) {
-        LOCK(cs_vNodes);
-        // Dandelion: new outbound connection
-        CNode::vDandelionOutbound.push_back(pnode);
-        if (CNode::vDandelionDestination.size() < DANDELION_MAX_DESTINATIONS) {
-            CNode::vDandelionDestination.push_back(pnode);
-        }
-        //LogPrintf("Added outbound Dandelion connection:\n%s",
-        //          CNode::GetDandelionRoutingDataDebugString());
-        // Dandelion service discovery
-        uint256 dummyHash;
-        dummyHash.SetHex("0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
-        CInv dummyInv(MSG_DANDELION_TX, dummyHash);
-        pnode->PushInventory(dummyInv);
-    }
-
     return true;
 }
 
-bool CConnman::OpenTnodeConnection(const CAddress &addrConnect) {
+bool CConnman::OpenMasternodeConnection(const CAddress &addrConnect) {
     return OpenNetworkConnection(addrConnect, false, NULL, NULL, false, false, false, true);
 }
 
@@ -3504,7 +3470,7 @@ CNode::CNode(NodeId idIn, ServiceFlags nLocalServicesIn, int nMyStartingHeightIn
     minFeeFilter = 0;
     lastSentFeeFilter = 0;
     nextSendTimeFeeFilter = 0;
-    // znode
+    // tnode
     fTnode = false;
     fPauseRecv = false;
     fPauseSend = false;
@@ -3756,3 +3722,4 @@ bool CNode::removeDandelionEmbargo(const uint256& hash) {
     }
     return false;
 }
+
