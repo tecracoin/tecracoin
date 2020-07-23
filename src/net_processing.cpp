@@ -32,9 +32,9 @@
 
 #include "spork.h"
 #include "instantx.h"
-#include "znode-payments.h"
-#include "znode-sync.h"
-#include "znodeman.h"
+#include "tnode-payments.h"
+#include "tnode-sync.h"
+#include "tnodeman.h"
 
 #include "masternode-payments.h"
 #include "masternode-sync.h"
@@ -981,13 +981,13 @@ bool static AlreadyHave(const CInv& inv) EXCLUSIVE_LOCKS_REQUIRED(cs_main)
         return fEvoTnodes || mapSporks.count(inv.hash);
 
     case MSG_TNODE_PAYMENT_VOTE:
-        return fEvoTnodes || znpayments.mapTnodePaymentVotes.count(inv.hash);
+        return fEvoTnodes || tnpayments.mapTnodePaymentVotes.count(inv.hash);
 
     case MSG_TNODE_PAYMENT_BLOCK:
         if (!fEvoTnodes)
         {
             BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
-            return mi != mapBlockIndex.end() && znpayments.mapTnodeBlocks.find(mi->second->nHeight) != znpayments.mapTnodeBlocks.end();
+            return mi != mapBlockIndex.end() && tnpayments.mapTnodeBlocks.find(mi->second->nHeight) != tnpayments.mapTnodeBlocks.end();
         }
         else
             return true;
@@ -1283,11 +1283,11 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 }
 
                 if (!fEvoTnodes && !pushed && inv.type == MSG_TNODE_PAYMENT_VOTE) {
-                    if(znpayments.HasVerifiedPaymentVote(inv.hash)) {
+                    if(tnpayments.HasVerifiedPaymentVote(inv.hash)) {
                         CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                         ss.reserve(1000);
-                        ss << znpayments.mapTnodePaymentVotes[inv.hash];
-                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::ZNODEPAYMENTVOTE, ss));
+                        ss << tnpayments.mapTnodePaymentVotes[inv.hash];
+                        connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::TNODEPAYMENTVOTE, ss));
                         pushed = true;
                     }
                 }
@@ -1295,15 +1295,15 @@ void static ProcessGetData(CNode* pfrom, const Consensus::Params& consensusParam
                 if (!fEvoTnodes && !pushed && inv.type == MSG_TNODE_PAYMENT_BLOCK) {
                     BlockMap::iterator mi = mapBlockIndex.find(inv.hash);
                     LOCK(cs_mapTnodeBlocks);
-                    if (mi != mapBlockIndex.end() && znpayments.mapTnodeBlocks.count(mi->second->nHeight)) {
-                        BOOST_FOREACH(CTnodePayee& payee, znpayments.mapTnodeBlocks[mi->second->nHeight].vecPayees) {
+                    if (mi != mapBlockIndex.end() && tnpayments.mapTnodeBlocks.count(mi->second->nHeight)) {
+                        BOOST_FOREACH(CTnodePayee& payee, tnpayments.mapTnodeBlocks[mi->second->nHeight].vecPayees) {
                             std::vector<uint256> vecVoteHashes = payee.GetVoteHashes();
                             BOOST_FOREACH(uint256& hash, vecVoteHashes) {
-                                if(znpayments.HasVerifiedPaymentVote(hash)) {
+                                if(tnpayments.HasVerifiedPaymentVote(hash)) {
                                     CDataStream ss(SER_NETWORK, PROTOCOL_VERSION);
                                     ss.reserve(1000);
-                                    ss << znpayments.mapTnodePaymentVotes[hash];
-                                    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::ZNODEPAYMENTVOTE, ss));
+                                    ss << tnpayments.mapTnodePaymentVotes[hash];
+                                    connman.PushMessage(pfrom, msgMaker.Make(NetMsgType::TNODEPAYMENTVOTE, ss));
                                 }
                             }
                         }
@@ -3156,9 +3156,9 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // legacy znodes
             if (!fEvoTnodes) {
                 mnodeman.ProcessMessage(pfrom, command, vRecv);
-                znpayments.ProcessMessage(pfrom, command, vRecv);
+                tnpayments.ProcessMessage(pfrom, command, vRecv);
                 sporkManager.ProcessSpork(pfrom, command, vRecv);
-                znodeSync.ProcessMessage(pfrom, command, vRecv);
+                tnodeSync.ProcessMessage(pfrom, command, vRecv);
             }
 
             // these functions must be called in transition window

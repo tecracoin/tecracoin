@@ -275,7 +275,7 @@ void Shutdown()
     CFlatDB<CTnodeMan> flatdb1("tncache.dat", "magicTnodeCache");
     flatdb1.Dump(mnodeman);
     CFlatDB<CTnodePayments> flatdb2("tnpayments.dat", "magicTnodePaymentsCache");
-    flatdb2.Dump(znpayments);
+    flatdb2.Dump(tnpayments);
     
     MapPort(false);
     UnregisterValidationInterface(peerLogic.get());
@@ -1234,8 +1234,6 @@ bool AppInitParameterInteraction()
     int ratio = std::min<int>(std::max<int>(GetArg("-checkmempool", chainparams.DefaultConsistencyChecks() ? 1 : 0), 0), 1000000);
     if (ratio != 0) {
         mempool.setSanityCheck(1.0 / ratio);
-        // Changes to mempool should also be made to Dandelion stempool
-        stempool.setSanityCheck(1.0 / ratio);
     }
     fCheckBlockIndex = GetBoolArg("-checkblockindex", chainparams.DefaultConsistencyChecks());
     fCheckpointsEnabled = GetBoolArg("-checkpoints", DEFAULT_CHECKPOINTS_ENABLED);
@@ -1995,26 +1993,26 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         nRelevantServices = ServiceFlags(nRelevantServices | NODE_WITNESS);
     }
 
-    // ********************************************************* Step 10a: Prepare znode related stuff
-    fTnode = GetBoolArg("-tnode", false);
-    if (fTnode)
-        // turn off dandelion for znodes
+    // ********************************************************* Step 10a: Prepare tnode related stuff
+    fTnodeMode = GetBoolArg("-tnode", false);
+    if (fTnodeMode)
+        // turn off dandelion for tnodes
         ForceSetArg("-dandelion", "0");
 
-    LogPrintf("fTnode = %s\n", fTnode);
+    LogPrintf("fTnodeMode = %s\n", fTnodeMode);
     LogPrintf("tnodeConfig.getCount(): %s\n", tnodeConfig.getCount());
 
-    if(fLiteMode && fTnode) {
+    if(fLiteMode && fTnodeMode) {
         return InitError(_("You can not start a masternode in lite mode."));
     }
 
-    if ((fTnode || tnodeConfig.getCount() > 0) && !fTxIndex) {
+    if ((fTnodeMode || tnodeConfig.getCount() > 0) && !fTxIndex) {
         return InitError("Enabling Tnode support requires turning on transaction indexing."
                                  "Please add txindex=1 to your configuration and start with -reindex");
     }
 
-    // Legacy znode system
-    if (fTnode) {
+    // Legacy tnode system
+    if (fTnodeMode) {
         LogPrintf("TNODE:\n");
 
         if (!GetArg("-tnodeaddr", "").empty()) {
@@ -2057,13 +2055,13 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         }
     }
 
-    // evo znode system
-    if(fLiteMode && fTnode) {
+    // evo tnode system
+    if(fLiteMode && fTnodeMode) {
         return InitError(_("You can not start a tnode in lite mode."));
     }
 
-    if(fTnode) {
-        LogPrintf("ZNODE:\n");
+    if(fTnodeMode) {
+        LogPrintf("TNODE:\n");
 
         std::string strMasterNodeBLSPrivKey = GetArg("-tnodeblsprivkey", "");
         if(!strMasterNodeBLSPrivKey.empty()) {
@@ -2078,7 +2076,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                 return InitError(_("Invalid tnodeblsprivkey. Please see documentation."));
             }
         } else {
-            // TODO: uncomment when switch to evo znodes is done
+            // TODO: uncomment when switch to evo tnodes is done
             //return InitError(_("You must specify a trnodeblsprivkey in the configuration. Please see documentation for help."));
         }
 
@@ -2094,7 +2092,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         activeMasternodeInfo.blsPubKeyOperator = std::make_unique<CBLSPublicKey>();
     }
 
-    // ********************************************************* Step 10b: PrivateSend (some of its functions are required for legacy znode operation)
+    // ********************************************************* Step 10b: PrivateSend (some of its functions are required for legacy tnode operation)
 
     nLiquidityProvider = GetArg("-liquidityprovider", nLiquidityProvider);
     nLiquidityProvider = std::min(std::max(nLiquidityProvider, 0), 100);
@@ -2120,7 +2118,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // LOAD SERIALIZED DAT FILES INTO DATA CACHES FOR INTERNAL USE
     bool fIgnoreCacheFiles = !GetBoolArg("-persistenttnodestate", true) || fLiteMode || fReindex || fReindexChainState;
     if (!fIgnoreCacheFiles) {
-        // Legacy znodes cache
+        // Legacy tnodes cache
         uiInterface.InitMessage(_("Loading tnode cache..."));
         CFlatDB<CTnodeMan> flatdb1("tncache.dat", "magicTnodeCache");
         if (!flatdb1.Load(mnodeman)) {
@@ -2276,19 +2274,19 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
         mnodeman.UpdatedBlockTip(chainActive.Tip());
         //darkSendPool.UpdatedBlockTip(chainActive.Tip());
-        znpayments.UpdatedBlockTip(chainActive.Tip());
-        znodeSync.UpdatedBlockTip(chainActive.Tip());
+        tnpayments.UpdatedBlockTip(chainActive.Tip());
+        tnodeSync.UpdatedBlockTip(chainActive.Tip());
         // governance.UpdatedBlockTip(chainActive.Tip());
     }
 
-    // ********************************************************* Step 13b: start legacy znodes thread
+    // ********************************************************* Step 13b: start legacy tnodes thread
 
     // TODO: remove this code after switch to evo is done
     if (!fEvoTnodes)
     {
         threadGroup.create_thread([] {
 
-            RenameThread("znode-tick");
+            RenameThread("tnode-tick");
 
             if (fLiteMode)
                 return;
@@ -2300,32 +2298,32 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
                 {
                     LOCK(cs_main);
-                    // shut legacy znode down if past 6 blocks of DIP3 enforcement
+                    // shut legacy tnode down if past 6 blocks of DIP3 enforcement
                     if (chainActive.Height()-6 >= Params().GetConsensus().DIP0003EnforcementHeight)
                         break;
                 }
                     
-                znodeSync.ProcessTick();
+                tnodeSync.ProcessTick();
 
-                if (znodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
+                if (tnodeSync.IsBlockchainSynced() && !ShutdownRequested()) {
                     nTick++;
 
                     LOCK(cs_main);
 
-                    // make sure to check all znodes first
+                    // make sure to check all tnodes first
                     mnodeman.Check();
 
                     mnodeman.ProcessPendingMnvRequests(*g_connman);
 
                     // check if we should activate or ping every few minutes,
                     // slightly postpone first run to give net thread a chance to connect to some peers
-                    if (nTick % ZNODE_MIN_MNP_SECONDS == 15)
+                    if (nTick % TNODE_MIN_MNP_SECONDS == 15)
                         activeTnode.ManageState();
 
                     if (nTick % 60 == 0) {
                         mnodeman.ProcessTnodeConnections();
                         mnodeman.CheckAndRemove();
-                        znpayments.CheckAndRemove();
+                        tnpayments.CheckAndRemove();
                         instantsend.CheckAndRemove();
                     }
                     if (fTnodeMode && (nTick % (60 * 5) == 0)) {

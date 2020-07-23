@@ -9,7 +9,7 @@
 #include "validation.h"
 #include "tnode-payments.h"
 #include "tnode-sync.h"
-#include "tnode-utils.h"
+#include "masternode-utils.h"
 #include "messagesigner.h"
 #include "net.h"
 #include "netmessagemaker.h"
@@ -1113,9 +1113,9 @@ bool CTxLockVote::CheckSignature() const
 {
     std::string strError;
 
-    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMN(trnodeProTxHash);
+    auto dmn = deterministicMNManager->GetListAtChainTip().GetValidMN(tnodeProTxHash);
     if (!dmn) {
-        LogPrintf("CTxLockVote::CheckSignature -- Unknown Tnode: znode=%s\n", trnodeProTxHash.ToString());
+        LogPrintf("CTxLockVote::CheckSignature -- Unknown Tnode: znode=%s\n", tnodeProTxHash.ToString());
         return false;
     }
 

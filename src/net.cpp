@@ -124,30 +124,6 @@ CNode* CNode::localDandelionDestination = nullptr;
 // After getting relayed they are moved to mempool.
 extern CTxPoolAggregate txpools;
 
-// Public Dandelion fields.
-
-// All transactions embargoed by dandelion.
-std::map<uint256, int64_t> CNode::mDandelionEmbargo;
-
-// Inbound connections. Transactions from each connection
-// are broadcast to one of 2 dandelion destinations.
-std::vector<CNode*> CNode::vDandelionInbound;
-
-// All of our outbound destinations.
-std::vector<CNode*> CNode::vDandelionOutbound;
-std::vector<CNode*> CNode::vDandelionDestination;
-
-// Dandelion routes, showing txn from which peer must go to which destination.
-std::map<CNode*, CNode*> CNode::mDandelionRoutes;
-
-// Destination node to which are stem-ed all local transactions.
-CNode* CNode::localDandelionDestination = nullptr;
-CThreadInterrupt CNode::interruptNet;
-
-// All txn are put in the stempool in stem phase.
-// After getting relayed they are moved to mempool.
-extern CTxMemPool stempool;
-
 /** Services this node implementation cares about */
 ServiceFlags nRelevantServices = NODE_NETWORK;
 

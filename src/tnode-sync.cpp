@@ -416,7 +416,7 @@ void CTnodeSync::ProcessTick() {
                 // ask node for all payment votes it has (new nodes will only return votes for future payments)
                 g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::TNODEPAYMENTSYNC, tnpayments.GetStorageLimit()));
                 // ask node for missing pieces only (old nodes will not be asked)
-                znpayments.RequestLowDataPaymentBlocks(pnode);
+                tnpayments.RequestLowDataPaymentBlocks(pnode);
 
                 g_connman->ReleaseNodeVector(vNodesCopy);
                 return; //this will cause each peer to get one request each six seconds for the various assets we need

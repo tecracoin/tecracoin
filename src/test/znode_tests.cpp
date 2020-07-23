@@ -25,9 +25,9 @@
 #include "rpc/server.h"
 #include "rpc/register.h"
 #include "zerocoin.h"
-#include "znodeman.h"
-#include "znode-sync.h"
-#include "znode-payments.h"
+#include "tnodeman.h"
+#include "tnode-sync.h"
+#include "tnode-payments.h"
 
 #include "test/testutil.h"
 #include "consensus/merkle.h"
@@ -154,7 +154,7 @@ BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
              , after_block = initialHeight + 1;
     // Emulates synced state of znodes.
     for(size_t i =0; i < 4; ++i)
-        znodeSync.SwitchToNextAsset();
+        tnodeSync.SwitchToNextAsset();
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
     CTnodeBlockPayees payees;
     payees.vecPayees.push_back(payee1);
 
-    znpayments.mapTnodeBlocks[after_block] = payees;
+    tnpayments.mapTnodeBlocks[after_block] = payees;
 
     b.fChecked = false;
     b.hashMerkleRoot = BlockMerkleRoot(b, &mutated);
@@ -213,7 +213,7 @@ BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
 
     ///////////////////////////////////////////////////////////////////////////
     // Making znodes not synchronized and checking the functionality is disabled
-    znodeSync.Reset();
+    tnodeSync.Reset();
     b.fChecked = false;
     b.hashMerkleRoot = BlockMerkleRoot(b, &mutated);
     while (!CheckProofOfWork(b.GetHash(), b.nBits, chainparams.GetConsensus())){
@@ -225,14 +225,14 @@ BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
     ///////////////////////////////////////////////////////////////////////////
     // Paying to an acceptable payee
     for(size_t i =0; i < 4; ++i)
-        znodeSync.SwitchToNextAsset();
+        tnodeSync.SwitchToNextAsset();
 
     CTnodePayee payee2(tx.vout[0].scriptPubKey, uint256());
     // Emulates 9 votes for the payee
     for(size_t i =0; i < 8; ++i)
         payee2.AddVoteHash(uint256());
 
-    znpayments.mapTnodeBlocks[after_block].vecPayees.insert(znpayments.mapTnodeBlocks[after_block].vecPayees.begin(), payee2);
+    tnpayments.mapTnodeBlocks[after_block].vecPayees.insert(tnpayments.mapTnodeBlocks[after_block].vecPayees.begin(), payee2);
 
     txCopy.vout[1].scriptPubKey = payee1.GetPayee();
     b.vtx[0] = MakeTransactionRef(txCopy);

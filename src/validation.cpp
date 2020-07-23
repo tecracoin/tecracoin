@@ -2805,8 +2805,8 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams &chainParams) {
 
     if (pindexNew->nHeight < chainParams.GetConsensus().DIP0003EnforcementHeight) {
         mnodeman.UpdatedBlockTip(chainActive.Tip());
-        znpayments.UpdatedBlockTip(chainActive.Tip());
-        znodeSync.UpdatedBlockTip(chainActive.Tip());
+        tnpayments.UpdatedBlockTip(chainActive.Tip());
+        tnodeSync.UpdatedBlockTip(chainActive.Tip());
     }
 
     // New best block
@@ -4316,7 +4316,7 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
         return error("%s: ActivateBestChain failed", __func__);
 
     if (pindex->nHeight < chainparams.GetConsensus().DIP0003EnforcementHeight)
-        znodeSync.IsBlockchainSynced(true);
+        tnodeSync.IsBlockchainSynced(true);
 
     return true;
 }

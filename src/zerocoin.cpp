@@ -664,10 +664,10 @@ bool CheckZerocoinFoundersInputs(const CTransaction &tx, CValidationState &state
                 bool validTnodePayment;
 
                 if (nHeight > params.nTnodePaymentsBugFixedAtBlock) {
-                    if (!znodeSync.IsSynced()) {
+                    if (!tnodeSync.IsSynced()) {
                         validTnodePayment = true;
                     } else {
-                        validTnodePayment = znpayments.IsTransactionValid(tx, nHeight, fMTP);
+                        validTnodePayment = tnpayments.IsTransactionValid(tx, nHeight, fMTP);
                     }
                 } else {
                     validTnodePayment = total_payment_tx <= 1;

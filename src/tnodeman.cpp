@@ -619,8 +619,8 @@ char* CTnodeMan::GetNotQualifyReason(CTnode& mn, int nBlockHeight, bool fFilterS
         return reasonStr;
     }
     //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
-    if (znpayments.IsScheduled(mn, nBlockHeight)) {
-        // LogPrintf("znpayments.IsScheduled!\n");
+    if (tnpayments.IsScheduled(mn, nBlockHeight)) {
+        // LogPrintf("tnpayments.IsScheduled!\n");
         char* reasonStr = new char[256];
         sprintf(reasonStr, "false: 'is scheduled'");
         return reasonStr;

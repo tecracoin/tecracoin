@@ -229,7 +229,7 @@ void CTnode::Check(bool fForce) {
     bool fOurTnode = fTnodeMode && activeTnode.pubKeyTnode == pubKeyTnode;
 
     // tnode doesn't meet payment protocol requirements ...
-/*    bool fRequireUpdate = nProtocolVersion < znpayments.GetMinTnodePaymentsProto() ||
+/*    bool fRequireUpdate = nProtocolVersion < tnpayments.GetMinTnodePaymentsProto() ||
                           // or it's our own node and we just updated it to the new protocol but we are still waiting for activation ...
                           (fOurTnode && nProtocolVersion < PROTOCOL_VERSION); */
 
@@ -438,8 +438,8 @@ void CTnode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack)
     LOCK(cs_mapTnodeBlocks);
 
     for (int i = 0; BlockReading && BlockReading->nHeight > nBlockLastPaid && i < nMaxBlocksToScanBack; i++) {
-//        LogPrintf("tnpayments.mapTnodeBlocks.count(BlockReading->nHeight)=%s\n", znpayments.mapTnodeBlocks.count(BlockReading->nHeight));
-//        LogPrintf("tnpayments.mapTnodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)=%s\n", znpayments.mapTnodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2));
+//        LogPrintf("tnpayments.mapTnodeBlocks.count(BlockReading->nHeight)=%s\n", tnpayments.mapTnodeBlocks.count(BlockReading->nHeight));
+//        LogPrintf("tnpayments.mapTnodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)=%s\n", tnpayments.mapTnodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2));
         if (tnpayments.mapTnodeBlocks.count(BlockReading->nHeight) &&
             tnpayments.mapTnodeBlocks[BlockReading->nHeight].HasPayeeWithVotes(mnpayee, 2)) {
             // LogPrintf("i=%s, BlockReading->nHeight=%s\n", i, BlockReading->nHeight);
@@ -468,8 +468,8 @@ void CTnode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack)
         BlockReading = BlockReading->pprev;
     }
 
-    // Last payment for this tnode wasn't found in latest znpayments blocks
-    // or it was found in znpayments blocks but wasn't found in the blockchain.
+    // Last payment for this tnode wasn't found in latest tnpayments blocks
+    // or it was found in tnpayments blocks but wasn't found in the blockchain.
     // LogPrint("tnode", "CTnode::UpdateLastPaidBlock -- searching for block with payment to %s -- keeping old %d\n", vin.prevout.ToStringShort(), nBlockLastPaid);
 }
 

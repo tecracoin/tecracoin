@@ -171,6 +171,11 @@ struct Params {
     //int nTnodePaymentsIncreasePeriod; // in blocks
     //int nSuperblockStartBlock;
 
+    int nInstantSendConfirmationsRequired; // in blocks
+    int nInstantSendKeepLock; // in blocks
+    int nInstantSendSigsRequired;
+    int nInstantSendSigsTotal;
+
     /** Zerocoin-related block numbers when features are changed */
     int nCheckBugFixedAtBlock;
     int nTnodePaymentsBugFixedAtBlock;
