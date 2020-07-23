@@ -1,21 +1,15 @@
-// Copyright (c) 2014-2019 The Dash Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef ACTIVETNODE_H
 #define ACTIVETNODE_H
 
-#include "chainparams.h"
-#include "key.h"
 #include "net.h"
-#include "primitives/transaction.h"
-#include "validationinterface.h"
+#include "key.h"
+#include "wallet/wallet.h"
 
-#include "evo/deterministicmns.h"
-#include "evo/providertx.h"
-
-struct CActiveTnodeInfo;
-class CActiveTnodeManager;
+class CActiveTnode;
 
 static const int ACTIVE_TNODE_INITIAL          = 0; // initial state
 static const int ACTIVE_TNODE_SYNC_IN_PROCESS  = 1;
@@ -23,50 +17,62 @@ static const int ACTIVE_TNODE_INPUT_TOO_NEW    = 2;
 static const int ACTIVE_TNODE_NOT_CAPABLE      = 3;
 static const int ACTIVE_TNODE_STARTED          = 4;
 
-extern CActiveTnodeInfo activeTnodeInfo;
-extern CActiveTnodeManager* activeTnodeManager;
+extern CActiveTnode activeTnode;
 
-struct CActiveTnodeInfo {
-    // Keys for the active Tnode
-    std::unique_ptr<CBLSPublicKey> blsPubKeyOperator;
-    std::unique_ptr<CBLSSecretKey> blsKeyOperator;
-
-    // Initialized while registering Tnode
-    uint256 proTxHash;
-    COutPoint outpoint;
-    CService service;
-};
-
-
-class CActiveTnodeManager : public CValidationInterface
+// Responsible for activating the Tnode and pinging the network
+class CActiveTnode
 {
 public:
-    enum masternode_state_t {
-        TNODE_WAITING_FOR_PROTX,
-        TNODE_POSE_BANNED,
-        TNODE_REMOVED,
-        TNODE_OPERATOR_KEY_CHANGED,
-        TNODE_PROTX_IP_CHANGED,
-        TNODE_READY,
-        TNODE_ERROR,
+    enum tnode_type_enum_t {
+        TNODE_UNKNOWN = 0,
+        TNODE_REMOTE  = 1,
+        TNODE_LOCAL   = 2
     };
 
 private:
-    masternode_state_t state{TNODE_WAITING_FOR_PROTX};
-    std::string strError;
+    // critical section to protect the inner data structures
+    mutable CCriticalSection cs;
+
+    tnode_type_enum_t eType;
+
+    bool fPingerEnabled;
+
+    /// Ping Tnode
+    bool SendTnodePing();
 
 public:
-    virtual void UpdatedBlockTip(const CBlockIndex* pindexNew, const CBlockIndex* pindexFork, bool fInitialDownload);
+    // Keys for the active Tnode
+    CPubKey pubKeyTnode;
+    CKey keyTnode;
 
-    void Init();
+    // Initialized while registering Tnode
+    CTxIn vin;
+    CService service;
+
+    int nState; // should be one of ACTIVE_TNODE_XXXX
+    std::string strNotCapableReason;
+
+    CActiveTnode()
+        : eType(TNODE_UNKNOWN),
+          fPingerEnabled(false),
+          pubKeyTnode(),
+          keyTnode(),
+          vin(),
+          service(),
+          nState(ACTIVE_TNODE_INITIAL)
+    {}
+
+    /// Manage state of active Tnode
+    void ManageState();
 
     std::string GetStateString() const;
     std::string GetStatus() const;
-
-    static bool IsValidNetAddr(CService addrIn);
+    std::string GetTypeString() const;
 
 private:
-    bool GetLocalAddress(CService& addrRet);
+    void ManageStateInitial();
+    void ManageStateRemote();
+    void ManageStateLocal();
 };
 
 #endif
