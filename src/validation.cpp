@@ -86,7 +86,7 @@
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
-# error "Zcoin cannot be compiled without assertions."
+# error "Tecracoin cannot be compiled without assertions."
 #endif
 
 bool AbortNode(const std::string& strMessage, const std::string& userMessage="");
@@ -131,7 +131,7 @@ CTxMemPool mempool(::minRelayTxFee);
 FeeFilterRounder filterRounder(::minRelayTxFee);
 CTxPoolAggregate txpools(::minRelayTxFee);
 
-// Zcoin znode
+// Tecracoin tnode
 map <uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 
 
@@ -140,7 +140,7 @@ static void CheckBlockIndex(const Consensus::Params& consensusParams);
 /** Constant stuff for coinbase transactions we create: */
 CScript COINBASE_FLAGS;
 
-const string strMessageMagic = "Zcoin Signed Message:\n";
+const string strMessageMagic = "Tecracoin Signed Message:\n";
 
 // Internal stuff
 namespace {
@@ -1533,7 +1533,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, int nHeight, con
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
 
-    // Zcoin - MTP
+    // Tecracoin - MTP
     if (!CheckMerkleTreeProof(block, consensusParams)){
     	return error("ReadBlockFromDisk: CheckMerkleTreeProof: Errors in block header at %s", pos.ToString());
     }
@@ -2410,7 +2410,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
         uint256 txHash = tx.GetHash();
         bool hasDuplicateInTheSameBlock = txIds.count(txHash) > 0;
-        if (hasDuplicateInTheSameBlock && (!isMainNet || pindex->nHeight >= HF_ZNODE_HEIGHT))
+        if (hasDuplicateInTheSameBlock && (!isMainNet || pindex->nHeight >= HF_TNODE_HEIGHT))
             return state.DoS(100, error("ConnectBlock(): duplicate transactions in the same block"),
                              REJECT_INVALID, "bad-txns-duplicatetxid");
         txIds.insert(txHash);
@@ -2508,26 +2508,26 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     std::string strError = "";
     if (deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) {
-        // evo znodes
+        // evo tnodes
         if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
-            return state.DoS(0, error("ConnectBlock(EVOZNODES): %s", strError), REJECT_INVALID, "bad-cb-amount");
+            return state.DoS(0, error("ConnectBlock(EVOTNODES): %s", strError), REJECT_INVALID, "bad-cb-amount");
         }
        
         if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockSubsidy)) {
             mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
-            return state.DoS(0, error("ConnectBlock(EVPZNODES): couldn't find evo znode payments"),
+            return state.DoS(0, error("ConnectBlock(EVPTNODES): couldn't find evo tnode payments"),
                                     REJECT_INVALID, "bad-cb-payee");
         }
     }
     else {
-        // legacy znodes
+        // legacy tnodes
         if (!IsTnodeBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
             return state.DoS(0, error("ConnectBlock(): %s", strError), REJECT_INVALID, "bad-cb-amount");
         }
 
         if (!IsTnodeBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, block.IsMTP())) {
             mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-            return state.DoS(0, error("ConnectBlock(): couldn't find znode or superblock payments"),
+            return state.DoS(0, error("ConnectBlock(): couldn't find tnode or superblock payments"),
                             REJECT_INVALID, "bad-cb-payee");
         }
 
@@ -2537,7 +2537,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
         return error("ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s",
                     pindex->GetBlockHash().ToString(), FormatStateMessage(state));
     }
-    // END ZNODE
+    // END tnode
 
     if (!fJustCheck)
         MTPState::GetMTPState()->SetLastBlock(pindex, chainparams.GetConsensus());
@@ -3814,7 +3814,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         if (mutated)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-duplicate", true, "duplicate transaction");
 
-        // Zcoin - MTP
+        // Tecracoin - MTP
         if (block.IsMTP() && !CheckMerkleTreeProof(block, consensusParams))
             return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
     }
@@ -3976,7 +3976,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
 
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex * const pindexPrev, int64_t nAdjustedTime)
 {
-	// Zcoin - MTP
+	// Tecracoin - MTP
     bool fBlockHasMTP = (block.nVersion & 4096) != 0 || (pindexPrev && consensusParams.nMTPSwitchTime == 0);
 
     if (block.IsMTP() != fBlockHasMTP)

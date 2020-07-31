@@ -57,7 +57,7 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"version\": xxxxx,           (numeric) the server version\n"
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-            "  \"balance\": xxxxxxx,         (numeric) the total zcoin balance of the wallet\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total tecracoin balance of the wallet\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"
@@ -354,7 +354,7 @@ UniValue mnsync(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
         throw std::runtime_error(
-            "evoznsync [status|next|reset]\n"
+            "evotnsync [status|next|reset]\n"
             "Returns the sync status, updates to the next step or resets it entirely.\n"
         );
 
@@ -1214,7 +1214,7 @@ UniValue getinfoex(const JSONRPCRequest& request)
             "  \"version\": xxxxx,           (numeric) the server version\n"
             "  \"protocolversion\": xxxxx,   (numeric) the protocol version\n"
             "  \"walletversion\": xxxxx,     (numeric) the wallet version\n"
-            "  \"balance\": xxxxxxx,         (numeric) the total zcoin balance of the wallet\n"
+            "  \"balance\": xxxxxxx,         (numeric) the total tecracoin balance of the wallet\n"
             "  \"blocks\": xxxxxx,           (numeric) the current number of blocks processed in the server\n"
             "  \"timeoffset\": xxxxx,        (numeric) the time offset\n"
             "  \"connections\": xxxxx,       (numeric) the number of connections\n"
@@ -1324,7 +1324,7 @@ static const CRPCCommand commands[] =
     { "addressindex",       "gettotalsupply",         &gettotalsupply,         false },
 
     /* Tnode features */
-    { "zcoin",              "evoznsync",              &mnsync,                 true,  {} },
+    { "tecracoin",          "evotnsync",              &mnsync,                 true,  {} },
 
     /* Not shown in help */
     { "hidden",             "getzerocoinsupply",      &getzerocoinsupply,      false },

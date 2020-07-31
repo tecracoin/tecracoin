@@ -88,6 +88,7 @@ public:
     std::string TnodePaymentPubKey() const { return strTnodePaymentsPubKey; }
 
     const ChainTxData& TxData() const { return chainTxData; }
+    CScript GetFounderScript(unsigned int founderIndex) const;
 protected:
     CChainParams() {}
 

@@ -1,6 +1,6 @@
 // Copyright (c) 2010 Satoshi Nakamoto
 // Copyright (c) 2009-2016 The Bitcoin Core developers
-// Copyright (c) 2018 The TecraCoin Core developers
+// Copyright (c) 2018-2020 The TecraCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -143,13 +143,6 @@ UniValue generateBlocks(boost::shared_ptr<CReserveScript> coinbaseScript, int nG
                 pblock->cachedPoWHash.SetNull();
             }
         }
-        else{
-            while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-                ++pblock->nNonce;
-                --nMaxTries;
-            }
-        }
-
         if (nMaxTries == 0) {
             break;
         }
@@ -239,7 +232,6 @@ UniValue generatetoaddress(const JSONRPCRequest& request)
 
     return generateBlocks(coinbaseScript, nGenerate, nMaxTries, false);
 }
-
 
 UniValue setgenerate(const JSONRPCRequest& request)
 {
@@ -440,7 +432,6 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
             "      \"flags\" : \"xx\"                  (string) key name is to be ignored, and value included in scriptSig\n"
             "  },\n"
             "  \"coinbasevalue\" : n,                (numeric) maximum allowable input to coinbase transaction, including the generation award and transaction fees (in Satoshis)\n"
-            "  \"coinbasesubsidy\" : n,              (numeric) maximum allowable input to coinbase transaction, including the generation award and excluding transaction fees (in Satoshis)\n"
             "  \"coinbasetxn\" : { ... },          (json object) information for coinbase transaction\n"
             "  \"target\" : \"xxxx\",                (string) The hash target\n"
             "  \"mintime\" : xxx,                  (numeric) The minimum timestamp appropriate for next block time in seconds since epoch (Jan 1 1970 GMT)\n"
@@ -552,9 +543,6 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     if (Params().GetConsensus().IsMain() && !tnodeSyncInterface.IsSynced())
         throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Tecacoin Core is syncing with network...");
 
-    if (!tnodeSync.IsSynced()){
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "TecraCoin Core is syncing with network...");
-    }
     static unsigned int nTransactionsUpdatedLast;
     if (!lpval.isNull())
     {
@@ -659,8 +647,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         uint256 txHash = tx.GetHash();
         setTxIndex[txHash] = i++;
 
-        //We process coinbase tx, only if we create it(scenario: cpu/solo mining), not miner(scenario: gpu/pool)
-        if (tx.IsCoinBase() && !coinbasetxn){
+        if (tx.IsCoinBase())
             continue;
 
         UniValue entry(UniValue::VOBJ);
@@ -687,12 +674,7 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         entry.push_back(Pair("sigops", nTxSigOps));
         entry.push_back(Pair("weight", GetTransactionWeight(tx)));
 
-        if(tx.IsCoinBase()){
-            txCoinbase = entry;
-            entry.push_back(Pair("required", true));// coinbase IS required
-        }else{
-            transactions.push_back(entry);
-        }
+        transactions.push_back(entry);
     }
 
     UniValue aux(UniValue::VOBJ);

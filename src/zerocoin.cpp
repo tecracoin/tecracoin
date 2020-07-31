@@ -3,7 +3,6 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "validation.h"
-#include "main.h"
 #include "zerocoin.h"
 #include "sigma.h"
 #include "timedata.h"
@@ -15,6 +14,7 @@
 #include "wallet/walletdb.h"
 #include "tnode-payments.h"
 #include "tnode-sync.h"
+#include "sigma/remint.h"
 
 #include <atomic>
 #include <sstream>
@@ -674,7 +674,7 @@ bool CheckZerocoinFoundersInputs(const CTransaction &tx, CValidationState &state
                 }
 
                 if (!validTnodePayment) {
-                    return state.DoS(100, false, REJECT_INVALID_ZNODE_PAYMENT,
+                    return state.DoS(100, false, REJECT_INVALID_TNODE_PAYMENT,
                                     "CTransaction::CheckTransaction() : invalid znode payment");
                 }
             }
@@ -695,7 +695,7 @@ bool CheckZerocoinFoundersInputs(const CTransaction &tx, CValidationState &state
         if (total_payment_tx > 1) {
             validTnodePayment = false;
         } else if (total_payment_tx == 1 && tnodeSync.IsSynced()){
-            validTnodePayment = mnpayments.IsTransactionValid(tx, nHeight, fMTP);
+            validTnodePayment = tnpayments.IsTransactionValid(tx, nHeight, fMTP);
         }
 
         if(!validTnodePayment){
