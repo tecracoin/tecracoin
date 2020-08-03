@@ -50,6 +50,39 @@ static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 TCR mininput
 // TecraCoin never released zerocoin txes with multiple spend inputs
 #define ZC_MULTIPLE_SPEND_INPUT_STARTING_BLOCK INT_MAX
 
+
+// Tecracoin TODO: remove Sigma
+// Block after which sigma mints are activated.
+#define ZC_SIGMA_STARTING_BLOCK         184200 //Approx July 30th, 2019, 8:00 AM UTC
+#define ZC_SIGMA_TESTNET_STARTING_BLOCK 50000
+
+// Block after which anonymity sets are being padded.
+#define ZC_SIGMA_PADDING_BLOCK         220720 //Approx December 5th 12PM UTC
+#define ZC_SIGMA_TESTNET_PADDING_BLOCK 110000
+
+//Block after whinch we are disabling sigma to enable after starting padding
+#define ZC_SIGMA_DISABLE_UNPADDED_BLOCK         219904 //December 2nd 12PM UTC
+#define ZC_SIGMA_TESTNET_DISABLE_UNPADDED_BLOCK 109160
+
+// The block number after which old sigma clients are banned.
+#define ZC_OLD_SIGMA_BAN_BLOCK          181850 //Approx July 22nd, 2019, 4:00 AM UTC
+
+// Number of blocks after ZC_SIGMA_STARTING_BLOCK during which we still accept zerocoin V2 mints into mempool.
+#define ZC_V2_MINT_GRACEFUL_MEMPOOL_PERIOD          4500
+#define ZC_V2_MINT_TESTNET_GRACEFUL_MEMPOOL_PERIOD  500
+
+// Number of blocks after ZC_SIGMA_STARTING_BLOCK during which we still accept zerocoin V2 mints to newly mined blocks.
+#define ZC_V2_MINT_GRACEFUL_PERIOD          5000
+#define ZC_V2_MINT_TESTNET_GRACEFUL_PERIOD  1000
+
+// Number of blocks after ZC_SIGMA_STARTING_BLOCK during which we still accept zerocoin V2 spends into mempool.
+#define ZC_V2_SPEND_GRACEFUL_MEMPOOL_PERIOD         9000
+#define ZC_V2_SPEND_TESTNET_GRACEFUL_MEMPOOL_PERIOD 1500
+
+// Number of blocks after ZC_SIGMA_STARTING_BLOCK during which we still accept zerocoin V2 spends to newly mined blocks.
+#define ZC_V2_SPEND_GRACEFUL_PERIOD         10000
+#define ZC_V2_SPEND_TESTNET_GRACEFUL_PERIOD 2000
+
 // Number of coins per id in spend v1/v1.5
 #define ZC_SPEND_V1_COINSPERID			10
 // Number of coins per id in spend v2.0

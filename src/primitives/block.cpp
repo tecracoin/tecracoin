@@ -59,43 +59,19 @@ bool CBlockHeader::IsMTP() const {
     return nTime > ZC_GENESIS_BLOCK_TIME && nTime >= Params().GetConsensus().nMTPSwitchTime;
 }
 
-bool CBlockHeader::IsMTP() const {
-    // In case if nTime == ZC_GENESIS_BLOCK_TIME we're being called from CChainParams() constructor and
-    // it is not possible to get Params()
-    return nTime > ZC_GENESIS_BLOCK_TIME && nTime >= Params().GetConsensus().nMTPSwitchTime;
-}
-
 uint256 CBlockHeader::GetPoWHash(int nHeight) const {
     if (!cachedPoWHash.IsNull())
         return cachedPoWHash;
 
     uint256 powHash;
-    // TecraCoin - MTP
-        if (IsMTP()) {
-            powHash = mtpHashValue;
-        } else {
-            lyra2z_hash(BEGIN(nVersion), BEGIN(powHash));
-        }
-        else if (nHeight > 0) {
-            // we take values from precomputed table because calculations of these are horribly slow
-            powHash = GetPrecomputedBlockPoWHash(nHeight);
-
-            /*
-             * This is original code for reference
-             * 
-             * if (nHeight >= HF_LYRA2_HEIGHT) {
-             *   LYRA2(BEGIN(powHash), 32, BEGIN(nVersion), 80, BEGIN(nVersion), 80, 2, 8192, 256);
-             * } else if (nHeight >= HF_LYRA2VAR_HEIGHT) {
-             *    LYRA2(BEGIN(powHash), 32, BEGIN(nVersion), 80, BEGIN(nVersion), 80, 2, nHeight, 256);
-             * }
-             */
-        }
+    if (IsMTP()) {
+        powHash = mtpHashValue;
+    }
     else {
-        // regtest - use simple block hash
-        // current testnet is MTP since block 1, shouldn't get here
+        // lyra2z_hash
         powHash = GetHash();
     }
-    
+
     cachedPoWHash = powHash;
     return powHash;
 }

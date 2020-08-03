@@ -11,21 +11,9 @@
 #include <stdint.h>
 
 // HF constants
-//static const int HF_LYRA2VAR_HEIGHT = 500;
-//static const int HF_LYRA2_HEIGHT = 8192;
-//static const int HF_LYRA2Z_HEIGHT = 20500;
+// Tecra - tnodes from beginning
 static const int HF_TNODE_HEIGHT = 0;
-//MTP is not determined by block height so this constant is useless
-//static const int HF_MTP_HEIGHT = 70000;
 
-//static const int HF_LYRA2VAR_HEIGHT_TESTNET = 10;
-//static const int HF_LYRA2_HEIGHT_TESTNET = 25; // for consistent purpose since the algo hash is so low
-//static const int HF_LYRA2Z_HEIGHT_TESTNET = 30;
-//static const int HF_TNODE_HEIGHT_TESTNET = 500;
-//MTP is not determined by block height so this constant is useless
-//static const int HF_MTP_HEIGHT_TESTNET = 30;
-
-//static const int HF_ZEROSPEND_FIX = 22000;
 
 /** The maximum allowed size for a serialized block, in bytes (only for buffer size limits) */
 static const unsigned int MAX_BLOCK_SERIALIZED_SIZE = 2000000;

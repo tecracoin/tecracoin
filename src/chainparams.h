@@ -11,7 +11,7 @@
 #include "consensus/params.h"
 #include "primitives/block.h"
 #include "protocol.h"
-#include "script/script.h"
+
 #include <vector>
 
 struct CDNSSeedData {
@@ -87,6 +87,15 @@ public:
     std::string SporkPubKey() const { return strSporkPubKey; }
     std::string TnodePaymentPubKey() const { return strTnodePaymentsPubKey; }
 
+    //Tecracoin TODO: rermove Sigma+zerocoin
+	/** Zerocoin-related block numbers when features are changed */
+	int nSpendV15StartBlock;
+	int nSpendV2ID_1, nSpendV2ID_10, nSpendV2ID_25, nSpendV2ID_50, nSpendV2ID_100;
+	
+	int nModulusV2StartBlock;
+    int nModulusV1MempoolStopBlock;
+	int nModulusV1StopBlock;
+
     const ChainTxData& TxData() const { return chainTxData; }
     CScript GetFounderScript(unsigned int founderIndex) const;
 protected:
@@ -115,6 +124,7 @@ protected:
     std::string strSporkPubKey;
     std::string strTnodePaymentsPubKey;
     ChainTxData chainTxData;
+    const char* foundersAddr[4];
 };
 
 /**

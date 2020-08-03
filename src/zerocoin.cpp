@@ -259,7 +259,7 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
             return state.DoS(100,
                 false,
                 REJECT_MALFORMED,
-                "CheckSpendZcoinTransaction: invalid spend transaction");
+                "CheckSpendTecracoinTransaction: invalid spend transaction");
         }
 
         bool fModulusV2 = pubcoinId >= ZC_MODULUS_V2_BASE_ID, fModulusV2InIndex = false;
@@ -337,32 +337,6 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
                 return state.DoS(100, false,
                                  NSEQUENCE_INCORRECT,
                                  "CheckSpendTecraCoinTransaction: cannon use modulus v1 at this point");
-        }
-
-        if (!fStatefulZerocoinCheck)
-            continue;
-
-        CBigNum serial = newSpend.getCoinSerialNumber();
-        // check if there are spends with the same serial within one block
-        // do not check for duplicates in case we've seen exact copy of this tx in this block before
-        if (nHeight >= params.nDontAllowDupTxsStartBlock || !(zerocoinTxInfo && zerocoinTxInfo->zcTransactions.count(hashTx) > 0)) {
-            if (serialsUsedInThisTx.count(serial) > 0)
-                return state.DoS(0, error("CTransaction::CheckTransaction() : two or more spends with same serial in the same block"));
-            serialsUsedInThisTx.insert(serial);
-
-            if (!CheckZerocoinSpendSerial(state, params, zerocoinTxInfo, newSpend.getDenomination(), serial, nHeight, false))
-                return false;
-        }
-
-        if(!isVerifyDB && !isCheckWallet) {
-            if (zerocoinTxInfo && !zerocoinTxInfo->fInfoIsComplete) {
-                // add spend information to the index
-                zerocoinTxInfo->spentSerials[serial] = (int)newSpend.getDenomination();
-                zerocoinTxInfo->zcTransactions.insert(hashTx);
-
-                if (newSpend.getVersion() == ZEROCOIN_TX_VERSION_1)
-                    zerocoinTxInfo->fHasSpendV1 = true;
-            }
         }
 
         if (!fStatefulZerocoinCheck)

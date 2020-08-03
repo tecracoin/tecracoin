@@ -20,7 +20,10 @@
 
 #include "chainparamsseeds.h"
 #include "arith_uint256.h"
+#include "base58.h"
 
+static int64_t defaultPowTargetSpacing = 2.5 * 60; //2.5 minutes per block
+static int64_t nDefaultSubsidyHalvingInterval = 840000; //every 4 years
 
 static CBlock CreateGenesisBlock(const char *pszTimestamp, const CScript &genesisOutputScript, uint32_t nTime, uint32_t nNonce,
         uint32_t nBits, int32_t nVersion, const CAmount &genesisReward,
@@ -57,7 +60,7 @@ static CBlock CreateGenesisBlock(const char *pszTimestamp, const CScript &genesi
  *   vMerkleTree: 4a5e1e
  */
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount &genesisReward,
-                   std::vector<unsigned char> extraNonce) {
+                   std::vector<unsigned char> extraNonce, bool testnet=false) {
     //btzc: zcoin timestamp
     const char *pszTimestamp = !testnet? "The NY Times 2018/07/12 It Came From a Black Hole, and Landed in Antarctica":
     "The NY Times 2020/04/04 Staggered U.S. Braces for More Infections";
@@ -240,15 +243,6 @@ public:
         consensus.nPremineSubsidy = 21000000; // 21mln TCR
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
-        
-        // znode params
-        consensus.nTnodePaymentsStartBlock = HF_ZNODE_PAYMENT_START; // not true, but it's ok as long as it's less then nTnodePaymentsIncreaseBlock
-        // consensus.nTnodePaymentsIncreaseBlock = 680000; // actual historical value // not used for now, probably later
-        // consensus.nTnodePaymentsIncreasePeriod = 576*30; // 17280 - actual historical value // not used for now, probably later
-        // consensus.nSuperblockStartBlock = 614820;
-        // consensus.nBudgetPaymentsStartBlock = 328008; // actual historical value
-        // consensus.nBudgetPaymentsCycleBlocks = 16616; // ~(60*24*30)/2.6, actual number of blocks per month is 200700 / 12 = 16725
-        // consensus.nBudgetPaymentsWindowBlocks = 100;
 
         // evo znodes TecraCoin: TODO!!!
         consensus.DIP0003Height = 278300; // Approximately June 22 2020, 12:00 UTC
@@ -285,18 +279,12 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
        `  * a large 32-bit integer with any alignment.
          */
-        //btzc: update tecracoin pchMessage
-//
-        consensus.nDisableZerocoinStartBlock = 108500;
+        consensus.nDisableZerocoinStartBlock = 1;
 
-//        pchMessageStart[0] = 0x3a;
-//        pchMessageStart[1] = 0x7d;
-//        pchMessageStart[2] = 0x78;
-//        pchMessageStart[3] = 0xea;
-            pchMessageStart[0] = 0x9e;
-            pchMessageStart[1] = 0xce;
-            pchMessageStart[2] = 0x3c;
-            pchMessageStart[3] = 0x7c;
+        pchMessageStart[0] = 0x9e;
+        pchMessageStart[1] = 0xce;
+        pchMessageStart[2] = 0x3c;
+        pchMessageStart[3] = 0x7c;
 
         nDefaultPort = 2718;
         nPruneAfterHeight = 100000;
@@ -369,7 +357,7 @@ public:
         consensus.nModulusV1MempoolStopBlock = ZC_MODULUS_V1_MEMPOOL_STOP_BLOCK;
         consensus.nModulusV1StopBlock = ZC_MODULUS_V1_STOP_BLOCK;
 
-        // Sigma related values.
+        // Sigma related values. Tecra: TODO REMOVE
         consensus.nSigmaStartBlock = ZC_SIGMA_STARTING_BLOCK;
         consensus.nSigmaPaddingBlock = ZC_SIGMA_PADDING_BLOCK;
         consensus.nDisableUnpaddedSigmaBlock = ZC_SIGMA_DISABLE_UNPADDED_BLOCK;
@@ -496,7 +484,7 @@ public:
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
 
         // evo znodes
-        consensus.DIP0003Height = 3340; // TODO!
+        consensus.DIP0003Height = 3340; // Tecracoin: TODO!
         consensus.DIP0003EnforcementHeight = 3800;
         consensus.DIP0008Height = INT_MAX;
         consensus.nEvoTnodeMinimumConfirmations = 0;
@@ -509,7 +497,7 @@ public:
         consensus.nLLMQPowTargetSpacing = 20;
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET;
-        consensus.nMTPStartBlock = 1; // TODO!
+        consensus.nMTPStartBlock = 1; // Tecracoin: TODO!
         consensus.nMTPFiveMinutesStartBlock = INT_MAX; // NOT USED IN TECRACOIN
         consensus.nDifficultyAdjustStartBlock = 100;// NOT USED IN TECRACOIN
         consensus.nFixedDifficulty = 0x2000ffff;// NOT USED IN TECRACOIN
