@@ -215,11 +215,11 @@ bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount bloc
 
     // Check for correct masternode payment
     if(mnpayments.IsTransactionValid(txNew, nBlockHeight, blockReward)) {
-        LogPrint("mnpayments", "%s -- Valid znode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString());
+        LogPrint("mnpayments", "%s -- Valid tnode payment at height %d: %s", __func__, nBlockHeight, txNew.ToString());
         return true;
     }
 
-    LogPrintf("%s -- ERROR: Invalid znode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString());
+    LogPrintf("%s -- ERROR: Invalid tnode payment detected at height %d: %s", __func__, nBlockHeight, txNew.ToString());
     return false;
 }
 
@@ -236,7 +236,7 @@ void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blo
     */
 
     if (!mnpayments.GetMasternodeTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
-        LogPrint("mnpayments", "%s -- no znode to pay (MN list probably empty)\n", __func__);
+        LogPrint("mnpayments", "%s -- no tnode to pay (MN list probably empty)\n", __func__);
     }
 
     txNew.vout.insert(txNew.vout.end(), voutMasternodePaymentsRet.begin(), voutMasternodePaymentsRet.end());
@@ -317,7 +317,7 @@ bool CMasternodePayments::GetMasternodeTxOuts(int nBlockHeight, CAmount blockRew
     voutMasternodePaymentsRet.clear();
 
     if(!GetBlockTxOuts(nBlockHeight, blockReward, voutMasternodePaymentsRet)) {
-        LogPrintf("CMasternodePayments::%s -- no payee (deterministic znode list empty)\n", __func__);
+        LogPrintf("CMasternodePayments::%s -- no payee (deterministic tnode list empty)\n", __func__);
         return false;
     }
 

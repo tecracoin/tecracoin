@@ -129,7 +129,7 @@ QT_FORMS_UI = \
   qt/forms/metadexcanceldialog.ui \
   qt/forms/metadexdialog.ui \
   qt/forms/tradehistorydialog.ui \
-  qt/forms/exoassetsdialog.ui \
+  qt/forms/elyassetsdialog.ui \
   qt/forms/zc2sigmapage.ui
 
 QT_MOC_CPP = \
@@ -191,7 +191,7 @@ QT_MOC_CPP = \
   qt/moc_lookupspdialog.cpp \
   qt/moc_lookuptxdialog.cpp \
   qt/moc_txhistorydialog.cpp \
-  qt/moc_axoassetsdialog.cpp \
+  qt/moc_elyassetsdialog.cpp \
   qt/moc_metadexdialog.cpp \
   qt/moc_metadexcanceldialog.cpp \
   qt/moc_tradehistorydialog.cpp \
@@ -241,7 +241,7 @@ BITCOIN_QT_H = \
   qt/intro.h \
   qt/recover.h \
   qt/notifymnemonic.h \
-  qt/notifyznodewarning.h \
+  qt/notifytnodewarning.h \
   qt/macdockiconhandler.h \
   qt/macnotificationhandler.h \
   qt/tnodelist.h \
@@ -284,7 +284,7 @@ BITCOIN_QT_H = \
   qt/lookupspdialog.h \
   qt/lookuptxdialog.h \
   qt/txhistorydialog.h \
-  qt/exoassetsdialog.h \
+  qt/elyassetsdialog.h \
   qt/metadexdialog.h \
   qt/metadexcanceldialog.h \
   qt/tradehistorydialog.h \
@@ -386,7 +386,7 @@ BITCOIN_QT_BASE_CPP = \
   qt/modaloverlay.cpp \
   qt/recover.cpp \
   qt/notifymnemonic.cpp \
-  qt/notifyznodewarning.cpp \
+  qt/notifytnodewarning.cpp \
   qt/masternodelist.cpp \
   qt/networkstyle.cpp \
   qt/notificator.cpp \
@@ -441,7 +441,7 @@ BITCOIN_QT_WALLET_CPP = \
   qt/zc2sigmamodel.cpp
 
 ZCOIN_QT_ELYSIUM_CPP = \
-  qt/exoassetsdialog.cpp \
+  qt/elyassetsdialog.cpp \
   qt/lookupaddressdialog.cpp \
   qt/lookupspdialog.cpp \
   qt/lookuptxdialog.cpp \

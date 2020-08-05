@@ -1047,8 +1047,8 @@ void CTnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStrea
         BOOST_FOREACH(CTnode& mn, vTnodes) {
             if (vin != CTxIn() && vin != mn.vin) continue; // asked for specific vin but we are not there yet
             if (Params().NetworkIDString() != CBaseChainParams::REGTEST)
-                if (mn.addr.IsRFC1918() || mn.addr.IsLocal()) continue; // do not send local network znode
-            if (mn.IsUpdateRequired()) continue; // do not send outdated znodes
+                if (mn.addr.IsRFC1918() || mn.addr.IsLocal()) continue; // do not send local network tnode
+            if (mn.IsUpdateRequired()) continue; // do not send outdated tnodes
 
             LogPrint("tnode", "DSEG -- Sending Tnode entry: tnode=%s  addr=%s\n", mn.vin.prevout.ToStringShort(), mn.addr.ToString());
             CTnodeBroadcast mnb = CTnodeBroadcast(mn);
@@ -1276,7 +1276,7 @@ void CTnodeMan::ProcessPendingMnvRequests(CConnman& connman)
             netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request");
             // use random nonce, store it and require node to reply with correct one later
             mWeAskedForVerification[pnode->addr] = itPendingMNV->second.second;
-            LogPrint("znode", "-- verifying node using nonce %d addr=%s\n", itPendingMNV->second.second.nonce, pnode->addr.ToString());
+            LogPrint("tnode", "-- verifying node using nonce %d addr=%s\n", itPendingMNV->second.second.nonce, pnode->addr.ToString());
             CNetMsgMaker msgMaker(LEGACY_TNODES_PROTOCOL_VERSION);
             connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNVERIFY, itPendingMNV->second.second));
             return true;

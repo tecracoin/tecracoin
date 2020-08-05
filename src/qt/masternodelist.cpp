@@ -1,13 +1,13 @@
 #include "masternodelist.h"
 #include "ui_masternodelist.h"
 
-#include "activeznode.h"
+#include "activetnode.h"
 #include "clientmodel.h"
 #include "clientversion.h"
 #include "coins.h"
 #include "guiutil.h"
 #include "init.h"
-#include "znode-sync.h"
+#include "tnode-sync.h"
 #include "netbase.h"
 #include "sync.h"
 #include "validation.h"
@@ -71,7 +71,7 @@ MasternodeList::MasternodeList(const PlatformStyle* platformStyle, QWidget* pare
     connect(ui->tableWidgetMasternodesDIP3, SIGNAL(doubleClicked(QModelIndex)), this, SLOT(extraInfoDIP3_clicked()));
     connect(copyProTxHashAction, SIGNAL(triggered()), this, SLOT(copyProTxHash_clicked()));
     connect(copyCollateralOutpointAction, SIGNAL(triggered()), this, SLOT(copyCollateralOutpoint_clicked()));
-    //always start with "my znodes only" checked
+    //always start with "my tnodes only" checked
     ui->checkBoxMyMasternodesOnly->setChecked(true);
 
     timer = new QTimer(this);

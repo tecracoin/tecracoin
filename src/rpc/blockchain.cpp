@@ -790,7 +790,7 @@ UniValue getblock(const JSONRPCRequest& request)
             "  \"cbTx\" : {             (json object) The coinbase special transaction \n"
             "     \"version\"           (numeric) The coinbase special transaction version\n"
             "     \"height\"            (numeric) The block height\n"
-            "     \"merkleRootMNList\" : \"xxxx\", (string) The merkle root of the znode list\n"
+            "     \"merkleRootMNList\" : \"xxxx\", (string) The merkle root of the tnode list\n"
             "  },\n"
             "  \"time\" : ttt,          (numeric) The block time in seconds since epoch (Jan 1 1970 GMT)\n"
             "  \"mediantime\" : ttt,    (numeric) The median block time in seconds since epoch (Jan 1 1970 GMT)\n"

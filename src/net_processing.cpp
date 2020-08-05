@@ -3153,7 +3153,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
             bool fEvoTnodes = deterministicMNManager->IsDIP3Enforced();
 
-            // legacy znodes
+            // legacy tnodes
             if (!fEvoTnodes) {
                 mnodeman.ProcessMessage(pfrom, command, vRecv);
                 tnpayments.ProcessMessage(pfrom, command, vRecv);
@@ -3164,7 +3164,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             // these functions must be called in transition window
             CMNAuth::ProcessMessage(pfrom, strCommand, vRecv, connman);
 
-            // evo znodes
+            // evo tnodes
             if (fEvoTnodes) {
                 masternodeSync.ProcessMessage(pfrom, strCommand, vRecv);
                 //privateSendServer.ProcessMessage(pfrom, strCommand, vRecv, connman);

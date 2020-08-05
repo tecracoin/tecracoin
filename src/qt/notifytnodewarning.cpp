@@ -1,11 +1,11 @@
-#include "notifyznodewarning.h"
+#include "notifytnodewarning.h"
 
 #include "evo/deterministicmns.h"
-#include "znode.h"
-#include "znodesync-interface.h"
+#include "tnode.h"
+#include "tnodesync-interface.h"
 #include "chain.h"
-#include "znodeconfig.h"
-#include "znodeman.h"
+#include "tnodeconfig.h"
+#include "tnodeman.h"
 #include "warnings.h"
 #include "validation.h"
 
@@ -26,7 +26,7 @@ void NotifyTnodeWarning::notify()
     float daysToEnforcement = floor(daysDecimal);
     float hoursToEnforcement = floor((daysDecimal > 0 ? (daysDecimal - daysToEnforcement) : 0) * 24);
 
-    std::string strWarning = strprintf(_("WARNING: Legacy znodes detected. You should migrate to the new Tnode layout before it becomes enforced (approximately %i days and %i hours). For details on how to migrate, go to https://zcoin.io/znode-migration"),
+    std::string strWarning = strprintf(_("WARNING: Legacy tnodes detected. You should migrate to the new Tnode layout before it becomes enforced (approximately %i days and %i hours). For details on how to migrate, go to https://zcoin.io/tnode-migration"),
         (int)daysToEnforcement,
         (int)hoursToEnforcement);
 
@@ -38,10 +38,10 @@ bool NotifyTnodeWarning::shouldShow()
 {
 #ifdef ENABLE_WALLET
     if(nConsidered ||                                         // already fully considered warning
-       znodeConfig.getCount() == 0 ||                         // no legacy znodes detected
+       tnodeConfig.getCount() == 0 ||                         // no legacy tnodes detected
        !CTnode::IsLegacyWindow(chainActive.Tip()->nHeight) || // outside of legacy window
        !pwalletMain ||                                        // wallet not yet loaded
-       !tnodeSyncInterface.IsSynced())                        // znode state not yet synced
+       !tnodeSyncInterface.IsSynced())                        // tnode state not yet synced
         return false;
 
     // get Tnode entries.
@@ -49,7 +49,7 @@ bool NotifyTnodeWarning::shouldShow()
     bool nGotProReg = false;
     uint256 mnTxHash;
     int outputIndex;
-    BOOST_FOREACH(CTnodeConfig::CTnodeEntry mne, znodeConfig.getEntries()) {
+    BOOST_FOREACH(CTnodeConfig::CTnodeEntry mne, tnodeConfig.getEntries()) {
       
         CTnode* mn = mnodeman.Find(mne.getTxHash(), mne.getOutputIndex());
         // in the case that the Tnode has dissapeared from the network, was never initialized, or it's outpoint has been spent (disabled Tnode).
@@ -80,7 +80,7 @@ bool NotifyTnodeWarning::shouldShow()
         }
     }
 
-    // if we get to here, the warning will never be shown, and so is fully considered (All znodes ported or expired)
+    // if we get to here, the warning will never be shown, and so is fully considered (All tnodes ported or expired)
     nConsidered = true;
 #endif
     return false;

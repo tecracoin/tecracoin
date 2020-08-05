@@ -1,5 +1,5 @@
-#ifndef ZCOIN_NOTIFYZNODEWARNING_H
-#define ZCOIN_NOTIFYZNODEWARNING_H
+#ifndef ZCOIN_NOTIFYTNODEWARNING_H
+#define ZCOIN_NOTIFYTNODEWARNING_H
 
 class NotifyTnodeWarning
 {
@@ -12,4 +12,4 @@ public:
     static bool nConsidered;
 };
 
-#endif //ZCOIN_NOTIFYZNODEWARNING_H
+#endif //ZCOIN_NOTIFYTNODEWARNING_H

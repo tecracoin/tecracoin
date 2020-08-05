@@ -68,7 +68,7 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
         },
         {"operatorPubKey",
             "%d. \"operatorPubKey\"           (string, required) The operator BLS public key. The private key does not have to be known.\n"
-            "                              It has to match the private key which is later used when operating the znode.\n"
+            "                              It has to match the private key which is later used when operating the tnode.\n"
         },
         {"operatorReward",
             "%d. \"operatorReward\"           (numeric, required) The fraction in %% to share with the operator. The value must be\n"
@@ -80,13 +80,13 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
             "                              be unused and must differ from the collateralAddress\n"
         },
         {"payoutAddress",
-            "%d. \"payoutAddress\"            (string, required) The Zcoin address to use for znode reward payments.\n"
+            "%d. \"payoutAddress\"            (string, required) The Zcoin address to use for tnode reward payments.\n"
         },
         {"proTxHash",
             "%d. \"proTxHash\"                (string, required) The hash of the initial ProRegTx.\n"
         },
         {"reason",
-            "%d. reason                     (numeric, optional) The reason for znode service revocation.\n"
+            "%d. reason                     (numeric, optional) The reason for tnode service revocation.\n"
         },
         {"votingAddress",
             "%d. \"votingAddress\"            (string, required) The voting key address. The private key does not have to be known by your wallet.\n"
@@ -296,7 +296,7 @@ void protx_register_fund_help(CWallet* const pwallet)
             "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" )\n"
             "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 XZC\n"
             "to the address specified by collateralAddress and will then function as the collateral of your\n"
-            "znode.\n"
+            "tnode.\n"
             "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"
             "is fully deployed.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
@@ -322,7 +322,7 @@ void protx_register_help(CWallet* const pwallet)
             "protx register \"collateralHash\" collateralIndex \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"feeSourceAddress\" )\n"
             "\nSame as \"protx register_fund\", but with an externally referenced collateral.\n"
             "The collateral is specified through \"collateralHash\" and \"collateralIndex\" and must be an unspent\n"
-            "transaction output spendable by this wallet. It must also not be used by any other znode.\n"
+            "transaction output spendable by this wallet. It must also not be used by any other tnode.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "collateralHash")
@@ -581,8 +581,8 @@ void protx_update_service_help(CWallet* const pwallet)
     throw std::runtime_error(
             "protx update_service \"proTxHash\" \"ipAndPort\" \"operatorKey\" (\"operatorPayoutAddress\" \"feeSourceAddress\" )\n"
             "\nCreates and sends a ProUpServTx to the network. This will update the IP address\n"
-            "of a znode.\n"
-            "If this is done for a znode that got PoSe-banned, the ProUpServTx will also revive this znode.\n"
+            "of a tnode.\n"
+            "If this is done for a tnode that got PoSe-banned, the ProUpServTx will also revive this tnode.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
@@ -620,7 +620,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
-        throw std::runtime_error(strprintf("znode with proTxHash %s not found", ptx.proTxHash.ToString()));
+        throw std::runtime_error(strprintf("tnode with proTxHash %s not found", ptx.proTxHash.ToString()));
     }
 
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
@@ -677,8 +677,8 @@ void protx_update_registrar_help(CWallet* const pwallet)
     throw std::runtime_error(
             "protx update_registrar \"proTxHash\" \"operatorPubKey\" \"votingAddress\" \"payoutAddress\" ( \"feeSourceAddress\" )\n"
             "\nCreates and sends a ProUpRegTx to the network. This will update the operator key, voting key and payout\n"
-            "address of the znode specified by \"proTxHash\".\n"
-            "The owner key of the znode must be known to your wallet.\n"
+            "address of the tnode specified by \"proTxHash\".\n"
+            "The owner key of the tnode must be known to your wallet.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
@@ -711,7 +711,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("znode %s not found", ptx.proTxHash.ToString()));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("tnode %s not found", ptx.proTxHash.ToString()));
     }
     ptx.pubKeyOperator = dmn->pdmnState->pubKeyOperator.Get();
     ptx.keyIDVoting = dmn->pdmnState->keyIDVoting;
@@ -760,10 +760,10 @@ void protx_revoke_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx revoke \"proTxHash\" \"operatorKey\" ( reason \"feeSourceAddress\")\n"
-            "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the znode and\n"
-            "put it into the PoSe-banned state. It will also set the service field of the znode\n"
+            "\nCreates and sends a ProUpRevTx to the network. This will revoke the operator key of the tnode and\n"
+            "put it into the PoSe-banned state. It will also set the service field of the tnode\n"
             "to zero. Use this in case your operator key got compromised or you want to stop providing your service\n"
-            "to the znode owner.\n"
+            "to the tnode owner.\n"
             + HelpRequiringPassphrase(pwallet) + "\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash")
@@ -805,7 +805,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
 
     auto dmn = deterministicMNManager->GetListAtChainTip().GetMN(ptx.proTxHash);
     if (!dmn) {
-        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("znode %s not found", ptx.proTxHash.ToString()));
+        throw JSONRPCError(RPC_INVALID_PARAMETER, strprintf("tnode %s not found", ptx.proTxHash.ToString()));
     }
 
     if (keyOperator.GetPublicKey() != dmn->pdmnState->pubKeyOperator.Get()) {
@@ -827,7 +827,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
         ExtractDestination(dmn->pdmnState->scriptOperatorPayout, txDest);
         FundSpecialTx(pwallet, tx, ptx, txDest);
     } else if (dmn->pdmnState->scriptPayout != CScript()) {
-        // Using funds from previousely specified znode payout address
+        // Using funds from previousely specified tnode payout address
         CTxDestination txDest;
         ExtractDestination(dmn->pdmnState->scriptPayout, txDest);
         FundSpecialTx(pwallet, tx, ptx, txDest);
@@ -1013,11 +1013,11 @@ void protx_info_help()
 {
     throw std::runtime_error(
             "protx info \"proTxHash\"\n"
-            "\nReturns detailed information about a deterministic znode.\n"
+            "\nReturns detailed information about a deterministic tnode.\n"
             "\nArguments:\n"
             + GetHelpString(1, "proTxHash") +
             "\nResult:\n"
-            "{                             (json object) Details about a specific deterministic znode\n"
+            "{                             (json object) Details about a specific deterministic tnode\n"
             "}\n"
             "\nExamples:\n"
             + HelpExampleCli("protx", "info \"0123456701234567012345670123456701234567012345670123456701234567\"")
@@ -1049,7 +1049,7 @@ void protx_diff_help()
 {
     throw std::runtime_error(
             "protx diff \"baseBlock\" \"block\"\n"
-            "\nCalculates a diff between two deterministic znode lists. The result also contains proof data.\n"
+            "\nCalculates a diff between two deterministic tnode lists. The result also contains proof data.\n"
             "\nArguments:\n"
             "1. \"baseBlock\"           (numeric, required) The starting block height.\n"
             "2. \"block\"               (numeric, required) The ending block height.\n"
@@ -1113,7 +1113,7 @@ UniValue protx_diff(const JSONRPCRequest& request)
             "  update_registrar  - Create and send ProUpRegTx to network\n"
             "  revoke            - Create and send ProUpRevTx to network\n"
 #endif
-            "  diff              - Calculate a diff and a proof between two znode lists\n"
+            "  diff              - Calculate a diff and a proof between two tnode lists\n"
     );
 }
 

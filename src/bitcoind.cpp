@@ -122,7 +122,7 @@ bool AppInit(int argc, char* argv[])
         std::string strErr;
         if(!tnodeConfig.read(strErr)) {
             fprintf(stderr,"Error reading tnode configuration file: %s\n", strErr.c_str());
-            // TODO: ignore the error after switch to evo znodes
+            // TODO: ignore the error after switch to evo tnodes
             return false;
         }
 

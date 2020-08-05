@@ -304,7 +304,7 @@ void CTnodeSync::ProcessTick() {
         // they are temporary and should be considered unreliable for a sync process.
         // Inbound connection this early is most likely a "tnode" connection
         // initialted from another node, so skip it too.
-        if (pnode->fTnode || (fTnode && pnode->fInbound)) continue;
+        if (pnode->fTnode || (fTnodeMode && pnode->fInbound)) continue;
 
         // QUICK MODE (REGTEST ONLY!)
         if (Params().NetworkIDString() == CBaseChainParams::REGTEST) {
@@ -314,7 +314,7 @@ void CTnodeSync::ProcessTick() {
                 mnodeman.DsegUpdate(pnode);
             } else if (nRequestedTnodeAttempt < 6) {
                 int nMnCount = mnodeman.CountTnodes();
-                g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TODES_PROTOCOL_VERSION).Make(NetMsgType::TNODEPAYMENTSYNC, nMnCount)); //sync payment votes
+                g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::TNODEPAYMENTSYNC, nMnCount)); //sync payment votes
             } else {
                 nRequestedTnodeAssets = TNODE_SYNC_FINISHED;
             }

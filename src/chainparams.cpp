@@ -244,7 +244,7 @@ public:
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
 
-        // evo znodes TecraCoin: TODO!!!
+        // evo tnodes TecraCoin: TODO!!!
         consensus.DIP0003Height = 278300; // Approximately June 22 2020, 12:00 UTC
         consensus.DIP0003EnforcementHeight = 284400; // Approximately July 13 2020, 12:00 UTC
         consensus.DIP0008Height = INT_MAX;
@@ -483,7 +483,7 @@ public:
         //consensus.nBudgetPaymentsWindowBlocks = 10;
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
 
-        // evo znodes
+        // evo tnodes
         consensus.DIP0003Height = 3340; // Tecracoin: TODO!
         consensus.DIP0003EnforcementHeight = 3800;
         consensus.DIP0008Height = INT_MAX;
@@ -717,7 +717,7 @@ public:
         consensus.nMultipleSpendInputsInOneTxStartBlock = 1;
         consensus.nDontAllowDupTxsStartBlock = 1;
 
-        // evo znodes
+        // evo tnodes
         consensus.DIP0003Height = 500;
         consensus.DIP0003EnforcementHeight = 550;
         consensus.DIP0008Height = INT_MAX;

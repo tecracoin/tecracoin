@@ -15,6 +15,9 @@
 #include "net.h"
 #include "netbase.h"
 
+//tecracoin TODO: remove functionality
+#include "darksend.h"
+
 #include <boost/lexical_cast.hpp>
 
 CTnodeTimings::CTnodeTimings()

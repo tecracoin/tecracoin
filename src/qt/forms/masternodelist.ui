@@ -61,14 +61,14 @@
          <item>
           <widget class="QLineEdit" name="filterLineEditDIP3">
            <property name="toolTip">
-            <string>Filter znode list</string>
+            <string>Filter tnode list</string>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QCheckBox" name="checkBoxMyMasternodesOnly">
            <property name="toolTip">
-            <string>Show only znodes this wallet has keys for.</string>
+            <string>Show only tnodes this wallet has keys for.</string>
            </property>
            <property name="text">
             <string>My Tnodes only</string>

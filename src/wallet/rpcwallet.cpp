@@ -32,8 +32,6 @@
 
 #include <tnode-payments.h>
 
-#include <tnode-payments.h>
-
 #include <stdint.h>
 
 #include <boost/assign/list_of.hpp>
@@ -4744,8 +4742,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "addwitnessaddress",        &addwitnessaddress,        true,   {"address"} },
     { "wallet",             "backupwallet",             &backupwallet,             true,   {"destination"} },
     { "wallet",             "bumpfee",                  &bumpfee,                  true,   {"txid", "options"} },
-    { "wallet",             "dumpprivkey",              &dumpprivkey_zcoin,        true,   {"address"}  },
-    { "wallet",             "dumpwallet",               &dumpwallet_zcoin,         true,   {"filename"} },
+    { "wallet",             "dumpprivkey",              &dumpprivkey_tecracoin,    true,   {"address"}  },
+    { "wallet",             "dumpwallet",               &dumpwallet_tecracoin,     true,   {"filename"} },
     { "wallet",             "encryptwallet",            &encryptwallet,            true,   {"passphrase"} },
     { "wallet",             "getaccountaddress",        &getaccountaddress,        true,   {"account"} },
     { "wallet",             "getaccount",               &getaccount,               true,   {"address"} },

@@ -41,7 +41,7 @@
 #include "tnodesync-interface.h"
 #include "tnodelist.h"
 #include "masternodelist.h"
-#include "notifyznodewarning.h"
+#include "notifytnodewarning.h"
 #include "elysium_qtutils.h"
 #include "zc2sigmapage.h"
 
@@ -376,12 +376,12 @@ void BitcoinGUI::createActions()
 #ifdef ENABLE_WALLET
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
-    tnodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/znodes"), tr("&Tnodes"), this);
+    tnodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/tnodes"), tr("&Tnodes"), this);
     tnodeAction->setStatusTip(tr("Browse Tnodes"));
     tnodeAction->setToolTip(tnodeAction->statusTip());
     tnodeAction->setCheckable(true);
 
-    masternodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/znodes"), tr("&Tnodes"), this);
+    masternodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/tnodes"), tr("&Tnodes"), this);
     masternodeAction->setStatusTip(tr("Browse Tnodes"));
     masternodeAction->setToolTip(masternodeAction->statusTip());
     masternodeAction->setCheckable(true);

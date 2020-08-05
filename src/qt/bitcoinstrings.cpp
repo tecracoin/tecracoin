@@ -308,7 +308,7 @@ QT_TRANSLATE_NOOP("tecracoin-core", ""
 "Would you like Elysium to attempt to update your configuration file "
 "accordingly?"),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
-"You must specify a znodeprivkey in the configuration. Please see "
+"You must specify a tnodeprivkey in the configuration. Please see "
 "documentation for help."),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
 "You need to rebuild the database using -reindex to go back to unpruned "
@@ -324,8 +324,8 @@ QT_TRANSLATE_NOOP("tecracoin-core", ""
 "it has to have at least two mint coins with at least 6 confirmation in order "
 "to spend a coin"),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
-"znodeaddr option is deprecated. Please use znode.conf to manage your remote "
-"znodes."),
+"tnodeaddr option is deprecated. Please use tnode.conf to manage your remote "
+"tnodes."),
 QT_TRANSLATE_NOOP("tecracoin-core", "%s - %d confirmations"),
 QT_TRANSLATE_NOOP("tecracoin-core", "%s Daemon"),
 QT_TRANSLATE_NOOP("tecracoin-core", "%s RPC client version"),
@@ -379,7 +379,7 @@ QT_TRANSLATE_NOOP("tecracoin-core", "Connect to a node to retrieve peer addresse
 QT_TRANSLATE_NOOP("tecracoin-core", "Connection options:"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Copyright (C) %i-%i"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Corrupted block database detected"),
-QT_TRANSLATE_NOOP("tecracoin-core", "Could not parse znode.conf"),
+QT_TRANSLATE_NOOP("tecracoin-core", "Could not parse tnode.conf"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Create hex-encoded Zcoin transaction"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Create new, empty TX."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Debugging/Testing options:"),
@@ -440,9 +440,9 @@ QT_TRANSLATE_NOOP("tecracoin-core", "Invalid amount for -mininput=<amount>: '%s'
 QT_TRANSLATE_NOOP("tecracoin-core", "Invalid amount for -paytxfee=<amount>: '%s' (must be at least %s)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Invalid amount"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Invalid netmask specified in -whitelist: '%s'"),
-QT_TRANSLATE_NOOP("tecracoin-core", "Invalid port detected in znode.conf"),
+QT_TRANSLATE_NOOP("tecracoin-core", "Invalid port detected in tnode.conf"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Invalid script detected."),
-QT_TRANSLATE_NOOP("tecracoin-core", "Invalid znodeprivkey. Please see documentation."),
+QT_TRANSLATE_NOOP("tecracoin-core", "Invalid tnodeprivkey. Please see documentation."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Keep the transaction memory pool below <n> megabytes (default: %u)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Keypool ran out, please call keypoolrefill first"),
@@ -459,7 +459,7 @@ QT_TRANSLATE_NOOP("tecracoin-core", "Loading banlist..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Loading block index..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Loading fulfilled requests cache..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Loading wallet..."),
-QT_TRANSLATE_NOOP("tecracoin-core", "Loading znode cache..."),
+QT_TRANSLATE_NOOP("tecracoin-core", "Loading tnode cache..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Location of the auth cookie (default: data dir)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Lock is already in place."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Maintain at most <n> connections to peers (default: %u)"),
@@ -542,15 +542,15 @@ QT_TRANSLATE_NOOP("tecracoin-core", "Specify your own public address"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Spend unconfirmed change when sending transactions (default: %u)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Start %s Daemon"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Starting network threads..."),
-QT_TRANSLATE_NOOP("tecracoin-core", "Submitted following entries to znode: %u / %d"),
-QT_TRANSLATE_NOOP("tecracoin-core", "Submitted to znode, waiting for more entries ( %u / %d ) %s"),
-QT_TRANSLATE_NOOP("tecracoin-core", "Submitted to znode, waiting in queue %s"),
+QT_TRANSLATE_NOOP("tecracoin-core", "Submitted following entries to tnode: %u / %d"),
+QT_TRANSLATE_NOOP("tecracoin-core", "Submitted to tnode, waiting for more entries ( %u / %d ) %s"),
+QT_TRANSLATE_NOOP("tecracoin-core", "Submitted to tnode, waiting in queue %s"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Synchronization failed"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Synchronization finished"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Synchronization pending..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Synchronizing sporks..."),
-QT_TRANSLATE_NOOP("tecracoin-core", "Synchronizing znode payments..."),
-QT_TRANSLATE_NOOP("tecracoin-core", "Synchronizing znodes..."),
+QT_TRANSLATE_NOOP("tecracoin-core", "Synchronizing tnode payments..."),
+QT_TRANSLATE_NOOP("tecracoin-core", "Synchronizing tnodes..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "The source code is available from %s."),
 QT_TRANSLATE_NOOP("tecracoin-core", "The spend coin transaction failed to verify"),
 QT_TRANSLATE_NOOP("tecracoin-core", "The transaction amount is too small to pay the fee"),

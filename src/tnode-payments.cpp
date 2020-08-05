@@ -13,6 +13,9 @@
 #include "net_processing.h"
 #include "netmessagemaker.h"
 
+//Tecracoin TODO: remove functionality
+#include "darksend.h"
+
 #include <boost/lexical_cast.hpp>
 
 /** Object for who's going to get paid on which blocks */
@@ -277,8 +280,6 @@ void CTnodePayments::ProcessMessage(CNode *pfrom, std::string &strCommand, CData
     if (fLiteMode) return; // disable all Zcoin specific functionality
 
     bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET || Params().NetworkIDString() == CBaseChainParams::REGTEST);
-
-    bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET);
 
     if (strCommand == NetMsgType::TNODEPAYMENTSYNC) { //Tnode Payments Request Sync
 

@@ -285,12 +285,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         FillBlockPayments(coinbaseTx, nHeight, nBlockSubsidy, pblocktemplate->voutMasternodePayments, sbPayments);
     }
     else {
-        // Update coinbase transaction with additional info about znode and governance payments,
+        // Update coinbase transaction with additional info about tnode and governance payments,
         // get some info back to pass to getblocktemplate
         if (nHeight >= params.nTnodePaymentsStartBlock) {
-            CAmount znodePayment = GetTnodePayment(chainparams.GetConsensus(), fMTP);
-            coinbaseTx.vout[0].nValue -= znodePayment;
-            FillTnodeBlockPayments(coinbaseTx, nHeight, znodePayment, pblock->txoutTnode, pblock->voutSuperblock);
+            CAmount tnodePayment = GetTnodePayment(chainparams.GetConsensus(), fMTP);
+            coinbaseTx.vout[0].nValue -= tnodePayment;
+            FillTnodeBlockPayments(coinbaseTx, nHeight, tnodePayment, pblock->txoutTnode, pblock->voutSuperblock);
         }
     }
 
@@ -966,7 +966,7 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
                 // Busy-wait for the network to come online so we don't waste time mining
                 // on an obsolete chain. In regtest mode we expect to fly solo.
 
-                // Also try to wait for znode winners unless we're on regtest chain
+                // Also try to wait for tnode winners unless we're on regtest chain
                 do {
                     bool fvNodesEmpty = g_connman->GetNodeCount(CConnman::CONNECTIONS_ALL) == 0;
                     bool fHasTnodesWinnerForNextBlock;

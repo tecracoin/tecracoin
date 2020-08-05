@@ -15,7 +15,7 @@
 #include "crypto/hmac_sha512.h"
 #include "keystore.h"
 #include <boost/optional.hpp>
-#include "znodesync-interface.h"
+#include "tnodesync-interface.h"
 
 /**
  * Constructor for CHDMintWallet object.

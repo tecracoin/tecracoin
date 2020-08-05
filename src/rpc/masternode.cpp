@@ -30,14 +30,14 @@ UniValue masternodelist(const JSONRPCRequest& request);
 void masternode_list_help()
 {
     throw std::runtime_error(
-            "evoznode list ( \"mode\" \"filter\" )\n"
-            "Get a list of evo znodes in different modes. This call is identical to evoznodelist call.\n"
+            "evotnode list ( \"mode\" \"filter\" )\n"
+            "Get a list of evo tnodes in different modes. This call is identical to evotnodelist call.\n"
             "\nArguments:\n"
             "1. \"mode\"      (string, optional/required to use filter, defaults = json) The mode to run list in\n"
             "2. \"filter\"    (string, optional) Filter results. Partial match by outpoint by default in all modes,\n"
             "                                    additional matches in some modes are also available\n"
             "\nAvailable modes:\n"
-            "  addr           - Print ip address associated with a znode (can be additionally filtered, partial match)\n"
+            "  addr           - Print ip address associated with a tnode (can be additionally filtered, partial match)\n"
             "  full           - Print info in format 'status payee lastpaidtime lastpaidblock IP'\n"
             "                   (can be additionally filtered, partial match)\n"
             "  info           - Print info in format 'status payee IP'\n"
@@ -45,13 +45,13 @@ void masternode_list_help()
             "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
             "  lastpaidblock  - Print the last block height a node was paid on the network\n"
             "  lastpaidtime   - Print the last time a node was paid on the network\n"
-            "  owneraddress   - Print the znode owner Zcoin address\n"
-            "  payee          - Print the znode payout Zcoin address (can be additionally filtered,\n"
+            "  owneraddress   - Print the tnode owner Zcoin address\n"
+            "  payee          - Print the tnode payout Zcoin address (can be additionally filtered,\n"
             "                   partial match)\n"
-            "  pubKeyOperator - Print the znode operator public key\n"
-            "  status         - Print znode status: ENABLED / POSE_BANNED\n"
+            "  pubKeyOperator - Print the tnode operator public key\n"
+            "  status         - Print tnode status: ENABLED / POSE_BANNED\n"
             "                   (can be additionally filtered, partial match)\n"
-            "  votingaddress  - Print the znode voting Zcoin address\n"
+            "  votingaddress  - Print the tnode voting Zcoin address\n"
         );
 }
 
@@ -71,10 +71,10 @@ UniValue masternode_list(const JSONRPCRequest& request)
 void masternode_connect_help()
 {
     throw std::runtime_error(
-            "znode connect \"address\"\n"
-            "Connect to given znode\n"
+            "tnode connect \"address\"\n"
+            "Connect to given tnode\n"
             "\nArguments:\n"
-            "1. \"address\"      (string, required) The address of the znode to connect\n"
+            "1. \"address\"      (string, required) The address of the tnode to connect\n"
         );
 }
 
@@ -87,12 +87,12 @@ UniValue masternode_connect(const JSONRPCRequest& request)
 
     CService addr;
     if (!Lookup(strAddress.c_str(), addr, 0, false))
-        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect znode address %s", strAddress));
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Incorrect tnode address %s", strAddress));
 
     // TODO: Pass CConnman instance somehow and don't use global variable.
     g_connman->OpenMasternodeConnection(CAddress(addr, NODE_NETWORK));
     if (!g_connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
-        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to znode %s", strAddress));
+        throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to tnode %s", strAddress));
 
     return "successfully connected";
 }
@@ -100,16 +100,16 @@ UniValue masternode_connect(const JSONRPCRequest& request)
 void masternode_count_help()
 {
     throw std::runtime_error(
-            "evoznode count (\"mode\")\n"
-            "  Get information about number of evo znodes. Mode\n"
+            "evotnode count (\"mode\")\n"
+            "  Get information about number of evo tnodes. Mode\n"
             "  usage is depricated, call without mode params returns\n"
             "  all values in JSON format.\n"
             "\nArguments:\n"
-            "1. \"mode\"      (string, optional, DEPRICATED) Option to get number of znodes in different states\n"
+            "1. \"mode\"      (string, optional, DEPRICATED) Option to get number of tnodes in different states\n"
             "\nAvailable modes:\n"
-            "  total         - total number of znodes"
-            "  enabled       - number of enabled znodes"
-            "  qualify       - number of qualified znodes"
+            "  total         - total number of tnodes"
+            "  enabled       - number of enabled tnodes"
+            "  qualify       - number of qualified tnodes"
             "  all           - all above in one string"
         );
 }
@@ -175,8 +175,8 @@ UniValue GetNextMasternodeForPayment(int heightShift)
 void masternode_winner_help()
 {
     throw std::runtime_error(
-            "znode winner\n"
-            "Print info on next znode winner to vote for\n"
+            "tnode winner\n"
+            "Print info on next tnode winner to vote for\n"
         );
 }
 
@@ -191,8 +191,8 @@ UniValue masternode_winner(const JSONRPCRequest& request)
 void masternode_current_help()
 {
     throw std::runtime_error(
-            "znode current\n"
-            "Print info on current znode winner to be paid the next block (calculated locally)\n"
+            "tnode current\n"
+            "Print info on current tnode winner to be paid the next block (calculated locally)\n"
         );
 }
 
@@ -208,8 +208,8 @@ UniValue masternode_current(const JSONRPCRequest& request)
 void masternode_outputs_help()
 {
     throw std::runtime_error(
-            "znode outputs\n"
-            "Print znode compatible outputs\n"
+            "tnode outputs\n"
+            "Print tnode compatible outputs\n"
         );
 }
 
@@ -239,8 +239,8 @@ UniValue masternode_outputs(const JSONRPCRequest& request)
 void masternode_status_help()
 {
     throw std::runtime_error(
-            "znode status\n"
-            "Print znode status information\n"
+            "tnode status\n"
+            "Print tnode status information\n"
         );
 }
 
@@ -250,7 +250,7 @@ UniValue masternode_status(const JSONRPCRequest& request)
         masternode_status_help();
 
     if (!fTnodeMode)
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a znode");
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a tnode");
 
     UniValue mnObj(UniValue::VOBJ);
 
@@ -276,8 +276,8 @@ UniValue masternode_status(const JSONRPCRequest& request)
 void masternode_winners_help()
 {
     throw std::runtime_error(
-            "evoznode winners ( count \"filter\" )\n"
-            "Print list of evo znode winners\n"
+            "evotnode winners ( count \"filter\" )\n"
+            "Print list of evo tnode winners\n"
             "\nArguments:\n"
             "1. count        (numeric, optional) number of last winners to return\n"
             "2. filter       (string, optional) filter for returned winners\n"
@@ -310,7 +310,7 @@ UniValue masternode_winners(const JSONRPCRequest& request)
     }
 
     if (request.params.size() > 3)
-        throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'znode winners ( \"count\" \"filter\" )'");
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'tnode winners ( \"count\" \"filter\" )'");
 
     UniValue obj(UniValue::VOBJ);
     auto mapPayments = GetRequiredPaymentsStrings(nHeight - nLast, nHeight + 20);
@@ -324,20 +324,20 @@ UniValue masternode_winners(const JSONRPCRequest& request)
 [[ noreturn ]] void masternode_help()
 {
     throw std::runtime_error(
-        "evoznode \"command\"...\n"
-        "Set of commands to execute evo znode related actions\n"
+        "evotnode \"command\"...\n"
+        "Set of commands to execute evo tnode related actions\n"
         "\nArguments:\n"
         "1. \"command\"        (string or set of strings, required) The command to execute\n"
         "\nAvailable commands:\n"
-        "  count        - Get information about number of znodes (DEPRECATED options: 'total', enabled', 'qualify', 'all')\n"
-        "  current      - Print info on current znode winner to be paid the next block (calculated locally)\n"
+        "  count        - Get information about number of tnodes (DEPRECATED options: 'total', enabled', 'qualify', 'all')\n"
+        "  current      - Print info on current tnode winner to be paid the next block (calculated locally)\n"
 #ifdef ENABLE_WALLET
-        "  outputs      - Print znode compatible outputs\n"
+        "  outputs      - Print tnode compatible outputs\n"
 #endif // ENABLE_WALLET
-        "  status       - Print znode status information\n"
-        "  list         - Print list of all known znodes (see evoznodelist for more info)\n"
-        "  winner       - Print info on next znode winner to vote for\n"
-        "  winners      - Print list of znode winners\n"
+        "  status       - Print tnode status information\n"
+        "  list         - Print list of all known tnodes (see evotnodelist for more info)\n"
+        "  winner       - Print info on next tnode winner to vote for\n"
+        "  winners      - Print list of tnode winners\n"
         );
 }
 
@@ -527,8 +527,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ ----------
-    { "zcoin",               "evoznode",              &masternode,             true,  {} },
-    { "zcoin",               "evoznodelist",          &masternodelist,         true,  {} },
+    { "zcoin",               "evotnode",              &masternode,             true,  {} },
+    { "zcoin",               "evotnodelist",          &masternodelist,         true,  {} },
 };
 
 void RegisterMasternodeRPCCommands(CRPCTable &t)

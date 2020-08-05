@@ -16,7 +16,7 @@
 #include "guiutil.h"
 #include "platformstyle.h"
 #include "zc2sigmamodel.h"
-#include "znodesync-interface.h"
+#include "tnodesync-interface.h"
 #include "clientmodel.h"
 #include "walletmodel.h"
 

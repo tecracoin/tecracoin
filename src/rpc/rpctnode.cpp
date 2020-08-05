@@ -88,7 +88,7 @@ UniValue getpoolinfo(const JSONRPCRequest &request) {
 }
 
 
-UniValue znode(const JSONRPCRequest &request) {
+UniValue tnode(const JSONRPCRequest &request) {
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
 
     std::string strCommand;
@@ -121,7 +121,7 @@ UniValue znode(const JSONRPCRequest &request) {
                         "  start-alias  - Start single remote tnode by assigned alias configured in tnode.conf\n"
                         "  start-<mode> - Start remote tnodes configured in tnode.conf (<mode>: 'all', 'missing', 'disabled')\n"
                         "  status       - Print tnode status information\n"
-                        "  list         - Print list of all known znodes (see tnodelist for more info)\n"
+                        "  list         - Print list of all known tnodes (see tnodelist for more info)\n"
                         "  list-conf    - Print tnode.conf in JSON format\n"
                         "  winner       - Print info on next tnode winner to vote for\n"
                         "  winners      - Print list of tnode winners\n"
@@ -149,7 +149,7 @@ UniValue znode(const JSONRPCRequest &request) {
 
         g_connman->OpenMasternodeConnection(CAddress(CService(ip[0], 0), NODE_NETWORK));
         /*if (!g_connman->IsConnected(CAddress(addr, NODE_NETWORK), CConnman::AllNodes))
-            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to znode %s", strAddress));*/
+            throw JSONRPCError(RPC_INTERNAL_ERROR, strprintf("Couldn't connect to tnode %s", strAddress));*/
 
         return "successfully connected";
     }
@@ -444,7 +444,7 @@ UniValue znode(const JSONRPCRequest &request) {
     return NullUniValue;
 }
 
-UniValue znodelist(const JSONRPCRequest &request) {
+UniValue tnodelist(const JSONRPCRequest &request) {
     std::string strMode = "status";
     std::string strFilter = "";
 
@@ -617,7 +617,7 @@ bool DecodeHexVecMnb(std::vector <CTnodeBroadcast> &vecMnb, std::string strHexMn
     return true;
 }
 
-UniValue znodebroadcast(const JSONRPCRequest &request) {
+UniValue tnodebroadcast(const JSONRPCRequest &request) {
     CWallet* const pwallet = GetWalletForJSONRPCRequest(request);
 
     std::string strCommand;
