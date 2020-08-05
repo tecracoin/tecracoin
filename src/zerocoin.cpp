@@ -567,7 +567,7 @@ bool CheckZerocoinFoundersInputs(const CTransaction &tx, CValidationState &state
         if (!fTestNet && (GetAdjustedTime() <= nStartRewardTime)) {
             throw std::runtime_error("CreateNewBlock() : Create new block too early");
         }
-        const CAmount tnodePayment = GetTnodePayment(nHeight, Params().GetConsensus(), fMTP);
+        const CAmount tnodePayment = GetTnodePayment(Params().GetConsensus(), fMTP);
 
         if (nHeight == 1) {
             BOOST_FOREACH(const CTxOut &output, tx.vout) {
