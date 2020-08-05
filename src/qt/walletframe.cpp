@@ -160,27 +160,6 @@ void WalletFrame::gotoTnodePage()
 {
     QMap<QString, WalletView*>::const_iterator i;
     for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoElysiumHistoryTab();
-}
-
-void WalletFrame::gotoBitcoinHistoryTab()
-{
-    QMap<QString, WalletView*>::const_iterator i;
-    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoBitcoinHistoryTab();
-}
-
-void WalletFrame::gotoToolboxPage()
-{
-    QMap<QString, WalletView*>::const_iterator i;
-    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
-        i.value()->gotoToolboxPage();
-}
-
-void WalletFrame::gotoTnodePage()
-{
-    QMap<QString, WalletView*>::const_iterator i;
-    for (i = mapWalletViews.constBegin(); i != mapWalletViews.constEnd(); ++i)
         i.value()->gotoTnodePage();
 }
 

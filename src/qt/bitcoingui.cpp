@@ -112,7 +112,7 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     appMenuBar(0),
     overviewAction(0),
 #ifdef ENABLE_ELYSIUM
-    exoAssetsAction(0),
+    elyAssetsAction(0),
     toolboxAction(0),
 #endif
     historyAction(0),
@@ -319,7 +319,6 @@ void BitcoinGUI::createActions()
 {
     size_t key = Qt::Key_1;
 	QActionGroup *tabGroup = new QActionGroup(this);
-    bool elysiumEnabled = isElysiumEnabled();
 
 	overviewAction = new QAction(platformStyle->SingleColorIcon(":/icons/overview"), tr("&Overview"), this);
 	overviewAction->setStatusTip(tr("Show general overview of wallet"));
@@ -329,7 +328,7 @@ void BitcoinGUI::createActions()
 	tabGroup->addAction(overviewAction);
 
 	sendCoinsAction = new QAction(platformStyle->SingleColorIcon(":/icons/send"), tr("&Send"), this);
-	sendCoinsAction->setStatusTip(tr(elysiumEnabled ? "Send Elysium and TecraCoin transactions" : "Send coins to a TecraCoin address"));
+	sendCoinsAction->setStatusTip(tr("Send coins to a TecraCoin address"));
 	sendCoinsAction->setToolTip(sendCoinsAction->statusTip());
 	sendCoinsAction->setCheckable(true);
 	sendCoinsAction->setShortcut(QKeySequence(Qt::ALT + key++));
@@ -359,7 +358,7 @@ void BitcoinGUI::createActions()
 
     sigmaAction = new QAction(platformStyle->SingleColorIcon(":/icons/sigma"), tr("Si&gma"), this);
     sigmaAction->setStatusTip(tr("Anonymize your coins and perform private transfers using Sigma"));
-    exoaAction->setToolTip(sigmaAction->statusTip());
+    sigmaAction->setToolTip(sigmaAction->statusTip());
     sigmaAction->setCheckable(true);
     sigmaAction->setShortcut(QKeySequence(Qt::ALT +  key++));
     tabGroup->addAction(sigmaAction);
@@ -438,8 +437,8 @@ void BitcoinGUI::createActions()
 
 #ifdef ENABLE_ELYSIUM
     if (elysiumEnabled) {
-        connect(exoAssetsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
-        connect(exoAssetsAction, SIGNAL(triggered()), this, SLOT(gotoElyAssetsPage()));
+        connect(elyAssetsAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
+        connect(elyAssetsAction, SIGNAL(triggered()), this, SLOT(gotoElyAssetsPage()));
         connect(toolboxAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
         connect(toolboxAction, SIGNAL(triggered()), this, SLOT(gotoToolboxPage()));
     }
@@ -585,7 +584,7 @@ void BitcoinGUI::createToolBars()
 
 #ifdef ENABLE_ELYSIUM
         if (isElysiumEnabled()) {
-            toolbar->addAction(exoAssetsAction);
+            toolbar->addAction(elyAssetsAction);
             toolbar->addAction(toolboxAction);
         }
 #endif

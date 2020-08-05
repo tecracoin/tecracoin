@@ -434,41 +434,6 @@ void WalletView::focusBitcoinHistoryTab(const QModelIndex &idx)
 
 void WalletView::gotoTnodePage()
 {
-    if (!transactionTabs) {
-        return;
-    }
-
-    setCurrentWidget(transactionsPage);
-    transactionTabs->setCurrentIndex(1);
-}
-
-void WalletView::gotoBitcoinHistoryTab()
-{
-    setCurrentWidget(transactionsPage);
-
-    if (transactionTabs) {
-        transactionTabs->setCurrentIndex(0);
-    }
-}
-
-void WalletView::focusElysiumTransaction(const uint256& txid)
-{
-    if (!elysiumTransactionsView) {
-        return;
-    }
-
-    gotoElysiumHistoryTab();
-    elysiumTransactionsView->focusTransaction(txid);
-}
-
-void WalletView::focusBitcoinHistoryTab(const QModelIndex &idx)
-{
-    gotoBitcoinHistoryTab();
-    tecracoinTransactionList->focusTransaction(idx);
-}
-
-void WalletView::gotoTnodePage()
-{
     setCurrentWidget(tnodeListPage);
 }
 
