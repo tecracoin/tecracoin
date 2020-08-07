@@ -189,8 +189,8 @@ public:
         consensus.nChainStartTime = 1539907200;
         consensus.BIP34Height = 227931;
         consensus.BIP34Hash = uint256S("0x000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8");
-        consensus.BIP65Height = INT_MAX;
-        consensus.BIP66Height = INT_MAX;
+        consensus.BIP65Height = INT_MAX; //OP_CHECKLOCKTIMEVERIFY
+        consensus.BIP66Height = INT_MAX; //Strict DER signatures
         consensus.powLimit = uint256S("00ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff");
         consensus.nPowTargetTimespan = 60 * 60; // 60 minutes between retargets
         consensus.nPowTargetSpacing = defaultPowTargetSpacing;
@@ -221,7 +221,7 @@ public:
         consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000019acb099d323987");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("7d828dd2b55cef5dfc376177dda08a02e780d9fd5dea3f192671adadbd6632d2"); //184200
+        consensus.defaultAssumeValid = uint256S("04a68a5c150d913c24ea45a15eb91fae7f8827743602f018f70114035143592a"); //358240
 
         consensus.nCheckBugFixedAtBlock = ZC_CHECK_BUG_FIXED_AT_BLOCK;
         consensus.nTnodePaymentsBugFixedAtBlock = ZC_TNODE_PAYMENT_BUG_FIXED_AT_BLOCK;
@@ -245,8 +245,8 @@ public:
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
 
         // evo tnodes TecraCoin: TODO!!!
-        consensus.DIP0003Height = 278300; // Approximately June 22 2020, 12:00 UTC
-        consensus.DIP0003EnforcementHeight = 284400; // Approximately July 13 2020, 12:00 UTC
+        consensus.DIP0003Height = 444444; // Approximately ???
+        consensus.DIP0003EnforcementHeight = 555555; // Approximately ???
         consensus.DIP0008Height = INT_MAX;
         consensus.nEvoTnodeMinimumConfirmations = 15;
 
@@ -257,7 +257,8 @@ public:
         consensus.nLLMQPowTargetSpacing = 5*60;
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
-        consensus.nMTPStartBlock = 117564; //tecra: TODO!
+        consensus.nMTPStartBlock = 192804; //Tecracoin
+
         consensus.nMTPFiveMinutesStartBlock = SWITCH_TO_MTP_5MIN_BLOCK;// NOT USED IN TECRACOIN
         consensus.nDifficultyAdjustStartBlock = 0;// NOT USED IN TECRACOIN
         consensus.nFixedDifficulty = 0x2000ffff;// NOT USED IN TECRACOIN
@@ -265,7 +266,7 @@ public:
         consensus.nInitialMTPDifficulty = 0x1c021e57;// NOT USED IN TECRACOIN
         consensus.nMTPRewardReduction = 1; // NOT USED IN TECRACOIN
 
-        consensus.nDisableZerocoinStartBlock = 157000;
+        consensus.nDisableZerocoinStartBlock = 108500;
 
         nMaxTipAge = 6 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
 
@@ -279,8 +280,6 @@ public:
          * The characters are rarely used upper ASCII, not valid as UTF-8, and produce
        `  * a large 32-bit integer with any alignment.
          */
-        consensus.nDisableZerocoinStartBlock = 1;
-
         pchMessageStart[0] = 0x9e;
         pchMessageStart[1] = 0xce;
         pchMessageStart[2] = 0x3c;
@@ -379,7 +378,7 @@ public:
         consensus.nDandelionShuffleInterval = DANDELION_SHUFFLE_INTERVAL;
         consensus.nDandelionFluff = DANDELION_FLUFF;
 
-        // Bip39
+        // Bip39: Mnemonic code for generating deterministic keys
         consensus.nMnemonicBlock = 222400;
 
         /**

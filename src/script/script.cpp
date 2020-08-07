@@ -287,7 +287,8 @@ bool CScript::IsZerocoinMint() const
             (*this)[0] == OP_ZEROCOINMINT);
 }
 
-bool CScript::IsZerocoinSpend() const {
+bool CScript::IsZerocoinSpend() const
+{
     return (this->size() > 0 &&
             (*this)[0] == OP_ZEROCOINSPEND);
 }
@@ -299,12 +300,14 @@ bool CScript::IsSigmaMint() const
             (*this)[0] == OP_SIGMAMINT);
 }
 
-bool CScript::IsSigmaSpend() const {
+bool CScript::IsSigmaSpend() const
+{
     return (this->size() > 0 &&
             (*this)[0] == OP_SIGMASPEND);
 }
 
-bool CScript::IsZerocoinRemint() const {
+bool CScript::IsZerocoinRemint() const
+{
     return (this->size() > 0 &&
             (*this)[0] == OP_ZEROCOINTOSIGMAREMINT);
 }
