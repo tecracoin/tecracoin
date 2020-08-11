@@ -16,7 +16,7 @@ class CTnode;
 class CTnodeBroadcast;
 class CTnodePing;
 
-static const int TNODE_CHECK_SECONDS               =   5;
+static const int TNODE_CHECK_SECONDS               =   15;  //5s almost loops it
 static const int TNODE_MIN_MNB_SECONDS             =   5 * 60; //BROADCAST_TIME
 static const int TNODE_EXPIRATION_SECONDS          =  65 * 60;
 static const int TNODE_WATCHDOG_MAX_SECONDS        = 120 * 60;
