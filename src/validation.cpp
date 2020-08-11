@@ -3141,25 +3141,29 @@ int GetInputAge(const CTxIn &txin) {
 }
 
 CAmount GetTnodePayment(const Consensus::Params &params, bool fMTP) {
-//    CAmount ret = blockValue * 30/100 ; // start at 30%
-//    int nMNPIBlock = Params().GetConsensus().nTnodePaymentsStartBlock;
-////    int nMNPIBlock = Params().GetConsensus().nTnodePaymentsIncreaseBlock;
-//    int nMNPIPeriod = Params().GetConsensus().nTnodePaymentsIncreasePeriod;
-//
-//    // mainnet:
-//    if (nHeight > nMNPIBlock) ret += blockValue / 20; // 158000 - 25.0% - 2014-10-24
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 1)) ret += blockValue / 20; // 175280 - 30.0% - 2014-11-25
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 2)) ret += blockValue / 20; // 192560 - 35.0% - 2014-12-26
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 3)) ret += blockValue / 40; // 209840 - 37.5% - 2015-01-26
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 4)) ret += blockValue / 40; // 227120 - 40.0% - 2015-02-27
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 5)) ret += blockValue / 40; // 244400 - 42.5% - 2015-03-30
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 6)) ret += blockValue / 40; // 261680 - 45.0% - 2015-05-01
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 7)) ret += blockValue / 40; // 278960 - 47.5% - 2015-06-01
-//    if (nHeight > nMNPIBlock + (nMNPIPeriod * 9)) ret += blockValue / 40; // 313520 - 50.0% - 2015-08-03
-    CAmount coin = fMTP ? COIN/params.nMTPRewardReduction : COIN;
-    CAmount ret = 15 * coin; //15 or 7.5 XZC
-
-    return ret;
+    int nHeight = chainActive.Height();
+    CAmount blockValue = GetBlockSubsidy(nHeight, params, fMTP);
+    if(nHeight < Params().GetConsensus().nTnodePaymentsStartBlock){
+        return 0;
+    }else if(nHeight < Params().GetConsensus().rewardsStage2Start) {
+        // T1
+        return blockValue * 39 / 100;
+    }else if(nHeight < Params().GetConsensus().rewardsStage3Start){
+        // T2
+        return blockValue * 15 / 100;
+    }else if(nHeight < Params().GetConsensus().rewardsStage4Start){
+        // T3
+        return blockValue * 15 / 100;
+    }else if(nHeight < Params().GetConsensus().rewardsStage5Start){
+        // T4
+        return blockValue * 20 / 100;
+    }else if(nHeight < Params().GetConsensus().rewardsStage6Start) {
+        // T5
+        return blockValue * 20 / 100;
+    }else{
+        // T6
+        return blockValue * 25 / 100;
+    }
 }
 
 bool DisconnectBlocks(int blocks) {
