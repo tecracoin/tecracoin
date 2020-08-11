@@ -1,7 +1,3 @@
-// Copyright (c) 2018 The TecraCoin Core developers
-// Distributed under the MIT software license, see the accompanying
-// file COPYING or http://www.opensource.org/licenses/mit-license.php.
-
 #include "validation.h"
 #include "zerocoin.h"
 #include "sigma.h"
@@ -220,7 +216,7 @@ bool CheckRemintZcoinTransaction(const CTransaction &tx,
     return true;
 }
 
-bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
+bool CheckSpendZcoinTransaction(const CTransaction &tx,
                                 const Consensus::Params &params,
                                 const vector<libzerocoin::CoinDenomination>& targetDenominations,
                                 CValidationState &state,
@@ -240,6 +236,7 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
     for (const CTxIn &txin : tx.vin) {
         std::unique_ptr<libzerocoin::CoinSpend> spend;
         uint32_t pubcoinId;
+
         vinIndex++;
         if (txin.scriptSig.IsZerocoinSpend()) {
             hasZerocoinSpendInputs = true;
@@ -259,7 +256,7 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
             return state.DoS(100,
                 false,
                 REJECT_MALFORMED,
-                "CheckSpendTecracoinTransaction: invalid spend transaction");
+                "CheckSpendZcoinTransaction: invalid spend transaction");
         }
 
         bool fModulusV2 = pubcoinId >= ZC_MODULUS_V2_BASE_ID, fModulusV2InIndex = false;
@@ -311,14 +308,14 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
             txHashForMetadata = txTemp.GetHash();
         }
 
-        LogPrintf("CheckSpendTecraCoinTransaction: tx version=%d, tx metadata hash=%s, serial=%s\n", spend->getVersion(), txHashForMetadata.ToString(), spend->getCoinSerialNumber().ToString());
+        LogPrintf("CheckSpendZcoinTransaction: tx version=%d, tx metadata hash=%s, serial=%s\n", spend->getVersion(), txHashForMetadata.ToString(), spend->getCoinSerialNumber().ToString());
 
         int txHeight = chainActive.Height();
 
         if (spendVersion == ZEROCOIN_TX_VERSION_1 && nHeight == INT_MAX) {
             int allowedV1Height = params.nSpendV15StartBlock;
             if (txHeight >= allowedV1Height + ZC_V1_5_GRACEFUL_MEMPOOL_PERIOD) {
-                LogPrintf("CheckSpendTecraCoinTransaction: cannot allow spend v1 into mempool after block %d\n",
+                LogPrintf("CheckSpendZcoinTransaction: cannot allow spend v1 into mempool after block %d\n",
                           allowedV1Height + ZC_V1_5_GRACEFUL_MEMPOOL_PERIOD);
                 return false;
             }
@@ -329,14 +326,14 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
             if ((nHeight == INT_MAX && txHeight < params.nModulusV2StartBlock) || nHeight < params.nModulusV2StartBlock)
                 return state.DoS(100, false,
                                  NSEQUENCE_INCORRECT,
-                                 "CheckSpendTecraCoinTransaction: cannon use modulus v2 at this point");
+                                 "CheckSpendZcoinTransaction: cannon use modulus v2 at this point");
         }
         else {
             if ((nHeight == INT_MAX && txHeight >= params.nModulusV1MempoolStopBlock) ||
                     (nHeight != INT_MAX && nHeight >= params.nModulusV1StopBlock))
                 return state.DoS(100, false,
                                  NSEQUENCE_INCORRECT,
-                                 "CheckSpendTecraCoinTransaction: cannon use modulus v1 at this point");
+                                 "CheckSpendZcoinTransaction: cannon use modulus v1 at this point");
         }
 
         if (!fStatefulZerocoinCheck)
@@ -369,7 +366,7 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
 
         CZerocoinState::CoinGroupInfo coinGroup;
         if (!zerocoinState.GetCoinGroupInfo(targetDenominations[vinIndex], pubcoinId, coinGroup))
-            return state.DoS(100, false, NO_MINT_ZEROCOIN, "CheckSpendTecraCoinTransaction: Error: no coins were minted with such parameters");
+            return state.DoS(100, false, NO_MINT_ZEROCOIN, "CheckSpendZcoinTransaction: Error: no coins were minted with such parameters");
 
         bool passVerify = false;
         CBlockIndex *index = coinGroup.lastBlock;
@@ -399,7 +396,7 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
                 libzerocoin::Accumulator accumulator(zcParams,
                                                      (index->*accChanges)[denominationAndId].first,
                                                      targetDenominations[vinIndex]);
-                LogPrintf("CheckSpendTecraCoinTransaction: accumulator=%s\n", accumulator.getValue().ToString().substr(0,15));
+                LogPrintf("CheckSpendZcoinTransaction: accumulator=%s\n", accumulator.getValue().ToString().substr(0,15));
                 passVerify = spend->Verify(accumulator, newMetadata);
             }
 
@@ -430,7 +427,7 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
             libzerocoin::Accumulator accumulator(zcParams, targetDenominations[vinIndex]);
             BOOST_FOREACH(const CBigNum &pubCoin, pubCoins) {
                 accumulator += libzerocoin::PublicCoin(zcParams, pubCoin, (libzerocoin::CoinDenomination)targetDenominations[vinIndex]);
-                LogPrintf("CheckSpendTecraCoinTransaction: accumulator=%s\n", accumulator.getValue().ToString().substr(0,15));
+                LogPrintf("CheckSpendZcoinTransaction: accumulator=%s\n", accumulator.getValue().ToString().substr(0,15));
                 if ((passVerify = spend->Verify(accumulator, newMetadata)) == true)
                     break;
             }
@@ -441,7 +438,7 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
                 libzerocoin::Accumulator accumulator(zcParams, targetDenominations[vinIndex]);
                 BOOST_REVERSE_FOREACH(const CBigNum &pubCoin, pubCoins) {
                     accumulator += libzerocoin::PublicCoin(zcParams, pubCoin, (libzerocoin::CoinDenomination)targetDenominations[vinIndex]);
-                    LogPrintf("CheckSpendTecraCoinTransaction: accumulatorRev=%s\n", accumulator.getValue().ToString().substr(0,15));
+                    LogPrintf("CheckSpendZcoinTransaction: accumulatorRev=%s\n", accumulator.getValue().ToString().substr(0,15));
                     if ((passVerify = spend->Verify(accumulator, newMetadata)) == true)
                         break;
                 }
@@ -449,7 +446,7 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
         }
 
         if (!passVerify) {
-            LogPrintf("CheckSpendTecraCoinTransaction: verification failed at block %d\n", nHeight);
+            LogPrintf("CheckSpendZCoinTransaction: verification failed at block %d\n", nHeight);
             return false;
         }
     }
@@ -459,7 +456,7 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
             // mixing zerocoin spend input with non-zerocoin inputs is prohibited
             return state.DoS(100, false,
                             REJECT_MALFORMED,
-                            "CheckSpendTecraCoinTransaction: can't mix zerocoin spend input with regular ones");
+                            "CheckSpendZcoinTransaction: can't mix zerocoin spend input with regular ones");
         }
         else if (tx.vin.size() > 1) {
             // having tx with several zerocoin spend inputs is possible since nMultipleSpendInputsInOneTxStartBlock
@@ -467,7 +464,7 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
                     (nHeight < params.nMultipleSpendInputsInOneTxStartBlock)) {
                 return state.DoS(100, false,
                              REJECT_MALFORMED,
-                             "CheckSpendTecraCoinTransaction: can't have more than one input");
+                             "CheckSpendZcoinTransaction: can't have more than one input");
             }
         }
     }
@@ -475,13 +472,13 @@ bool CheckSpendTecraCoinTransaction(const CTransaction &tx,
     return true;
 }
 
-bool CheckMintTecraCoinTransaction(const CTxOut &txout,
+bool CheckMintZcoinTransaction(const CTxOut &txout,
                                CValidationState &state,
                                uint256 hashTx,
                                CZerocoinTxInfo *zerocoinTxInfo) {
     CBigNum pubCoin;
 
-    LogPrintf("CheckMintTecraCoinTransaction txHash = %s\n", txout.GetHash().ToString());
+    LogPrintf("CheckMintZcoinTransaction txHash = %s\n", txout.GetHash().ToString());
     LogPrintf("nValue = %d\n", txout.nValue);
 
     try {
@@ -713,15 +710,17 @@ bool CheckZerocoinTransaction(const CTransaction &tx,
             if (!isWalletCheck && realHeight > params.nSigmaStartBlock + params.nZerocoinV2MintGracefulPeriod)
                 return state.DoS(100, false, REJECT_OBSOLETE, "bad-txns-mint-obsolete");
 
-            if (!CheckMintTecraCoinTransaction(txout, state, hashTx, zerocoinTxInfo))
+            if (!CheckMintZcoinTransaction(txout, state, hashTx, zerocoinTxInfo))
                 return false;
         }
     }
 
-
     // Check Spend Zerocoin Transaction
     vector<libzerocoin::CoinDenomination> denominations;
-    if(tx.IsZerocoinSpend()) {
+    if (tx.IsZerocoinSpend()) {
+        if (!isWalletCheck && realHeight > params.nSigmaStartBlock + params.nZerocoinV2SpendGracefulPeriod)
+            return state.DoS(100, false, REJECT_OBSOLETE, "bad-txns-spend-obsolete");
+
         if (tx.vout.size() > 1) {
             // TODO: enable such spends after some block number
             return state.DoS(100, error("Zerocoin spend with more than 1 output"));
@@ -738,9 +737,9 @@ bool CheckZerocoinTransaction(const CTransaction &tx,
             if(!txin.scriptSig.IsZerocoinSpend()) {
                 return state.DoS(100, false,
                                 REJECT_MALFORMED,
-                                "CheckSpendTecraCoinTransaction: can't mix zerocoin spend input with regular ones");
+                                "CheckSpendZcoinTransaction: can't mix zerocoin spend input with regular ones");
             }
-            // Get the CoinDenomination value of each vin for the CheckSpendTecraCoinTransaction function
+            // Get the CoinDenomination value of each vin for the CheckSpendZcoinTransaction function
             uint32_t pubcoinId = txin.nSequence;
             if (pubcoinId < 1 || pubcoinId >= INT_MAX) {
                  // coin id should be positive integer
@@ -762,7 +761,7 @@ bool CheckZerocoinTransaction(const CTransaction &tx,
         {
             if(!isVerifyDB) {
                 if (txout.nValue == totalValue * COIN) {
-                    if(!CheckSpendTecraCoinTransaction(tx, params, denominations, state, hashTx, isVerifyDB, nHeight, isCheckWallet, fStatefulZerocoinCheck, zerocoinTxInfo)){
+                    if(!CheckSpendZcoinTransaction(tx, params, denominations, state, hashTx, isVerifyDB, nHeight, isCheckWallet, fStatefulZerocoinCheck, zerocoinTxInfo)){
                         return false;
                     }
                 }
@@ -772,6 +771,9 @@ bool CheckZerocoinTransaction(const CTransaction &tx,
             }
         }
     }
+
+    if (tx.IsZerocoinRemint())
+        return CheckRemintZcoinTransaction(tx, params, state, hashTx, isVerifyDB, nHeight, isCheckWallet, fStatefulZerocoinCheck, zerocoinTxInfo);
 
     return true;
 }
