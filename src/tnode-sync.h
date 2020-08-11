@@ -70,7 +70,7 @@ public:
     bool IsBlockchainSynced(bool fBlockAccepted = false);
     bool IsTnodeListSynced() { return nRequestedTnodeAssets > TNODE_SYNC_LIST; }
     bool IsWinnersListSynced() { return nRequestedTnodeAssets > TNODE_SYNC_MNW; }
-    bool IsSynced();
+    bool IsSynced() { return nRequestedTnodeAssets == TNODE_SYNC_FINISHED; }
 
     int GetAssetID() { return nRequestedTnodeAssets; }
     int GetAttempt() { return nRequestedTnodeAttempt; }

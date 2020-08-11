@@ -947,7 +947,7 @@ void CTnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStrea
 {
 
 //    LogPrint("tnode", "CTnodeMan::ProcessMessage, strCommand=%s\n", strCommand);
-    if(fLiteMode) return; // disable all Dash specific functionality
+    if(fLiteMode) return; // disable all Zcoin specific functionality
     if(!tnodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == NetMsgType::MNANNOUNCE) { //Tnode Broadcast

@@ -431,6 +431,3 @@ void CTnodeSync::ProcessTick() {
 void CTnodeSync::UpdatedBlockTip(const CBlockIndex *pindex) {
     pCurrentBlockIndex = pindex;
 }
-bool CTnodeSync::IsSynced() {
-    return nRequestedTnodeAssets == TNODE_SYNC_FINISHED;
-}
