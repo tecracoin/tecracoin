@@ -1361,7 +1361,7 @@ void CNode::CloseDandelionConnections(const CNode* const pnode)
     }
 
     // Dandelion debug message
-    LogPrintf("After closing Dandelion connections:\n%s",
+    LogPrint("net", "After closing Dandelion connections:\n%s",
               CNode::GetDandelionRoutingDataDebugString());
 }
 
