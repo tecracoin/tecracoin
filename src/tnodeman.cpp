@@ -945,8 +945,7 @@ std::pair<CService, std::set<uint256> > CTnodeMan::PopScheduledMnbRequestConnect
 
 void CTnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-
-//    LogPrint("tnode", "CTnodeMan::ProcessMessage, strCommand=%s\n", strCommand);
+    LogPrint("tnode", "CTnodeMan::ProcessMessage, strCommand=%s\n", strCommand);
     if(fLiteMode) return; // disable all Zcoin specific functionality
     if(!tnodeSync.IsBlockchainSynced()) return;
 
@@ -955,6 +954,9 @@ void CTnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStrea
         vRecv >> mnb;
 
         pfrom->setAskFor.erase(mnb.GetHash());
+        if (mnb.vin.prevout.IsNull()){  // fix for MNANNOUNCE -- Tnode announce, tnode=COutPoint(000...000, 4294967295)
+            return;
+            }
 
         LogPrintf("MNANNOUNCE -- Tnode announce, tnode=%s\n", mnb.vin.prevout.ToStringShort());
 
