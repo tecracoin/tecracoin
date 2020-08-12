@@ -631,7 +631,7 @@ void ReadConfigFile(const std::string& confPath)
 {
     boost::filesystem::ifstream streamConfig(GetConfigFile(confPath));
     if (!streamConfig.good())
-        return; // No zcoin.conf file is OK
+        return; // No tecracoin.conf file is OK
 
     {
         LOCK(cs_args);
@@ -988,8 +988,7 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
         strCopyrightHolders
                 += '\n' + strPrefix + "The Bitcoin Core developers"
-                +  '\n' + strPrefix + "The Zcoin Core developers"
-                +  '\n' + strPrefix + "The TecraCoin Core developers";
+                +  '\n' + strPrefix + "The Zcoin Core developers";
     }
 
     strCopyrightHolders += "\n" + strPrefix + strYear + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));

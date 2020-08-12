@@ -501,7 +501,7 @@ void BitcoinApplication::initializeResult(int retval)
         }
         
         // Now that initialization/startup is done, process any command-line
-        // zcoin: URIs or payment requests:
+        // tecracoin: URIs or payment requests:
         connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
                          window, SLOT(handlePaymentRequest(SendCoinsRecipient)));
         connect(window, SIGNAL(receivedURI(QString)),
@@ -602,7 +602,7 @@ int main(int argc, char *argv[])
     if (!Intro::pickDataDirectory())
         return EXIT_SUCCESS;
 
-    /// 6. Determine availability of data directory and parse zcoin.conf
+    /// 6. Determine availability of data directory and parse tecracoin.conf
     /// - Do not call GetDataDir(true) before this step finishes
     if (!boost::filesystem::is_directory(GetDataDir(false)))
     {
@@ -675,7 +675,7 @@ int main(int argc, char *argv[])
         exit(EXIT_SUCCESS);
 
     // Start up the payment server early, too, so impatient users that click on
-    // zcoin: links repeatedly have their payment requests routed to this process:
+    // tecracoin: links repeatedly have their payment requests routed to this process:
     app.createPaymentServer();
 #endif
     /// 9. Main GUI initialization

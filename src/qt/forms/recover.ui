@@ -45,7 +45,7 @@ Warning:
 
 If you have an existing seed that you wish to restore, please select "Recover existing wallet" and enter your passphrase (if you have set one for your seed).
 
-Advanced: If you don't wish to generate a wallet with a seed phrase backup (not recommended), you can set usemnemonic=0 in zcoin.conf.
+Advanced: If you don't wish to generate a wallet with a seed phrase backup (not recommended), you can set usemnemonic=0 in tecracoin.conf.
       </string>
      </property>
      <property name="wordWrap">

@@ -41,7 +41,7 @@ RUN curl -L https://github.com/zeromq/libzmq/releases/download/v4.3.1/zeromq-4.3
 # Create user to run daemon
 RUN useradd -m -U tecracoind
 
-# Build Zcoin
+# Build TecraCoin
 COPY . /tmp/tecracoin/
 
 RUN cd /tmp/tecracoin && \
