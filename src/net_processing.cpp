@@ -1551,7 +1551,7 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
             if (sscanf(cleanSubVer.c_str(), "/Satoshi:%2d.%2d.%2d.%2d/",
                     &parsedVersion[0], &parsedVersion[1], &parsedVersion[2], &parsedVersion[3]) == 4) {
                 int peerClientVersion = parsedVersion[0]*1000000 + parsedVersion[1]*10000 + parsedVersion[2]*100 + parsedVersion[3];
-                if (peerClientVersion < MIN_ZCOIN_CLIENT_VERSION) {
+                if (peerClientVersion < MIN_CLIENT_VERSION) {
                     connman.PushMessage(pfrom, CNetMsgMaker(INIT_PROTO_VERSION).Make(NetMsgType::REJECT, strCommand, REJECT_OBSOLETE, "This version is banned from the network"));
                     pfrom->fDisconnect = 1;
                     LOCK(cs_main);
