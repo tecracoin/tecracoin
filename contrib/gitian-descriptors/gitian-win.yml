@@ -1,5 +1,5 @@
 ---
-name: "tecracoin-win-1.6.0"
+name: "tecracoin-win-1.7.0"
 enable_cache: true
 suites:
 - "bionic"
@@ -100,9 +100,9 @@ script: |
 
   # Faketime for depends so intermediate results are comparable
   export PATH_orig=${PATH}
-  create_global_faketime_wrappers "2000-01-01 12:00:00"
-  create_per-host_faketime_wrappers "2000-01-01 12:00:00"
-  create_per-host_linker_wrapper "2000-01-01 12:00:00"
+  create_global_faketime_wrappers "2020-01-01 12:00:00"
+  create_per-host_faketime_wrappers "2020-01-01 12:00:00"
+  create_per-host_linker_wrapper "2020-01-01 12:00:00"
   export PATH=${WRAP_DIR}:${PATH}
 
   cd tecracoin
