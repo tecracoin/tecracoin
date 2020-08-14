@@ -283,8 +283,8 @@ BITCOIN_CORE_H = \
   mtpstate.h \
   messagesigner.h \
   masternode-meta.h \
-  tnode-payments.h \
-  tnode-sync.h \
+  masternode-payments.h \
+  masternode-sync.h \
   tnodesync-interface.h \
   saltedhasher.h \
   unordered_lru_cache.h \
@@ -468,7 +468,7 @@ libbitcoin_wallet_a_SOURCES = \
   tnode.cpp \
   tnode-payments.cpp \
   tnode-sync.cpp \
-  tnode-sync.cpp \
+  masternode-sync.cpp \
   tnodesync-interface.cpp \
   tnodeconfig.cpp \
   tnodeman.cpp \
