@@ -197,7 +197,7 @@ BITCOIN_CORE_H = \
   tnode.h \
   tnode-payments.h \
   tnode-sync.h \
-  tnode-utils.h \
+  masternode-utils.h \
   tnodeman.h \
   tnodeconfig.h \
   mbstring.h \
@@ -282,7 +282,7 @@ BITCOIN_CORE_H = \
   addresstype.h \
   mtpstate.h \
   messagesigner.h \
-  tnode-meta.h \
+  masternode-meta.h \
   tnode-payments.h \
   tnode-sync.h \
   tnodesync-interface.h \
