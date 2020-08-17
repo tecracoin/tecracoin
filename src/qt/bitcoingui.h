@@ -96,8 +96,7 @@ private:
     QMenuBar *appMenuBar;
     QAction *overviewAction;
 #ifdef ENABLE_ELYSIUM
-    QAction *exoAssetsAction;
-    QAction *toolboxAction;
+    QAction *elyAssetsAction;
 #endif
     QAction *historyAction;
     QAction *quitAction;

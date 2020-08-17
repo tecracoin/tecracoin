@@ -113,7 +113,6 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     overviewAction(0),
 #ifdef ENABLE_ELYSIUM
     elyAssetsAction(0),
-    toolboxAction(0),
 #endif
     historyAction(0),
     quitAction(0),

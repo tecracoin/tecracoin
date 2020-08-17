@@ -70,7 +70,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     overviewPage = new OverviewPage(platformStyle);
     transactionsPage = new QWidget(this);
 #ifdef ENABLE_ELYSIUM
-    exoAssetsPage = new ElyAssetsDialog();
+    elyAssetsPage = new ElyAssetsDialog();
 #endif
     receiveCoinsPage = new ReceiveCoinsDialog(platformStyle);
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
@@ -94,7 +94,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 
     addWidget(overviewPage);
 #ifdef ENABLE_ELYSIUM
-    addWidget(exoAssetsPage);
+    addWidget(elyAssetsPage);
 #endif
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
@@ -279,7 +279,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
     tnodeListPage->setClientModel(clientModel);
     masternodeListPage->setClientModel(clientModel);
 #ifdef ENABLE_ELYSIUM
-    exoAssetsPage->setClientModel(clientModel);
+    elyAssetsPage->setClientModel(clientModel);
 #endif
     if (pwalletMain->IsHDSeedAvailable()) {
         sigmaView->setClientModel(clientModel);
@@ -319,7 +319,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     sendTecracoinView->setModel(_walletModel);
     zc2SigmaPage->setWalletModel(_walletModel);
 #ifdef ENABLE_ELYSIUM
-    exoAssetsPage->setWalletModel(walletModel);
+    elyAssetsPage->setWalletModel(walletModel);
 
     if (elysiumTransactionsView) {
         elysiumTransactionsView->setWalletModel(walletModel);
@@ -382,7 +382,7 @@ void WalletView::gotoOverviewPage()
 #ifdef ENABLE_ELYSIUM
 void WalletView::gotoElyAssetsPage()
 {
-    setCurrentWidget(exoAssetsPage);
+    setCurrentWidget(elyAssetsPage);
 }
 #endif
 

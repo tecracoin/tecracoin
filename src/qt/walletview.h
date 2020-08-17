@@ -15,7 +15,7 @@
 #include "sigmadialog.h"
 
 #ifdef ENABLE_ELYSIUM
-#include "exoassetsdialog.h"
+#include "elyassetsdialog.h"
 #endif
 
 #include <QStackedWidget>
@@ -90,12 +90,10 @@ private:
 
     OverviewPage *overviewPage;
 #ifdef ENABLE_ELYSIUM
-    ElyAssetsDialog *exoAssetsPage;
+    ElyAssetsDialog *elyAssetsPage;
     QWidget *toolboxPage;
     TXHistoryDialog *elysiumTransactionsView;
-    QTabWidget *transactionTabs;
     SendMPDialog *sendElysiumView;
-    QTabWidget *sendCoinsTabs;
 #endif
     QWidget *transactionsPage;
     QWidget *smartPropertyPage;
