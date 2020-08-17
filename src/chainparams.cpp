@@ -444,11 +444,6 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = SWITCH_TO_MTP_BLOCK_HEADER - 2*60; //2 minutes
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER + consensus.nMinerConfirmationWindow*2*5*60; //enforce
 
-        // Deployment of MTP
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].bit = 12;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = 1539172800 - 2*60;
-        consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = 1539172800 + consensus.nMinerConfirmationWindow*2 * 5*60;
-
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000001623d4d33"); //10572
 
@@ -483,8 +478,8 @@ public:
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
 
         // evo tnodes
-        consensus.DIP0003Height = 3340; // Tecracoin: TODO!
-        consensus.DIP0003EnforcementHeight = 3800;
+        consensus.DIP0003Height = 333333; // Tecracoin: TODO!
+        consensus.DIP0003EnforcementHeight = 444444;
         consensus.DIP0008Height = INT_MAX;
         consensus.nEvoTnodeMinimumConfirmations = 0;
 
