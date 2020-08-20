@@ -2545,7 +2545,7 @@ void Discover(boost::thread_group& threadGroup)
 
 void CNode::DandelionShuffle() {
     // Dandelion debug message
-    LogPrintf(
+    LogPrint("net",
         "Before Dandelion shuffle:\n%s",
         CNode::GetDandelionRoutingDataDebugString());
     
@@ -2603,7 +2603,7 @@ void CNode::DandelionShuffle() {
     g_connman->ReleaseNodeVector(vNodes);
 
     // Dandelion debug message
-    LogPrintf(
+    LogPrint("net",
         "After Dandelion shuffle:\n%s",
         CNode::GetDandelionRoutingDataDebugString());
 }
