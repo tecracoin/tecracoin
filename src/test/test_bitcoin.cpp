@@ -289,7 +289,7 @@ size_t FindTnodeOutput(CTransaction const & tx) {
     for(size_t i = 0; i < tx.vout.size(); ++i) {
         CTxOut const & out = tx.vout[i];
          if(std::find(founders.begin(), founders.end(), out.scriptPubKey) == founders.end()) {
-            if(out.nValue == GetTnodePayment(Params().GetConsensus(), false))
+            if(out.nValue == GetTnodePayment(1000, Params().GetConsensus(), false)) //Tecra: TODO
                 return i;
         }
     }
