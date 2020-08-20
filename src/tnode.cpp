@@ -453,7 +453,7 @@ void CTnode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScanBack)
                 continue;
             }
             bool fMTP = BlockReading->nHeight > 0 && BlockReading->nTime >= params.nMTPSwitchTime;
-            CAmount nTnodePayment = GetTnodePayment(params, fMTP);
+            CAmount nTnodePayment = GetTnodePayment(BlockReading->nHeight, params, fMTP);
 
             BOOST_FOREACH(CTxOut txout, block.vtx[0]->vout)
             if (mnpayee == txout.scriptPubKey && nTnodePayment == txout.nValue) {

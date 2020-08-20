@@ -3140,8 +3140,7 @@ int GetInputAge(const CTxIn &txin) {
     }
 }
 
-CAmount GetTnodePayment(const Consensus::Params &params, bool fMTP) {
-    int nHeight = chainActive.Height();
+CAmount GetTnodePayment(int nHeight, const Consensus::Params &params, bool fMTP) {
     CAmount blockValue = GetBlockSubsidy(nHeight, params, fMTP);
     if(nHeight < Params().GetConsensus().nTnodePaymentsStartBlock){
         return 0;
@@ -4065,7 +4064,7 @@ bool ContextualCheckBlock(const CBlock& block, CValidationState& state, const Co
         }
     }
 
-    if (!CheckZerocoinFoundersInputs(*block.vtx[0], state, consensusParams, nHeight, block.IsMTP())) {
+    if (!CheckFoundersInputs(*block.vtx[0], state, consensusParams, nHeight, block.IsMTP())) {
         return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(), "Founders' reward check failed");
     }
 

@@ -220,7 +220,7 @@ private:
     int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx);
 
     /** Zcoin: fill in founders' reward and tnode payout outputs */
-    void FillFoundersReward(CMutableTransaction &coinbaseTx, bool fMTP);
+    void FillFoundersReward(CMutableTransaction &coinbaseTx, CAmount nBlockSubsidy, bool fMTP);
 
     /** Fill txBlackList set */
     void FillBlackListForBlockTemplate();

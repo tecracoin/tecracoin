@@ -243,7 +243,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vout[0].nValue = nFees + nBlockSubsidy;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
-    FillFoundersReward(coinbaseTx, fMTP);
+    FillFoundersReward(coinbaseTx, nBlockSubsidy, fMTP);
 
     if (fDIP0003Active_context) {
         coinbaseTx.vin[0].scriptSig = CScript() << OP_RETURN;
@@ -288,7 +288,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         // Update coinbase transaction with additional info about tnode and governance payments,
         // get some info back to pass to getblocktemplate
         if (nHeight >= params.nTnodePaymentsStartBlock) {
-            CAmount tnodePayment = GetTnodePayment(chainparams.GetConsensus(), fMTP);
+            CAmount tnodePayment = GetTnodePayment(nHeight, chainparams.GetConsensus(), fMTP);
             coinbaseTx.vout[0].nValue -= tnodePayment;
             FillTnodeBlockPayments(coinbaseTx, nHeight, tnodePayment, pblock->txoutTnode, pblock->voutSuperblock);
         }
@@ -780,80 +780,89 @@ void BlockAssembler::addPriorityTxs()
     fNeedSizeAccounting = fSizeAccounting;
 }
 
-
-//Tecrcoin: TODO!
-void BlockAssembler::FillFoundersReward(CMutableTransaction &coinbaseTx, bool fMTP) {
+void BlockAssembler::FillFoundersReward(CMutableTransaction &coinbaseTx, CAmount nBlockSubsidy, bool fMTP) {
     auto &params = chainparams.GetConsensus();
-    CAmount coin = COIN / (fMTP ? params.nMTPRewardReduction : 1);
 
     // To founders and investors
-    if ((nHeight + 1 > 0) && (nHeight + 1 < params.nSubsidyHalvingFirst)) {
-        CScript FOUNDER_1_SCRIPT;
-        CScript FOUNDER_2_SCRIPT;
-        CScript FOUNDER_3_SCRIPT;
-        CScript FOUNDER_4_SCRIPT;
-        CScript FOUNDER_5_SCRIPT;
-        if (nHeight < params.nTnodePaymentsStartBlock) {
-            // Take some reward away from us
-            coinbaseTx.vout[0].nValue -= 10 * coin;
-
-            if (params.IsMain() && (GetAdjustedTime() > nStartRewardTime)) {
-                FOUNDER_1_SCRIPT = GetScriptForDestination(CBitcoinAddress("aCAgTPgtYcA4EysU4UKC86EQd5cTtHtCcr").Get());
-                if (nHeight + 1 < 14000) {
-                    FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("aLrg41sXbXZc5MyEj7dts8upZKSAtJmRDR").Get());
-                } else {
-                    FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD").Get());
-                }
-                FOUNDER_3_SCRIPT = GetScriptForDestination(CBitcoinAddress("aQ18FBVFtnueucZKeVg4srhmzbpAeb1KoN").Get());
-                FOUNDER_4_SCRIPT = GetScriptForDestination(CBitcoinAddress("a1HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3").Get());
-                FOUNDER_5_SCRIPT = GetScriptForDestination(CBitcoinAddress("a1kCCGddf5pMXSipLVD9hBG2MGGVNaJ15U").Get());
-            } else if (params.IsMain() && (GetAdjustedTime() <= nStartRewardTime)) {
+    if (nHeight > 0 && nHeight < params.nSubsidyHalvingInterval * 10) {
+        if (params.IsMain() && (GetAdjustedTime() <= nStartRewardTime)) {
                 throw std::runtime_error("CreateNewBlock() : Create new block too early");
-            } else if (!params.IsMain()) {
-                FOUNDER_1_SCRIPT = GetScriptForDestination(CBitcoinAddress("TDk19wPKYq91i18qmY6U9FeTdTxwPeSveo").Get());
-                FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("TWZZcDGkNixTAMtRBqzZkkMHbq1G6vUTk5").Get());
-                FOUNDER_3_SCRIPT = GetScriptForDestination(CBitcoinAddress("TRZTFdNCKCKbLMQV8cZDkQN9Vwuuq4gDzT").Get());
-                FOUNDER_4_SCRIPT = GetScriptForDestination(CBitcoinAddress("TG2ruj59E5b1u9G3F7HQVs6pCcVDBxrQve").Get());
-                FOUNDER_5_SCRIPT = GetScriptForDestination(CBitcoinAddress("TCsTzQZKVn4fao8jDmB9zQBk9YQNEZ3XfS").Get());
-            }
-
-            // And give it to the founders
-            coinbaseTx.vout.push_back(CTxOut(2 * coin, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(2 * coin, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(2 * coin, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(2 * coin, CScript(FOUNDER_4_SCRIPT.begin(), FOUNDER_4_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(2 * coin, CScript(FOUNDER_5_SCRIPT.begin(), FOUNDER_5_SCRIPT.end())));
-        } else if (nHeight >= Params().GetConsensus().nTnodePaymentsStartBlock) {
-            // Take some reward away from us
-            coinbaseTx.vout[0].nValue -= 7 * coin;
-
-            if (params.IsMain() && (GetAdjustedTime() > nStartRewardTime)) {
-                FOUNDER_1_SCRIPT = GetScriptForDestination(CBitcoinAddress("aCAgTPgtYcA4EysU4UKC86EQd5cTtHtCcr").Get());
-                if (nHeight + 1 < 14000) {
-                    FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("aLrg41sXbXZc5MyEj7dts8upZKSAtJmRDR").Get());
-                } else {
-                    FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("aHu897ivzmeFuLNB6956X6gyGeVNHUBRgD").Get());
-                }
-                FOUNDER_3_SCRIPT = GetScriptForDestination(CBitcoinAddress("aQ18FBVFtnueucZKeVg4srhmzbpAeb1KoN").Get());
-                FOUNDER_4_SCRIPT = GetScriptForDestination(CBitcoinAddress("a1HwTdCmQV3NspP2QqCGpehoFpi8NY4Zg3").Get());
-                FOUNDER_5_SCRIPT = GetScriptForDestination(CBitcoinAddress("a1kCCGddf5pMXSipLVD9hBG2MGGVNaJ15U").Get());
-            } else if (params.IsMain() && (GetAdjustedTime() <= nStartRewardTime)) {
-                throw std::runtime_error("CreateNewBlock() : Create new block too early");
-            } else if (!params.IsMain()) {
-                FOUNDER_1_SCRIPT = GetScriptForDestination(CBitcoinAddress("TDk19wPKYq91i18qmY6U9FeTdTxwPeSveo").Get());
-                FOUNDER_2_SCRIPT = GetScriptForDestination(CBitcoinAddress("TWZZcDGkNixTAMtRBqzZkkMHbq1G6vUTk5").Get());
-                FOUNDER_3_SCRIPT = GetScriptForDestination(CBitcoinAddress("TRZTFdNCKCKbLMQV8cZDkQN9Vwuuq4gDzT").Get());
-                FOUNDER_4_SCRIPT = GetScriptForDestination(CBitcoinAddress("TG2ruj59E5b1u9G3F7HQVs6pCcVDBxrQve").Get());
-                FOUNDER_5_SCRIPT = GetScriptForDestination(CBitcoinAddress("TCsTzQZKVn4fao8jDmB9zQBk9YQNEZ3XfS").Get());
-            }
-
-            // And give it to the founders
-            coinbaseTx.vout.push_back(CTxOut(1 * coin, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(1 * coin, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(1 * coin, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(3 * coin, CScript(FOUNDER_4_SCRIPT.begin(), FOUNDER_4_SCRIPT.end())));
-            coinbaseTx.vout.push_back(CTxOut(1 * coin, CScript(FOUNDER_5_SCRIPT.begin(), FOUNDER_5_SCRIPT.end())));
         }
+        CScript FOUNDER_0_SCRIPT = chainparams.GetFounderScript(0);
+        CScript FOUNDER_1_SCRIPT = chainparams.GetFounderScript(1);
+        CScript FOUNDER_2_SCRIPT = chainparams.GetFounderScript(2);
+        CScript FOUNDER_3_SCRIPT = chainparams.GetFounderScript(3);
+
+        if(nHeight == 1){
+            // In this stage miners have no reward
+            coinbaseTx.vout[0].nValue -= nBlockSubsidy;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy, CScript(FOUNDER_0_SCRIPT.begin(), FOUNDER_0_SCRIPT.end())));// premine
+        } else if(nHeight < params.nTnodePaymentsStartBlock){
+            // In this stage miners have 1% reward
+            coinbaseTx.vout[0].nValue -= nBlockSubsidy * 99 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 79 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
+        } else if(nHeight < params.rewardsStage2Start){
+            // T1
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue -= nBlockSubsidy * 60 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 40 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
+        } else if(nHeight < params.rewardsStage3Start){
+            // T2
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue -= nBlockSubsidy * 84 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 64 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 10 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
+        } else if(nHeight < params.rewardsStage4Start){
+            // T3
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue -= nBlockSubsidy * 80 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 55 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 15 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
+        } else if(nHeight < params.rewardsStage5Start){
+            // T4
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue -= nBlockSubsidy * 70 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 40 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 20 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
+        } else if(nHeight < params.rewardsStage6Start){
+            // T5
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue -= nBlockSubsidy * 65 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 35 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 20 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
+        } else {
+            // T6
+            // Take some reward away from miners
+            coinbaseTx.vout[0].nValue -= nBlockSubsidy * 55 / 100;
+
+            // And give it to the founders
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 10 / 100, CScript(FOUNDER_1_SCRIPT.begin(), FOUNDER_1_SCRIPT.end())));// dev team
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 20 / 100, CScript(FOUNDER_2_SCRIPT.begin(), FOUNDER_2_SCRIPT.end())));// science projects
+            coinbaseTx.vout.push_back(CTxOut(nBlockSubsidy * 25 / 100, CScript(FOUNDER_3_SCRIPT.begin(), FOUNDER_3_SCRIPT.end())));// crypto-interest
+        }
+
     }
 }
 

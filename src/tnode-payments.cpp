@@ -508,13 +508,13 @@ bool CTnodeBlockPayees::HasPayeeWithVotes(CScript payeeIn, int nVotesReq) {
     return false;
 }
 
-bool CTnodeBlockPayees::IsTransactionValid(const CTransaction &txNew, bool fMTP) {
+bool CTnodeBlockPayees::IsTransactionValid(const CTransaction &txNew, int nHeight, bool fMTP) {
     LOCK(cs_vecPayees);
 
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
 
-    CAmount nTnodePayment = GetTnodePayment(Params().GetConsensus(), fMTP);
+    CAmount nTnodePayment = GetTnodePayment(nHeight, Params().GetConsensus(), fMTP);
 
     //require at least TNPAYMENTS_SIGNATURES_REQUIRED signatures
 
@@ -595,7 +595,7 @@ bool CTnodePayments::IsTransactionValid(const CTransaction &txNew, int nBlockHei
     LOCK(cs_mapTnodeBlocks);
 
     if (mapTnodeBlocks.count(nBlockHeight)) {
-        return mapTnodeBlocks[nBlockHeight].IsTransactionValid(txNew, fMTP);
+        return mapTnodeBlocks[nBlockHeight].IsTransactionValid(txNew, nBlockHeight, fMTP);
     }
 
     return true;
