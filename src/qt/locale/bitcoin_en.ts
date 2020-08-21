@@ -1123,7 +1123,7 @@
     </message>
     <message>
         <location line="+19"/>
-        <source>Attempting to spend zcoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
+        <source>Attempting to spend tecracoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

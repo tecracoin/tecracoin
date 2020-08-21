@@ -3614,7 +3614,7 @@ UniValue spendmany(const JSONRPCRequest& request) {
                 "4. \"comment\"             (string, optional) A comment\n"
                 "5. subtractfeefromamount   (string, optional) A json array with addresses.\n"
                 "                           The fee will be equally deducted from the amount of each selected address.\n"
-                "                           Those recipients will receive less zcoins than you enter in their corresponding amount field.\n"
+                "                           Those recipients will receive less tecracoins than you enter in their corresponding amount field.\n"
                 "                           If no addresses are specified here, the sender pays the fee.\n"
                 "    [\n"
                 "      \"address\"            (string) Subtract fee from this address\n"
