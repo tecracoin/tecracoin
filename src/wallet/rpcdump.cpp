@@ -681,6 +681,8 @@ UniValue dumpprivkey_tecracoin(const JSONRPCRequest& request)
             ;
         throw runtime_error(warning);
     }
+#else
+    if (request.fHelp) throw runtime_error("dumpprivkey function is disabled\n");
 #endif
 
     JSONRPCRequest newRequest;
@@ -882,6 +884,8 @@ UniValue dumpwallet_tecracoin(const JSONRPCRequest& request)
             ;
         throw runtime_error(warning);
     }
+#else
+    if (request.fHelp) throw runtime_error("dumpwallet function is disabled\n");
 #endif
 
     JSONRPCRequest newRequest;
