@@ -29,7 +29,7 @@ void RegisterMiscRPCCommands(CRPCTable &tableRPC);
 void RegisterMiningRPCCommands(CRPCTable &tableRPC);
 /** Register raw transaction RPC commands */
 void RegisterRawTransactionRPCCommands(CRPCTable &tableRPC);
-/** Register evo tnode RPC commands */
+/** Register evo znode RPC commands */
 void RegisterMasternodeRPCCommands(CRPCTable &tableRPC);
 /** Register Evo RPC commands */
 void RegisterEvoRPCCommands(CRPCTable &tableRPC);
@@ -42,15 +42,6 @@ void RegisterElysiumDataRetrievalRPCCommands(CRPCTable &tableRPC);
 /** Register Elysium transaction creation RPC commands */
 void RegisterElysiumTransactionCreationRPCCommands(CRPCTable &tableRPC);
 #endif
-/** Register Elysium payload creation RPC commands */
-void RegisterElysiumPayloadCreationRPCCommands(CRPCTable &tableRPC);
-/** Register Elysium raw transaction RPC commands */
-void RegisterElysiumRawTransactionRPCCommands(CRPCTable &tableRPC);
-
-/** Register Elysium data retrieval RPC commands */
-void RegisterElysiumDataRetrievalRPCCommands(CRPCTable &tableRPC);
-/** Register Elysium transaction creation RPC commands */
-void RegisterElysiumTransactionCreationRPCCommands(CRPCTable &tableRPC);
 /** Register Elysium payload creation RPC commands */
 void RegisterElysiumPayloadCreationRPCCommands(CRPCTable &tableRPC);
 /** Register Elysium raw transaction RPC commands */
