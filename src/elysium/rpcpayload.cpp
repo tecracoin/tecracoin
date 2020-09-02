@@ -76,7 +76,7 @@ UniValue elysium_createpayload_dexsell(const JSONRPCRequest& request)
         throw runtime_error(
             "elysium_createpayload_dexsell propertyidforsale \"amountforsale\" \"amountdesired\" paymentwindow minacceptfee action\n"
 
-            "\nCreate a payload to place, update or cancel a sell offer on the traditional distributed ELYSIUM/XZC exchange.\n"
+            "\nCreate a payload to place, update or cancel a sell offer on the traditional distributed ELYSIUM/TCR exchange.\n"
 
             "\nArguments:\n"
 
@@ -105,7 +105,7 @@ UniValue elysium_createpayload_dexsell(const JSONRPCRequest& request)
 
     if (action <= CMPTransaction::UPDATE) { // actions 3 permit zero values, skip check
         amountForSale = ParseAmount(request.params[1], true); // TELYSIUM/ELYSIUM is divisible
-        amountDesired = ParseAmount(request.params[2], true); // XZC is divisible
+        amountDesired = ParseAmount(request.params[2], true); // TCR is divisible
         paymentWindow = ParseDExPaymentWindow(request.params[3]);
         minAcceptFee = ParseDExFee(request.params[4]);
     }

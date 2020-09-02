@@ -244,7 +244,7 @@
                <string>Your current spendable anonymized balance</string>
               </property>
               <property name="text">
-               <string>0.000 000 00 XZC</string>
+               <string>0.000 000 00 TCR</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
@@ -381,7 +381,7 @@
                <string>Your current total balance</string>
               </property>
               <property name="text">
-               <string notr="true">0.000 000 00 XZC</string>
+               <string notr="true">0.000 000 00 TCR</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>

@@ -294,7 +294,7 @@ void protx_register_fund_help(CWallet* const pwallet)
 {
     throw std::runtime_error(
             "protx register_fund \"collateralAddress\" \"ipAndPort\" \"ownerAddress\" \"operatorPubKey\" \"votingAddress\" operatorReward \"payoutAddress\" ( \"fundAddress\" )\n"
-            "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 XZC\n"
+            "\nCreates, funds and sends a ProTx to the network. The resulting transaction will move 1000 TCR\n"
             "to the address specified by collateralAddress and will then function as the collateral of your\n"
             "tnode.\n"
             "A few of the limitations you see in the arguments are temporary and might be lifted after DIP3\n"

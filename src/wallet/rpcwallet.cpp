@@ -3277,7 +3277,7 @@ UniValue mintmanyzerocoin(const JSONRPCRequest& request)
                 "\nArguments:\n"
                 "1. \"denomination\"             (integer, required) zerocoin denomination\n"
                 "2. \"numberOfMints\"            (integer, required) amount of mints for chosen denomination\n"
-                "\nExamples:\nThe first example mints denomination 1, one time, for a total XZC valuation of 1.\nThe next example mints denomination 25, ten times, and denomination 50, five times, for a total XZC valuation of 500.\n"
+                "\nExamples:\nThe first example mints denomination 1, one time, for a total TCR valuation of 1.\nThe next example mints denomination 25, ten times, and denomination 50, five times, for a total TCR valuation of 500.\n"
                     + HelpExampleCli("mintmanyzerocoin", "1 1")
                     + HelpExampleCli("mintmanyzerocoin", "25 10 50 5")
         );

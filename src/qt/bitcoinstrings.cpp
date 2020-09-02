@@ -244,10 +244,10 @@ QT_TRANSLATE_NOOP("tecracoin-core", ""
 "Unable to locate enough PrivateSend denominated funds for this transaction."),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
 "Unable to locate enough PrivateSend non-denominated funds for this "
-"transaction that are not equal 1000 XZC."),
+"transaction that are not equal 1000 TCR."),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
 "Unable to locate enough funds for this transaction that are not equal 1000 "
-"XZC."),
+"TCR."),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
 "Unable to rewind the database to a pre-fork state. You will need to "
 "redownload the blockchain"),

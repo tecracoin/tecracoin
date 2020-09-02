@@ -1591,7 +1591,7 @@ UniValue elysium_getactivedexsells(const JSONRPCRequest& request)
             "    \"seller\" : \"address\",               (string) the Zcoin address of the seller\n"
             "    \"amountavailable\" : \"n.nnnnnnnn\",   (string) the number of tokens still listed for sale and currently available\n"
             "    \"tecracoindesired\" : \"n.nnnnnnnn\",    (string) the number of tecracoins desired in exchange\n"
-            "    \"unitprice\" : \"n.nnnnnnnn\" ,        (string) the unit price (XZC/token)\n"
+            "    \"unitprice\" : \"n.nnnnnnnn\" ,        (string) the unit price (TCR/token)\n"
             "    \"timelimit\" : nn,                   (number) the time limit in blocks a buyer has to pay following a successful accept\n"
             "    \"minimumfee\" : \"n.nnnnnnnn\",        (string) the minimum mining fee a buyer has to pay to accept this offer\n"
             "    \"amountaccepted\" : \"n.nnnnnnnn\",    (string) the number of tokens currently reserved for pending \"accept\" orders\n"
