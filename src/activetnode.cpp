@@ -264,7 +264,7 @@ void CActiveTnode::ManageStateInitial() {
     }
 
     if (pwalletMain->GetBalance() < TNODE_COIN_REQUIRED * COIN) {
-        LogPrintf("CActiveTnode::ManageStateInitial -- %s: Wallet balance is < 1000 XZC\n", GetStateString());
+        LogPrintf("CActiveTnode::ManageStateInitial -- %s: Wallet balance is < 10000 TCR\n", GetStateString());
         return;
     }
 
