@@ -1324,7 +1324,7 @@ static const CRPCCommand commands[] =
     { "addressindex",       "gettotalsupply",         &gettotalsupply,         false },
 
     /* Tnode features */
-    { "tecracoin",          "evotnsync",              &mnsync,                 true,  {} },
+    { "tnode",              "evotnsync",              &mnsync,                 true,  {} },
 
     /* Not shown in help */
     { "hidden",             "getzerocoinsupply",      &getzerocoinsupply,      false },

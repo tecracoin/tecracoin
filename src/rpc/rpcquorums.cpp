@@ -424,7 +424,7 @@ UniValue quorum(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafeMode
   //  --------------------- ------------------------  -----------------------  ----------
-    { "evo",                "quorum",                 &quorum,                 false, {}  },
+    { "tnode",                "quorum",                 &quorum,                 false, {}  },
 };
 
 void RegisterQuorumsRPCCommands(CRPCTable &tableRPC)

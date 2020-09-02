@@ -527,8 +527,8 @@ UniValue masternodelist(const JSONRPCRequest& request)
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ ----------
-    { "zcoin",               "evotnode",              &masternode,             true,  {} },
-    { "zcoin",               "evotnodelist",          &masternodelist,         true,  {} },
+    { "tnode",               "evotnode",              &masternode,             true,  {} },
+    { "tnode",               "evotnodelist",          &masternodelist,         true,  {} },
 };
 
 void RegisterMasternodeRPCCommands(CRPCTable &t)
