@@ -431,6 +431,7 @@ int CBlockTreeDB::GetBlockIndexVersion(uint256 const & blockHash)
             CDiskBlockIndex diskindex;
             if (pcursor->GetValue(diskindex))
                 return diskindex.nDiskBlockVersion;
+            if (blockHash == zero_hash) return -1;  //force reindex/upgrade
         } else {
 	    break;
         }
