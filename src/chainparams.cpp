@@ -357,19 +357,19 @@ public:
         consensus.nModulusV1StopBlock = ZC_MODULUS_V1_STOP_BLOCK;
 
         // Sigma related values. Tecra: TODO REMOVE
-        consensus.nSigmaStartBlock = ZC_SIGMA_STARTING_BLOCK;
+        consensus.nSigmaStartBlock = INT_MAX;
         consensus.nSigmaPaddingBlock = ZC_SIGMA_PADDING_BLOCK;
         consensus.nDisableUnpaddedSigmaBlock = ZC_SIGMA_DISABLE_UNPADDED_BLOCK;
-        consensus.nOldSigmaBanBlock = ZC_OLD_SIGMA_BAN_BLOCK;
+        consensus.nOldSigmaBanBlock = 1;
         consensus.nZerocoinV2MintMempoolGracefulPeriod = ZC_V2_MINT_GRACEFUL_MEMPOOL_PERIOD;
         consensus.nZerocoinV2MintGracefulPeriod = ZC_V2_MINT_GRACEFUL_PERIOD;
         consensus.nZerocoinV2SpendMempoolGracefulPeriod = ZC_V2_SPEND_GRACEFUL_MEMPOOL_PERIOD;
         consensus.nZerocoinV2SpendGracefulPeriod = ZC_V2_SPEND_GRACEFUL_PERIOD;
-        consensus.nMaxSigmaInputPerBlock = ZC_SIGMA_INPUT_LIMIT_PER_BLOCK;
-        consensus.nMaxValueSigmaSpendPerBlock = ZC_SIGMA_VALUE_SPEND_LIMIT_PER_BLOCK;
-        consensus.nMaxSigmaInputPerTransaction = ZC_SIGMA_INPUT_LIMIT_PER_TRANSACTION;
-        consensus.nMaxValueSigmaSpendPerTransaction = ZC_SIGMA_VALUE_SPEND_LIMIT_PER_TRANSACTION;
-        consensus.nZerocoinToSigmaRemintWindowSize = 50000;
+        consensus.nMaxSigmaInputPerBlock = 1;
+        consensus.nMaxValueSigmaSpendPerBlock = 1;
+        consensus.nMaxSigmaInputPerTransaction = 1;
+        consensus.nMaxValueSigmaSpendPerTransaction = 1;
+        consensus.nZerocoinToSigmaRemintWindowSize = 0;
 
         // Dandelion related values.
         consensus.nDandelionEmbargoMinimum = DANDELION_EMBARGO_MINIMUM;
@@ -505,8 +505,6 @@ public:
         pchMessageStart[2] = 0x18;
         pchMessageStart[3] = 0xef;
 
-        consensus.nDisableZerocoinStartBlock = 20;
-
         nDefaultPort = 2818;
         nPruneAfterHeight = 1000;
 
@@ -575,8 +573,8 @@ public:
         consensus.nModulusV1MempoolStopBlock = ZC_MODULUS_V1_TESTNET_MEMPOOL_STOP_BLOCK;
         consensus.nModulusV1StopBlock = ZC_MODULUS_V1_TESTNET_STOP_BLOCK;
 
-        // Sigma related values.
-        consensus.nSigmaStartBlock = 1;
+        // Sigma related values. TODO TECRA: remove completrly
+        consensus.nSigmaStartBlock = INT_MAX;
         consensus.nSigmaPaddingBlock = 1;
         consensus.nDisableUnpaddedSigmaBlock = 1;
         consensus.nOldSigmaBanBlock = 1;
@@ -585,10 +583,10 @@ public:
         consensus.nZerocoinV2MintGracefulPeriod = ZC_V2_MINT_TESTNET_GRACEFUL_PERIOD;
         consensus.nZerocoinV2SpendMempoolGracefulPeriod = ZC_V2_SPEND_TESTNET_GRACEFUL_MEMPOOL_PERIOD;
         consensus.nZerocoinV2SpendGracefulPeriod = ZC_V2_SPEND_TESTNET_GRACEFUL_PERIOD;
-        consensus.nMaxSigmaInputPerBlock = ZC_SIGMA_INPUT_LIMIT_PER_BLOCK;
-        consensus.nMaxValueSigmaSpendPerBlock = ZC_SIGMA_VALUE_SPEND_LIMIT_PER_BLOCK;
-        consensus.nMaxSigmaInputPerTransaction = ZC_SIGMA_INPUT_LIMIT_PER_TRANSACTION;
-        consensus.nMaxValueSigmaSpendPerTransaction = ZC_SIGMA_VALUE_SPEND_LIMIT_PER_TRANSACTION;
+        consensus.nMaxSigmaInputPerBlock = 1;
+        consensus.nMaxValueSigmaSpendPerBlock = 1;
+        consensus.nMaxSigmaInputPerTransaction = 1;
+        consensus.nMaxValueSigmaSpendPerTransaction = 1;
         consensus.nZerocoinToSigmaRemintWindowSize = 0;
 
         // Dandelion related values.
