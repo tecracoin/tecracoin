@@ -444,12 +444,6 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = SWITCH_TO_MTP_BLOCK_HEADER - 2*60; //2 minutes
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER + consensus.nMinerConfirmationWindow*2*5*60; //enforce
 
-        // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000001623d4d33"); //10572
-
-        // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x00065ba00de7f8b4f3dbf085b8e3ed25fa396692e816f7f2953a851c904626f3"); //last checkpoint for now
-
         consensus.nSpendV15StartBlock = 1;
         consensus.nCheckBugFixedAtBlock = 1;
         consensus.nTnodePaymentsBugFixedAtBlock = 100;
@@ -478,10 +472,10 @@ public:
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
 
         // evo tnodes
-        consensus.DIP0003Height = 333333; // Tecracoin: TODO!
-        consensus.DIP0003EnforcementHeight = 444444;
+        consensus.DIP0003Height = 59000; // Tecracoin: around 09/07/2020 @ 7:30pm (UTC)
+        consensus.DIP0003EnforcementHeight = 61000; //TCR: around 09/11/2020 @ 6:50am (UTC)
         consensus.DIP0008Height = INT_MAX;
-        consensus.nEvoTnodeMinimumConfirmations = 0;
+        consensus.nEvoTnodeMinimumConfirmations = 1;
 
         // long living quorum params
         consensus.llmqs[Consensus::LLMQ_10_70] = llmq10_70;
@@ -491,12 +485,12 @@ public:
         consensus.nLLMQPowTargetSpacing = 20;
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET;
-        consensus.nMTPStartBlock = 1; // Tecracoin: TODO!
+        consensus.nMTPStartBlock = 15593; // Tecracoin
         consensus.nMTPFiveMinutesStartBlock = INT_MAX; // NOT USED IN TECRACOIN
         consensus.nDifficultyAdjustStartBlock = 100;// NOT USED IN TECRACOIN
         consensus.nFixedDifficulty = 0x2000ffff;// NOT USED IN TECRACOIN
         consensus.nPowTargetSpacingMTP = defaultPowTargetSpacing; // NOT USED IN TECRACOIN
-        consensus.nInitialMTPDifficulty = 0x2000ffff;  // !!!! change it to the real value
+        consensus.nInitialMTPDifficulty = 0x2000ffff;  // NOT USED IN TECRACOIN
         consensus.nMTPRewardReduction = 1; // NOT USED IN TECRACOIN
 
         consensus.nDisableZerocoinStartBlock = 1;
@@ -556,13 +550,20 @@ public:
             boost::assign::map_list_of
                         (1097, uint256S("0x0000083dcce10b707687d6f15074976b541fc7d72d760931292227d0f0ea9122"))
                         (10572, uint256S("0x00065ba00de7f8b4f3dbf085b8e3ed25fa396692e816f7f2953a851c904626f3"))
+                        (58000,  uint256S("0x5d4051eb81d2eb32faa536ccc2e576141b062993caa0ed1814b51dda26d70b19"))
         };
 
         chainTxData = ChainTxData{
-            1589473621,
-            10577,
-            0.001
+            1599313321, //timestamp
+            58047,      //transactions
+            0.001       //tx/s
         };
+
+        // The best chain should have at least this much work.
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000008663e0e62"); //58000
+
+        // By default assume that the signatures in ancestors of this block are valid.
+        consensus.defaultAssumeValid = uint256S("0x5d4051eb81d2eb32faa536ccc2e576141b062993caa0ed1814b51dda26d70b19"); //58000
 
         consensus.nSpendV15StartBlock = ZC_V1_5_TESTNET_STARTING_BLOCK;
         consensus.nSpendV2ID_1 = ZC_V2_TESTNET_SWITCH_ID_1;
