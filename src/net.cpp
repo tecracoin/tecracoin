@@ -1276,7 +1276,7 @@ void CConnman::AcceptConnection(const ListenSocket& hListenSocket) {
         if (pto != nullptr) {
             CNode::mDandelionRoutes.insert(std::make_pair(pnode, pto));
         }
-        LogPrintf("Added inbound Dandelion connection:\n%s",
+        LogPrint("net", "Added inbound Dandelion connection:\n%s",
                   CNode::GetDandelionRoutingDataDebugString());
     }
 }
