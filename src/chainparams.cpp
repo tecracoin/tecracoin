@@ -472,8 +472,8 @@ public:
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
 
         // evo tnodes
-        consensus.DIP0003Height = 59000; // Tecracoin: around 09/07/2020 @ 7:30pm (UTC)
-        consensus.DIP0003EnforcementHeight = 61000; //TCR: around 09/11/2020 @ 6:50am (UTC)
+        consensus.DIP0003Height = 60000; // Tecracoin: around 10/09/2020 @ 0:0am (UTC)
+        consensus.DIP0003EnforcementHeight = 63000; //TCR: around 15/09/2020 @ 5:00am (UTC)
         consensus.DIP0008Height = INT_MAX;
         consensus.nEvoTnodeMinimumConfirmations = 1;
 
