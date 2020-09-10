@@ -93,7 +93,9 @@ private:
     ElyAssetsDialog *elyAssetsPage;
     QWidget *toolboxPage;
     TXHistoryDialog *elysiumTransactionsView;
+    QTabWidget *transactionTabs;
     SendMPDialog *sendElysiumView;
+    QTabWidget *sendCoinsTabs;
 #endif
     QWidget *transactionsPage;
     QWidget *smartPropertyPage;
@@ -117,9 +119,6 @@ private:
 
     QProgressDialog *progressDialog;
     const PlatformStyle *platformStyle;
-
-    QTabWidget *transactionTabs;
-    QTabWidget *sendCoinsTabs;
 
 public Q_SLOTS:
     /** Switch to overview (home) page */

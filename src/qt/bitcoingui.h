@@ -97,10 +97,10 @@ private:
     QAction *overviewAction;
 #ifdef ENABLE_ELYSIUM
     QAction *elyAssetsAction;
+    QAction *toolboxAction;
 #endif
     QAction *historyAction;
     QAction *quitAction;
-    QAction *toolboxAction;
     QAction *sendCoinsAction;
     QAction *sendCoinsMenuAction;
     QAction *usedSendingAddressesAction;
