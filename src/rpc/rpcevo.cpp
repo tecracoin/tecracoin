@@ -35,7 +35,7 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
 {
     static const std::map<std::string, std::string> mapParamHelp = {
         {"collateralAddress",
-            "%d. \"collateralAddress\"        (string, required) The Zcoin address to send the collateral to.\n"
+            "%d. \"collateralAddress\"        (string, required) The Tecracoin address to send the collateral to.\n"
         },
         {"collateralHash",
             "%d. \"collateralHash\"           (string, required) The collateral transaction hash.\n"
@@ -75,12 +75,12 @@ std::string GetHelpString(int nParamNum, std::string strParamName)
             "                              between 0.00 and 100.00.\n"
         },
         {"ownerAddress",
-            "%d. \"ownerAddress\"             (string, required) The Zcoin address to use for payee updates and proposal voting.\n"
+            "%d. \"ownerAddress\"             (string, required) The Tecracoin address to use for payee updates and proposal voting.\n"
             "                              The private key belonging to this address must be known in your wallet. The address must\n"
             "                              be unused and must differ from the collateralAddress\n"
         },
         {"payoutAddress",
-            "%d. \"payoutAddress\"            (string, required) The Zcoin address to use for tnode reward payments.\n"
+            "%d. \"payoutAddress\"            (string, required) The Tecracoin address to use for tnode reward payments.\n"
         },
         {"proTxHash",
             "%d. \"proTxHash\"                (string, required) The hash of the initial ProRegTx.\n"
@@ -412,7 +412,7 @@ UniValue protx_register(const JSONRPCRequest& request)
 
     size_t paramIdx = 1;
 
-    CAmount collateralAmount = 1000 * COIN;
+    CAmount collateralAmount = 10000 * COIN;
 
     CMutableTransaction tx;
     tx.nVersion = 3;
@@ -488,7 +488,7 @@ UniValue protx_register(const JSONRPCRequest& request)
     if (request.params.size() > paramIdx + 6) {
         fundAddress = CBitcoinAddress(request.params[paramIdx + 6].get_str());
         if (!fundAddress.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Zcoin address: ") + request.params[paramIdx + 6].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Tecracoin address: ") + request.params[paramIdx + 6].get_str());
     }
 
     FundSpecialTx(pwallet, tx, ptx, fundAddress.Get());
@@ -652,7 +652,7 @@ UniValue protx_update_service(const JSONRPCRequest& request)
     if (request.params.size() >= 6) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[5].get_str());
         if (!feeSourceAddress.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Zcoin address: ") + request.params[5].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Tecracoin address: ") + request.params[5].get_str());
         feeSource = feeSourceAddress.Get();
     } else {
         if (ptx.scriptOperatorPayout != CScript()) {
@@ -746,7 +746,7 @@ UniValue protx_update_registrar(const JSONRPCRequest& request)
     if (request.params.size() > 5) {
         feeSourceAddress = CBitcoinAddress(request.params[5].get_str());
         if (!feeSourceAddress.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Zcoin address: ") + request.params[5].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Tecracoin address: ") + request.params[5].get_str());
     }
 
     FundSpecialTx(pwallet, tx, ptx, feeSourceAddress.Get());
@@ -819,7 +819,7 @@ UniValue protx_revoke(const JSONRPCRequest& request)
     if (request.params.size() > 4) {
         CBitcoinAddress feeSourceAddress = CBitcoinAddress(request.params[4].get_str());
         if (!feeSourceAddress.IsValid())
-            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Zcoin address: ") + request.params[4].get_str());
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, std::string("Invalid Tecracoin address: ") + request.params[4].get_str());
         FundSpecialTx(pwallet, tx, ptx, feeSourceAddress.Get());
     } else if (dmn->pdmnState->scriptOperatorPayout != CScript()) {
         // Using funds from previousely specified operator payout address
