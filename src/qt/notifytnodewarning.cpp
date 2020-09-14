@@ -26,7 +26,7 @@ void NotifyTnodeWarning::notify()
     float daysToEnforcement = floor(daysDecimal);
     float hoursToEnforcement = floor((daysDecimal > 0 ? (daysDecimal - daysToEnforcement) : 0) * 24);
 
-    std::string strWarning = strprintf(_("WARNING: Legacy tnodes detected. You should migrate to the new Tnode layout before it becomes enforced (approximately %i days and %i hours). For details on how to migrate, go to https://zcoin.io/tnode-migration"),
+    std::string strWarning = strprintf(_("WARNING: Legacy tnodes detected. You should migrate to the new Tnode layout before it becomes enforced (approximately %i days and %i hours). For details on how to migrate, go to https://tecracoin.io/tnode-migration"),
         (int)daysToEnforcement,
         (int)hoursToEnforcement);
 
