@@ -621,7 +621,7 @@ boost::filesystem::path GetConfigFile(const std::string& confPath)
 
 boost::filesystem::path GetTnodeConfigFile()
 {
-    boost::filesystem::path pathConfigFile(GetArg("-znconf", "tnode.conf"));
+    boost::filesystem::path pathConfigFile(GetArg("-tnconf", "tnode.conf"));
     if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
     LogPrintf("pathConfigFile=%s\n", pathConfigFile);
     return pathConfigFile;

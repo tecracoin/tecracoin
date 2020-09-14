@@ -2036,7 +2036,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
 
     LogPrintf("Using Tnode config file %s\n", GetTnodeConfigFile().string());
 
-    if (GetBoolArg("-znconflock", true) && pwalletMain && (tnodeConfig.getCount() > 0)) {
+    if (GetBoolArg("-tnconflock", true) && pwalletMain && (tnodeConfig.getCount() > 0)) {
         LOCK(pwalletMain->cs_wallet);
         LogPrintf("Locking Tnodes:\n");
         uint256 mnTxHash;
@@ -2077,7 +2077,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
             }
         } else {
             // TODO: uncomment when switch to evo tnodes is done
-            //return InitError(_("You must specify a trnodeblsprivkey in the configuration. Please see documentation for help."));
+            //return InitError(_("You must specify a tnodeblsprivkey in the configuration. Please see documentation for help."));
         }
 
         // Create and register activeMasternodeManager, will init later in ThreadImport

@@ -279,10 +279,10 @@ struct Params {
     /** block number to disable zerocoin on consensus level */
     int nDisableZerocoinStartBlock;
 
-    /** block to start accepting pro reg txs for evo znodes */
+    /** block to start accepting pro reg txs for evo tnodes */
     int DIP0003Height;
 
-    /** block to switch to evo znode payments */
+    /** block to switch to evo tnode payments */
     int DIP0003EnforcementHeight;
 
     /** block to start using chainlocks */

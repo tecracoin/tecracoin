@@ -638,7 +638,7 @@ char* CTnodeMan::GetNotQualifyReason(CTnode& mn, int nBlockHeight, bool fFilterS
         // LogPrintf("mn.GetCollateralAge()=%s!\n", mn.GetCollateralAge());
         // LogPrintf("nMnCount=%s!\n", nMnCount);
         char* reasonStr = new char[256];
-        sprintf(reasonStr, "false: 'collateralAge < znCount', collateralAge=%d, znCount=%d", mn.GetCollateralAge(), nMnCount);
+        sprintf(reasonStr, "false: 'collateralAge < tnCount', collateralAge=%d, tnCount=%d", mn.GetCollateralAge(), nMnCount);
         return reasonStr;
     }
     return NULL;
