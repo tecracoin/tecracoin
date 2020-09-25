@@ -78,6 +78,17 @@ unsigned int static DarkGravityWave(const CBlockIndex* pindexLast, const CBlockH
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
+    const arith_uint256 bnPowLimit = UintToArith256(params.powLimit);
+    //regtest
+    if (params.fPowNoRetargeting){
+        return bnPowLimit.GetCompact();
+    }
+
+    //testnet hardfork/fix: drop diff when no bloks over 10 mins
+    if (params.fPowAllowMinDifficultyBlocks && pindexLast->nHeight >= 64114 && pblock->GetBlockTime() > pindexLast->GetBlockTime() + params.nPowTargetSpacing * 4) {
+        return bnPowLimit.GetCompact();
+    }
+
     return DarkGravityWave(pindexLast, pblock, params);
 }
 
