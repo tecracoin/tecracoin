@@ -3876,7 +3876,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     for (CTransactionRef tx : block.vtx)
         // We don't check transactions against zerocoin state here, we'll check it again later in ConnectBlock
-        if (!CheckTransaction(*tx, state, false, tx->GetHash(), isVerifyDB, nHeight, false, false, NULL, NULL))
+        if (!CheckTransaction(*tx, state, true, tx->GetHash(), isVerifyDB, nHeight, false, false, NULL, NULL))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                 strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
