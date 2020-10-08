@@ -4785,32 +4785,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
 
-    { "sigma",             "listunspentmintzerocoins", &listunspentmintzerocoins, false },
-    { "sigma",             "listunspentsigmamints",    &listunspentsigmamints,    false },
-    { "sigma",             "mint",                     &mint,                     false },
-    { "sigma",             "mintzerocoin",             &mintzerocoin,             false },
-    { "sigma",             "mintmanyzerocoin",         &mintmanyzerocoin,         false },
-    { "sigma",             "spendzerocoin",            &spendzerocoin,            false },
-    { "sigma",             "spendmanyzerocoin",        &spendmanyzerocoin,        false },
-    { "sigma",             "spendmany",                &spendmany,                false },
-    { "sigma",             "resetmintzerocoin",        &resetmintzerocoin,        false },
-    { "sigma",             "resetsigmamint",           &resetsigmamint,           false },
-    { "sigma",             "setmintzerocoinstatus",    &setmintzerocoinstatus,    false },
-    { "sigma",             "setsigmamintstatus",       &setsigmamintstatus,       false },
-    { "sigma",             "listmintzerocoins",        &listmintzerocoins,        false },
-    { "sigma",             "listsigmamints",           &listsigmamints,           false },
-    { "sigma",             "listpubcoins",             &listpubcoins,             false },
-    { "sigma",             "listsigmapubcoins",        &listsigmapubcoins,        false },
-
-    { "sigma",             "setmininput",              &setmininput,              false },
-    { "sigma",             "regeneratemintpool",       &regeneratemintpool,       false },
     { "wallet",             "removetxmempool",          &removetxmempool,          false },
     { "wallet",             "removetxwallet",           &removetxwallet,           false },
-    { "sigma",             "listspendzerocoins",       &listspendzerocoins,       false },
-    { "sigma",             "listsigmaspends",          &listsigmaspends,          false },
-    { "sigma",             "spendallzerocoin",         &spendallzerocoin,         false },
-    { "sigma",             "remintzerocointosigma",    &remintzerocointosigma,    false }
-
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)
