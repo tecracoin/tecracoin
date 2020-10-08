@@ -132,7 +132,7 @@ public:
         READWRITE(nTime);
         READWRITE(nBits);
         READWRITE(nNonce);
-        // Tecracoin - MTP
+        // TecraCoin - MTP
         // On read: allocate and read. On write: write only if already allocated
         if (IsMTP()) {
             READWRITE(nVersionMTP);
@@ -176,7 +176,7 @@ public:
         nNonce = 0;
         cachedPoWHash.SetNull();
 
-        // Tecracoin - MTP
+        // TecraCoin - MTP
         mtpHashData.reset();
         mtpHashValue.SetNull();
         reserved[0].SetNull();

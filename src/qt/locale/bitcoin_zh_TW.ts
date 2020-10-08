@@ -548,8 +548,8 @@
         <translation>錢包&lt;b&gt;已加密&lt;/b&gt;並且&lt;b&gt;上鎖中&lt;/b&gt;</translation>
     </message>
     <message>
-        <source>A fatal error occurred. Zcoin can no longer continue safely and will quit.</source>
-        <translation>發生了致命的錯誤。Zcoin 軟體沒辦法再繼續安全執行，只好結束。</translation>
+        <source>A fatal error occurred. TecraCoin can no longer continue safely and will quit.</source>
+        <translation>發生了致命的錯誤。TecraCoin 軟體沒辦法再繼續安全執行，只好結束。</translation>
     </message>
 </context>
 <context>
@@ -886,12 +886,12 @@
         <translation>表單</translation>
     </message>
     <message>
-        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the zcoin network, as detailed below.</source>
-        <translation>最近的交易可能還看不到，因此錢包餘額可能不正確。在錢包軟體完成跟 zcoin 網路的同步後，這裡的資訊就會正確。詳情請見下面。</translation>
+        <source>Recent transactions may not yet be visible, and therefore your wallet's balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the tecracoin network, as detailed below.</source>
+        <translation>最近的交易可能還看不到，因此錢包餘額可能不正確。在錢包軟體完成跟 tecracoin 網路的同步後，這裡的資訊就會正確。詳情請見下面。</translation>
     </message>
     <message>
         <source>Attempting to spend tecracoins that are affected by not-yet-displayed transactions will not be accepted by the network.</source>
-        <translation>使用還沒顯示出來的交易所影響到的 zcoin 可能會不被網路所接受。</translation>
+        <translation>使用還沒顯示出來的交易所影響到的 tecracoin 可能會不被網路所接受。</translation>
     </message>
     <message>
         <source>Number of blocks left</source>

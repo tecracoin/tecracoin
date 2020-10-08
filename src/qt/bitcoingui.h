@@ -61,7 +61,7 @@ public:
 
 #ifdef ENABLE_WALLET
     /** Set the wallet model.
-        The wallet model represents a Zcoin wallet, and offers access to the list of transactions, address book and sending
+        The wallet model represents a TecraCoin wallet, and offers access to the list of transactions, address book and sending
         functionality.
     */
     bool addWallet(const QString& name, WalletModel *walletModel);
@@ -223,7 +223,7 @@ private Q_SLOTS:
 #endif
     /** Switch to history (transactions) page */
     void gotoHistoryPage();
-    /** Switch directly to Zcoin history tab */
+    /** Switch directly to TecraCoin history tab */
     void gotoBitcoinHistoryTab();
     /** Switch to tnode page */
     void gotoTnodePage();

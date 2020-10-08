@@ -257,7 +257,7 @@ public:
         consensus.nLLMQPowTargetSpacing = 5*60;
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
-        consensus.nMTPStartBlock = 192804; //Tecracoin
+        consensus.nMTPStartBlock = 192804; //TecraCoin
 
         consensus.nMTPFiveMinutesStartBlock = SWITCH_TO_MTP_5MIN_BLOCK;// NOT USED IN TECRACOIN
         consensus.nDifficultyAdjustStartBlock = 0;// NOT USED IN TECRACOIN
@@ -472,7 +472,7 @@ public:
         nMaxTipAge = 0x7fffffff; // allow mining on top of old blocks for testnet
 
         // evo tnodes
-        consensus.DIP0003Height = 60000; // Tecracoin: around 10/09/2020 @ 0:0am (UTC)
+        consensus.DIP0003Height = 60000; // TecraCoin: around 10/09/2020 @ 0:0am (UTC)
         consensus.DIP0003EnforcementHeight = 63000; //TCR: around 15/09/2020 @ 5:00am (UTC)
         consensus.DIP0008Height = INT_MAX;
         consensus.nEvoTnodeMinimumConfirmations = 1;
@@ -485,7 +485,7 @@ public:
         consensus.nLLMQPowTargetSpacing = 20;
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET;
-        consensus.nMTPStartBlock = 15593; // Tecracoin
+        consensus.nMTPStartBlock = 15593; // TecraCoin
         consensus.nMTPFiveMinutesStartBlock = INT_MAX; // NOT USED IN TECRACOIN
         consensus.nDifficultyAdjustStartBlock = 100;// NOT USED IN TECRACOIN
         consensus.nFixedDifficulty = 0x2000ffff;// NOT USED IN TECRACOIN

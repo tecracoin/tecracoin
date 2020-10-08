@@ -45,13 +45,13 @@ void masternode_list_help()
             "  json           - Print info in JSON format (can be additionally filtered, partial match)\n"
             "  lastpaidblock  - Print the last block height a node was paid on the network\n"
             "  lastpaidtime   - Print the last time a node was paid on the network\n"
-            "  owneraddress   - Print the tnode owner Zcoin address\n"
-            "  payee          - Print the tnode payout Zcoin address (can be additionally filtered,\n"
+            "  owneraddress   - Print the tnode owner TecraCoin address\n"
+            "  payee          - Print the tnode payout TecraCoin address (can be additionally filtered,\n"
             "                   partial match)\n"
             "  pubKeyOperator - Print the tnode operator public key\n"
             "  status         - Print tnode status: ENABLED / POSE_BANNED\n"
             "                   (can be additionally filtered, partial match)\n"
-            "  votingaddress  - Print the tnode voting Zcoin address\n"
+            "  votingaddress  - Print the tnode voting TecraCoin address\n"
         );
 }
 

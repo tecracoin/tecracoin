@@ -121,13 +121,13 @@ WalletView::~WalletView()
 
 void WalletView::setupTransactionPage()
 {
-    // Create Zcoin transactions list
+    // Create TecraCoin transactions list
     tecracoinTransactionList = new TransactionView(platformStyle);
 
     connect(tecracoinTransactionList, SIGNAL(doubleClicked(QModelIndex)), tecracoinTransactionList, SLOT(showDetails()));
     connect(tecracoinTransactionList, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
 
-    // Create export panel for Zcoin transactions
+    // Create export panel for TecraCoin transactions
     auto exportButton = new QPushButton(tr("&Export"));
 
     exportButton->setToolTip(tr("Export the data in the current tab to a file"));
@@ -159,7 +159,7 @@ void WalletView::setupTransactionPage()
         elysiumTransactionsView = new TXHistoryDialog();
 
         transactionTabs = new QTabWidget();
-        transactionTabs->addTab(tecracoinTransactionsView, tr("Zcoin"));
+        transactionTabs->addTab(tecracoinTransactionsView, tr("TecraCoin"));
         transactionTabs->addTab(elysiumTransactionsView, tr("Elysium"));
     }
 #endif
@@ -179,9 +179,9 @@ void WalletView::setupTransactionPage()
 
 void WalletView::setupSendCoinPage()
 {
-    sendTecracoinView = new SendCoinsDialog(platformStyle);
+    sendTecraCoinView = new SendCoinsDialog(platformStyle);
 
-    connect(sendTecracoinView, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
+    connect(sendTecraCoinView, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
 
 #ifdef ENABLE_ELYSIUM
     // Create tab for coin type
@@ -189,7 +189,7 @@ void WalletView::setupSendCoinPage()
         sendElysiumView = new SendMPDialog(platformStyle);
 
         sendCoinsTabs = new QTabWidget();
-        sendCoinsTabs->addTab(sendTecracoinView, tr("Tecracoin"));
+        sendCoinsTabs->addTab(sendTecraCoinView, tr("TecraCoin"));
         sendCoinsTabs->addTab(sendElysiumView, tr("Elysium"));
     }
 #endif
@@ -202,7 +202,7 @@ void WalletView::setupSendCoinPage()
         pageLayout->addWidget(sendCoinsTabs);
     } else
 #endif
-        pageLayout->addWidget(sendTecracoinView);
+        pageLayout->addWidget(sendTecraCoinView);
 
     sendCoinsPage->setLayout(pageLayout);
 }
@@ -275,7 +275,7 @@ void WalletView::setClientModel(ClientModel *_clientModel)
     this->clientModel = _clientModel;
 
     overviewPage->setClientModel(clientModel);
-    sendTecracoinView->setClientModel(clientModel);
+    sendTecraCoinView->setClientModel(clientModel);
     tnodeListPage->setClientModel(clientModel);
     masternodeListPage->setClientModel(clientModel);
 #ifdef ENABLE_ELYSIUM
@@ -316,7 +316,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     usedSendingAddressesPage->setModel(_walletModel->getAddressTableModel());
     tnodeListPage->setWalletModel(_walletModel);
     masternodeListPage->setWalletModel(_walletModel);
-    sendTecracoinView->setModel(_walletModel);
+    sendTecraCoinView->setModel(_walletModel);
     zc2SigmaPage->setWalletModel(_walletModel);
 #ifdef ENABLE_ELYSIUM
     elyAssetsPage->setWalletModel(walletModel);
@@ -478,7 +478,7 @@ void WalletView::gotoSendCoinsPage(QString addr)
     setCurrentWidget(sendCoinsPage);
 
     if (!addr.isEmpty()){
-        sendTecracoinView->setAddress(addr);
+        sendTecraCoinView->setAddress(addr);
     }
 }
 
@@ -514,7 +514,7 @@ bool WalletView::handlePaymentRequest(const SendCoinsRecipient& recipient)
     }
 #endif
 
-    return sendTecracoinView->handlePaymentRequest(recipient);
+    return sendTecraCoinView->handlePaymentRequest(recipient);
 }
 
 void WalletView::showOutOfSyncWarning(bool fShow)

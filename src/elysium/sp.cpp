@@ -73,7 +73,7 @@ CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
     implied_elysium.subcategory = "N/A";
     implied_elysium.name = "Elysium";
     implied_elysium.url = "https://www.tecracoin.io";
-    implied_elysium.data = "Elysium serve as the binding between Zcoin, smart properties and contracts created on the Elysium Layer.";
+    implied_elysium.data = "Elysium serve as the binding between TecraCoin, smart properties and contracts created on the Elysium Layer.";
     implied_telysium.issuer = GetSystemAddress().ToString();
     implied_telysium.prop_type = ELYSIUM_PROPERTY_TYPE_DIVISIBLE;
     implied_telysium.num_tokens = 700000;
@@ -81,7 +81,7 @@ CMPSPInfo::CMPSPInfo(const boost::filesystem::path& path, bool fWipe)
     implied_telysium.subcategory = "N/A";
     implied_telysium.name = "Test Elysium";
     implied_telysium.url = "https://www.tecracoin.io";
-    implied_telysium.data = "Test Elysium serve as the binding between Zcoin, smart properties and contracts created on the Elysium Layer.";
+    implied_telysium.data = "Test Elysium serve as the binding between TecraCoin, smart properties and contracts created on the Elysium Layer.";
 
     init();
 }

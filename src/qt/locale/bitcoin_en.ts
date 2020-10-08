@@ -690,8 +690,8 @@
         <translation>Wallet is &lt;b&gt;encrypted&lt;/b&gt; and currently &lt;b&gt;locked&lt;/b&gt;</translation>
     </message>
     <message>
-        <location filename="../zcoin.cpp" line="+518"/>
-        <source>A fatal error occurred. Zcoin can no longer continue safely and will quit.</source>
+        <location filename="../tecracoin.cpp" line="+518"/>
+        <source>A fatal error occurred. TecraCoin can no longer continue safely and will quit.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1118,7 +1118,7 @@
     </message>
     <message>
         <location line="+119"/>
-        <source>Recent transactions may not yet be visible, and therefore your wallet&apos;s balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the zcoin network, as detailed below.</source>
+        <source>Recent transactions may not yet be visible, and therefore your wallet&apos;s balance might be incorrect. This information will be correct once your wallet has finished synchronizing with the tecracoin network, as detailed below.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -1850,7 +1850,7 @@
         </translation>
     </message>
     <message>
-        <location filename="../zcoin.cpp" line="+172"/>
+        <location filename="../tecracoin.cpp" line="+172"/>
         <source>%1 didn&apos;t yet exit safely...</source>
         <translation type="unfinished"></translation>
     </message>
@@ -3865,7 +3865,7 @@
     </message>
 </context>
 <context>
-    <name>zcoin-core</name>
+    <name>tecracoin-core</name>
     <message>
         <location filename="../TecraCoinstrings.cpp" line="+318"/>
         <source>Options:</source>
@@ -3953,7 +3953,7 @@
     </message>
     <message>
         <location line="-360"/>
-        <source>Zcoin Core</source>
+        <source>TecraCoin Core</source>
         <translation type="unfinished">TeraCoin Core</translation>
     </message>
     <message>

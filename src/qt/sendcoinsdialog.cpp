@@ -722,7 +722,7 @@ void SendCoinsDialog::coinControlChangeEdited(const QString& text)
         }
         else if (!addr.IsValid()) // Invalid address
         {
-            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid Zcoin address"));
+            ui->labelCoinControlChangeLabel->setText(tr("Warning: Invalid TecraCoin address"));
         }
         else // Valid address
         {

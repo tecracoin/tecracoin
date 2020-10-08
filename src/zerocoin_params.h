@@ -51,7 +51,7 @@ static const int64_t DUST_HARD_LIMIT = 1000;   // 0.00001 TCR mininput
 #define ZC_MULTIPLE_SPEND_INPUT_STARTING_BLOCK INT_MAX
 
 
-// Tecracoin TODO: remove Sigma
+// TecraCoin TODO: remove Sigma
 // Block after which sigma mints are activated.
 #define ZC_SIGMA_STARTING_BLOCK         184200 //Approx July 30th, 2019, 8:00 AM UTC
 #define ZC_SIGMA_TESTNET_STARTING_BLOCK 50000

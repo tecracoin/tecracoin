@@ -87,7 +87,7 @@ public:
     std::string SporkPubKey() const { return strSporkPubKey; }
     std::string TnodePaymentPubKey() const { return strTnodePaymentsPubKey; }
 
-    //Tecracoin TODO: rermove Sigma+zerocoin
+    //TecraCoin TODO: remove/disable Sigma+zerocoin
 	/** Zerocoin-related block numbers when features are changed */
 	int nSpendV15StartBlock;
 	int nSpendV2ID_1, nSpendV2ID_10, nSpendV2ID_25, nSpendV2ID_50, nSpendV2ID_100;

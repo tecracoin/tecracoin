@@ -67,7 +67,7 @@ void LookupTXDialog::searchTX()
         std::string strText = "The transaction hash entered is ";
         switch(populateResult) {
             case MP_TX_NOT_FOUND:
-                strText += "not a valid Tecracoin or Elysium transaction.  Please check the transaction hash "
+                strText += "not a valid TecraCoin or Elysium transaction.  Please check the transaction hash "
                            "entered and try again.";
             break;
             case MP_TX_UNCONFIRMED:
@@ -76,8 +76,8 @@ void LookupTXDialog::searchTX()
                            "transactions in the transactions tab.";
             break;
             case MP_TX_IS_NOT_ELYSIUM_PROTOCOL:
-                strText += "a Tecracoin transaction only.\n\nTip: You can use the debug console "
-                           "'gettransaction' command to lookup specific Tecracoin transactions.";
+                strText += "a TecraCoin transaction only.\n\nTip: You can use the debug console "
+                           "'gettransaction' command to lookup specific TecraCoin transactions.";
             break;
 
             default:

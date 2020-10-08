@@ -13,7 +13,7 @@
 #include "net_processing.h"
 #include "netmessagemaker.h"
 
-//Tecracoin TODO: remove functionality
+//TecraCoin TODO: remove functionality
 #include "darksend.h"
 
 #include <boost/lexical_cast.hpp>

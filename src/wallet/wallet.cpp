@@ -134,7 +134,7 @@ CPubKey CWallet::GetKeyFromKeypath(uint32_t nChange, uint32_t nChild) {
     CKey key;                      //master key seed (256bit)
     CExtKey masterKey;             //hd master key
     CExtKey purposeKey;            //key at m/44'
-    CExtKey coinTypeKey;           //key at m/44'/<1/136>' (Testnet or Zcoin Coin Type respectively, according to SLIP-0044)
+    CExtKey coinTypeKey;           //key at m/44'/<1/136>' (Testnet or TecraCoin Coin Type respectively, according to SLIP-0044)
     CExtKey accountKey;            //key at m/44'/<1/136>'/0'
     CExtKey externalChainChildKey; //key at m/44'/<1/136>'/0'/<c> (Standard: 0/1, Mints: 2)
     CExtKey childKey;              //key at m/44'/<1/136>'/0'/<c>/<n>
@@ -199,7 +199,7 @@ CPubKey CWallet::GenerateNewKey(uint32_t nChange)
         CKey key;                      //master key seed (256bit)
         CExtKey masterKey;             //hd master key
         CExtKey purposeKey;            //key at m/44'
-        CExtKey coinTypeKey;           //key at m/44'/<1/136>' (Testnet or Zcoin Coin Type respectively, according to SLIP-0044)
+        CExtKey coinTypeKey;           //key at m/44'/<1/136>' (Testnet or TecraCoin Coin Type respectively, according to SLIP-0044)
         CExtKey accountKey;            //key at m/44'/<1/136>'/0'
         CExtKey externalChainChildKey; //key at m/44'/<1/136>'/0'/<c> (Standard: 0/1, Mints: 2)
         CExtKey childKey;              //key at m/44'/<1/136>'/0'/<c>/<n>
@@ -3949,7 +3949,7 @@ bool CWallet::CreateSigmaMintModel(
         int64_t denominationValue;
         if (!DenominationToInteger(denomination, denominationValue)) {
             throw runtime_error(
-                "mintzerocoin <amount>(0.1, 0.5, 1, 10, 100) (\"zcoinaddress\")\n");
+                "mintzerocoin <amount>(0.1, 0.5, 1, 10, 100) (\"tecracoinaddress\")\n");
         }
 
         int64_t coinCount = denominationPair.second;
@@ -3958,7 +3958,7 @@ bool CWallet::CreateSigmaMintModel(
             denominationValue, coinCount);
 
         if(coinCount < 0) {
-            throw runtime_error("Coin count negative (\"zcoinaddress\")\n");
+            throw runtime_error("Coin count negative (\"tecracoinaddress\")\n");
         }
 
         sigma::Params* sigmaParams = sigma::Params::get_default();
@@ -4076,7 +4076,7 @@ bool CWallet::CreateZerocoinMintModelV2(
                 break;
             default:
                 throw runtime_error(
-                    "mintzerocoin <amount>(1,10,25,50,100) (\"zcoinaddress\")\n");
+                    "mintzerocoin <amount>(1,10,25,50,100) (\"tecracoinaddress\")\n");
         }
 
         int64_t amount = denominationPair.second;
@@ -4085,7 +4085,7 @@ bool CWallet::CreateZerocoinMintModelV2(
 
         if(amount < 0){
                 throw runtime_error(
-                    "mintzerocoin <amount>(1,10,25,50,100) (\"zcoinaddress\")\n");
+                    "mintzerocoin <amount>(1,10,25,50,100) (\"tecracoinaddress\")\n");
         }
 
         for(int64_t i=0; i<amount; i++){
@@ -5162,10 +5162,10 @@ bool CWallet::CreateZerocoinSpendTransaction(std::string &thirdPartyaddress, int
 
                 CBitcoinAddress address(thirdPartyaddress);
                 if (!address.IsValid()){
-                    strFailReason = _("Invalid Zcoin address");
+                    strFailReason = _("Invalid TecraCoin address");
                     return false;
                 }
-                // Parse Zcoin address
+                // Parse TecraCoin address
                 scriptChange = GetScriptForDestination(CBitcoinAddress(thirdPartyaddress).Get());
             }
 
@@ -5408,10 +5408,10 @@ bool CWallet::CreateSigmaSpendTransaction(
             } else {
                 CBitcoinAddress address(thirdPartyaddress);
                 if (!address.IsValid()){
-                    strFailReason = _("Invalid Zcoin address");
+                    strFailReason = _("Invalid TecraCoin address");
                     return false;
                 }
-                // Parse Zcoin address
+                // Parse TecraCoin address
                 scriptChange = GetScriptForDestination(CBitcoinAddress(thirdPartyaddress).Get());
             }
 
@@ -5692,10 +5692,10 @@ bool CWallet::CreateMultipleZerocoinSpendTransaction(std::string &thirdPartyaddr
             }else{
                  CBitcoinAddress address(thirdPartyaddress);
                 if (!address.IsValid()){
-                    strFailReason = _("Invalid Zcoin address");
+                    strFailReason = _("Invalid TecraCoin address");
                     return false;
                 }
-                // Parse Zcoin address
+                // Parse TecraCoin address
                 scriptChange = GetScriptForDestination(CBitcoinAddress(thirdPartyaddress).Get());
             }
 
@@ -6014,10 +6014,10 @@ bool CWallet::CreateMultipleSigmaSpendTransaction(
             }else{
                 CBitcoinAddress address(thirdPartyaddress);
                 if (!address.IsValid()) {
-                    strFailReason = _("Invalid Zcoin address");
+                    strFailReason = _("Invalid TecraCoin address");
                     return false;
                 }
-                // Parse Zcoin address
+                // Parse TecraCoin address
                 scriptChange = GetScriptForDestination(CBitcoinAddress(thirdPartyaddress).Get());
             }
 

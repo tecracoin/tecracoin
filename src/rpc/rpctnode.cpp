@@ -473,7 +473,7 @@ UniValue tnodelist(const JSONRPCRequest &request) {
                         "  lastpaidblock  - Print the last block height a node was paid on the network\n"
                         "  lastpaidtime   - Print the last time a node was paid on the network\n"
                         "  lastseen       - Print timestamp of when a tnode was last seen on the network\n"
-                        "  payee          - Print Tecracoin address associated with a tnode (can be additionally filtered,\n"
+                        "  payee          - Print TecraCoin address associated with a tnode (can be additionally filtered,\n"
                         "                   partial match)\n"
                         "  protocol       - Print protocol of a tnode (can be additionally filtered, exact match))\n"
                         "  rank           - Print rank of a tnode based on current block\n"

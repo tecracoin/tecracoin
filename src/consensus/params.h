@@ -207,14 +207,14 @@ struct Params {
     // Probability (percentage) that a Dandelion transaction enters fluff phase.
     uint32_t nDandelionFluff;
 
-    //Tecracoin rewards
+    //TecraCoin rewards
     int rewardsStage2Start;
     int rewardsStage3Start;
     int rewardsStage4Start;
     int rewardsStage5Start;
     int rewardsStage6Start;
 
-    // Values for sigma implementation. Tecracoin: TODO - remove Sigma and Zerocoin
+    // Values for sigma implementation. TecraCoin: TODO - remove Sigma and Zerocoin
     // The block number after which sigma are accepted.
     int nSigmaStartBlock;
 

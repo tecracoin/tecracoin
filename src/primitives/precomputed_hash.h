@@ -5,7 +5,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-//Tecracoin TODO: Fill with precomputed block hashes? Do we even need it?
+//TecraCoin TODO: Fill with precomputed block hashes? Do we even need it?
 static const char *precomputedHash[1] = {
         "",
         // hex tx hashes

@@ -86,7 +86,7 @@
 #include <boost/thread.hpp>
 
 #if defined(NDEBUG)
-# error "Tecracoin cannot be compiled without assertions."
+# error "TecraCoin cannot be compiled without assertions."
 #endif
 
 bool AbortNode(const std::string& strMessage, const std::string& userMessage="");
@@ -131,7 +131,7 @@ CTxMemPool mempool(::minRelayTxFee);
 FeeFilterRounder filterRounder(::minRelayTxFee);
 CTxPoolAggregate txpools(::minRelayTxFee);
 
-// Tecracoin tnode
+// TecraCoin tnode
 map <uint256, int64_t> mapRejectedBlocks GUARDED_BY(cs_main);
 
 
@@ -1533,7 +1533,7 @@ bool ReadBlockFromDisk(CBlock& block, const CDiskBlockPos& pos, int nHeight, con
         return error("%s: Deserialize or I/O error - %s at %s", __func__, e.what(), pos.ToString());
     }
 
-    // Tecracoin - MTP
+    // TecraCoin - MTP
     if (!CheckMerkleTreeProof(block, consensusParams)){
     	return error("ReadBlockFromDisk: CheckMerkleTreeProof: Errors in block header at %s", pos.ToString());
     }
@@ -3818,7 +3818,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         if (mutated)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-duplicate", true, "duplicate transaction");
 
-        // Tecracoin - MTP
+        // TecraCoin - MTP
         if (block.IsMTP() && !CheckMerkleTreeProof(block, consensusParams))
             return state.DoS(100, false, REJECT_INVALID, "bad-diffbits", false, "incorrect proof of work");
     }
@@ -3980,7 +3980,7 @@ std::vector<unsigned char> GenerateCoinbaseCommitment(CBlock& block, const CBloc
 
 bool ContextualCheckBlockHeader(const CBlockHeader& block, CValidationState& state, const Consensus::Params& consensusParams, CBlockIndex * const pindexPrev, int64_t nAdjustedTime)
 {
-	// Tecracoin - MTP
+	// TecraCoin - MTP
     bool fBlockHasMTP = (block.nVersion & 4096) != 0 || (pindexPrev && consensusParams.nMTPSwitchTime == 0);
 
     if (block.IsMTP() != fBlockHasMTP)
