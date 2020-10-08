@@ -244,10 +244,10 @@ public:
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
 
-        // evo tnodes TecraCoin: TODO!!!
-        consensus.DIP0003Height = 444444; // Approximately ???
-        consensus.DIP0003EnforcementHeight = 555555; // Approximately ???
-        consensus.DIP0008Height = INT_MAX;
+        // evo tnodes TecraCoin
+        consensus.DIP0003Height = 400000; // Approximately 2020-10-21T20:20:34+00:00 unix ts 1603311634
+        consensus.DIP0003EnforcementHeight = 450000; // Approximately 2021-01-16T15:40:34+00:00 unix ts 1610811634
+        consensus.DIP0008Height = INT_MAX; //chainlocks not ready
         consensus.nEvoTnodeMinimumConfirmations = 15;
 
         // long living quorum params
@@ -391,10 +391,10 @@ public:
 
 
         consensus.rewardsStage2Start = 71000;
-        consensus.rewardsStage3Start = 500000;
-        consensus.rewardsStage4Start = 710000;
-        consensus.rewardsStage5Start = 960000;
-        consensus.rewardsStage6Start = 1170000;
+        consensus.rewardsStage3Start = 840000;  //wp 1.3
+        consensus.rewardsStage4Start = 1680000;
+        consensus.rewardsStage5Start = 2520000;
+        consensus.rewardsStage6Start = 3366000;
     }
 };
 
