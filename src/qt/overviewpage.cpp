@@ -240,21 +240,8 @@ void OverviewPage::updateCoins(const std::vector<CMintMeta>& spendable, const st
         pendingSum += denom;
     }
 
-
-
     currentSigmaBalance = sum;
     currentSigmaUnconfirmedBalance = pendingSum;
-    setSigmaBalance();
-}
-
-void OverviewPage::setSigmaBalance()
-{
-    int unit = walletModel->getOptionsModel()->getDisplayUnit();
-
-    ui->labelSigmaBalance->setText(BitcoinUnits::formatWithUnit(unit, currentSigmaBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelSigmaPending->setText(BitcoinUnits::formatWithUnit(unit, currentSigmaUnconfirmedBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelTotal->setText(BitcoinUnits::formatWithUnit(unit, currentBalance + currentUnconfirmedBalance + currentImmatureBalance + currentSigmaBalance + currentSigmaUnconfirmedBalance, false, BitcoinUnits::separatorAlways));
-
 }
 
 // show/hide watch-only labels
@@ -323,7 +310,6 @@ void OverviewPage::updateDisplayUnit()
         if(currentBalance != -1)
             setBalance(currentBalance, currentUnconfirmedBalance, currentImmatureBalance,
                        currentWatchOnlyBalance, currentWatchUnconfBalance, currentWatchImmatureBalance);
-        setSigmaBalance();
 
         // Update txdelegate->unit with the current unit
         txdelegate->unit = walletModel->getOptionsModel()->getDisplayUnit();
