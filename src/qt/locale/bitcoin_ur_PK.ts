@@ -80,7 +80,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>TecraCoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <source>Error</source>
         <translation>نقص</translation>

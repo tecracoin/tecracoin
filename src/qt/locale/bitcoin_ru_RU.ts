@@ -64,7 +64,7 @@
     <name>BanTableModel</name>
     </context>
 <context>
-    <name>TecraCoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <source>TecraCoin</source>
         <translation>TecraCoin Core</translation>

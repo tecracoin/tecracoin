@@ -297,7 +297,7 @@
     </message>
 </context>
 <context>
-    <name>TecraCoinGUI</name>
+    <name>BitcoinGUI</name>
     <message>
         <location filename="../TecraCoingui.cpp" line="+357"/>
         <source>Sign &amp;message...</source>
