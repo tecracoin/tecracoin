@@ -166,14 +166,6 @@ static Consensus::LLMQParams llmq400_85 = {
 /**
  * Main network
  */
-/**
- * What makes a good checkpoint block?
- * + Is surrounded by blocks with reasonable timestamps
- *   (no blocks before with a timestamp after, none after with
- *    timestamp before)
- * + Contains no strange transactions
- */
-
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
@@ -323,6 +315,13 @@ public:
         fMineBlocksOnDemand = false;
         fAllowMultiplePorts = false;
 
+        /**
+         * What makes a good checkpoint block?
+         * + Is surrounded by blocks with reasonable timestamps
+         *   (no blocks before with a timestamp after, none after with
+         *    timestamp before)
+         * + Contains no strange transactions
+         */
         checkpointData = (CCheckpointData) {
                 boost::assign::map_list_of
                 (0, uint256S("0x000008c721bdb1312f1954156f64828a052e8e8ce5a914f7b301a44eba154989"))
@@ -338,6 +337,7 @@ public:
                             //   (the tx=... number in the SetBestChain debug.log lines)
                 0.014       // * estimated number of transactions per second after checkpoint
         };
+
         consensus.nSpendV15StartBlock = ZC_V1_5_STARTING_BLOCK;
         consensus.nSpendV2ID_1 = ZC_V2_SWITCH_ID_1;
         consensus.nSpendV2ID_10 = ZC_V2_SWITCH_ID_10;
