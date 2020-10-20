@@ -1589,9 +1589,6 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams, i
     // Do propoer number of halvings
     nSubsidy >>= halvings;
 
-    if (nHeight > 0 && nTime >= (int)consensusParams.nMTPSwitchTime)
-        nSubsidy /= consensusParams.nMTPRewardReduction;
-
     return nSubsidy;
 }
 

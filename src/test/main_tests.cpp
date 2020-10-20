@@ -23,7 +23,7 @@ static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
     CAmount nInitialSubsidy = MAIN_TESTS_INITIAL_SUBSIDY * COIN;
 
     BOOST_CHECK_EQUAL(GetBlockSubsidy(1, consensusParams, consensusParams.nMTPSwitchTime-1000), nInitialSubsidy);
-    nInitialSubsidy /= consensusParams.nMTPRewardReduction;
+
     BOOST_CHECK_EQUAL(GetBlockSubsidy(2, consensusParams, consensusParams.nMTPSwitchTime), nInitialSubsidy);
 
     CAmount nPreviousSubsidy = nInitialSubsidy;

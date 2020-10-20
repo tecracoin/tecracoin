@@ -259,13 +259,6 @@ public:
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
         consensus.nMTPStartBlock = 192804; //TecraCoin
 
-        consensus.nMTPFiveMinutesStartBlock = SWITCH_TO_MTP_5MIN_BLOCK;// NOT USED IN TECRACOIN
-        consensus.nDifficultyAdjustStartBlock = 0;// NOT USED IN TECRACOIN
-        consensus.nFixedDifficulty = 0x2000ffff;// NOT USED IN TECRACOIN
-        consensus.nPowTargetSpacingMTP = defaultPowTargetSpacing;// NOT USED IN TECRACOIN
-        consensus.nInitialMTPDifficulty = 0x1c021e57;// NOT USED IN TECRACOIN
-        consensus.nMTPRewardReduction = 1; // NOT USED IN TECRACOIN
-
         consensus.nDisableZerocoinStartBlock = 108500;
 
         nMaxTipAge = 6 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
@@ -273,7 +266,6 @@ public:
         nPoolMaxTransactions = 3;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
         strSporkPubKey = "043e62180057b1fcbd3ca534f0a32ec83b967ae663a6fc7321ce0cf9f866ca909be062575c1aad9cd7ef0823938d0cc6b37161f9da5136731816db7e5794ec4063";
-        strTnodePaymentsPubKey = "04af8ad2afb4a6f5e57a3571c8fdbc504fe8ee80c15c89cb06c470d7d3d39c9c774099f3d2be33f341f5fe1ddf914a51ff12dd4a925a524bedf54ccd4bd6052ddf";
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -486,19 +478,12 @@ public:
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET;
         consensus.nMTPStartBlock = 15593; // TecraCoin
-        consensus.nMTPFiveMinutesStartBlock = INT_MAX; // NOT USED IN TECRACOIN
-        consensus.nDifficultyAdjustStartBlock = 100;// NOT USED IN TECRACOIN
-        consensus.nFixedDifficulty = 0x2000ffff;// NOT USED IN TECRACOIN
-        consensus.nPowTargetSpacingMTP = defaultPowTargetSpacing; // NOT USED IN TECRACOIN
-        consensus.nInitialMTPDifficulty = 0x2000ffff;  // NOT USED IN TECRACOIN
-        consensus.nMTPRewardReduction = 1; // NOT USED IN TECRACOIN
 
         consensus.nDisableZerocoinStartBlock = 1;
 
         nPoolMaxTransactions = 3;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         strSporkPubKey = "048779365ea4301c3da88204a79f202ad51fc5497727ae11a804b95091dfbd0ad3ef88456e0d09428ae97b70be75f8f49b0b52dad6900c6933717dcfe4ba9302d2";
-        strTnodePaymentsPubKey = "04287c0c51473073b2654396dfe853d80275f90e3027680a1c5d66864dfe1d05a34524bd10b968692cb0827179949e4ba8622c759e9d417e7bf9a5449043885b17";
 
         pchMessageStart[0] = 0x2c;
         pchMessageStart[1] = 0xc2;
@@ -692,12 +677,6 @@ public:
         consensus.nDontAllowDupTxsStartBlock = 1;
 
         consensus.nMTPSwitchTime = INT_MAX;
-        consensus.nMTPFiveMinutesStartBlock = 0; // NOT USED IN TECRACOIN
-        consensus.nDifficultyAdjustStartBlock = 5000; // NOT USED IN TECRACOIN
-        consensus.nFixedDifficulty = 0x2000ffff; // NOT USED IN TECRACOIN
-        consensus.nPowTargetSpacingMTP = defaultPowTargetSpacing; // NOT USED IN TECRACOIN
-        consensus.nInitialMTPDifficulty = 0x2070ffff; // NOT USED IN TECRACOIN
-        consensus.nMTPRewardReduction = 1; // NOT USED IN TECRACOIN
 
         consensus.nCheckBugFixedAtBlock = 120;
         consensus.nTnodePaymentsBugFixedAtBlock = 1;
@@ -728,12 +707,6 @@ public:
 
         consensus.nMTPSwitchTime = INT_MAX;
         consensus.nMTPStartBlock = 0;
-        consensus.nMTPFiveMinutesStartBlock = 0;
-        consensus.nDifficultyAdjustStartBlock = 5000;
-        consensus.nFixedDifficulty = 0x207fffff;
-        consensus.nPowTargetSpacingMTP = 5*60;
-        consensus.nInitialMTPDifficulty = 0x2070ffff;  // !!!! change it to the real value
-        consensus.nMTPRewardReduction = 2;
 
         consensus.nDisableZerocoinStartBlock = INT_MAX;
 
