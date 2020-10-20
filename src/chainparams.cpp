@@ -209,12 +209,6 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = SWITCH_TO_MTP_BLOCK_HEADER - 2*60; // 2 hours leeway
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER + consensus.nMinerConfirmationWindow*2 * 5*60;
 
-        // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000019acb099d323987");
-
-        // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("04a68a5c150d913c24ea45a15eb91fae7f8827743602f018f70114035143592a"); //358240
-
         consensus.nCheckBugFixedAtBlock = ZC_CHECK_BUG_FIXED_AT_BLOCK;
         consensus.nTnodePaymentsBugFixedAtBlock = ZC_TNODE_PAYMENT_BUG_FIXED_AT_BLOCK;
         consensus.nSpendV15StartBlock = ZC_V1_5_STARTING_BLOCK;
@@ -327,16 +321,23 @@ public:
                 (0, uint256S("0x000008c721bdb1312f1954156f64828a052e8e8ce5a914f7b301a44eba154989"))
                 (2500, uint256S("0x00000179620d5efd4770d98f43474fd54045d6e4723445cb1907e12b576ee14e"))
                 (6860, uint256S("0x0000001a85edff4034839d410fd4efc6ed36a4e9b9a92ed399a1343acce44a32"))
-                (291588, uint256S("a7d8afb46a810bc3a53cd7f036085a4d776f86bd035bf8d64eb82e27dfcbb32b"))
-                (311766, uint256S("7d828dd2b55cef5dfc376177dda08a02e780d9fd5dea3f192671adadbd6632d2"))
+                (291588, uint256S("0xa7d8afb46a810bc3a53cd7f036085a4d776f86bd035bf8d64eb82e27dfcbb32b"))
+                (311766, uint256S("0x7d828dd2b55cef5dfc376177dda08a02e780d9fd5dea3f192671adadbd6632d2"))
+                (398849, uint256S("0x3b1309eb011eaab8b86aca32d2d30df3c892f7374b4cc0e2a51ed06a57c126f2"))
         };
 
         chainTxData = ChainTxData{
-                1589474612, // * UNIX timestamp of last checkpoint block
-                339663,     // * total number of transactions between genesis and last checkpoint
+                1603196462, // * UNIX timestamp of last checkpoint block
+                454351,     // * total number of transactions between genesis and last checkpoint
                             //   (the tx=... number in the SetBestChain debug.log lines)
                 0.014       // * estimated number of transactions per second after checkpoint
         };
+
+        // The best chain should have at least this much work.
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000001d2adb54c0eb6b1");
+
+        // By default assume that the signatures in ancestors of this block are valid.
+        consensus.defaultAssumeValid = uint256S("0x3b1309eb011eaab8b86aca32d2d30df3c892f7374b4cc0e2a51ed06a57c126f2"); //398849
 
         consensus.nSpendV15StartBlock = ZC_V1_5_STARTING_BLOCK;
         consensus.nSpendV2ID_1 = ZC_V2_SWITCH_ID_1;
@@ -536,20 +537,21 @@ public:
                         (1, uint256S("0x00b360392b7230eef10baec8fe24a0a5590164681028b868a57ae0c1754365ec"))
                         (1097, uint256S("0x0000083dcce10b707687d6f15074976b541fc7d72d760931292227d0f0ea9122"))
                         (10572, uint256S("0x00065ba00de7f8b4f3dbf085b8e3ed25fa396692e816f7f2953a851c904626f3"))
-                        (58000,  uint256S("0x5d4051eb81d2eb32faa536ccc2e576141b062993caa0ed1814b51dda26d70b19"))
+                        (58000, uint256S("0x5d4051eb81d2eb32faa536ccc2e576141b062993caa0ed1814b51dda26d70b19"))
+                        (77910, uint256S("0x8fafbb35ee9b6383d24cefd3e96cf4504a751c44d0757c4123ca27174242c9d9"))
         };
 
         chainTxData = ChainTxData{
-            1599313321, //timestamp
-            58047,      //transactions
+            1603196161, //timestamp
+            94569,      //transactions
             0.001       //tx/s
         };
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000008663e0e62"); //58000
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000009c4bc7c84"); //77910
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x5d4051eb81d2eb32faa536ccc2e576141b062993caa0ed1814b51dda26d70b19"); //58000
+        consensus.defaultAssumeValid = uint256S("0x8fafbb35ee9b6383d24cefd3e96cf4504a751c44d0757c4123ca27174242c9d9"); //77910
 
         consensus.nSpendV15StartBlock = ZC_V1_5_TESTNET_STARTING_BLOCK;
         consensus.nSpendV2ID_1 = ZC_V2_TESTNET_SWITCH_ID_1;
