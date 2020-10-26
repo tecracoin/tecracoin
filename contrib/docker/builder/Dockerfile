@@ -1,74 +1,24 @@
-## builder
-FROM ubuntu:14.04
-MAINTAINER Maciej Partyka <maciek@partyka.io>
+FROM ubuntu:18.04
 
-RUN apt-get update && \
-    apt-get install -y curl \
-    g++-aarch64-linux-gnu \
-    g++-4.8-aarch64-linux-gnu \
-    gcc-4.8-aarch64-linux-gnu \
-    binutils-aarch64-linux-gnu \
-    g++-arm-linux-gnueabihf \
-    g++-4.8-arm-linux-gnueabihf \
-    gcc-4.8-arm-linux-gnueabihf \
-    binutils-arm-linux-gnueabihf \
-    g++-4.8-multilib \
-    gcc-4.8-multilib \
-    binutils-gold \
-    git-core \
-    pkg-config \
-    autoconf \
-    libtool \
-    automake \
-    faketime \
-    bsdmainutils \
-    ca-certificates \
-    python \
-    build-essential
+# install required packages
+RUN apt-get update && apt-get install -y software-properties-common
 
-ARG DEV_REPO
-ARG DEV_REPO_CACHE_BUST
-COPY ./id_rsa /root/.ssh/id_rsa
-RUN cd /root && \
-    ssh-keyscan -t rsa bitbucket.org > ~/.ssh/known_hosts && \
-    git clone $DEV_REPO && \
-    cd /root/tecracoin && \
-    git checkout dev && \
-    cd /root/tecracoin/depends && \
-    make -j5 && \
-    cd /root/tecracoin && \
-    echo Building for system `sh ./depends/config.guess` && \
-    ls `pwd`/depends/`sh ./depends/config.guess` && \
-    ./autogen.sh && \
-    ./configure \
-    --without-gui \
-    --prefix=`pwd`/depends/`sh ./depends/config.guess` \
-    --enable-static && \
-    make -j5 
+RUN add-apt-repository ppa:bitcoin/bitcoin
 
-WORKDIR /root/tecracoin
+RUN apt-get update && apt-get install -y \
+    autoconf automake bsdmainutils ccache cmake curl g++ g++-mingw-w64-x86-64 gcc gcc-mingw-w64-x86-64 git \
+    libboost-all-dev libbz2-dev libcap-dev libdb4.8-dev libdb4.8++-dev libevent-dev libminiupnpc-dev libprotobuf-dev \
+    libqrencode-dev libssl-dev libtool make pkg-config protobuf-compiler python-pip qtbase5-dev \
+    qttools5-dev-tools python3-zmq zlib1g-dev build-essential minizip lcov default-jre libzmq3-dev libgmp-dev
 
-RUN git pull && git checkout dev && git pull && \
-    make -j5 && \
-    cd src \
-    && strip tecracoind \
-    && strip tecracoin-cli \
-    && mv tecracoind /usr/local/bin \
-    && mv tecracoin-cli /usr/local/bin
+RUN pip install ez_setup
 
-RUN git pull && git checkout feat/diff-func && git pull &&  \
-    make -j5 && \
-    cd src \
-    && strip tecracoind \
-    && strip tecracoin-cli \
-    && mv tecracoind /usr/local/bin \
-    && mv tecracoin-cli /usr/local/bin
-RUN git pull && git checkout feat/diff-func && git pull && \
-    make -j5 && \
-    cd src \
-    && strip tecracoind \
-    && strip tecracoin-cli \
-    && mv tecracoind /usr/local/bin \
-    && mv tecracoin-cli /usr/local/bin
+# create user to use
+RUN useradd -m -U tecracoin-builder
 
-#ARG CACHEBUST
+# create a volume for home directory
+VOLUME [ "/home/tecracoin-builder" ]
+
+# start shell with created user
+USER tecracoin-builder
+WORKDIR /home/tecracoin-builder

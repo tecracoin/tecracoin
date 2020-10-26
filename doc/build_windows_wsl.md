@@ -12,7 +12,7 @@ There are two possibilities of compiling TecraCoin code on Windows 10.
  * [WSL/Ubuntu](https://msdn.microsoft.com/en-us/commandline/wsl/install_guide) installed
 ---
 For the more complex second execution method, you need to install
- * [Xming](http://www.straightrunning.com/XmingNotes/) latest version, if you are planning to compile using [unix compiling instruction](https://github.com/zcoinofficial/zcoin/blob/master/doc/build-unix.md)
+ * [Xming](http://www.straightrunning.com/XmingNotes/) latest version, if you are planning to compile using [unix compiling instruction](https://github.com/TecraCoinofficial/TecraCoin/blob/master/doc/build-unix.md)
 
 
 ## Pre common steps
@@ -49,7 +49,7 @@ For the more complex second execution method, you need to install
 
 5. Clone git repository into newly created directory and go to the right branch
    
-            git clone https://github.com/zcoinofficial/zcoin.git
+            git clone https://github.com/tecracoin/tecracoin.git
             cd tecracoin
     If you are not authorized in git, configure git to always use LF and (optionally) specify your name/email. Global Windows git settings (if set)
     won't be inherited if git is invoked from Ubuntu shell.
@@ -105,30 +105,30 @@ For the more complex second execution method, you need to install
 
     Now do either step **7** OR step **8**, not both.
 
-6. Build 32-bit debug build (from the tecracoin root directory)
+6. Build 32-bit debug build (from the TecraCoin root directory)
     
         ./configure --prefix=$HOME/tecracoin-depends/i686-w64-mingw32
         make -j`nproc`
 
-7. Build 64-bit debug build (from the tecracoin root directory)
+7. Build 64-bit debug build (from the TecraCoin root directory)
      
         ./configure --prefix=$HOME/tecracoin-depends/x86_64-w64-mingw32
         make -j`nproc`
 
-8. After check the directory to run GUI with __tecracoin-qt.exe__
+8. After check the directory to run GUI with __TecraCoin-qt.exe__
     
         C:\Users\<username>\tecracoin\src\qt
 ----
 ## Second method - Ubuntu + Xming
-1. Use existing paper [build-unix](https://github.com/zcoinofficial/zcoin/blob/master/doc/build-unix.md) and
+1. Use existing paper [build-unix](https://github.com/tecracoin/tecracoin/blob/master/doc/build-unix.md) and
     * Install all dependencies
     * Build app
 2. Start installed Xming in Windows
 3. From Ubuntu bash window start output to Xming:
    
         export DISPLAY=localhost:0.0
-4. From Ubuntu bash window start tecracoin-qt:
+4. From Ubuntu bash window start TecraCoin-qt:
 
         cd /mnt/c/Users/<username>/tecracoin/src/qt
-        ./tecracoin-qt 
+        ./TecraCoin-qt 
 

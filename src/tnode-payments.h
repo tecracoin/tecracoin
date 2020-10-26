@@ -8,7 +8,7 @@
 #include "util.h"
 #include "core_io.h"
 #include "key.h"
-#include "main.h"
+#include "validation.h"
 #include "tnode.h"
 #include "utilstrencodings.h"
 
@@ -16,26 +16,26 @@ class CTnodePayments;
 class CTnodePaymentVote;
 class CTnodeBlockPayees;
 
-static const int MNPAYMENTS_SIGNATURES_REQUIRED         = 6;
-static const int MNPAYMENTS_SIGNATURES_TOTAL            = 10;
+static const int TNPAYMENTS_SIGNATURES_REQUIRED         = 6;
+static const int TNPAYMENTS_SIGNATURES_TOTAL            = 10;
 
 //! minimum peer version that can receive and send tnode payment messages,
 //  vote for tnode and be elected as a payment winner
 // V1 - Last protocol version before update
 // V2 - Newest protocol version
-static const int MIN_TNODE_PAYMENT_PROTO_VERSION_1 = 90026;
+static const int MIN_TNODE_PAYMENT_PROTO_VERSION_1 = 90024;
 static const int MIN_TNODE_PAYMENT_PROTO_VERSION_2 = 90026;
 
 extern CCriticalSection cs_vecPayees;
 extern CCriticalSection cs_mapTnodeBlocks;
 extern CCriticalSection cs_mapTnodePayeeVotes;
 
-extern CTnodePayments mnpayments;
+extern CTnodePayments tnpayments;
 
 /// TODO: all 4 functions do not belong here really, they should be refactored/moved somewhere (main.cpp ?)
-bool IsBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string &strErrorRet);
-bool IsBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, bool fMTP);
-void FillBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutTnodeRet, std::vector<CTxOut>& voutSuperblockRet);
+bool IsTnodeBlockValueValid(const CBlock& block, int nBlockHeight, CAmount blockReward, std::string &strErrorRet);
+bool IsTnodeBlockPayeeValid(const CTransaction& txNew, int nBlockHeight, CAmount blockReward, bool fMTP);
+void FillTnodeBlockPayments(CMutableTransaction& txNew, int nBlockHeight, CAmount blockReward, CTxOut& txoutTnodeRet, std::vector<CTxOut>& voutSuperblockRet);
 std::string GetRequiredPaymentsString(int nBlockHeight);
 
 class CTnodePayee
@@ -60,7 +60,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(*(CScriptBase*)(&scriptPubKey));
         READWRITE(vecVoteHashes);
     }
@@ -92,7 +92,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(nBlockHeight);
         READWRITE(vecPayees);
     }
@@ -101,7 +101,7 @@ public:
     bool GetBestPayee(CScript& payeeRet);
     bool HasPayeeWithVotes(CScript payeeIn, int nVotesReq);
 
-    bool IsTransactionValid(const CTransaction& txNew, bool fMTP);
+    bool IsTransactionValid(const CTransaction& txNew, int nHeight, bool fMTP);
 
     std::string GetRequiredPaymentsString();
 };
@@ -133,7 +133,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(vinTnode);
         READWRITE(nBlockHeight);
         READWRITE(*(CScriptBase*)(&payee));
@@ -186,7 +186,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(mapTnodePaymentVotes);
         READWRITE(mapTnodeBlocks);
     }

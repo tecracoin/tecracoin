@@ -5,24 +5,24 @@
 #include "metadexdialog.h"
 #include "ui_metadexdialog.h"
 
-#include "exodus_qtutils.h"
+#include "elysium_qtutils.h"
 
 #include "clientmodel.h"
 #include "walletmodel.h"
 
-#include "exodus/createpayload.h"
-#include "exodus/errors.h"
-#include "exodus/mdex.h"
-#include "exodus/exodus.h"
-#include "exodus/parse_string.h"
-#include "exodus/pending.h"
-#include "exodus/rules.h"
-#include "exodus/rpctxobject.h"
-#include "exodus/sp.h"
-#include "exodus/tally.h"
-#include "exodus/utilsbitcoin.h"
-#include "exodus/wallettxs.h"
-#include "exodus/uint256_extensions.h"
+#include "elysium/createpayload.h"
+#include "elysium/errors.h"
+#include "elysium/mdex.h"
+#include "elysium/elysium.h"
+#include "elysium/parse_string.h"
+#include "elysium/pending.h"
+#include "elysium/rules.h"
+#include "elysium/rpctxobject.h"
+#include "elysium/sp.h"
+#include "elysium/tally.h"
+#include "elysium/utilsbitcoin.h"
+#include "elysium/wallettxs.h"
+#include "elysium/uint256_extensions.h"
 #include "amount.h"
 #include "sync.h"
 #include "uint256.h"
@@ -50,7 +50,7 @@
 using std::ostringstream;
 using std::string;
 
-using namespace exodus;
+using namespace elysium;
 
 MetaDExDialog::MetaDExDialog(QWidget *parent) :
     QDialog(parent),
@@ -114,9 +114,9 @@ void MetaDExDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if (NULL != model) {
-        connect(model, SIGNAL(refreshExodusState()), this, SLOT(UpdateOffers()));
-        connect(model, SIGNAL(refreshExodusBalance()), this, SLOT(BalanceOrderRefresh()));
-        connect(model, SIGNAL(reinitExodusState()), this, SLOT(FullRefresh()));
+        connect(model, SIGNAL(refreshElysiumState()), this, SLOT(UpdateOffers()));
+        connect(model, SIGNAL(refreshElysiumBalance()), this, SLOT(BalanceOrderRefresh()));
+        connect(model, SIGNAL(reinitElysiumState()), this, SLOT(FullRefresh()));
     }
 }
 
@@ -132,7 +132,7 @@ void MetaDExDialog::setWalletModel(WalletModel *model)
 void MetaDExDialog::PopulateAddresses()
 {
     { // restrict scope of lock to address updates only (don't hold for balance update too)
-        LOCK(cs_tally);
+        LOCK(cs_main);
 
         uint32_t propertyId = GetPropForSale();
         QString currentSetAddress = ui->comboAddress->currentText();
@@ -341,7 +341,7 @@ void MetaDExDialog::UpdateOffers()
 {
     ui->sellList->setRowCount(0);
 
-    LOCK(cs_tally);
+    LOCK(cs_main);
 
     // Obtain divisibility outside the loop to avoid repeatedly loading properties
     bool divisSale = isPropertyDivisible(GetPropForSale());
@@ -437,7 +437,7 @@ void MetaDExDialog::ShowDetails()
 void MetaDExDialog::ShowHistory()
 {
     UniValue history(UniValue::VARR);
-    LOCK(cs_tally);
+    LOCK(cs_main);
     t_tradelistdb->getTradesForPair(GetPropForSale(), GetPropDesired(), history, 50);
     std::string strHistory = history.write(true);
 
@@ -554,11 +554,8 @@ void MetaDExDialog::sendTrade()
         if (!autoCommit) {
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
-            PendingAdd(txid, strFromAddress, EXODUS_TYPE_METADEX_TRADE, GetPropForSale(), amountForSale);
+            PendingAdd(txid, strFromAddress, ELYSIUM_TYPE_METADEX_TRADE, GetPropForSale(), amountForSale);
             PopulateTXSentDialog(txid.GetHex());
         }
     }
 }
-
-
-

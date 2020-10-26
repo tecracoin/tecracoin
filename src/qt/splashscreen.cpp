@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -20,8 +20,8 @@
 #include "wallet/wallet.h"
 #endif
 
-#include "exodus/version.h"
-#include "exodus/utilsbitcoin.h"
+#include "elysium/version.h"
+#include "elysium/utilsbitcoin.h"
 
 #include <QApplication>
 #include <QCloseEvent>
@@ -53,12 +53,12 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) : QSplashSc
 
     // load the bitmap for writing some text over it
     QPixmap newPixmap;
-//    if(GetBoolArg("-testnet")) {
-//        newPixmap     = QPixmap(":/images/splash_testnet");
-//    }
-//    else {
-    newPixmap     = QPixmap(":/images/splash");
-//    }
+    if(GetBoolArg("-testnet", false)) {
+        newPixmap     = QPixmap(":/images/splash_testnet");
+    }
+    else {
+        newPixmap     = QPixmap(":/images/splash");
+    }
 
     QPainter pixPaint(&newPixmap);
     pixPaint.setPen(QColor(70,70,70));
@@ -119,7 +119,7 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) : QSplashSc
 //    QRect rGradient(QPoint(0,0), splashSize);
 //    pixPaint.fillRect(rGradient, gradient);
 //
-//    // draw the bitcoin icon, expected size of PNG: 1024x1024
+//    // draw the Zcoin icon, expected size of PNG: 1024x1024
 //    QRect rectIcon(QPoint(-150,-122), QSize(430,430));
 //
 //    const QSize requiredSize(1024,1024);
@@ -216,9 +216,10 @@ static void ShowProgress(SplashScreen *splash, const std::string &title, int nPr
 }
 
 #ifdef ENABLE_WALLET
-static void ConnectWallet(SplashScreen *splash, CWallet* wallet)
+void SplashScreen::ConnectWallet(CWallet* wallet)
 {
-    wallet->ShowProgress.connect(boost::bind(ShowProgress, splash, _1, _2));
+    wallet->ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
+    connectedWallets.push_back(wallet);
 }
 #endif
 
@@ -228,7 +229,7 @@ void SplashScreen::subscribeToCoreSignals()
     uiInterface.InitMessage.connect(boost::bind(InitMessage, this, _1));
     uiInterface.ShowProgress.connect(boost::bind(ShowProgress, this, _1, _2));
 #ifdef ENABLE_WALLET
-    uiInterface.LoadWallet.connect(boost::bind(ConnectWallet, this, _1));
+    uiInterface.LoadWallet.connect(boost::bind(&SplashScreen::ConnectWallet, this, _1));
 #endif
 }
 
@@ -238,8 +239,9 @@ void SplashScreen::unsubscribeFromCoreSignals()
     uiInterface.InitMessage.disconnect(boost::bind(InitMessage, this, _1));
     uiInterface.ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
 #ifdef ENABLE_WALLET
-    if(pwalletMain)
-        pwalletMain->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+    Q_FOREACH(CWallet* const & pwallet, connectedWallets) {
+        pwallet->ShowProgress.disconnect(boost::bind(ShowProgress, this, _1, _2));
+    }
 #endif
 }
 

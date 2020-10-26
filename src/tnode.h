@@ -6,7 +6,7 @@
 #define TNODE_H
 
 #include "key.h"
-#include "main.h"
+#include "validation.h"
 #include "net.h"
 #include "spork.h"
 #include "timedata.h"
@@ -16,15 +16,37 @@ class CTnode;
 class CTnodeBroadcast;
 class CTnodePing;
 
-static const int TNODE_CHECK_SECONDS               =   5;
+static const int TNODE_CHECK_SECONDS               =   15;  //5s almost loops it
 static const int TNODE_MIN_MNB_SECONDS             =   5 * 60; //BROADCAST_TIME
-static const int TNODE_MIN_MNP_SECONDS             =  10 * 60; //PRE_ENABLE_TIME
 static const int TNODE_EXPIRATION_SECONDS          =  65 * 60;
 static const int TNODE_WATCHDOG_MAX_SECONDS        = 120 * 60;
-static const int TNODE_NEW_START_REQUIRED_SECONDS  = 180 * 60;
-static const int TNODE_COIN_REQUIRED  = 10000;
+static const int TNODE_COIN_REQUIRED               = 10000; //TCR
 
 static const int TNODE_POSE_BAN_MAX_SCORE          = 5;
+
+class CTnodeTimings {
+    struct Mainnet {
+        static const int TnodeMinMnpSeconds                =  10 * 60; //PRE_ENABLE_TIME
+        static const int TnodeNewStartRequiredSeconds      = 180 * 60;
+    };
+    struct Regtest {
+        static const int TnodeMinMnpSeconds                = 30;
+        static const int TnodeNewStartRequiredSeconds      = 60;
+    };
+public:
+    static int MinMnpSeconds();
+    static int NewStartRequiredSeconds();
+private:
+    static CTnodeTimings & Inst();
+    CTnodeTimings();
+    CTnodeTimings(CTnodeTimings const &)=delete;
+    void operator=(CTnodeTimings const &)=delete;
+    int minMnp, newStartRequired;
+};
+
+#define TNODE_MIN_MNP_SECONDS CTnodeTimings::MinMnpSeconds()
+#define TNODE_NEW_START_REQUIRED_SECONDS CTnodeTimings::NewStartRequiredSeconds()
+
 //
 // The Tnode Ping Class : Contains a different serialize method for sending pings from tnodes through out the network
 //
@@ -50,24 +72,11 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(vin);
         READWRITE(blockHash);
         READWRITE(sigTime);
         READWRITE(vchSig);
-    }
-
-    void swap(CTnodePing& first, CTnodePing& second) // nothrow
-    {
-        // enable ADL (not necessary in our case, but good practice)
-        using std::swap;
-
-        // by swapping the members of two classes,
-        // the two classes are effectively swapped
-        swap(first.vin, second.vin);
-        swap(first.blockHash, second.blockHash);
-        swap(first.sigTime, second.sigTime);
-        swap(first.vchSig, second.vchSig);
     }
 
     uint256 GetHash() const
@@ -86,9 +95,12 @@ public:
     bool CheckAndUpdate(CTnode* pmn, bool fFromNewBroadcast, int& nDos);
     void Relay();
 
-    CTnodePing& operator=(CTnodePing from)
+    CTnodePing& operator=(const CTnodePing &from)
     {
-        swap(*this, from);
+        vin = from.vin;
+        blockHash = from.blockHash;
+        sigTime = from.sigTime;
+        vchSig = from.vchSig;
         return *this;
     }
     friend bool operator==(const CTnodePing& a, const CTnodePing& b)
@@ -188,7 +200,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         LOCK(cs);
         READWRITE(vin);
         READWRITE(addr);
@@ -281,6 +293,8 @@ public:
 
     bool IsValidForPayment();
 
+    static bool IsLegacyWindow(int height);
+
     bool IsValidNetAddr();
     static bool IsValidNetAddr(CService addrIn);
 
@@ -344,7 +358,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(vin);
         READWRITE(addr);
         READWRITE(pubKeyCollateralAddress);
@@ -411,7 +425,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         READWRITE(vin1);
         READWRITE(vin2);
         READWRITE(addr);
@@ -435,7 +449,7 @@ public:
     void Relay() const
     {
         CInv inv(MSG_TNODE_VERIFY, GetHash());
-        RelayInv(inv);
+        g_connman->RelayInv(inv);
     }
 };
 

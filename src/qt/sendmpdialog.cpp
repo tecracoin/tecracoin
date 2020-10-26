@@ -5,35 +5,29 @@
 #include "sendmpdialog.h"
 #include "ui_sendmpdialog.h"
 
-#include "exodus_qtutils.h"
+#include "elysium_qtutils.h"
 
 #include "clientmodel.h"
 #include "walletmodel.h"
 
 #include "platformstyle.h"
 
-#include "exodus/createpayload.h"
-#include "exodus/errors.h"
-#include "exodus/exodus.h"
-#include "exodus/parse_string.h"
-#include "exodus/pending.h"
-#include "exodus/sp.h"
-#include "exodus/tally.h"
-#include "exodus/utilsbitcoin.h"
-#include "exodus/wallettxs.h"
+#include "../elysium/createpayload.h"
+#include "../elysium/errors.h"
+#include "../elysium/parse_string.h"
+#include "../elysium/pending.h"
+#include "../elysium/sp.h"
+#include "../elysium/tally.h"
+#include "../elysium/tx.h"
+#include "../elysium/utilsbitcoin.h"
+#include "../elysium/wallettxs.h"
 
-#include "amount.h"
-#include "base58.h"
-#include "main.h"
-#include "sync.h"
-#include "uint256.h"
-#include "wallet/wallet.h"
-
-#include <stdint.h>
-#include <map>
-#include <sstream>
-#include <string>
-#include <vector>
+#include "../amount.h"
+#include "../base58.h"
+#include "../validation.h"
+#include "../sync.h"
+#include "../uint256.h"
+#include "../wallet/wallet.h"
 
 #include <QDateTime>
 #include <QDialog>
@@ -42,10 +36,17 @@
 #include <QString>
 #include <QWidget>
 
+#include <map>
+#include <sstream>
+#include <string>
+#include <vector>
+
+#include <inttypes.h>
+
 using std::ostringstream;
 using std::string;
 
-using namespace exodus;
+using namespace elysium;
 
 SendMPDialog::SendMPDialog(const PlatformStyle *platformStyle, QWidget *parent) :
     QDialog(parent),
@@ -67,7 +68,7 @@ SendMPDialog::SendMPDialog(const PlatformStyle *platformStyle, QWidget *parent) 
     }
 
 #if QT_VERSION >= 0x040700 // populate placeholder text
-    ui->sendToLineEdit->setPlaceholderText("Enter an Exodus address (e.g. 1oMn1LaYeRADDreSShef77z6A5S4P)");
+    ui->sendToLineEdit->setPlaceholderText("Enter an Elysium address (e.g. 1oMn1LaYeRADDreSShef77z6A5S4P)");
     ui->amountLineEdit->setPlaceholderText("Enter Amount");
 #endif
 
@@ -90,8 +91,8 @@ void SendMPDialog::setClientModel(ClientModel *model)
 {
     this->clientModel = model;
     if (model != NULL) {
-        connect(model, SIGNAL(refreshOmniBalance()), this, SLOT(balancesUpdated()));
-        connect(model, SIGNAL(reinitOmniState()), this, SLOT(balancesUpdated()));
+        connect(model, SIGNAL(refreshElysiumBalance()), this, SLOT(balancesUpdated()));
+        connect(model, SIGNAL(reinitElysiumState()), this, SLOT(balancesUpdated()));
     }
 }
 
@@ -106,7 +107,7 @@ void SendMPDialog::setWalletModel(WalletModel *model)
 
 void SendMPDialog::updatePropSelector()
 {
-    LOCK(cs_tally);
+    LOCK(cs_main);
 
     uint32_t nextPropIdMainEco = GetNextPropertyId(true);  // these allow us to end the for loop at the highest existing
     uint32_t nextPropIdTestEco = GetNextPropertyId(false); // property ID rather than a fixed value like 100000 (optimization)
@@ -170,7 +171,7 @@ void SendMPDialog::updateFrom()
         if (CheckFee(currentSetFromAddress, 16)) {
             ui->feeWarningLabel->setVisible(false);
         } else {
-            ui->feeWarningLabel->setText("WARNING: The sending address is low on TCR for transaction fees. Please topup the TCR balance for the sending address to send Exodus transactions.");
+            ui->feeWarningLabel->setText("WARNING: The sending address is low on TCR for transaction fees. Please topup the TCR balance for the sending address to send Elysium transactions.");
             ui->feeWarningLabel->setVisible(true);
         }
     }
@@ -185,7 +186,7 @@ void SendMPDialog::updateProperty()
     // populate from address selector
     QString spId = ui->propertyComboBox->itemData(ui->propertyComboBox->currentIndex()).toString();
     uint32_t propertyId = spId.toUInt();
-    LOCK(cs_tally);
+    LOCK(cs_main);
     for (std::unordered_map<string, CMPTally>::iterator my_it = mp_tally_map.begin(); my_it != mp_tally_map.end(); ++my_it) {
         string address = (my_it->first).c_str();
         uint32_t id = 0;
@@ -339,7 +340,7 @@ void SendMPDialog::sendMPTransaction()
         if (!autoCommit) {
             PopulateSimpleDialog(rawHex, "Raw Hex (auto commit is disabled)", "Raw transaction hex");
         } else {
-            PendingAdd(txid, fromAddress.ToString(), EXODUS_TYPE_SIMPLE_SEND, propertyId, sendAmount);
+            PendingAdd(txid, fromAddress.ToString(), ELYSIUM_TYPE_SIMPLE_SEND, propertyId, sendAmount);
             PopulateTXSentDialog(txid.GetHex());
         }
     }

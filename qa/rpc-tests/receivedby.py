@@ -14,7 +14,6 @@ def get_sub_array_from_array(object_array, to_match):
         Finds and returns a sub array from an array of arrays.
         to_match should be a unique idetifier of a sub array
     '''
-    num_matched = 0
     for item in object_array:
         all_match = True
         for key,value in to_match.items():
@@ -41,9 +40,10 @@ class ReceivedByTest(BitcoinTestFramework):
         '''
         listreceivedbyaddress Test
         '''
+
         # Send from node 0 to 1
         addr = self.nodes[1].getnewaddress()
-        txid = self.nodes[0].sendtoaddress(addr, 0.1)
+        txid = self.nodes[0].sendtoaddress(addr, 10)
         self.sync_all()
 
         #Check not listed in listreceivedbyaddress because has 0 confirmations
@@ -56,11 +56,11 @@ class ReceivedByTest(BitcoinTestFramework):
         self.sync_all()
         assert_array_result(self.nodes[1].listreceivedbyaddress(),
                            {"address":addr},
-                           {"address":addr, "account":"", "amount":Decimal("0.1"), "confirmations":10, "txids":[txid,]})
+                           {"address":addr, "account":"", "amount":Decimal("10"), "confirmations":10, "txids":[txid,]})
         #With min confidence < 10
         assert_array_result(self.nodes[1].listreceivedbyaddress(5),
                            {"address":addr},
-                           {"address":addr, "account":"", "amount":Decimal("0.1"), "confirmations":10, "txids":[txid,]})
+                           {"address":addr, "account":"", "amount":Decimal("10"), "confirmations":10, "txids":[txid,]})
         #With min confidence > 10, should not find Tx
         assert_array_result(self.nodes[1].listreceivedbyaddress(11),{"address":addr},{ },True)
 
@@ -104,7 +104,7 @@ class ReceivedByTest(BitcoinTestFramework):
         received_by_account_json = get_sub_array_from_array(self.nodes[1].listreceivedbyaccount(),{"account":account})
         if len(received_by_account_json) == 0:
             raise AssertionError("No accounts found in node")
-        balance_by_account = rec_by_accountArr = self.nodes[1].getreceivedbyaccount(account)
+        balance_by_account = self.nodes[1].getreceivedbyaccount(account)
 
         txid = self.nodes[0].sendtoaddress(addr, 0.1)
         self.sync_all()

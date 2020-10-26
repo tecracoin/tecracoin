@@ -9,6 +9,11 @@
 #include "tnode-payments.h"
 #include "tnodeman.h"
 #include "protocol.h"
+#include "netbase.h"
+
+// TODO: upgrade to new dash, remove this hack
+#define vNodes (g_connman->vNodes)
+#define cs_vNodes (g_connman->cs_vNodes)
 
 extern CWallet *pwalletMain;
 
@@ -17,7 +22,7 @@ CActiveTnode activeTnode;
 
 void CActiveTnode::ManageState() {
     LogPrint("tnode", "CActiveTnode::ManageState -- Start\n");
-    if (!fTNode) {
+    if (!fTnodeMode) {
         LogPrint("tnode", "CActiveTnode::ManageState -- Not a tnode, returning\n");
         return;
     }
@@ -177,6 +182,39 @@ void CActiveTnode::ManageStateInitial() {
             }
         }
     }
+        
+    if(Params().NetworkIDString() == CBaseChainParams::REGTEST) {
+        std::string const & serv = GetArg("-externalip", "");
+        if(!serv.empty()) {
+            if (Lookup(serv.c_str(), service, 0, false))
+                fFoundLocal = true;
+        }
+
+    }
+    if(!fFoundLocal)
+    {
+        LOCK(cs_vNodes);
+
+        // First try to find whatever local address is specified by externalip option
+        fFoundLocal = GetLocal(service) && CTnode::IsValidNetAddr(service);
+        if (!fFoundLocal) {
+            // nothing and no live connections, can't do anything for now
+            if (vNodes.empty()) {
+                nState = ACTIVE_TNODE_NOT_CAPABLE;
+                strNotCapableReason = "Can't detect valid external address. Will retry when there are some connections available.";
+                LogPrintf("CActiveTnode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
+                return;
+            }
+            // We have some peers, let's try to find our local address from one of them
+            BOOST_FOREACH(CNode * pnode, vNodes)
+            {
+                if (pnode->fSuccessfullyConnected && pnode->addr.IsIPv4()) {
+                    fFoundLocal = GetLocal(service, &pnode->addr) && CTnode::IsValidNetAddr(service);
+                    if (fFoundLocal) break;
+                }
+            }
+        }
+    }
 
     if (!fFoundLocal) {
         nState = ACTIVE_TNODE_NOT_CAPABLE;
@@ -204,7 +242,7 @@ void CActiveTnode::ManageStateInitial() {
 
     LogPrintf("CActiveTnode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
     //TODO
-    if (!ConnectNode(CAddress(service, NODE_NETWORK), NULL, false, true)) {
+    if (!g_connman->OpenMasternodeConnection(CAddress(service, NODE_NETWORK))) {
         nState = ACTIVE_TNODE_NOT_CAPABLE;
         strNotCapableReason = "Could not connect to " + service.ToString();
         LogPrintf("CActiveTnode::ManageStateInitial -- %s: %s\n", GetStateString(), strNotCapableReason);
@@ -226,7 +264,7 @@ void CActiveTnode::ManageStateInitial() {
     }
 
     if (pwalletMain->GetBalance() < TNODE_COIN_REQUIRED * COIN) {
-        LogPrintf("CActiveTnode::ManageStateInitial -- %s: Wallet balance is < %d TCR\n",TNODE_COIN_REQUIRED, GetStateString());
+        LogPrintf("CActiveTnode::ManageStateInitial -- %s: Wallet balance is < 10000 TCR\n", GetStateString());
         return;
     }
 

@@ -4,14 +4,21 @@
 
 #include "activetnode.h"
 #include "checkpoints.h"
-#include "main.h"
+#include "validation.h"
 #include "tnode.h"
 #include "tnode-payments.h"
 #include "tnode-sync.h"
 #include "tnodeman.h"
 #include "netfulfilledman.h"
 #include "spork.h"
+#include "darksend.h"
+#include "net_processing.h"
+#include "netmessagemaker.h"
 #include "util.h"
+
+// TODO: remove this when upgraded to dash latest version
+#define cs_vNodes (g_connman->cs_vNodes)
+#define vNodes (g_connman->vNodes)
 
 class CTnodeSync;
 
@@ -50,10 +57,10 @@ bool CTnodeSync::IsBlockchainSynced(bool fBlockAccepted) {
     static int nSkipped = 0;
     static bool fFirstBlockAccepted = false;
 
-    // If the last call to this function was more than 60 minutes ago
+    // If the last call to this function was more than 60 minutes ago 
     // (client was in sleep mode) reset the sync process
     if (GetTime() - nTimeLastProcess > 60 * 60) {
-        LogPrintf("CTnodeSync::IsBlockchainSynced time-check fBlockchainSynced=%s\n",
+        LogPrintf("CTnodeSync::IsBlockchainSynced time-check fBlockchainSynced=%s\n", 
                   fBlockchainSynced);
         Reset();
         fBlockchainSynced = false;
@@ -94,13 +101,7 @@ bool CTnodeSync::IsBlockchainSynced(bool fBlockAccepted) {
         return true;
     }
 
-    if (fCheckpointsEnabled &&
-        pCurrentBlockIndex->nHeight < Checkpoints::GetTotalBlocksEstimate(Params().Checkpoints())) {
-
-        return false;
-    }
-
-    std::vector < CNode * > vNodesCopy = CopyNodeVector();
+    std::vector < CNode * > vNodesCopy = g_connman->CopyNodeVector();
     // We have enough peers and assume most of them are synced
     if (vNodesCopy.size() >= TNODE_SYNC_ENOUGH_PEERS) {
         // Check to see how many of our peers are (almost) at the same height as we are
@@ -116,12 +117,12 @@ bool CTnodeSync::IsBlockchainSynced(bool fBlockAccepted) {
             if (nNodesAtSameHeight >= TNODE_SYNC_ENOUGH_PEERS) {
                 LogPrintf("CTnodeSync::IsBlockchainSynced -- found enough peers on the same height as we are, done\n");
                 fBlockchainSynced = true;
-                ReleaseNodeVector(vNodesCopy);
+                g_connman->ReleaseNodeVector(vNodesCopy);
                 return true;
             }
         }
     }
-    ReleaseNodeVector(vNodesCopy);
+    g_connman->ReleaseNodeVector(vNodesCopy);
 
     // wait for at least one new block to be accepted
     if (!fFirstBlockAccepted) return false;
@@ -258,7 +259,7 @@ void CTnodeSync::ProcessTick() {
     // INITIAL SYNC SETUP / LOG REPORTING
     double nSyncProgress = double(nRequestedTnodeAttempt + (nRequestedTnodeAssets - 1) * 8) / (8 * 4);
     LogPrint("ProcessTick", "CTnodeSync::ProcessTick -- nTick %d nRequestedTnodeAssets %d nRequestedTnodeAttempt %d nSyncProgress %f\n", nTick, nRequestedTnodeAssets, nRequestedTnodeAttempt, nSyncProgress);
-    uiInterface.NotifyAdditionalDataSyncProgressChanged(pCurrentBlockIndex->nHeight, nSyncProgress);
+    uiInterface.NotifyAdditionalDataSyncProgressChanged(nSyncProgress);
 
     // RESET SYNCING INCASE OF FAILURE
     {
@@ -270,8 +271,8 @@ void CTnodeSync::ProcessTick() {
                 LogPrintf("CTnodeSync::ProcessTick -- WARNING: not enough data, restarting sync\n");
                 Reset();
             } else {
-                std::vector < CNode * > vNodesCopy = CopyNodeVector();
-                ReleaseNodeVector(vNodesCopy);
+                std::vector < CNode * > vNodesCopy = g_connman->CopyNodeVector();
+                g_connman->ReleaseNodeVector(vNodesCopy);
                 return;
             }
         }
@@ -295,7 +296,7 @@ void CTnodeSync::ProcessTick() {
         SwitchToNextAsset();
     }
 
-    std::vector < CNode * > vNodesCopy = CopyNodeVector();
+    std::vector < CNode * > vNodesCopy = g_connman->CopyNodeVector();
 
     BOOST_FOREACH(CNode * pnode, vNodesCopy)
     {
@@ -303,22 +304,22 @@ void CTnodeSync::ProcessTick() {
         // they are temporary and should be considered unreliable for a sync process.
         // Inbound connection this early is most likely a "tnode" connection
         // initialted from another node, so skip it too.
-        if (pnode->fTnode || (fTNode && pnode->fInbound)) continue;
+        if (pnode->fTnode || (fTnodeMode && pnode->fInbound)) continue;
 
         // QUICK MODE (REGTEST ONLY!)
         if (Params().NetworkIDString() == CBaseChainParams::REGTEST) {
             if (nRequestedTnodeAttempt <= 2) {
-                pnode->PushMessage(NetMsgType::GETSPORKS); //get current network sporks
+                g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::GETSPORKS)); //get current network sporks
             } else if (nRequestedTnodeAttempt < 4) {
                 mnodeman.DsegUpdate(pnode);
             } else if (nRequestedTnodeAttempt < 6) {
                 int nMnCount = mnodeman.CountTnodes();
-                pnode->PushMessage(NetMsgType::TNODEPAYMENTSYNC, nMnCount); //sync payment votes
+                g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::TNODEPAYMENTSYNC, nMnCount)); //sync payment votes
             } else {
                 nRequestedTnodeAssets = TNODE_SYNC_FINISHED;
             }
             nRequestedTnodeAttempt++;
-            ReleaseNodeVector(vNodesCopy);
+            g_connman->ReleaseNodeVector(vNodesCopy);
             return;
         }
 
@@ -338,7 +339,7 @@ void CTnodeSync::ProcessTick() {
                 // only request once from each peer
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "spork-sync");
                 // get current network sporks
-                pnode->PushMessage(NetMsgType::GETSPORKS);
+                g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::GETSPORKS));
                 LogPrintf("CTnodeSync::ProcessTick -- nTick %d nRequestedTnodeAssets %d -- requesting sporks from peer %d\n", nTick, nRequestedTnodeAssets, pnode->id);
                 continue; // always get sporks first, switch to the next node without waiting for the next tick
             }
@@ -353,11 +354,11 @@ void CTnodeSync::ProcessTick() {
                         LogPrintf("CTnodeSync::ProcessTick -- ERROR: failed to sync %s\n", GetAssetName());
                         // there is no way we can continue without tnode list, fail here and try later
                         Fail();
-                        ReleaseNodeVector(vNodesCopy);
+                        g_connman->ReleaseNodeVector(vNodesCopy);
                         return;
                     }
                     SwitchToNextAsset();
-                    ReleaseNodeVector(vNodesCopy);
+                    g_connman->ReleaseNodeVector(vNodesCopy);
                     return;
                 }
 
@@ -365,19 +366,19 @@ void CTnodeSync::ProcessTick() {
                 if (netfulfilledman.HasFulfilledRequest(pnode->addr, "tnode-list-sync")) continue;
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "tnode-list-sync");
 
-                if (pnode->nVersion < mnpayments.GetMinTnodePaymentsProto()) continue;
+                if (pnode->nVersion < tnpayments.GetMinTnodePaymentsProto()) continue;
                 nRequestedTnodeAttempt++;
 
                 mnodeman.DsegUpdate(pnode);
 
-                ReleaseNodeVector(vNodesCopy);
+                g_connman->ReleaseNodeVector(vNodesCopy);
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
             // MNW : SYNC TNODE PAYMENT VOTES FROM OTHER CONNECTED CLIENTS
 
             if (nRequestedTnodeAssets == TNODE_SYNC_MNW) {
-                LogPrint("mnpayments", "CTnodeSync::ProcessTick -- nTick %d nRequestedTnodeAssets %d nTimeLastPaymentVote %lld GetTime() %lld diff %lld\n", nTick, nRequestedTnodeAssets, nTimeLastPaymentVote, GetTime(), GetTime() - nTimeLastPaymentVote);
+                LogPrint("tnpayments", "CTnodeSync::ProcessTick -- nTick %d nRequestedTnodeAssets %d nTimeLastPaymentVote %lld GetTime() %lld diff %lld\n", nTick, nRequestedTnodeAssets, nTimeLastPaymentVote, GetTime(), GetTime() - nTimeLastPaymentVote);
                 // check for timeout first
                 // This might take a lot longer than TNODE_SYNC_TIMEOUT_SECONDS minutes due to new blocks,
                 // but that should be OK and it should timeout eventually.
@@ -387,21 +388,21 @@ void CTnodeSync::ProcessTick() {
                         LogPrintf("CTnodeSync::ProcessTick -- ERROR: failed to sync %s\n", GetAssetName());
                         // probably not a good idea to proceed without winner list
                         Fail();
-                        ReleaseNodeVector(vNodesCopy);
+                        g_connman->ReleaseNodeVector(vNodesCopy);
                         return;
                     }
                     SwitchToNextAsset();
-                    ReleaseNodeVector(vNodesCopy);
+                    g_connman->ReleaseNodeVector(vNodesCopy);
                     return;
                 }
 
                 // check for data
-                // if mnpayments already has enough blocks and votes, switch to the next asset
+                // if tnpayments already has enough blocks and votes, switch to the next asset
                 // try to fetch data from at least two peers though
-                if (nRequestedTnodeAttempt > 1 && mnpayments.IsEnoughData()) {
+                if (nRequestedTnodeAttempt > 1 && tnpayments.IsEnoughData()) {
                     LogPrintf("CTnodeSync::ProcessTick -- nTick %d nRequestedTnodeAssets %d -- found enough data\n", nTick, nRequestedTnodeAssets);
                     SwitchToNextAsset();
-                    ReleaseNodeVector(vNodesCopy);
+                    g_connman->ReleaseNodeVector(vNodesCopy);
                     return;
                 }
 
@@ -409,27 +410,24 @@ void CTnodeSync::ProcessTick() {
                 if (netfulfilledman.HasFulfilledRequest(pnode->addr, "tnode-payment-sync")) continue;
                 netfulfilledman.AddFulfilledRequest(pnode->addr, "tnode-payment-sync");
 
-                if (pnode->nVersion < mnpayments.GetMinTnodePaymentsProto()) continue;
+                if (pnode->nVersion < tnpayments.GetMinTnodePaymentsProto()) continue;
                 nRequestedTnodeAttempt++;
 
                 // ask node for all payment votes it has (new nodes will only return votes for future payments)
-                pnode->PushMessage(NetMsgType::TNODEPAYMENTSYNC, mnpayments.GetStorageLimit());
+                g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::TNODEPAYMENTSYNC, tnpayments.GetStorageLimit()));
                 // ask node for missing pieces only (old nodes will not be asked)
-                mnpayments.RequestLowDataPaymentBlocks(pnode);
+                tnpayments.RequestLowDataPaymentBlocks(pnode);
 
-                ReleaseNodeVector(vNodesCopy);
+                g_connman->ReleaseNodeVector(vNodesCopy);
                 return; //this will cause each peer to get one request each six seconds for the various assets we need
             }
 
         }
     }
     // looped through all nodes, release them
-    ReleaseNodeVector(vNodesCopy);
+    g_connman->ReleaseNodeVector(vNodesCopy);
 }
 
 void CTnodeSync::UpdatedBlockTip(const CBlockIndex *pindex) {
     pCurrentBlockIndex = pindex;
-}
-bool CTnodeSync::IsSynced() {
-    return nRequestedTnodeAssets == TNODE_SYNC_FINISHED;
 }

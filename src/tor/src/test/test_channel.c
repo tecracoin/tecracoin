@@ -1,29 +1,35 @@
-/* Copyright (c) 2013-2017, The Tor Project, Inc. */
+/* Copyright (c) 2013-2019, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 #define TOR_CHANNEL_INTERNAL_
 #define CHANNEL_PRIVATE_
-#include "or.h"
-#include "channel.h"
+#include "core/or/or.h"
+#include "core/or/channel.h"
 /* For channel_note_destroy_not_pending */
 #define CIRCUITLIST_PRIVATE
-#include "circuitlist.h"
-#include "circuitmux.h"
-#include "circuitmux_ewma.h"
+#include "core/or/circuitlist.h"
+#include "core/or/circuitmux.h"
+#include "core/or/circuitmux_ewma.h"
 /* For var_cell_free */
-#include "connection_or.h"
-#include "crypto_rand.h"
+#include "core/or/connection_or.h"
+#include "lib/crypt_ops/crypto_rand.h"
 /* For packed_cell stuff */
 #define RELAY_PRIVATE
-#include "relay.h"
+#include "core/or/relay.h"
 /* For init/free stuff */
-#include "scheduler.h"
-#include "networkstatus.h"
+#include "core/or/scheduler.h"
+#include "feature/nodelist/networkstatus.h"
+
+#include "core/or/cell_st.h"
+#include "feature/nodelist/networkstatus_st.h"
+#include "core/or/origin_circuit_st.h"
+#include "feature/nodelist/routerstatus_st.h"
+#include "core/or/var_cell_st.h"
 
 /* Test suite stuff */
-#include "log_test_helpers.h"
-#include "test.h"
-#include "fakechans.h"
+#include "test/log_test_helpers.h"
+#include "test/test.h"
+#include "test/fakechans.h"
 
 static int test_chan_accept_cells = 0;
 static int test_chan_fixed_cells_recved = 0;
@@ -548,7 +554,7 @@ test_channel_outbound_cell(void *arg)
   /* Set the test time to be mocked, since this test assumes that no
    * time will pass, ewma values will not need to be re-scaled, and so on */
   monotime_enable_test_mocking();
-  monotime_set_mock_time_nsec(U64_LITERAL(1000000000) * 12345);
+  monotime_set_mock_time_nsec(UINT64_C(1000000000) * 12345);
 
   cmux_ewma_set_options(NULL,NULL);
 
@@ -592,7 +598,6 @@ test_channel_outbound_cell(void *arg)
   circuit_set_n_circid_chan(TO_CIRCUIT(circ), 42, chan);
   tt_int_op(channel_num_circuits(chan), OP_EQ, 1);
   /* Test the cmux state. */
-  tt_ptr_op(TO_CIRCUIT(circ)->n_mux, OP_EQ, chan->cmux);
   tt_int_op(circuitmux_is_circuit_attached(chan->cmux, TO_CIRCUIT(circ)),
             OP_EQ, 1);
 
@@ -1535,6 +1540,10 @@ test_channel_listener(void *arg)
   channel_listener_dump_statistics(chan, LOG_INFO);
 
  done:
+  if (chan) {
+    channel_listener_unregister(chan);
+    tor_free(chan);
+  }
   channel_free_all();
 }
 
@@ -1561,4 +1570,3 @@ struct testcase_t channel_tests[] = {
     NULL, NULL },
   END_OF_TESTCASES
 };
-

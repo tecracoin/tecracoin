@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, The Tor Project, Inc. */
+/* Copyright (c) 2017-2019, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 /**
@@ -6,24 +6,23 @@
  * \brief Unit tests for hidden service control port event and command.
  **/
 
-#define CONTROL_PRIVATE
-#define CIRCUITBUILD_PRIVATE
-#define RENDCOMMON_PRIVATE
-#define RENDSERVICE_PRIVATE
-#define HS_SERVICE_PRIVATE
+#define CONTROL_EVENTS_PRIVATE
 
-#include "or.h"
-#include "test.h"
-#include "control.h"
-#include "config.h"
-#include "hs_common.h"
-#include "hs_control.h"
-#include "nodelist.h"
-//#include "rendcommon.h"
-//#include "rendservice.h"
-//#include "routerset.h"
-//#include "circuitbuild.h"
-#include "test_helpers.h"
+#include "core/or/or.h"
+#include "test/test.h"
+#include "feature/control/control.h"
+#include "feature/control/control_events.h"
+#include "feature/control/control_fmt.h"
+#include "app/config/config.h"
+#include "feature/hs/hs_common.h"
+#include "feature/hs/hs_control.h"
+#include "feature/nodelist/nodelist.h"
+
+#include "feature/nodelist/node_st.h"
+#include "feature/nodelist/routerstatus_st.h"
+#include "lib/crypt_ops/crypto_format.h"
+
+#include "test/test_helpers.h"
 
 /* mock ID digest and longname for node that's in nodelist */
 #define HSDIR_EXIST_ID \
@@ -108,8 +107,7 @@ test_hs_desc_event(void *arg)
   memset(&blinded_pk, 'B', sizeof(blinded_pk));
   memset(&hsdir_rs, 0, sizeof(hsdir_rs));
   memcpy(hsdir_rs.identity_digest, HSDIR_EXIST_ID, DIGEST_LEN);
-  ret = ed25519_public_to_base64(base64_blinded_pk, &blinded_pk);
-  tt_int_op(ret, OP_EQ, 0);
+  ed25519_public_to_base64(base64_blinded_pk, &blinded_pk);
   memcpy(&ident.identity_pk, &identity_kp.pubkey,
          sizeof(ed25519_public_key_t));
   memcpy(&ident.blinded_pk, &blinded_pk, sizeof(blinded_pk));
@@ -195,4 +193,3 @@ struct testcase_t hs_control_tests[] = {
 
   END_OF_TESTCASES
 };
-

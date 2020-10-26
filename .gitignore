@@ -1,5 +1,7 @@
+# ide & editor stuff
 .project
 .cproject
+.vscode
 
 *.tar.gz
 
@@ -41,6 +43,7 @@ src/qt/forms/ui_*.h
 src/qt/test/moc*.cpp
 
 src/tor.timestamp*
+src/tor/src/or
 
 .deps
 .dirstamp
@@ -53,7 +56,6 @@ src/tor.timestamp*
 *.pyc
 *.o
 *.o-*
-*.patch
 *.a
 *.pb.cc
 *.pb.h
@@ -71,7 +73,10 @@ src/tor.timestamp*
 
 # Compilation and Qt preprocessor part
 *.qm
-Makefile
+/Makefile
+/src/Makefile
+tecracoin-qt
+Tecracoin-Qt.app
 
 # Unit-tests
 Makefile.test
@@ -97,15 +102,25 @@ win32-build
 test/config.ini
 test/cache/*
 src/test/buildenv.py
+src/test/test_bitcoin
+qa/pull-tester/tests_config.py
+qa/cache/*
 
 !src/leveldb*/Makefile
 !depends/Makefile
 !depends/**/*.patch
 !src/tor/src/ext/timeouts/Makefile
 
-/doc/doxygen/
+doc/doxygen/
+doc/man/Makefile
 
 contrib/devtools/split-debug.sh
+
+src/test/test_bitcoin
+
+qa/pull-tester/run-bitcoind-for-test.sh
+qa/pull-tester/tests_config.py
+
 .idea
 
 libtecracoinconsensus.pc
@@ -116,6 +131,8 @@ src/tecracoin-tx
 src/tecracoind
 src/test/test_bitcoin
 qa/pull-tester/tests_config.py
+
+# Qt Creator project files
 *.pro
 *.user
 *.creator

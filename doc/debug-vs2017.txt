@@ -52,7 +52,7 @@ Building
  5. Install cross-compilation tools
       sudo apt-get install g++-mingw-w64-i686 mingw-w64-i686-dev g++-mingw-w64-x86-64 mingw-w64-x86-64-dev curl
 
- 6. Build fails when there are special symbols (space, parentheses etc) in path directories. Reset path to the simple 
+ 6. Build fails when there are special symbols (space, parentheses etc) in path directories. Reset path to the simple
     one
       export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
@@ -115,7 +115,7 @@ Free option
      pacman -Suy
    Install gdb
      pacman -S gdb
- 
+
 2. Create a new project with Visual Studio. Select "General\Makefile project" as a project type (DO NOT create a
    cross-platform Linux project).
      Name: tecracoin

@@ -11,7 +11,7 @@ Install the macOS command line tools:
 
 When the popup appears, click `Install`.
 
-Then install [Homebrew](http://brew.sh).
+Then install [Homebrew](https://brew.sh).
 
 Dependencies
 ----------------------
@@ -41,19 +41,18 @@ Build TecraCoin Core
     In case you want to build the disk image with `make deploy` (.dmg / optional), by passing `--with-gui` to configure.
     
     You can disable the GUI build by passing `--without-gui` to configure.
-        
+
         ./autogen.sh
         ./configure
         make
 
-2.  It is recommended to build and run the unit tests:
+3.  It is recommended to build and run the unit tests:
 
        ` make check`
         
 3.   You can also create a .dmg that contains the .app bundle (optional):
 
        ` make deploy`
-
 
 Running
 -------

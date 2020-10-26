@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+#include <uint256.h>
 
 class uint256;
 
@@ -236,6 +237,9 @@ public:
         return sizeof(pn);
     }
 
+    base_uint<BITS> UintToArith(const base_blob<BITS>& a) const;
+    base_blob<BITS> ArithToUint(const base_uint<BITS>& a) const;
+
     /**
      * Returns the position of the highest bit set plus one, or zero if the
      * value is zero.
@@ -248,13 +252,13 @@ public:
         return pn[0] | (uint64_t)pn[1] << 32;
     }
     template<typename Stream>
-    void Serialize(Stream& s, int nType, int nVersion) const
+    void Serialize(Stream& s) const
     {
         s.write((char*)pn, sizeof(pn));
     }
 
     template<typename Stream>
-    void Unserialize(Stream& s, int nType, int nVersion)
+    void Unserialize(Stream& s)
     {
         s.read((char*)pn, sizeof(pn));
     }
@@ -295,7 +299,21 @@ public:
     friend arith_uint256 UintToArith256(const uint256 &);
 };
 
+/** 512-bit unsigned big integer. */
+class arith_uint512 : public base_uint<512> {
+public:
+    arith_uint512() {}
+    arith_uint512(const base_uint<512>& b) : base_uint<512>(b) {}
+    arith_uint512(uint64_t b) : base_uint<512>(b) {}
+    explicit arith_uint512(const std::string& str) : base_uint<512>(str) {}
+    friend uint512 ArithToUint512(const arith_uint512 &);
+    friend arith_uint512 UintToArith512(const uint512 &);
+};
+
 uint256 ArithToUint256(const arith_uint256 &);
 arith_uint256 UintToArith256(const uint256 &);
+
+uint512 ArithToUint512(const arith_uint512 &);
+arith_uint512 UintToArith512(const uint512 &);
 
 #endif // BITCOIN_ARITH_UINT256_H

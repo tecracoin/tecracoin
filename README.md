@@ -1,68 +1,129 @@
-TecraCoin v1.6.1.0
-===============
+# What is TecraCoin
 
-[![Build Status](https://travis-ci.com/tecracoin/tecracoin.svg?branch=CI)](https://travis-ci.com/tecracoinofficial/tecracoin)
+[TecraCoin](https://tecra.space) is open source cryptocurrency developed mainly by Tecra. It focuses on fast transactions and reliable network with low transaction fees. TecraCoin is circulating medium on [Tecra fundraising platform](https://tecra.space) which enables tokenization of high-tech projects.
 
-What is TecraCoin?
+Tokenization process is decentralised and is fully compatible with Omni Layer asset platform.
+
+TecraCoin developed and utilizes [Merkle Tree Proofs (MTP)](https://arxiv.org/pdf/1606.03588.pdf) as its Proof-of-Work algorithm which aims to be memory-hard with fast verification and short proofs.
+
 --------------
 
-[TecraCoin](https://tecracoin.io) is the first full implementation of the Zerocoin Protocol, which allows users to have complete privacy via Zero-Knowledge cryptographic proofs. It is worth noting that TecraCoin is unrelated to other cryptocurrencies utilizing the Zerocash Protocol. Although Zerocash is a development from Zerocoin, their respective implementations are not simple forks of each other, but rely on different cryptographic assumptions with various tradeoffs. Both approaches supplement each other quite nicely, and a good way to describe them would be sibling projects.
+## Running with Docker
 
-The Zerocoin Protocol is being actively researched and improved, such as removing the trustless setup and reducing proof sizes.
+If you are already familiar with Docker, then running TecraCoin with Docker might be the easier method for you. To run TecraCoin using this method, first install [Docker](https://store.docker.com/search?type=edition&offering=community). After this, you may continue with the following instructions.
 
+Please note that we currently don‘t support the GUI when running with Docker. Therefore, you can only use RPC (via HTTP or the `tecracoin-cli` utility) to interact with TecraCoin via this method.
 
-Linux Build Instructions and Notes
-==================================
+1. Pull our latest official Docker image:
 
-Dependencies
-----------------------
-1.  Update packages
+    ```sh
+    docker pull tecracoin/tecranode-mainnet
+    ```
 
-        sudo apt-get update
+2. Start TecraCoin daemon:
 
-2.  Install required packages
+    ```sh
+    docker run --detach --name tecracoind tecracoin/tecranode-mainnet
+    ```
 
-        sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils libboost-all-dev
+3. View current block count (this might take a while since the daemon needs to find other nodes and download blocks first):
 
-3.  Install Berkeley DB 4.8
+    ```sh
+    docker exec tecracoind tecracoin-cli getblockcount
+    ```
 
-        sudo apt-get install software-properties-common
-        sudo add-apt-repository ppa:bitcoin/bitcoin
-        sudo apt-get update
-        sudo apt-get install libdb4.8-dev libdb4.8++-dev
+4. View connected nodes:
 
-4.  Install QT 5
+    ```sh
+    docker exec tecracoind tecracoin-cli getpeerinfo
+    ```
 
-        sudo apt-get install libminiupnpc-dev libzmq3-dev
-        sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler libqrencode-dev
+5. Stop daemon:
 
-Build
-----------------------
-1.  Clone the source:
+    ```sh
+    docker stop tecracoind
+    ```
 
-        git clone https://github.com/tecracoin/tecracoin
+6. Backup wallet:
 
-2.  Build TecraCoin-core:
+    ```sh
+    docker cp tecracoind:/home/tecracoind/.tecracoin/wallet.dat .
+    ```
+
+7. Start daemon again:
+
+    ```sh
+    docker start tecracoind
+    ```
+
+--------------
+
+## Linux Build Instructions and Notes
+
+### Dependencies
+
+1. Update packages
+
+    ```sh
+    sudo apt-get update
+    ```
+
+2. Install required packages
+
+    ```sh
+    sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils libboost-all-dev libgmp-dev cmake
+    ```
+
+3. Install Berkeley DB 4.8
+
+    ```sh
+    sudo apt-get install software-properties-common
+    sudo add-apt-repository ppa:bitcoin/bitcoin
+    sudo apt-get update
+    sudo apt-get install libdb4.8-dev libdb4.8++-dev
+    ```
+
+4. Install QT 5
+
+    ```sh
+    sudo apt-get install libminiupnpc-dev libzmq3-dev
+    sudo apt-get install libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler libqrencode-dev
+    ```
+
+### Build
+
+1. Clone the source:
+
+    ```sh
+    git clone https://github.com/tecracoin/tecracoin
+    ```
+
+2. Build TecraCoin-core:
 
     Configure and build the headless TecraCoin binaries as well as the GUI (if Qt is found).
 
     You can disable the GUI build by passing `--without-gui` to configure.
-        
-        ./autogen.sh
-        ./configure
-        make
 
-3.  It is recommended to build and run the unit tests:
+    ```sh
+    ./autogen.sh
+    ./configure
+    make
+    ```
 
-        make check
+3. It is recommended to build and run the unit tests:
 
+    ```sh
+    make check
+    ```
 
-macOS Build Instructions and Notes
-=====================================
+--------------
+
+## macOS Build Instructions and Notes
+
 See (doc/build-macos.md) for instructions on building on macOS.
 
+--------------
 
+## Windows (64/32 bit) Build Instructions and Notes
 
-Windows (64/32 bit) Build Instructions and Notes
-=====================================
 See (doc/build-windows.md) for instructions on building on Windows 64/32 bit.

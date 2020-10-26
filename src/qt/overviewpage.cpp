@@ -1,4 +1,4 @@
-// Copyright (c) 2011-2015 The Bitcoin Core developers
+// Copyright (c) 2011-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -14,6 +14,7 @@
 #include "transactionfilterproxy.h"
 #include "transactiontablemodel.h"
 #include "walletmodel.h"
+#include "validation.h"
 
 #ifdef WIN32
 #include <string.h>
@@ -32,9 +33,9 @@ class TxViewDelegate : public QAbstractItemDelegate
 {
     Q_OBJECT
 public:
-    TxViewDelegate(const PlatformStyle *platformStyle, QObject *parent=nullptr):
+    TxViewDelegate(const PlatformStyle *_platformStyle, QObject *parent=nullptr):
         QAbstractItemDelegate(parent), unit(BitcoinUnits::BTC),
-        platformStyle(platformStyle)
+        platformStyle(_platformStyle)
     {
 
     }
@@ -131,14 +132,17 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
     ui->setupUi(this);
 
     // read config
-    boost::filesystem::path pathTorSetting = GetDataDir()/"torsetting.dat";
-    std::pair<bool,std::string> torEnabled = ReadBinaryFileTor(pathTorSetting.string().c_str());
-    if(torEnabled.first){
-		if(torEnabled.second == "1"){
-			ui->checkboxEnabledTor->setChecked(true);
-		}else{
-			ui->checkboxEnabledTor->setChecked(false);
-		}
+    bool torEnabled;
+    if(IsArgSet("-torsetup")){
+        torEnabled = GetBoolArg("-torsetup", DEFAULT_TOR_SETUP);
+    }else{
+        torEnabled = settings.value("fTorSetup").toBool();
+    }
+
+    if(torEnabled){
+        ui->checkboxEnabledTor->setChecked(true);
+    }else{
+        ui->checkboxEnabledTor->setChecked(false);
     }
 
     // use a SingleColorIcon for the "out of sync warning" icon
@@ -158,6 +162,8 @@ OverviewPage::OverviewPage(const PlatformStyle *platformStyle, QWidget *parent) 
 
     // start with displaying the "out of sync" warnings
     showOutOfSyncWarning(true);
+    connect(ui->labelWalletStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
+    connect(ui->labelTransactionsStatus, SIGNAL(clicked()), this, SLOT(handleOutOfSyncWarningClicks()));
 }
 
 void OverviewPage::handleTransactionClicked(const QModelIndex &index)
@@ -169,22 +175,20 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 void OverviewPage::handleEnabledTorChanged(){
 
 	QMessageBox msgBox;
-	boost::filesystem::path pathTorSetting = GetDataDir()/"torsetting.dat";
 
 	if(ui->checkboxEnabledTor->isChecked()){
-		if (WriteBinaryFileTor(pathTorSetting.string().c_str(), "1")) {
-			msgBox.setText("Please restart the TecraCoin wallet to route your connection through Tor to protect your IP address. \nSyncing your wallet might be slower with TOR.");
-		} else {
-			msgBox.setText("Anonymous communication cannot be enabled");
-		}
+        settings.setValue("fTorSetup", true);
+        msgBox.setText("Please restart the TecraCoin wallet to route your connection through Tor to protect your IP address. \nSyncing your wallet might be slower with TOR. \nNote that -torsetup in tecracoin.conf will always override any changes made here.");
 	}else{
-		if (WriteBinaryFileTor(pathTorSetting.string().c_str(), "0")) {
-			msgBox.setText("Please restart the TecraCoin wallet to disable routing of your connection through Tor to protect your IP address.");
-		} else {
-			msgBox.setText("Anonymous communication cannot be disabled");
-		}
+        settings.setValue("fTorSetup", false);
+        msgBox.setText("Please restart the TecraCoin wallet to disable routing of your connection through Tor to protect your IP address. \nNote that -torsetup in tecracoin.conf will always override any changes made here.");
 	}
 	msgBox.exec();
+}
+
+void OverviewPage::handleOutOfSyncWarningClicks()
+{
+    Q_EMIT outOfSyncWarningClicked();
 }
 
 OverviewPage::~OverviewPage()
@@ -219,6 +223,25 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
+}
+
+void OverviewPage::updateCoins(const std::vector<CMintMeta>& spendable, const std::vector<CMintMeta>& pending)
+{
+    CAmount sum(0);
+    int64_t denom;
+    for (const auto& c : spendable) {
+        DenominationToInteger(c.denom, denom);
+        sum += denom;
+    }
+
+    CAmount pendingSum(0);
+    for (const auto& c : pending) {
+        DenominationToInteger(c.denom, denom);
+        pendingSum += denom;
+    }
+
+    currentSigmaBalance = sum;
+    currentSigmaUnconfirmedBalance = pendingSum;
 }
 
 // show/hide watch-only labels
@@ -267,6 +290,8 @@ void OverviewPage::setWalletModel(WalletModel *model)
         setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
                    model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
         connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+        connect(model, SIGNAL(notifySigmaChanged(const std::vector<CMintMeta>, const std::vector<CMintMeta>)),
+        this, SLOT(updateCoins(const std::vector<CMintMeta>, const std::vector<CMintMeta>)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 
@@ -274,7 +299,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
         connect(model, SIGNAL(notifyWatchonlyChanged(bool)), this, SLOT(updateWatchOnlyLabels(bool)));
     }
 
-    // update the display unit, to not use the default ("BTC")
+    // update the display unit, to not use the default ("TCR")
     updateDisplayUnit();
 }
 

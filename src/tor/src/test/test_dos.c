@@ -1,22 +1,27 @@
-/* Copyright (c) 2018, The Tor Project, Inc. */
+/* Copyright (c) 2018-2019, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 #define DOS_PRIVATE
 #define TOR_CHANNEL_INTERNAL_
 #define CIRCUITLIST_PRIVATE
 
-#include "or.h"
-#include "dos.h"
-#include "circuitlist.h"
-#include "crypto_rand.h"
-#include "geoip.h"
-#include "channel.h"
-#include "microdesc.h"
-#include "networkstatus.h"
-#include "nodelist.h"
-#include "routerlist.h"
-#include "test.h"
-#include "log_test_helpers.h"
+#include "core/or/or.h"
+#include "core/or/dos.h"
+#include "core/or/circuitlist.h"
+#include "lib/crypt_ops/crypto_rand.h"
+#include "feature/stats/geoip_stats.h"
+#include "core/or/channel.h"
+#include "feature/nodelist/microdesc.h"
+#include "feature/nodelist/networkstatus.h"
+#include "feature/nodelist/nodelist.h"
+#include "feature/nodelist/routerlist.h"
+
+#include "feature/nodelist/networkstatus_st.h"
+#include "core/or/or_connection_st.h"
+#include "feature/nodelist/routerstatus_st.h"
+
+#include "test/test.h"
+#include "test/log_test_helpers.h"
 
 static networkstatus_t *dummy_ns = NULL;
 static networkstatus_t *
@@ -406,7 +411,7 @@ test_dos_bucket_refill(void *arg)
   }
   tt_uint_op(current_circ_count, OP_EQ, 0);
   tt_uint_op(dos_stats->cc_stats.circuit_bucket, OP_EQ, current_circ_count);
-#endif
+#endif /* SIZEOF_TIME_T == 8 */
 
  done:
   tor_free(chan);
@@ -495,4 +500,3 @@ struct testcase_t dos_tests[] = {
     NULL, NULL },
   END_OF_TESTCASES
 };
-

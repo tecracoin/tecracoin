@@ -90,6 +90,7 @@ public:
     int CompareTo(const CBase58Data& b58) const;
 
     bool operator==(const CBase58Data& b58) const { return CompareTo(b58) == 0; }
+    bool operator!=(const CBase58Data& b58) const { return CompareTo(b58) != 0; }
     bool operator<=(const CBase58Data& b58) const { return CompareTo(b58) <= 0; }
     bool operator>=(const CBase58Data& b58) const { return CompareTo(b58) >= 0; }
     bool operator< (const CBase58Data& b58) const { return CompareTo(b58) <  0; }
@@ -149,7 +150,7 @@ public:
     K GetKey() {
         K ret;
         if (vchData.size() == Size) {
-            //if base58 encouded data not holds a ext key, return a !IsValid() key
+            // If base58 encoded data does not hold an ext key, return a !IsValid() key
             ret.Decode(&vchData[0]);
         }
         return ret;

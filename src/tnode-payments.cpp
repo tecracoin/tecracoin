@@ -3,39 +3,44 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include "activetnode.h"
-#include "darksend.h"
 #include "tnode-payments.h"
 #include "tnode-sync.h"
 #include "tnodeman.h"
 #include "netfulfilledman.h"
 #include "spork.h"
 #include "util.h"
+#include "net.h"
+#include "net_processing.h"
+#include "netmessagemaker.h"
+
+//TecraCoin TODO: remove functionality
+#include "darksend.h"
 
 #include <boost/lexical_cast.hpp>
 
 /** Object for who's going to get paid on which blocks */
-CTnodePayments mnpayments;
+CTnodePayments tnpayments;
 
 CCriticalSection cs_vecPayees;
 CCriticalSection cs_mapTnodeBlocks;
 CCriticalSection cs_mapTnodePaymentVotes;
 
 /**
-* IsBlockValueValid
+* IsTnodeBlockValueValid
 *
 *   Determine if coinbase outgoing created money is the correct value
 *
 *   Why is this needed?
-*   - In Dash some blocks are superblocks, which output much higher amounts of coins
+*   - In Zcoin some blocks are superblocks, which output much higher amounts of coins
 *   - Otherblocks are 10% lower in outgoing value, so in total, no extra coins are created
 *   - When non-superblocks are detected, the normal schedule should be maintained
 */
 
-bool IsBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockReward, std::string &strErrorRet) {
+bool IsTnodeBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockReward, std::string &strErrorRet) {
     strErrorRet = "";
 
-    bool isBlockRewardValueMet = (block.vtx[0].GetValueOut() <= blockReward);
-    if (fDebug) LogPrintf("block.vtx[0].GetValueOut() %lld <= blockReward %lld\n", block.vtx[0].GetValueOut(), blockReward);
+    bool isBlockRewardValueMet = (block.vtx[0]->GetValueOut() <= blockReward);
+    if (fDebug) LogPrintf("block.vtx[0].GetValueOut() %lld <= blockReward %lld\n", block.vtx[0]->GetValueOut(), blockReward);
 
     // we are still using budgets, but we have no data about them anymore,
     // all we know is predefined budget cycle and window
@@ -49,18 +54,18 @@ bool IsBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockRewar
 //            // NOTE: make sure SPORK_13_OLD_SUPERBLOCK_FLAG is disabled when 12.1 starts to go live
 //            if (tnodeSync.IsSynced() && !sporkManager.IsSporkActive(SPORK_13_OLD_SUPERBLOCK_FLAG)) {
 //                // no budget blocks should be accepted here, if SPORK_13_OLD_SUPERBLOCK_FLAG is disabled
-//                LogPrint("gobject", "IsBlockValueValid -- Client synced but budget spork is disabled, checking block value against block reward\n");
+//                LogPrint("gobject", "IsTnodeBlockValueValid -- Client synced but budget spork is disabled, checking block value against block reward\n");
 //                if (!isBlockRewardValueMet) {
 //                    strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, budgets are disabled",
 //                                            nBlockHeight, block.vtx[0].GetValueOut(), blockReward);
 //                }
 //                return isBlockRewardValueMet;
 //            }
-//            LogPrint("gobject", "IsBlockValueValid -- WARNING: Skipping budget block value checks, accepting block\n");
+//            LogPrint("gobject", "IsTnodeBlockValueValid -- WARNING: Skipping budget block value checks, accepting block\n");
 //            // TODO: reprocess blocks to make sure they are legit?
 //            return true;
 //        }
-//        // LogPrint("gobject", "IsBlockValueValid -- Block is not in budget cycle window, checking block value against block reward\n");
+//        // LogPrint("gobject", "IsTnodeBlockValueValid -- Block is not in budget cycle window, checking block value against block reward\n");
 //        if (!isBlockRewardValueMet) {
 //            strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, block is not in budget cycle window",
 //                                    nBlockHeight, block.vtx[0].GetValueOut(), blockReward);
@@ -79,7 +84,7 @@ bool IsBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockRewar
     if (!tnodeSync.IsSynced()) {
         // not enough data but at least it must NOT exceed superblock max value
 //        if(CSuperblock::IsValidBlockHeight(nBlockHeight)) {
-//            if(fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Client not synced, checking superblock max bounds only\n");
+//            if(fDebug) LogPrintf("IsTnodeBlockPayeeValid -- WARNING: Client not synced, checking superblock max bounds only\n");
 //            if(!isSuperblockMaxValueMet) {
 //                strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded superblock max value",
 //                                        nBlockHeight, block.vtx[0].GetValueOut(), nSuperblockMaxValue);
@@ -88,7 +93,7 @@ bool IsBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockRewar
 //        }
         if (!isBlockRewardValueMet) {
             strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, only regular blocks are allowed at this height",
-                                    nBlockHeight, block.vtx[0].GetValueOut(), blockReward);
+                                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
         }
         // it MUST be a regular block otherwise
         return isBlockRewardValueMet;
@@ -99,28 +104,28 @@ bool IsBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockRewar
     if (sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED)) {
 ////        if(CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
 ////            if(CSuperblockManager::IsValid(block.vtx[0], nBlockHeight, blockReward)) {
-////                LogPrint("gobject", "IsBlockValueValid -- Valid superblock at height %d: %s", nBlockHeight, block.vtx[0].ToString());
+////                LogPrint("gobject", "IsTnodeBlockValueValid -- Valid superblock at height %d: %s", nBlockHeight, block.vtx[0].ToString());
 ////                // all checks are done in CSuperblock::IsValid, nothing to do here
 ////                return true;
 ////            }
 ////
 ////            // triggered but invalid? that's weird
-////            LogPrintf("IsBlockValueValid -- ERROR: Invalid superblock detected at height %d: %s", nBlockHeight, block.vtx[0].ToString());
+////            LogPrintf("IsTnodeBlockValueValid -- ERROR: Invalid superblock detected at height %d: %s", nBlockHeight, block.vtx[0].ToString());
 ////            // should NOT allow invalid superblocks, when superblocks are enabled
 ////            strErrorRet = strprintf("invalid superblock detected at height %d", nBlockHeight);
 ////            return false;
 ////        }
-//        LogPrint("gobject", "IsBlockValueValid -- No triggered superblock detected at height %d\n", nBlockHeight);
+//        LogPrint("gobject", "IsTnodeBlockValueValid -- No triggered superblock detected at height %d\n", nBlockHeight);
 //        if(!isBlockRewardValueMet) {
 //            strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, no triggered superblock detected",
 //                                    nBlockHeight, block.vtx[0].GetValueOut(), blockReward);
 //        }
     } else {
 //        // should NOT allow superblocks at all, when superblocks are disabled
-        LogPrint("gobject", "IsBlockValueValid -- Superblocks are disabled, no superblocks allowed\n");
+        LogPrint("gobject", "IsTnodeBlockValueValid -- Superblocks are disabled, no superblocks allowed\n");
         if (!isBlockRewardValueMet) {
             strErrorRet = strprintf("coinbase pays too much at height %d (actual=%d vs limit=%d), exceeded block reward, superblocks are disabled",
-                                    nBlockHeight, block.vtx[0].GetValueOut(), blockReward);
+                                    nBlockHeight, block.vtx[0]->GetValueOut(), blockReward);
         }
     }
 
@@ -128,24 +133,24 @@ bool IsBlockValueValid(const CBlock &block, int nBlockHeight, CAmount blockRewar
     return isBlockRewardValueMet;
 }
 
-bool IsBlockPayeeValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward, bool fMTP) {
+bool IsTnodeBlockPayeeValid(const CTransaction &txNew, int nBlockHeight, CAmount blockReward, bool fMTP) {
     // we can only check tnode payment /
     const Consensus::Params &consensusParams = Params().GetConsensus();
 
     if (nBlockHeight < consensusParams.nTnodePaymentsStartBlock) {
         //there is no budget data to use to check anything, let's just accept the longest chain
-        if (fDebug) LogPrintf("IsBlockPayeeValid -- tnode isn't start\n");
+        if (fDebug) LogPrintf("IsTnodeBlockPayeeValid -- tnode isn't start\n");
         return true;
     }
     if (!tnodeSync.IsSynced() && Params().NetworkIDString() != CBaseChainParams::REGTEST) {
         //there is no budget data to use to check anything, let's just accept the longest chain
-        if (fDebug) LogPrintf("IsBlockPayeeValid -- WARNING: Client not synced, skipping block payee checks\n");
+        if (fDebug) LogPrintf("IsTnodeBlockPayeeValid -- WARNING: Client not synced, skipping block payee checks\n");
         return true;
     }
 
     //check for tnode payee
-    if (mnpayments.IsTransactionValid(txNew, nBlockHeight, fMTP)) {
-        LogPrint("mnpayments", "IsBlockPayeeValid -- Valid tnode payment at height %d: %s", nBlockHeight, txNew.ToString());
+    if (tnpayments.IsTransactionValid(txNew, nBlockHeight, fMTP)) {
+        LogPrint("tnpayments", "IsTnodeBlockPayeeValid -- Valid tnode payment at height %d: %s", nBlockHeight, txNew.ToString());
         return true;
     } else {
         if(sporkManager.IsSporkActive(SPORK_8_TNODE_PAYMENT_ENFORCEMENT)){
@@ -157,19 +162,19 @@ bool IsBlockPayeeValid(const CTransaction &txNew, int nBlockHeight, CAmount bloc
     }
 }
 
-void FillBlockPayments(CMutableTransaction &txNew, int nBlockHeight, CAmount tnodePayment, CTxOut &txoutTnodeRet, std::vector <CTxOut> &voutSuperblockRet) {
+void FillTnodeBlockPayments(CMutableTransaction &txNew, int nBlockHeight, CAmount tnodePayment, CTxOut &txoutTnodeRet, std::vector <CTxOut> &voutSuperblockRet) {
     // only create superblocks if spork is enabled AND if superblock is actually triggered
     // (height should be validated inside)
 //    if(sporkManager.IsSporkActive(SPORK_9_SUPERBLOCKS_ENABLED) &&
 //        CSuperblockManager::IsSuperblockTriggered(nBlockHeight)) {
-//            LogPrint("gobject", "FillBlockPayments -- triggered superblock creation at height %d\n", nBlockHeight);
+//            LogPrint("gobject", "FillTnodeBlockPayments -- triggered superblock creation at height %d\n", nBlockHeight);
 //            CSuperblockManager::CreateSuperblock(txNew, nBlockHeight, voutSuperblockRet);
 //            return;
 //    }
 
     // FILL BLOCK PAYEE WITH TNODE PAYMENT OTHERWISE
-    mnpayments.FillBlockPayee(txNew, nBlockHeight, tnodePayment, txoutTnodeRet);
-    LogPrint("mnpayments", "FillBlockPayments -- nBlockHeight %d tnodePayment %lld txoutTnodeRet %s txNew %s",
+    tnpayments.FillBlockPayee(txNew, nBlockHeight, tnodePayment, txoutTnodeRet);
+    LogPrint("tnpayments", "FillTnodeBlockPayments -- nBlockHeight %d tnodePayment %lld txoutTnodeRet %s txNew %s",
              nBlockHeight, tnodePayment, txoutTnodeRet.ToString(), txNew.ToString());
 }
 
@@ -180,7 +185,7 @@ std::string GetRequiredPaymentsString(int nBlockHeight) {
 //    }
 
     // OTHERWISE, PAY TNODE
-    return mnpayments.GetRequiredPaymentsString(nBlockHeight);
+    return tnpayments.GetRequiredPaymentsString(nBlockHeight);
 }
 
 void CTnodePayments::Clear() {
@@ -225,7 +230,7 @@ void CTnodePayments::FillBlockPayee(CMutableTransaction &txNew, int nBlockHeight
     CScript payee;
     bool foundMaxVotedPayee = true;
 
-    if (!mnpayments.GetBlockPayee(nBlockHeight, payee)) {
+    if (!tnpayments.GetBlockPayee(nBlockHeight, payee)) {
         // no tnode detected...
         // LogPrintf("no tnode detected...\n");
         foundMaxVotedPayee = false;
@@ -244,7 +249,7 @@ void CTnodePayments::FillBlockPayee(CMutableTransaction &txNew, int nBlockHeight
             LogPrintf("payee=%s\n", winningNode->ToString());
         }
         else
-            payee = txNew.vout[0].scriptPubKey;//This is only for unit tests scenario on REGTEST. WTF ZCOIN WTF IS THIS
+            payee = txNew.vout[0].scriptPubKey;//This is only for unit tests scenario on REGTEST
     }
     txoutTnodeRet = CTxOut(tnodePayment, payee);
     txNew.vout.push_back(txoutTnodeRet);
@@ -272,9 +277,9 @@ void CTnodePayments::ProcessMessage(CNode *pfrom, std::string &strCommand, CData
     // Ignore any payments messages until tnode list is synced
     if (!tnodeSync.IsTnodeListSynced()) return;
 
-    if (fLiteMode) return; // disable all Dash specific functionality
+    if (fLiteMode) return; // disable all Zcoin specific functionality
 
-    bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET);
+    bool fTestNet = (Params().NetworkIDString() == CBaseChainParams::TESTNET || Params().NetworkIDString() == CBaseChainParams::REGTEST);
 
     if (strCommand == NetMsgType::TNODEPAYMENTSYNC) { //Tnode Payments Request Sync
 
@@ -295,7 +300,7 @@ void CTnodePayments::ProcessMessage(CNode *pfrom, std::string &strCommand, CData
         netfulfilledman.AddFulfilledRequest(pfrom->addr, NetMsgType::TNODEPAYMENTSYNC);
 
         Sync(pfrom);
-        LogPrint("mnpayments", "TNODEPAYMENTSYNC -- Sent Tnode payment votes to peer %d\n", pfrom->id);
+        LogPrint("tnpayments", "TNODEPAYMENTSYNC -- Sent Tnode payment votes to peer %d\n", pfrom->id);
 
     } else if (strCommand == NetMsgType::TNODEPAYMENTVOTE) { // Tnode Payments Vote for the Winner
 
@@ -313,7 +318,7 @@ void CTnodePayments::ProcessMessage(CNode *pfrom, std::string &strCommand, CData
         {
             LOCK(cs_mapTnodePaymentVotes);
             if (mapTnodePaymentVotes.count(nHash)) {
-                LogPrint("mnpayments", "TNODEPAYMENTVOTE -- hash=%s, nHeight=%d seen\n", nHash.ToString(), pCurrentBlockIndex->nHeight);
+                LogPrint("tnpayments", "TNODEPAYMENTVOTE -- hash=%s, nHeight=%d seen\n", nHash.ToString(), pCurrentBlockIndex->nHeight);
                 return;
             }
 
@@ -326,13 +331,13 @@ void CTnodePayments::ProcessMessage(CNode *pfrom, std::string &strCommand, CData
 
         int nFirstBlock = pCurrentBlockIndex->nHeight - GetStorageLimit();
         if (vote.nBlockHeight < nFirstBlock || vote.nBlockHeight > pCurrentBlockIndex->nHeight + 20) {
-            LogPrint("mnpayments", "TNODEPAYMENTVOTE -- vote out of range: nFirstBlock=%d, nBlockHeight=%d, nHeight=%d\n", nFirstBlock, vote.nBlockHeight, pCurrentBlockIndex->nHeight);
+            LogPrint("tnpayments", "TNODEPAYMENTVOTE -- vote out of range: nFirstBlock=%d, nBlockHeight=%d, nHeight=%d\n", nFirstBlock, vote.nBlockHeight, pCurrentBlockIndex->nHeight);
             return;
         }
 
         std::string strError = "";
         if (!vote.IsValid(pfrom, pCurrentBlockIndex->nHeight, strError)) {
-            LogPrint("mnpayments", "TNODEPAYMENTVOTE -- invalid message, error: %s\n", strError);
+            LogPrint("tnpayments", "TNODEPAYMENTVOTE -- invalid message, error: %s\n", strError);
             return;
         }
 
@@ -356,7 +361,7 @@ void CTnodePayments::ProcessMessage(CNode *pfrom, std::string &strCommand, CData
                 if (!fTestNet) Misbehaving(pfrom->GetId(), nDos);
             } else {
                 // only warn about anything non-critical (i.e. nDos == 0) in debug mode
-                LogPrint("mnpayments", "TNODEPAYMENTVOTE -- WARNING: invalid signature\n");
+                LogPrint("tnpayments", "TNODEPAYMENTVOTE -- WARNING: invalid signature\n");
             }
             // Either our info or vote info could be outdated.
             // In case our info is outdated, ask for an update,
@@ -371,7 +376,7 @@ void CTnodePayments::ProcessMessage(CNode *pfrom, std::string &strCommand, CData
         ExtractDestination(vote.payee, address1);
         CBitcoinAddress address2(address1);
 
-        LogPrint("mnpayments", "TNODEPAYMENTVOTE -- vote: address=%s, nBlockHeight=%d, nHeight=%d, prevout=%s\n", address2.ToString(), vote.nBlockHeight, pCurrentBlockIndex->nHeight, vote.vinTnode.prevout.ToStringShort());
+        LogPrint("tnpayments", "TNODEPAYMENTVOTE -- vote: address=%s, nBlockHeight=%d, nHeight=%d, prevout=%s\n", address2.ToString(), vote.nBlockHeight, pCurrentBlockIndex->nHeight, vote.vinTnode.prevout.ToStringShort());
 
         if (AddPaymentVote(vote)) {
             vote.Relay();
@@ -471,9 +476,9 @@ void CTnodeBlockPayees::AddPayee(const CTnodePaymentVote &vote) {
 
 bool CTnodeBlockPayees::GetBestPayee(CScript &payeeRet) {
     LOCK(cs_vecPayees);
-    LogPrint("mnpayments", "CTnodeBlockPayees::GetBestPayee, vecPayees.size()=%s\n", vecPayees.size());
+    LogPrint("tnpayments", "CTnodeBlockPayees::GetBestPayee, vecPayees.size()=%s\n", vecPayees.size());
     if (!vecPayees.size()) {
-        LogPrint("mnpayments", "CTnodeBlockPayees::GetBestPayee -- ERROR: couldn't find any payee\n");
+        LogPrint("tnpayments", "CTnodeBlockPayees::GetBestPayee -- ERROR: couldn't find any payee\n");
         return false;
     }
 
@@ -499,20 +504,19 @@ bool CTnodeBlockPayees::HasPayeeWithVotes(CScript payeeIn, int nVotesReq) {
         }
     }
 
-//    LogPrint("mnpayments", "CTnodeBlockPayees::HasPayeeWithVotes -- ERROR: couldn't find any payee with %d+ votes\n", nVotesReq);
+//    LogPrint("tnpayments", "CTnodeBlockPayees::HasPayeeWithVotes -- ERROR: couldn't find any payee with %d+ votes\n", nVotesReq);
     return false;
 }
 
-bool CTnodeBlockPayees::IsTransactionValid(const CTransaction &txNew, bool fMTP) {
+bool CTnodeBlockPayees::IsTransactionValid(const CTransaction &txNew, int nHeight, bool fMTP) {
     LOCK(cs_vecPayees);
 
     int nMaxSignatures = 0;
     std::string strPayeesPossible = "";
 
+    CAmount nTnodePayment = GetTnodePayment(nHeight, Params().GetConsensus(), fMTP);
 
-    CAmount nTnodePayment = GetTnodePayment(nBlockHeight, Params().GetConsensus(), fMTP);
-
-    //require at least MNPAYMENTS_SIGNATURES_REQUIRED signatures
+    //require at least TNPAYMENTS_SIGNATURES_REQUIRED signatures
 
     BOOST_FOREACH(CTnodePayee & payee, vecPayees)
     {
@@ -521,19 +525,19 @@ bool CTnodeBlockPayees::IsTransactionValid(const CTransaction &txNew, bool fMTP)
         }
     }
 
-    // if we don't have at least MNPAYMENTS_SIGNATURES_REQUIRED signatures on a payee, approve whichever is the longest chain
-    if (nMaxSignatures < MNPAYMENTS_SIGNATURES_REQUIRED) return true;
+    // if we don't have at least TNPAYMENTS_SIGNATURES_REQUIRED signatures on a payee, approve whichever is the longest chain
+    if (nMaxSignatures < TNPAYMENTS_SIGNATURES_REQUIRED) return true;
 
     bool hasValidPayee = false;
 
     BOOST_FOREACH(CTnodePayee & payee, vecPayees)
     {
-        if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
+        if (payee.GetVoteCount() >= TNPAYMENTS_SIGNATURES_REQUIRED) {
             hasValidPayee = true;
 
             BOOST_FOREACH(CTxOut txout, txNew.vout) {
                 if (payee.GetPayee() == txout.scriptPubKey && nTnodePayment == txout.nValue) {
-                    LogPrint("mnpayments", "CTnodeBlockPayees::IsTransactionValid -- Found required payment\n");
+                    LogPrint("tnpayments", "CTnodeBlockPayees::IsTransactionValid -- Found required payment\n");
                     return true;
                 }
             }
@@ -591,7 +595,7 @@ bool CTnodePayments::IsTransactionValid(const CTransaction &txNew, int nBlockHei
     LOCK(cs_mapTnodeBlocks);
 
     if (mapTnodeBlocks.count(nBlockHeight)) {
-        return mapTnodeBlocks[nBlockHeight].IsTransactionValid(txNew, fMTP);
+        return mapTnodeBlocks[nBlockHeight].IsTransactionValid(txNew, nBlockHeight, fMTP);
     }
 
     return true;
@@ -609,7 +613,7 @@ void CTnodePayments::CheckAndRemove() {
         CTnodePaymentVote vote = (*it).second;
 
         if (pCurrentBlockIndex->nHeight - vote.nBlockHeight > nLimit) {
-            LogPrint("mnpayments", "CTnodePayments::CheckAndRemove -- Removing old Tnode payment: nBlockHeight=%d\n", vote.nBlockHeight);
+            LogPrint("tnpayments", "CTnodePayments::CheckAndRemove -- Removing old Tnode payment: nBlockHeight=%d\n", vote.nBlockHeight);
             mapTnodePaymentVotes.erase(it++);
             mapTnodeBlocks.erase(vote.nBlockHeight);
         } else {
@@ -635,7 +639,7 @@ bool CTnodePaymentVote::IsValid(CNode *pnode, int nValidationHeight, std::string
     int nMinRequiredProtocol;
     if (nBlockHeight >= nValidationHeight) {
         // new votes must comply SPORK_10_TNODE_PAY_UPDATED_NODES rules
-        nMinRequiredProtocol = mnpayments.GetMinTnodePaymentsProto();
+        nMinRequiredProtocol = tnpayments.GetMinTnodePaymentsProto();
     } else {
         // allow non-updated tnodes for old blocks
         nMinRequiredProtocol = MIN_TNODE_PAYMENT_PROTO_VERSION_1;
@@ -648,23 +652,23 @@ bool CTnodePaymentVote::IsValid(CNode *pnode, int nValidationHeight, std::string
 
     // Only tnodes should try to check tnode rank for old votes - they need to pick the right winner for future blocks.
     // Regular clients (miners included) need to verify tnode rank for future block votes only.
-    if (!fTNode && nBlockHeight < nValidationHeight) return true;
+    if (!fTnodeMode && nBlockHeight < nValidationHeight) return true;
 
     int nRank = mnodeman.GetTnodeRank(vinTnode, nBlockHeight - 101, nMinRequiredProtocol, false);
 
     if (nRank == -1) {
-        LogPrint("mnpayments", "CTnodePaymentVote::IsValid -- Can't calculate rank for tnode %s\n",
+        LogPrint("tnpayments", "CTnodePaymentVote::IsValid -- Can't calculate rank for tnode %s\n",
                  vinTnode.prevout.ToStringShort());
         return false;
     }
 
-    if (nRank > MNPAYMENTS_SIGNATURES_TOTAL) {
+    if (nRank > TNPAYMENTS_SIGNATURES_TOTAL) {
         // It's common to have tnodes mistakenly think they are in the top 10
         // We don't want to print all of these messages in normal mode, debug mode should print though
-        strError = strprintf("Tnode is not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL, nRank);
+        strError = strprintf("Tnode is not in the top %d (%d)", TNPAYMENTS_SIGNATURES_TOTAL, nRank);
         // Only ban for new mnw which is out of bounds, for old mnw MN list itself might be way too much off
-        if (nRank > MNPAYMENTS_SIGNATURES_TOTAL * 2 && nBlockHeight > nValidationHeight) {
-            strError = strprintf("Tnode is not in the top %d (%d)", MNPAYMENTS_SIGNATURES_TOTAL * 2, nRank);
+        if (nRank > TNPAYMENTS_SIGNATURES_TOTAL * 2 && nBlockHeight > nValidationHeight) {
+            strError = strprintf("Tnode is not in the top %d (%d)", TNPAYMENTS_SIGNATURES_TOTAL * 2, nRank);
             LogPrintf("CTnodePaymentVote::IsValid -- Error: %s\n", strError);
             Misbehaving(pnode->GetId(), 20);
         }
@@ -679,7 +683,7 @@ bool CTnodePayments::ProcessBlock(int nBlockHeight) {
 
     // DETERMINE IF WE SHOULD BE VOTING FOR THE NEXT PAYEE
 
-    if (fLiteMode || !fTNode) {
+    if (fLiteMode || !fTnodeMode) {
         return false;
     }
 
@@ -693,12 +697,12 @@ bool CTnodePayments::ProcessBlock(int nBlockHeight) {
     int nRank = mnodeman.GetTnodeRank(activeTnode.vin, nBlockHeight - 101, GetMinTnodePaymentsProto(), false);
 
     if (nRank == -1) {
-        LogPrint("mnpayments", "CTnodePayments::ProcessBlock -- Unknown Tnode\n");
+        LogPrint("tnpayments", "CTnodePayments::ProcessBlock -- Unknown Tnode\n");
         return false;
     }
 
-    if (nRank > MNPAYMENTS_SIGNATURES_TOTAL) {
-        LogPrint("mnpayments", "CTnodePayments::ProcessBlock -- Tnode not in the top %d (%d)\n", MNPAYMENTS_SIGNATURES_TOTAL, nRank);
+    if (nRank > TNPAYMENTS_SIGNATURES_TOTAL) {
+        LogPrint("tnpayments", "CTnodePayments::ProcessBlock -- Tnode not in the top %d (%d)\n", TNPAYMENTS_SIGNATURES_TOTAL, nRank);
         return false;
     }
 
@@ -745,7 +749,7 @@ void CTnodePaymentVote::Relay() {
         return;
     }
     CInv inv(MSG_TNODE_PAYMENT_VOTE, GetHash());
-    RelayInv(inv);
+    g_connman->RelayInv(inv);
 }
 
 bool CTnodePaymentVote::CheckSignature(const CPubKey &pubKeyTnode, int nValidationHeight, int &nDos) {
@@ -805,7 +809,7 @@ void CTnodePayments::Sync(CNode *pnode) {
     }
 
     LogPrintf("CTnodePayments::Sync -- Sent %d votes to peer %d\n", nInvCount, pnode->id);
-    pnode->PushMessage(NetMsgType::SYNCSTATUSCOUNT, TNODE_SYNC_MNW, nInvCount);
+    g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::SYNCSTATUSCOUNT, TNODE_SYNC_MNW, nInvCount));
 }
 
 // Request low data/unknown payment blocks in batches directly from some node instead of/after preliminary Sync.
@@ -826,7 +830,7 @@ void CTnodePayments::RequestLowDataPaymentBlocks(CNode *pnode) {
             // We should not violate GETDATA rules
             if (vToFetch.size() == MAX_INV_SZ) {
                 LogPrintf("CTnodePayments::SyncLowDataPaymentBlocks -- asking peer %d for %d blocks\n", pnode->id, MAX_INV_SZ);
-                pnode->PushMessage(NetMsgType::GETDATA, vToFetch);
+                g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::GETDATA, vToFetch));
                 // Start filling new batch
                 vToFetch.clear();
             }
@@ -842,15 +846,15 @@ void CTnodePayments::RequestLowDataPaymentBlocks(CNode *pnode) {
         bool fFound = false;
         BOOST_FOREACH(CTnodePayee & payee, it->second.vecPayees)
         {
-            if (payee.GetVoteCount() >= MNPAYMENTS_SIGNATURES_REQUIRED) {
+            if (payee.GetVoteCount() >= TNPAYMENTS_SIGNATURES_REQUIRED) {
                 fFound = true;
                 break;
             }
             nTotalVotes += payee.GetVoteCount();
         }
-        // A clear winner (MNPAYMENTS_SIGNATURES_REQUIRED+ votes) was found
+        // A clear winner (TNPAYMENTS_SIGNATURES_REQUIRED+ votes) was found
         // or no clear winner was found but there are at least avg number of votes
-        if (fFound || nTotalVotes >= (MNPAYMENTS_SIGNATURES_TOTAL + MNPAYMENTS_SIGNATURES_REQUIRED) / 2) {
+        if (fFound || nTotalVotes >= (TNPAYMENTS_SIGNATURES_TOTAL + TNPAYMENTS_SIGNATURES_REQUIRED) / 2) {
             // so just move to the next block
             ++it;
             continue;
@@ -875,7 +879,7 @@ void CTnodePayments::RequestLowDataPaymentBlocks(CNode *pnode) {
         // We should not violate GETDATA rules
         if (vToFetch.size() == MAX_INV_SZ) {
             LogPrintf("CTnodePayments::SyncLowDataPaymentBlocks -- asking peer %d for %d payment blocks\n", pnode->id, MAX_INV_SZ);
-            pnode->PushMessage(NetMsgType::GETDATA, vToFetch);
+            g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::GETDATA, vToFetch));
             // Start filling new batch
             vToFetch.clear();
         }
@@ -884,7 +888,7 @@ void CTnodePayments::RequestLowDataPaymentBlocks(CNode *pnode) {
     // Ask for the rest of it
     if (!vToFetch.empty()) {
         LogPrintf("CTnodePayments::SyncLowDataPaymentBlocks -- asking peer %d for %d payment blocks\n", pnode->id, vToFetch.size());
-        pnode->PushMessage(NetMsgType::GETDATA, vToFetch);
+        g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::GETDATA, vToFetch));
     }
 }
 
@@ -898,7 +902,7 @@ std::string CTnodePayments::ToString() const {
 }
 
 bool CTnodePayments::IsEnoughData() {
-    float nAverageVotes = (MNPAYMENTS_SIGNATURES_TOTAL + MNPAYMENTS_SIGNATURES_REQUIRED) / 2;
+    float nAverageVotes = (TNPAYMENTS_SIGNATURES_TOTAL + TNPAYMENTS_SIGNATURES_REQUIRED) / 2;
     int nStorageLimit = GetStorageLimit();
     return GetBlockCount() > nStorageLimit && GetVoteCount() > nStorageLimit * nAverageVotes;
 }
@@ -909,7 +913,7 @@ int CTnodePayments::GetStorageLimit() {
 
 void CTnodePayments::UpdatedBlockTip(const CBlockIndex *pindex) {
     pCurrentBlockIndex = pindex;
-    LogPrint("mnpayments", "CTnodePayments::UpdatedBlockTip -- pCurrentBlockIndex->nHeight=%d\n", pCurrentBlockIndex->nHeight);
+    LogPrint("tnpayments", "CTnodePayments::UpdatedBlockTip -- pCurrentBlockIndex->nHeight=%d\n", pCurrentBlockIndex->nHeight);
     
     ProcessBlock(pindex->nHeight + 5);
 }

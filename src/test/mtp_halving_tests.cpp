@@ -15,7 +15,7 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "key.h"
-#include "main.h"
+#include "validation.h"
 #include "miner.h"
 #include "pubkey.h"
 #include "random.h"
@@ -43,7 +43,7 @@ CScript scriptPubKeyMtpHalving;
 
 #define MTP_TESTS_INITIAL_SUBSIDY 112.5
 
-// TECRA: this test could be just deleted, but for future easier-maintaining it is left here. Tecracoin doesnt use MTPRewardReductionFactor
+// TECRA: this test could be just deleted, but for future easier-maintaining it is left here. TecraCoin doesnt use MTPRewardReductionFactor
 struct MtpHalvingTestingSetup : public TestingSetup {
     MtpHalvingTestingSetup() : TestingSetup(CBaseChainParams::REGTEST)
     {
@@ -54,36 +54,26 @@ struct MtpHalvingTestingSetup : public TestingSetup {
         pwalletMain->SetAddressBook(CBitcoinAddress(strAddress).Get(), "",
                                ( "receive"));
 
-        printf("Balance before %ld\n", pwalletMain->GetBalance());
         scriptPubKeyMtpHalving = CScript() <<  ToByteVector(newKey/*coinbaseKey.GetPubKey()*/) << OP_CHECKSIG;
         bool mtp = false;
         CBlock b;
         for (int i = 0; i < 150; i++)
         {
-            std::vector<CMutableTransaction> noTxns;
-            b = CreateAndProcessBlock(noTxns, scriptPubKeyMtpHalving, mtp);
-            coinbaseTxns.push_back(b.vtx[0]);
+            b = CreateAndProcessBlock(scriptPubKeyMtpHalving, mtp);
+            coinbaseTxns.push_back(*b.vtx[0]);
             LOCK(cs_main);
             {
                 LOCK(pwalletMain->cs_wallet);
-                pwalletMain->AddToWalletIfInvolvingMe(b.vtx[0], &b, true);
+                pwalletMain->AddToWalletIfInvolvingMe(*b.vtx[0], chainActive.Tip(), 0, true);
             }   
         }
-        printf("Balance after 150 blocks: %ld\n", pwalletMain->GetBalance());
     }
 
-    CBlock CreateBlock(const std::vector<CMutableTransaction>& txns,
-                       const CScript& scriptPubKeyMtpHalving, bool mtp = false) {
+    CBlock CreateBlock(const CScript& scriptPubKeyMtpHalving, bool mtp = false) {
         const CChainParams& chainparams = Params();
-        CBlockTemplate *pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKeyMtpHalving);
-        CBlock& block = pblocktemplate->block;
+        std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKeyMtpHalving);
+        CBlock block = pblocktemplate->block;
 
-        // Replace mempool-selected txns with just coinbase plus passed-in txns:
-        if(txns.size() > 0) {
-            block.vtx.resize(1);
-            BOOST_FOREACH(const CMutableTransaction& tx, txns)
-                block.vtx.push_back(tx);
-        }
         // IncrementExtraNonce creates a valid coinbase and merkleRoot
         unsigned int extraNonce = 0;
         IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
@@ -106,18 +96,17 @@ struct MtpHalvingTestingSetup : public TestingSetup {
         return block;
     }
 
-    bool ProcessBlock(CBlock &block) {
+    bool ProcessBlock(const CBlock &block) {
         const CChainParams& chainparams = Params();
-        CValidationState state;
-        return ProcessNewBlock(state, chainparams, NULL, &block, true, NULL, false);
+        return ProcessNewBlock(chainparams, std::make_shared<const CBlock>(block), true, NULL);
     }
 
     // Create a new block with just given transactions, coinbase paying to
     // scriptPubKeyMtpHalving, and try to add it to the current chain.
-    CBlock CreateAndProcessBlock(const std::vector<CMutableTransaction>& txns,
-                                 const CScript& scriptPubKeyMtpHalving, bool mtp = false){
+    CBlock CreateAndProcessBlock(
+            const CScript& scriptPubKeyMtpHalving, bool mtp = false){
 
-        CBlock block = CreateBlock(txns, scriptPubKeyMtpHalving, mtp);
+        CBlock block = CreateBlock(scriptPubKeyMtpHalving, mtp);
         BOOST_CHECK_MESSAGE(ProcessBlock(block), "Processing block failed");
         return block;
     }
@@ -136,38 +125,39 @@ BOOST_AUTO_TEST_CASE(mtp_halving)
     BOOST_CHECK_MESSAGE(!b.fChecked, "fChecked must be initialized to false");
     const CChainParams& chainparams = Params();
 
-    std::vector<CMutableTransaction> noTxns;
-    b = CreateBlock(noTxns, scriptPubKeyMtpHalving, mtp);
+    b = CreateBlock(scriptPubKeyMtpHalving, mtp);
     CAmount blockReward = 0;
-    for(auto txout : b.vtx[0].vout)
+    for(auto txout : b.vtx[0]->vout)
         blockReward += txout.nValue;
-    BOOST_CHECK_MESSAGE(blockReward == MTP_TESTS_INITIAL_SUBSIDY * COIN, "Block reward not correct in MTP block");
+    BOOST_CHECK_MESSAGE(blockReward == 50 * COIN, "Block reward not correct in MTP block");
     CBlock oldBlock = b;
 
     int previousHeight = chainActive.Height();
     ProcessBlock(b);
     BOOST_CHECK_MESSAGE(previousHeight == chainActive.Height() - 1, "Block not connected");
+    CBlockIndex *bBlockIndex = chainActive.Tip();
 
     //Transition to MTP
     mtp = true;
     Params(CBaseChainParams::REGTEST).SetRegTestMtpSwitchTime(GetAdjustedTime());
 
-    b = CreateBlock(noTxns, scriptPubKeyMtpHalving, mtp);
+    b = CreateBlock(scriptPubKeyMtpHalving, mtp);
 
     CBlock bMtp = b;
     blockReward = 0;
-    for(int i = 0; i < oldBlock.vtx[0].vout.size(); i++) {
-        BOOST_CHECK_MESSAGE(oldBlock.vtx[0].vout[i].nValue == bMtp.vtx[0].vout[i].nValue * 1, "Block reward not valid");
+    for(int i = 0; i < oldBlock.vtx[0]->vout.size(); i++) {
+        BOOST_CHECK_MESSAGE(oldBlock.vtx[0]->vout[i].nValue == bMtp.vtx[0]->vout[i].nValue * 2, "Block reward not halved");
     }
-    for(auto txout : bMtp.vtx[0].vout)
+    for(auto txout : bMtp.vtx[0]->vout)
         blockReward += txout.nValue;
-    BOOST_CHECK_MESSAGE(blockReward == MTP_TESTS_INITIAL_SUBSIDY * COIN, "Block reward not correct in MTP block");
+    BOOST_CHECK_MESSAGE(blockReward == 25 * COIN, "Block reward not correct in MTP block");
 
-    for(int i = 0; i < bMtp.vtx[0].vout.size(); i++)
+    for(int i = 0; i < bMtp.vtx[0]->vout.size(); i++)
     {
         CBlock bModified = bMtp;
-        bModified.vtx[0].vout[i].nValue += COIN;
-        bModified.vtx[0].UpdateHash();
+        CMutableTransaction modifiedTx = *bModified.vtx[0];
+        modifiedTx.vout[i].nValue += COIN;
+        bModified.vtx[0] = MakeTransactionRef(modifiedTx);
         bool mutated;
         bModified.hashMerkleRoot = BlockMerkleRoot(bModified, &mutated);
 
@@ -181,14 +171,15 @@ BOOST_AUTO_TEST_CASE(mtp_halving)
     }
 
 
-    for(int i = 1; i < bMtp.vtx[0].vout.size() - 1; i++)
+    for(int i = 1; i < bMtp.vtx[0]->vout.size() - 1; i++)
     {
         CBlock bModified = bMtp;
         CPubKey modifiedKey;
         BOOST_CHECK(pwalletMain->GetKeyFromPool(modifiedKey));
         CScript modifiedScript = CScript() <<  ToByteVector(modifiedKey) << OP_CHECKSIG;
-        bModified.vtx[0].vout[i].scriptPubKey = modifiedScript;
-        bModified.vtx[0].UpdateHash();
+        CMutableTransaction modifiedTx = *bModified.vtx[0];
+        modifiedTx.vout[i].scriptPubKey = modifiedScript;
+        bModified.vtx[0] = MakeTransactionRef(modifiedTx);
         bool mutated;
         bModified.hashMerkleRoot = BlockMerkleRoot(bModified, &mutated);
 
@@ -201,17 +192,17 @@ BOOST_AUTO_TEST_CASE(mtp_halving)
         BOOST_CHECK_MESSAGE(previousHeight == chainActive.Height(), "Invalid Block connected");
     }
 
-    bMtp = CreateBlock(noTxns, scriptPubKeyMtpHalving, mtp);
+    bMtp = CreateBlock(scriptPubKeyMtpHalving, mtp);
     previousHeight = chainActive.Height();
     ProcessBlock(bMtp);
     BOOST_CHECK_MESSAGE(previousHeight == chainActive.Height() - 1, "Block not connected");
 
 
-    coinbaseTxns.push_back(b.vtx[0]);
+    coinbaseTxns.push_back(*b.vtx[0]);
     LOCK(cs_main);
     {
         LOCK(pwalletMain->cs_wallet);
-        pwalletMain->AddToWalletIfInvolvingMe(b.vtx[0], &b, true);
+        pwalletMain->AddToWalletIfInvolvingMe(*b.vtx[0], bBlockIndex, 0, true);
     }
     Params(CBaseChainParams::REGTEST).SetRegTestMtpSwitchTime(INT_MAX);
 

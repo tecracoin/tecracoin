@@ -4,13 +4,66 @@
 
 #include "activetnode.h"
 #include "addrman.h"
-#include "darksend.h"
 //#include "governance.h"
 #include "tnode-payments.h"
 #include "tnode-sync.h"
 #include "tnodeman.h"
 #include "netfulfilledman.h"
+#include "darksend.h"
+#include "netmessagemaker.h"
+#include "net.h"
+#include "net_processing.h"
 #include "util.h"
+#include "txmempool.h"
+
+#define cs_vNodes (g_connman->cs_vNodes)
+#define vNodes (g_connman->vNodes)
+
+/**
+ * PRNG initialized from secure entropy based RNG
+ */
+class InsecureRand
+{
+private:
+    uint32_t nRz;
+    uint32_t nRw;
+    bool fDeterministic;
+
+public:
+    InsecureRand(bool _fDeterministic = false);
+
+    /**
+     * MWC RNG of George Marsaglia
+     * This is intended to be fast. It has a period of 2^59.3, though the
+     * least significant 16 bits only have a period of about 2^30.1.
+     *
+     * @return random value < nMax
+     */
+    int64_t operator()(int64_t nMax)
+    {
+        nRz = 36969 * (nRz & 65535) + (nRz >> 16);
+        nRw = 18000 * (nRw & 65535) + (nRw >> 16);
+        return ((nRw << 16) + nRz) % nMax;
+    }
+};
+
+InsecureRand::InsecureRand(bool _fDeterministic)
+        : nRz(11),
+          nRw(11),
+          fDeterministic(_fDeterministic)
+{
+    // The seed values have some unlikely fixed points which we avoid.
+    if(fDeterministic) return;
+    uint32_t nTmp;
+    do {
+        GetRandBytes((unsigned char*)&nTmp, 4);
+    } while (nTmp == 0 || nTmp == 0x9068ffffU);
+    nRz = nTmp;
+    do {
+        GetRandBytes((unsigned char*)&nTmp, 4);
+    } while (nTmp == 0 || nTmp == 0x464fffffU);
+    nRw = nTmp;
+}
 
 /** Tnode manager */
 CTnodeMan mnodeman;
@@ -160,7 +213,7 @@ void CTnodeMan::AskForMN(CNode* pnode, const CTxIn &vin)
     }
     mWeAskedForTnodeListEntry[vin.prevout][pnode->addr] = GetTime() + DSEG_UPDATE_SECONDS;
 
-    pnode->PushMessage(NetMsgType::DSEG, vin);
+    g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::DSEG, vin));
 }
 
 void CTnodeMan::Check()
@@ -266,7 +319,7 @@ void CTnodeMan::CheckAndRemove()
     }
     {
         // no need for cm_main below
-        LOCK(cs);
+        LOCK2(cs_main, cs);
 
         std::map<uint256, std::pair< int64_t, std::set<CNetAddr> > >::iterator itMnbRequest = mMnbRecoveryRequests.begin();
         while(itMnbRequest != mMnbRecoveryRequests.end()){
@@ -381,7 +434,7 @@ int CTnodeMan::CountTnodes(int nProtocolVersion)
 {
     LOCK(cs);
     int nCount = 0;
-    nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinTnodePaymentsProto() : nProtocolVersion;
+    nProtocolVersion = nProtocolVersion == -1 ? tnpayments.GetMinTnodePaymentsProto() : nProtocolVersion;
 
     BOOST_FOREACH(CTnode& mn, vTnodes) {
         if(mn.nProtocolVersion < nProtocolVersion) continue;
@@ -395,7 +448,7 @@ int CTnodeMan::CountEnabled(int nProtocolVersion)
 {
     LOCK(cs);
     int nCount = 0;
-    nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinTnodePaymentsProto() : nProtocolVersion;
+    nProtocolVersion = nProtocolVersion == -1 ? tnpayments.GetMinTnodePaymentsProto() : nProtocolVersion;
 
     BOOST_FOREACH(CTnode& mn, vTnodes) {
         if(mn.nProtocolVersion < nProtocolVersion || !mn.IsEnabled()) continue;
@@ -436,11 +489,26 @@ void CTnodeMan::DsegUpdate(CNode* pnode)
         }
     }
     
-    pnode->PushMessage(NetMsgType::DSEG, CTxIn());
+    g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::DSEG, CTxIn()));
     int64_t askAgain = GetTime() + DSEG_UPDATE_SECONDS;
     mWeAskedForTnodeList[pnode->addr] = askAgain;
 
     LogPrint("tnode", "CTnodeMan::DsegUpdate -- asked %s for the list\n", pnode->addr.ToString());
+}
+
+CTnode* CTnodeMan::Find(const std::string &txHash, const std::string &outputIndex)
+{
+    LOCK(cs);
+
+    BOOST_FOREACH(CTnode& mn, vTnodes)
+    {
+        COutPoint outpoint = mn.vin.prevout;
+
+        if(txHash==outpoint.hash.ToString().substr(0,64) &&
+           outputIndex==to_string(outpoint.n))
+            return &mn;
+    }
+    return NULL;
 }
 
 CTnode* CTnodeMan::Find(const CScript &payee)
@@ -542,17 +610,17 @@ char* CTnodeMan::GetNotQualifyReason(CTnode& mn, int nBlockHeight, bool fFilterS
         return reasonStr;
     }
     // //check protocol version
-    if (mn.nProtocolVersion < mnpayments.GetMinTnodePaymentsProto()) {
+    if (mn.nProtocolVersion < tnpayments.GetMinTnodePaymentsProto()) {
         // LogPrintf("Invalid nProtocolVersion!\n");
         // LogPrintf("mn.nProtocolVersion=%s!\n", mn.nProtocolVersion);
-        // LogPrintf("mnpayments.GetMinTnodePaymentsProto=%s!\n", mnpayments.GetMinTnodePaymentsProto());
+        // LogPrintf("tnpayments.GetMinTnodePaymentsProto=%s!\n", tnpayments.GetMinTnodePaymentsProto());
         char* reasonStr = new char[256];
         sprintf(reasonStr, "false: 'Invalid nProtocolVersion', nProtocolVersion=%d", mn.nProtocolVersion);
         return reasonStr;
     }
     //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
-    if (mnpayments.IsScheduled(mn, nBlockHeight)) {
-        // LogPrintf("mnpayments.IsScheduled!\n");
+    if (tnpayments.IsScheduled(mn, nBlockHeight)) {
+        // LogPrintf("tnpayments.IsScheduled!\n");
         char* reasonStr = new char[256];
         sprintf(reasonStr, "false: 'is scheduled'");
         return reasonStr;
@@ -570,7 +638,7 @@ char* CTnodeMan::GetNotQualifyReason(CTnode& mn, int nBlockHeight, bool fFilterS
         // LogPrintf("mn.GetCollateralAge()=%s!\n", mn.GetCollateralAge());
         // LogPrintf("nMnCount=%s!\n", nMnCount);
         char* reasonStr = new char[256];
-        sprintf(reasonStr, "false: 'collateralAge < znCount', collateralAge=%d, znCount=%d", mn.GetCollateralAge(), nMnCount);
+        sprintf(reasonStr, "false: 'collateralAge < tnCount', collateralAge=%d, tnCount=%d", mn.GetCollateralAge(), nMnCount);
         return reasonStr;
     }
     return NULL;
@@ -591,7 +659,8 @@ CTnode* CTnodeMan::GetNextTnodeInQueueForPayment(bool fFilterSigTime, int& nCoun
 CTnode* CTnodeMan::GetNextTnodeInQueueForPayment(int nBlockHeight, bool fFilterSigTime, int& nCount)
 {
     // Need LOCK2 here to ensure consistent locking order because the GetBlockHash call below locks cs_main
-    LOCK2(cs_main,cs);
+    LOCK2(cs_main, mempool.cs);
+    LOCK(cs);
 
     CTnode *pBestTnode = NULL;
     std::vector<std::pair<int, CTnode*> > vecTnodeLastPaid;
@@ -611,17 +680,17 @@ CTnode* CTnodeMan::GetNextTnodeInQueueForPayment(int nBlockHeight, bool fFilterS
             continue;
         }
         // //check protocol version
-        if (mn.nProtocolVersion < mnpayments.GetMinTnodePaymentsProto()) {
+        if (mn.nProtocolVersion < tnpayments.GetMinTnodePaymentsProto()) {
             // LogPrintf("Invalid nProtocolVersion!\n");
             // LogPrintf("mn.nProtocolVersion=%s!\n", mn.nProtocolVersion);
-            // LogPrintf("mnpayments.GetMinTnodePaymentsProto=%s!\n", mnpayments.GetMinTnodePaymentsProto());
+            // LogPrintf("tnpayments.GetMinTnodePaymentsProto=%s!\n", tnpayments.GetMinTnodePaymentsProto());
             LogPrint("tnodeman", "Tnode, %s, addr(%s), not-qualified: 'invalid nProtocolVersion'\n",
                      mn.vin.prevout.ToStringShort(), CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString());
             continue;
         }
         //it's in the list (up to 8 entries ahead of current block to allow propagation) -- so let's skip it
-        if (mnpayments.IsScheduled(mn, nBlockHeight)) {
-            // LogPrintf("mnpayments.IsScheduled!\n");
+        if (tnpayments.IsScheduled(mn, nBlockHeight)) {
+            // LogPrintf("tnpayments.IsScheduled!\n");
             LogPrint("tnodeman", "Tnode, %s, addr(%s), not-qualified: 'IsScheduled'\n",
                      mn.vin.prevout.ToStringShort(), CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString());
             continue;
@@ -641,7 +710,7 @@ CTnode* CTnodeMan::GetNextTnodeInQueueForPayment(int nBlockHeight, bool fFilterS
                      mn.vin.prevout.ToStringShort(), CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString(), mn.GetCollateralAge(), nMnCount);
             continue;
         }*/
-        char* reasonStr = GetNotQualifyReason(mn, nBlockHeight, fFilterSigTime, nMnCount);
+        char* reasonStr = GetNotQualifyReason(mn, nBlockHeight, fFilterSigTime & (Params().NetworkIDString() != CBaseChainParams::REGTEST), nMnCount);
         if (reasonStr != NULL) {
             LogPrint("tnodeman", "Tnode, %s, addr(%s), qualify %s\n",
                      mn.vin.prevout.ToStringShort(), CBitcoinAddress(mn.pubKeyCollateralAddress.GetID()).ToString(), reasonStr);
@@ -689,7 +758,7 @@ CTnode* CTnodeMan::FindRandomNotInVec(const std::vector<CTxIn> &vecToExclude, in
 {
     LOCK(cs);
 
-    nProtocolVersion = nProtocolVersion == -1 ? mnpayments.GetMinTnodePaymentsProto() : nProtocolVersion;
+    nProtocolVersion = nProtocolVersion == -1 ? tnpayments.GetMinTnodePaymentsProto() : nProtocolVersion;
 
     int nCountEnabled = CountEnabled(nProtocolVersion);
     int nCountNotExcluded = nCountEnabled - vecToExclude.size();
@@ -876,9 +945,8 @@ std::pair<CService, std::set<uint256> > CTnodeMan::PopScheduledMnbRequestConnect
 
 void CTnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStream& vRecv)
 {
-
-//    LogPrint("tnode", "CTnodeMan::ProcessMessage, strCommand=%s\n", strCommand);
-    if(fLiteMode) return; // disable all Dash specific functionality
+    LogPrint("tnode", "CTnodeMan::ProcessMessage, strCommand=%s\n", strCommand);
+    if(fLiteMode) return; // disable all Zcoin specific functionality
     if(!tnodeSync.IsBlockchainSynced()) return;
 
     if (strCommand == NetMsgType::MNANNOUNCE) { //Tnode Broadcast
@@ -886,6 +954,9 @@ void CTnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStrea
         vRecv >> mnb;
 
         pfrom->setAskFor.erase(mnb.GetHash());
+        if (mnb.vin.prevout.IsNull()){  // fix for MNANNOUNCE -- Tnode announce, tnode=COutPoint(000...000, 4294967295)
+            return;
+            }
 
         LogPrintf("MNANNOUNCE -- Tnode announce, tnode=%s\n", mnb.vin.prevout.ToStringShort());
 
@@ -893,7 +964,7 @@ void CTnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStrea
 
         if (CheckMnbAndUpdateTnodeList(pfrom, mnb, nDos)) {
             // use announced Tnode as a peer
-            addrman.Add(CAddress(mnb.addr, NODE_NETWORK), pfrom->addr, 2*60*60);
+            g_connman->AddNewAddress(CAddress(mnb.addr, NODE_NETWORK), pfrom->addr, 2*60*60);
         } else if(nDos > 0) {
             Misbehaving(pfrom->GetId(), nDos);
         }
@@ -977,7 +1048,8 @@ void CTnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStrea
 
         BOOST_FOREACH(CTnode& mn, vTnodes) {
             if (vin != CTxIn() && vin != mn.vin) continue; // asked for specific vin but we are not there yet
-            if (mn.addr.IsRFC1918() || mn.addr.IsLocal()) continue; // do not send local network tnode
+            if (Params().NetworkIDString() != CBaseChainParams::REGTEST)
+                if (mn.addr.IsRFC1918() || mn.addr.IsLocal()) continue; // do not send local network tnode
             if (mn.IsUpdateRequired()) continue; // do not send outdated tnodes
 
             LogPrint("tnode", "DSEG -- Sending Tnode entry: tnode=%s  addr=%s\n", mn.vin.prevout.ToStringShort(), mn.addr.ToString());
@@ -998,7 +1070,7 @@ void CTnodeMan::ProcessMessage(CNode* pfrom, std::string& strCommand, CDataStrea
         }
 
         if(vin == CTxIn()) {
-            pfrom->PushMessage(NetMsgType::SYNCSTATUSCOUNT, TNODE_SYNC_LIST, nInvCount);
+            g_connman->PushMessage(pfrom, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::SYNCSTATUSCOUNT, TNODE_SYNC_LIST, nInvCount));
             LogPrintf("DSEG -- Sent %d Tnode invs to peer %d\n", nInvCount, pfrom->id);
             return;
         }
@@ -1035,11 +1107,11 @@ void CTnodeMan::DoFullVerificationStep()
 
     std::vector<std::pair<int, CTnode> > vecTnodeRanks = GetTnodeRanks(pCurrentBlockIndex->nHeight - 1, MIN_POSE_PROTO_VERSION);
 
-    // Need LOCK2 here to ensure consistent locking order because the SendVerifyRequest call below locks cs_main
-    // through GetHeight() signal in ConnectNode
-    LOCK2(cs_main, cs);
-
+    std::vector<CAddress> vAddr;
     int nCount = 0;
+
+    {
+    LOCK2(cs_main, cs);
 
     int nMyRank = -1;
     int nRanksTotal = (int)vecTnodeRanks.size();
@@ -1091,13 +1163,20 @@ void CTnodeMan::DoFullVerificationStep()
         }
         LogPrint("tnode", "CTnodeMan::DoFullVerificationStep -- Verifying tnode %s rank %d/%d address %s\n",
                     it->second.vin.prevout.ToStringShort(), it->first, nRanksTotal, it->second.addr.ToString());
-        if(SendVerifyRequest(CAddress(it->second.addr, NODE_NETWORK), vSortedByAddr)) {
-            nCount++;
-            if(nCount >= MAX_POSE_CONNECTIONS) break;
+        CAddress addr = CAddress(it->second.addr, NODE_NETWORK);
+        if(CheckVerifyRequestAddr(addr, *g_connman)) {
+            vAddr.push_back(addr);
+            if((int)vAddr.size() >= MAX_POSE_CONNECTIONS) break;
         }
         nOffset += MAX_POSE_CONNECTIONS;
         if(nOffset >= (int)vecTnodeRanks.size()) break;
         it += MAX_POSE_CONNECTIONS;
+    }
+
+    } // LOCK2(cs_main, cs)
+
+    for (const auto& addr : vAddr) {
+        PrepareVerifyRequest(addr, *g_connman);
     }
 
     LogPrint("tnode", "CTnodeMan::DoFullVerificationStep -- Sent verification requests to %d tnodes\n", nCount);
@@ -1161,34 +1240,66 @@ void CTnodeMan::CheckSameAddr()
     }
 }
 
-bool CTnodeMan::SendVerifyRequest(const CAddress& addr, const std::vector<CTnode*>& vSortedByAddr)
+bool CTnodeMan::CheckVerifyRequestAddr(const CAddress& addr, CConnman& connman)
 {
     if(netfulfilledman.HasFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request")) {
         // we already asked for verification, not a good idea to do this too often, skip it
-        LogPrint("tnode", "CTnodeMan::SendVerifyRequest -- too many requests, skipping... addr=%s\n", addr.ToString());
+        LogPrint("tnode", "CTnodeMan::%s -- too many requests, skipping... addr=%s\n", __func__, addr.ToString());
         return false;
     }
 
-    CNode* pnode = ConnectNode(addr, NULL, false, true);
-    if(pnode == NULL) {
-        LogPrintf("CTnodeMan::SendVerifyRequest -- can't connect to node to verify it, addr=%s\n", addr.ToString());
-        return false;
+    return !connman.IsMasternodeOrDisconnectRequested(addr);
+}
+
+void CTnodeMan::PrepareVerifyRequest(const CAddress& addr, CConnman& connman)
+{
+    int nHeight;
+    {
+        LOCK(cs_main);
+        nHeight = chainActive.Height();
     }
 
-    netfulfilledman.AddFulfilledRequest(addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request");
+    connman.AddPendingMasternode(addr);
     // use random nonce, store it and require node to reply with correct one later
-    CTnodeVerification mnv(addr, GetRandInt(999999), pCurrentBlockIndex->nHeight - 1);
-    mWeAskedForVerification[addr] = mnv;
-    LogPrintf("CTnodeMan::SendVerifyRequest -- verifying node using nonce %d addr=%s\n", mnv.nonce, addr.ToString());
-    pnode->PushMessage(NetMsgType::MNVERIFY, mnv);
+    CTnodeVerification mnv(addr, GetRandInt(999999), nHeight - 1);
+    LOCK(cs_mapPendingMNV);
+    mapPendingMNV.insert(std::make_pair(addr, std::make_pair(GetTime(), mnv)));
+    LogPrintf("CTnodeMan::%s -- verifying node using nonce %d addr=%s\n", __func__, mnv.nonce, addr.ToString());
+}
 
-    return true;
+void CTnodeMan::ProcessPendingMnvRequests(CConnman& connman)
+{
+    LOCK(cs_mapPendingMNV);
+
+    std::map<CService, std::pair<int64_t, CTnodeVerification> >::iterator itPendingMNV = mapPendingMNV.begin();
+
+    while (itPendingMNV != mapPendingMNV.end()) {
+        bool fDone = connman.ForNode(itPendingMNV->first, [&](CNode* pnode) {
+            netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-request");
+            // use random nonce, store it and require node to reply with correct one later
+            mWeAskedForVerification[pnode->addr] = itPendingMNV->second.second;
+            LogPrint("tnode", "-- verifying node using nonce %d addr=%s\n", itPendingMNV->second.second.nonce, pnode->addr.ToString());
+            CNetMsgMaker msgMaker(LEGACY_TNODES_PROTOCOL_VERSION);
+            connman.PushMessage(pnode, msgMaker.Make(NetMsgType::MNVERIFY, itPendingMNV->second.second));
+            return true;
+        });
+
+        int64_t nTimeAdded = itPendingMNV->second.first;
+        if (fDone || (GetTime() - nTimeAdded > 15)) {
+            if (!fDone) {
+                LogPrint("tnode", "CTnodeMan::%s -- failed to connect to %s\n", __func__, itPendingMNV->first.ToString());
+            }
+            mapPendingMNV.erase(itPendingMNV++);
+        } else {
+            ++itPendingMNV;
+        }
+    }
 }
 
 void CTnodeMan::SendVerifyReply(CNode* pnode, CTnodeVerification& mnv)
 {
     // only tnodes can sign this, why would someone ask regular node?
-    if(!fTNode) {
+    if(!fTnodeMode) {
         // do not ban, malicious node might be using my IP
         // and trying to confuse the node which tries to verify it
         return;
@@ -1221,7 +1332,7 @@ void CTnodeMan::SendVerifyReply(CNode* pnode, CTnodeVerification& mnv)
         return;
     }
 
-    pnode->PushMessage(NetMsgType::MNVERIFY, mnv);
+    g_connman->PushMessage(pnode, CNetMsgMaker(LEGACY_TNODES_PROTOCOL_VERSION).Make(NetMsgType::MNVERIFY, mnv));
     netfulfilledman.AddFulfilledRequest(pnode->addr, strprintf("%s", NetMsgType::MNVERIFY)+"-reply");
 }
 
@@ -1548,9 +1659,9 @@ bool CTnodeMan::CheckMnbAndUpdateTnodeList(CNode* pfrom, CTnodeBroadcast mnb, in
         Add(mnb);
         tnodeSync.AddedTnodeList();
         // if it matches our Tnode privkey...
-        if(fTNode && mnb.pubKeyTnode == activeTnode.pubKeyTnode) {
+        if(fTnodeMode && mnb.pubKeyTnode == activeTnode.pubKeyTnode) {
             mnb.nPoSeBanScore = -TNODE_POSE_BAN_MAX_SCORE;
-            if(mnb.nProtocolVersion == PROTOCOL_VERSION) {
+            if(mnb.nProtocolVersion == LEGACY_TNODES_PROTOCOL_VERSION) {
                 // ... and PROTOCOL_VERSION, then we've been remotely activated ...
                 LogPrintf("CTnodeMan::CheckMnbAndUpdateTnodeList -- Got NEW Tnode entry: tnode=%s  sigTime=%lld  addr=%s\n",
                             mnb.vin.prevout.ToStringShort(), mnb.sigTime, mnb.addr.ToString());
@@ -1558,7 +1669,7 @@ bool CTnodeMan::CheckMnbAndUpdateTnodeList(CNode* pfrom, CTnodeBroadcast mnb, in
             } else {
                 // ... otherwise we need to reactivate our node, do not add it to the list and do not relay
                 // but also do not ban the node we get this message from
-                LogPrintf("CTnodeMan::CheckMnbAndUpdateTnodeList -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", mnb.nProtocolVersion, PROTOCOL_VERSION);
+                LogPrintf("CTnodeMan::CheckMnbAndUpdateTnodeList -- wrong PROTOCOL_VERSION, re-activate your MN: message nProtocolVersion=%d  PROTOCOL_VERSION=%d\n", mnb.nProtocolVersion, LEGACY_TNODES_PROTOCOL_VERSION);
                 return false;
             }
         }
@@ -1583,9 +1694,9 @@ void CTnodeMan::UpdateLastPaid()
     static bool IsFirstRun = true;
     // Do full scan on first run or if we are not a tnode
     // (MNs should update this info on every block, so limited scan should be enough for them)
-    int nMaxBlocksToScanBack = (IsFirstRun || !fTNode) ? mnpayments.GetStorageLimit() : LAST_PAID_SCAN_BLOCKS;
+    int nMaxBlocksToScanBack = (IsFirstRun || !fTnodeMode) ? tnpayments.GetStorageLimit() : LAST_PAID_SCAN_BLOCKS;
 
-    LogPrint("mnpayments", "CTnodeMan::UpdateLastPaid -- nHeight=%d, nMaxBlocksToScanBack=%d, IsFirstRun=%s\n",
+    LogPrint("tnpayments", "CTnodeMan::UpdateLastPaid -- nHeight=%d, nMaxBlocksToScanBack=%d, IsFirstRun=%s\n",
                              pCurrentBlockIndex->nHeight, nMaxBlocksToScanBack, IsFirstRun ? "true" : "false");
 
     BOOST_FOREACH(CTnode& mn, vTnodes) {
@@ -1692,7 +1803,7 @@ bool CTnodeMan::IsTnodePingedWithin(const CTxIn& vin, int nSeconds, int64_t nTim
 
 void CTnodeMan::SetTnodeLastPing(const CTxIn& vin, const CTnodePing& mnp)
 {
-    LOCK(cs);
+    LOCK2(cs_main, cs);
     CTnode* pMN = Find(vin);
     if(!pMN)  {
         return;
@@ -1714,7 +1825,7 @@ void CTnodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
 
     CheckSameAddr();
 
-    if(fTNode) {
+    if(fTnodeMode) {
         // normal wallet does not need to update this every block, doing update on rpc call should be enough
         UpdateLastPaid();
     }

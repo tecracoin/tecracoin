@@ -1,4 +1,4 @@
-/* Copyright (c) 2017, The Tor Project, Inc. */
+/* Copyright (c) 2017-2019, The Tor Project, Inc. */
 /* See LICENSE for licensing information */
 
 #define CIRCUITBUILD_PRIVATE
@@ -6,16 +6,21 @@
 #define CIRCUITLIST_PRIVATE
 #define CHANNEL_PRIVATE_
 
-#include "or.h"
-#include "test.h"
-#include "test_helpers.h"
-#include "log_test_helpers.h"
-#include "config.h"
-#include "circuitlist.h"
-#include "circuitbuild.h"
-#include "circuitstats.h"
-#include "circuituse.h"
-#include "channel.h"
+#include "core/or/or.h"
+#include "test/test.h"
+#include "test/test_helpers.h"
+#include "test/log_test_helpers.h"
+#include "app/config/config.h"
+#include "core/or/circuitlist.h"
+#include "core/or/circuitbuild.h"
+#include "core/or/circuitstats.h"
+#include "core/or/circuituse.h"
+#include "core/or/channel.h"
+
+#include "core/or/cpath_build_state_st.h"
+#include "core/or/crypt_path_st.h"
+#include "core/or/extend_info_st.h"
+#include "core/or/origin_circuit_st.h"
 
 void test_circuitstats_timeout(void *arg);
 void test_circuitstats_hoplen(void *arg);
@@ -23,7 +28,7 @@ origin_circuit_t *subtest_fourhop_circuit(struct timeval, int);
 origin_circuit_t *add_opened_threehop(void);
 origin_circuit_t *build_unopened_fourhop(struct timeval);
 
-int onion_append_hop(crypt_path_t **head_ptr, extend_info_t *choice);
+int cpath_append_hop(crypt_path_t **head_ptr, extend_info_t *choice);
 
 static int marked_for_close;
 /* Mock function because we are not trying to test the close circuit that does
@@ -52,9 +57,9 @@ add_opened_threehop(void)
   or_circ->build_state = tor_malloc_zero(sizeof(cpath_build_state_t));
   or_circ->build_state->desired_path_len = DEFAULT_ROUTE_LEN;
 
-  onion_append_hop(&or_circ->cpath, &fakehop);
-  onion_append_hop(&or_circ->cpath, &fakehop);
-  onion_append_hop(&or_circ->cpath, &fakehop);
+  cpath_append_hop(&or_circ->cpath, &fakehop);
+  cpath_append_hop(&or_circ->cpath, &fakehop);
+  cpath_append_hop(&or_circ->cpath, &fakehop);
 
   or_circ->has_opened = 1;
   TO_CIRCUIT(or_circ)->state = CIRCUIT_STATE_OPEN;
@@ -77,10 +82,10 @@ build_unopened_fourhop(struct timeval circ_start_time)
   or_circ->build_state = tor_malloc_zero(sizeof(cpath_build_state_t));
   or_circ->build_state->desired_path_len = 4;
 
-  onion_append_hop(&or_circ->cpath, fakehop);
-  onion_append_hop(&or_circ->cpath, fakehop);
-  onion_append_hop(&or_circ->cpath, fakehop);
-  onion_append_hop(&or_circ->cpath, fakehop);
+  cpath_append_hop(&or_circ->cpath, fakehop);
+  cpath_append_hop(&or_circ->cpath, fakehop);
+  cpath_append_hop(&or_circ->cpath, fakehop);
+  cpath_append_hop(&or_circ->cpath, fakehop);
 
   tor_free(fakehop);
 
@@ -192,7 +197,7 @@ test_circuitstats_hoplen(void *arg)
 }
 
 #define TEST_CIRCUITSTATS(name, flags) \
-    { #name, test_##name, (flags), NULL, NULL }
+    { #name, test_##name, (flags), &helper_pubsub_setup, NULL }
 
 struct testcase_t circuitstats_tests[] = {
   TEST_CIRCUITSTATS(circuitstats_hoplen, TT_FORK),

@@ -1,6 +1,6 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
-// Copyright (c) 2018 The TecraCoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
+// Copyright (c) 2018-2020 The TecraCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -37,6 +37,80 @@ struct BIP9Deployment {
     int64_t nTimeout;
 };
 
+enum LLMQType : uint8_t
+{
+    LLMQ_NONE = 0xff,
+
+    LLMQ_50_60 = 1, // 50 members, 30 (60%) threshold, one per hour
+    LLMQ_400_60 = 2, // 400 members, 240 (60%) threshold, one every 12 hours
+    LLMQ_400_85 = 3, // 400 members, 340 (85%) threshold, one every 24 hours
+
+    // for testing only
+    LLMQ_10_70 = 4,  // 10 members, 7 (70%) threshold, one per hour
+    LLMQ_5_60 = 100, // 5 members, 3 (60%) threshold, one per hour
+};
+
+// Configures a LLMQ and its DKG
+// See https://github.com/dashpay/dips/blob/master/dip-0006.md for more details
+struct LLMQParams {
+    LLMQType type;
+
+    // not consensus critical, only used in logging, RPC and UI
+    std::string name;
+
+    // the size of the quorum, e.g. 50 or 400
+    int size;
+
+    // The minimum number of valid members after the DKK. If less members are determined valid, no commitment can be
+    // created. Should be higher then the threshold to allow some room for failing nodes, otherwise quorum might end up
+    // not being able to ever created a recovered signature if more nodes fail after the DKG
+    int minSize;
+
+    // The threshold required to recover a final signature. Should be at least 50%+1 of the quorum size. This value
+    // also controls the size of the public key verification vector and has a large influence on the performance of
+    // recovery. It also influences the amount of minimum messages that need to be exchanged for a single signing session.
+    // This value has the most influence on the security of the quorum. The number of total malicious masternodes
+    // required to negatively influence signing sessions highly correlates to the threshold percentage.
+    int threshold;
+
+    // The interval in number blocks for DKGs and the creation of LLMQs. If set to 24 for example, a DKG will start
+    // every 24 blocks, which is approximately once every hour.
+    int dkgInterval;
+
+    // The number of blocks per phase in a DKG session. There are 6 phases plus the mining phase that need to be processed
+    // per DKG. Set this value to a number of blocks so that each phase has enough time to propagate all required
+    // messages to all members before the next phase starts. If blocks are produced too fast, whole DKG sessions will
+    // fail.
+    int dkgPhaseBlocks;
+
+    // The starting block inside the DKG interval for when mining of commitments starts. The value is inclusive.
+    // Starting from this block, the inclusion of (possibly null) commitments is enforced until the first non-null
+    // commitment is mined. The chosen value should be at least 5 * dkgPhaseBlocks so that it starts right after the
+    // finalization phase.
+    int dkgMiningWindowStart;
+
+    // The ending block inside the DKG interval for when mining of commitments ends. The value is inclusive.
+    // Choose a value so that miners have enough time to receive the commitment and mine it. Also take into consideration
+    // that miners might omit real commitments and revert to always including null commitments. The mining window should
+    // be large enough so that other miners have a chance to produce a block containing a non-null commitment. The window
+    // should at the same time not be too large so that not too much space is wasted with null commitments in case a DKG
+    // session failed.
+    int dkgMiningWindowEnd;
+
+    // In the complaint phase, members will vote on other members being bad (missing valid contribution). If at least
+    // dkgBadVotesThreshold have voted for another member to be bad, it will considered to be bad by all other members
+    // as well. This serves as a protection against late-comers who send their contribution on the bring of
+    // phase-transition, which would otherwise result in inconsistent views of the valid members set
+    int dkgBadVotesThreshold;
+
+    // Number of quorums to consider "active" for signing sessions
+    int signingActiveQuorumCount;
+
+    // Used for inter-quorum communication. This is the number of quorums for which we should keep old connections. This
+    // should be at least one more then the active quorums set.
+    int keepOldConnections;
+};
+
 /**
  * Type of chain
  */
@@ -53,7 +127,12 @@ struct Params {
     ChainType chainType;
 
     uint256 hashGenesisBlock;
+    /** First subsidy halving */
+    int nSubsidyHalvingFirst;
+    /** Subsequent subsidy halving intervals */
     int nSubsidyHalvingInterval;
+    /** Stop subsidy at this block number */
+    int nSubsidyHalvingStopBlock;
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;
@@ -61,8 +140,12 @@ struct Params {
     /** Block height and hash at which BIP34 becomes active */
     int BIP34Height;
     uint256 BIP34Hash;
+    /** Block height at which BIP65 becomes active */
+    int BIP65Height;
+    /** Block height at which BIP66 becomes active */
+    int BIP66Height;
     /**
-     * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargetting period,
+     * Minimum blocks including miner confirmation of the total of 2016 blocks in a retargeting period,
      * (nPowTargetTimespan / nPowTargetSpacing) which is also used for BIP9 deployments.
      * Examples: 1916 for 95%, 1512 for testchains.
      */
@@ -78,7 +161,6 @@ struct Params {
     int64_t nChainStartTime;
     unsigned char nMinNFactor;
     unsigned char nMaxNFactor;
-    int nInstantSendKeepLock; // in blocks
     //int nBudgetPaymentsStartBlock;
     //int nBudgetPaymentsCycleBlocks;
     //int nBudgetPaymentsWindowBlocks;
@@ -88,6 +170,11 @@ struct Params {
     //int nTnodePaymentsIncreaseBlock;
     //int nTnodePaymentsIncreasePeriod; // in blocks
     //int nSuperblockStartBlock;
+
+    int nInstantSendConfirmationsRequired; // in blocks
+    int nInstantSendKeepLock; // in blocks
+    int nInstantSendSigsRequired;
+    int nInstantSendSigsTotal;
 
     /** Zerocoin-related block numbers when features are changed */
     int nCheckBugFixedAtBlock;
@@ -103,42 +190,104 @@ struct Params {
 
     int nDontAllowDupTxsStartBlock;
 
-    /** switch to MTP time */
-    uint32_t nMTPSwitchTime;
-    /** block number to reduce distance between blocks */
-    int nMTPFiveMinutesStartBlock;
+    // Values for dandelion.
 
-    /** don't adjust difficulty until some block number */
-    int nDifficultyAdjustStartBlock;
-    /** fixed diffuculty to use before adjustment takes place */
-    int nFixedDifficulty;
+    // The minimum amount of time a Dandelion transaction is embargoed (seconds).
+    uint32_t nDandelionEmbargoMinimum;
 
-    /** pow target spacing after switch to MTP */
-    int64_t nPowTargetSpacingMTP;
+    // The average additional embargo time beyond the minimum amount (seconds).
+    uint32_t nDandelionEmbargoAvgAdd;
 
-    /** initial MTP difficulty */
-    int nInitialMTPDifficulty;
+    // Maximum number of outbound peers designated as Dandelion destinations.
+    uint32_t nDandelionMaxDestinations;
+    
+    // Expected time between Dandelion routing shuffles (in seconds).
+    uint32_t nDandelionShuffleInterval;
 
-    /** reduction coefficient for rewards after MTP kicks in */
-    int nMTPRewardReduction;
+    // Probability (percentage) that a Dandelion transaction enters fluff phase.
+    uint32_t nDandelionFluff;
 
-    int64_t DifficultyAdjustmentInterval(bool fMTP = false) const { return nPowTargetTimespan / (fMTP ? nPowTargetSpacingMTP : nPowTargetSpacing); }
-    uint256 nMinimumChainWork;
-
-    bool IsMain() const { return chainType == chainMain; }
-    bool IsTestnet() const { return chainType == chainTestnet; }
-    bool IsRegtest() const { return chainType == chainRegtest; }
-
-
-    /** block number to disable zerocoin on consensus level */
-    int nDisableZerocoinStartBlock;
-
-
+    //TecraCoin rewards
     int rewardsStage2Start;
     int rewardsStage3Start;
     int rewardsStage4Start;
     int rewardsStage5Start;
     int rewardsStage6Start;
+
+    // Values for sigma implementation. TecraCoin: TODO - remove Sigma and Zerocoin
+    // The block number after which sigma are accepted.
+    int nSigmaStartBlock;
+
+    int nSigmaPaddingBlock;
+
+    int nDisableUnpaddedSigmaBlock;
+
+    // The block number after which old sigma clients are banned.
+    int nOldSigmaBanBlock;
+
+    // The block number when Bip39 was implemented in Zcoin
+    int nMnemonicBlock;
+
+    // Number of blocks after nSigmaMintStartBlock during which we still accept zerocoin V2 mints into mempool.
+    int nZerocoinV2MintMempoolGracefulPeriod;
+
+    // Number of blocks after nSigmaMintStartBlock during which we still accept zerocoin V2 mints to newly mined blocks.
+    int nZerocoinV2MintGracefulPeriod;
+
+    // Number of blocks after nSigmaMintStartBlock during which we still accept zerocoin V2 spend into mempool.
+    int nZerocoinV2SpendMempoolGracefulPeriod;
+
+    // Number of blocks after nSigmaMintStartBlock during which we still accept zerocoin V2 spend to newly mined blocks.
+    int nZerocoinV2SpendGracefulPeriod;
+
+    // Amount of maximum sigma spend per block.
+    unsigned nMaxSigmaInputPerBlock;
+
+    // Value of maximum sigma spend per block.
+    int64_t nMaxValueSigmaSpendPerBlock;
+
+    // Amount of maximum sigma spend per transaction.
+    unsigned nMaxSigmaInputPerTransaction;
+
+    // Value of maximum sigma spend per transaction.
+    int64_t nMaxValueSigmaSpendPerTransaction;
+
+    // Number of blocks with allowed zerocoin to sigma remint transaction (after nSigmaStartBlock)
+    int nZerocoinToSigmaRemintWindowSize;
+
+    /** switch to MTP time */
+    uint32_t nMTPSwitchTime;
+    /** number of block when MTP switch occurs or 0 if not clear yet */
+    int nMTPStartBlock;
+
+    /** block number to disable zerocoin on consensus level */
+    int nDisableZerocoinStartBlock;
+
+    /** block to start accepting pro reg txs for evo tnodes */
+    int DIP0003Height;
+
+    /** block to switch to evo tnode payments */
+    int DIP0003EnforcementHeight;
+
+    /** block to start using chainlocks */
+    int DIP0008Height;
+
+    int nEvoTnodeMinimumConfirmations;
+
+    std::map<LLMQType, LLMQParams> llmqs;
+    LLMQType llmqChainLocks;
+    LLMQType llmqForInstantSend{LLMQ_NONE};
+
+    /** Time between blocks for LLMQ random time purposes. Can be less than actual average distance between blocks */
+    int nLLMQPowTargetSpacing;
+	
+    int64_t DifficultyAdjustmentInterval(bool fMTP = false) const { return nPowTargetTimespan / nPowTargetSpacing; }
+    uint256 nMinimumChainWork;
+    uint256 defaultAssumeValid;
+
+    bool IsMain() const { return chainType == chainMain; }
+    bool IsTestnet() const { return chainType == chainTestnet; }
+    bool IsRegtest() const { return chainType == chainRegtest; }
 };
 } // namespace Consensus
 

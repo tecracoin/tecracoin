@@ -65,7 +65,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion)
+    inline void SerializationOp(Stream& s, Operation ser_action)
     {
         READWRITE(mapIndex);
         if(ser_action.ForRead()) {
@@ -132,6 +132,8 @@ private:
     std::map<uint256, std::pair< int64_t, std::set<CNetAddr> > > mMnbRecoveryRequests;
     std::map<uint256, std::vector<CTnodeBroadcast> > mMnbRecoveryGoodReplies;
     std::list< std::pair<CService, uint256> > listScheduledMnbRequestConnections;
+    std::map<CService, std::pair<int64_t, CTnodeVerification> > mapPendingMNV;
+    CCriticalSection cs_mapPendingMNV;
 
     int64_t nLastIndexRebuildTime;
 
@@ -168,7 +170,7 @@ public:
     ADD_SERIALIZE_METHODS;
 
     template <typename Stream, typename Operation>
-    inline void SerializationOp(Stream& s, Operation ser_action, int nType, int nVersion) {
+    inline void SerializationOp(Stream& s, Operation ser_action) {
         LOCK(cs);
         std::string strVersion;
         if(ser_action.ForRead()) {
@@ -227,6 +229,7 @@ public:
     void DsegUpdate(CNode* pnode);
 
     /// Find an entry
+    CTnode* Find(const std::string &txHash, const std::string &outputIndex);
     CTnode* Find(const CScript &payee);
     CTnode* Find(const CTxIn& vin);
     CTnode* Find(const CPubKey& pubKeyTnode);
@@ -294,7 +297,7 @@ public:
     /// Find a random entry
     CTnode* FindRandomNotInVec(const std::vector<CTxIn> &vecToExclude, int nProtocolVersion = -1);
 
-    std::vector<CTnode> GetFullTnodeVector() { return vTnodes; }
+    std::vector<CTnode> GetFullTnodeVector() { LOCK(cs); return vTnodes; }
 
     std::vector<std::pair<int, CTnode> > GetTnodeRanks(int nBlockHeight = -1, int nMinProtocol=0);
     int GetTnodeRank(const CTxIn &vin, int nBlockHeight, int nMinProtocol=0, bool fOnlyActive=true);
@@ -307,7 +310,9 @@ public:
 
     void DoFullVerificationStep();
     void CheckSameAddr();
-    bool SendVerifyRequest(const CAddress& addr, const std::vector<CTnode*>& vSortedByAddr);
+    bool CheckVerifyRequestAddr(const CAddress& addr, CConnman& connman);
+    void PrepareVerifyRequest(const CAddress& addr, CConnman& connman);
+    void ProcessPendingMnvRequests(CConnman& connman);
     void SendVerifyReply(CNode* pnode, CTnodeVerification& mnv);
     void ProcessVerifyReply(CNode* pnode, CTnodeVerification& mnv);
     void ProcessVerifyBroadcast(CNode* pnode, const CTnodeVerification& mnv);
@@ -362,6 +367,8 @@ public:
      * Must be called while not holding the CTnodeMan::cs mutex
      */
     void NotifyTnodeUpdates();
+    
+    CCriticalSection & GetCS() {return cs;}
 
 };
 

@@ -1,5 +1,5 @@
 // Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2015 The Bitcoin Core developers
+// Copyright (c) 2009-2016 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -129,7 +129,7 @@ const char* GetOpName(opcodetype opcode)
     case OP_CHECKMULTISIG          : return "OP_CHECKMULTISIG";
     case OP_CHECKMULTISIGVERIFY    : return "OP_CHECKMULTISIGVERIFY";
 
-    // expanson
+    // expansion
     case OP_NOP1                   : return "OP_NOP1";
     case OP_CHECKLOCKTIMEVERIFY    : return "OP_CHECKLOCKTIMEVERIFY";
     case OP_CHECKSEQUENCEVERIFY    : return "OP_CHECKSEQUENCEVERIFY";
@@ -146,6 +146,10 @@ const char* GetOpName(opcodetype opcode)
     // zerocoin
     case OP_ZEROCOINMINT           : return "OP_ZEROCOINMINT";
     case OP_ZEROCOINSPEND          : return "OP_ZEROCOINSPEND";
+    case OP_SIGMAMINT         : return "OP_SIGMAMINT";
+    case OP_SIGMASPEND        : return "OP_SIGMASPEND";
+    case OP_ZEROCOINTOSIGMAREMINT  : return "OP_ZEROCOINTOSIGMAREMINT";
+
 
     // Note:
     //  The template matching params OP_SMALLINTEGER/etc are defined in opcodetype enum
@@ -283,9 +287,29 @@ bool CScript::IsZerocoinMint() const
             (*this)[0] == OP_ZEROCOINMINT);
 }
 
-bool CScript::IsZerocoinSpend() const {
+bool CScript::IsZerocoinSpend() const
+{
     return (this->size() > 0 &&
             (*this)[0] == OP_ZEROCOINSPEND);
+}
+
+bool CScript::IsSigmaMint() const
+{
+    // Extra-fast test for Zerocoin Mint CScripts:
+    return (this->size() > 0 &&
+            (*this)[0] == OP_SIGMAMINT);
+}
+
+bool CScript::IsSigmaSpend() const
+{
+    return (this->size() > 0 &&
+            (*this)[0] == OP_SIGMASPEND);
+}
+
+bool CScript::IsZerocoinRemint() const
+{
+    return (this->size() > 0 &&
+            (*this)[0] == OP_ZEROCOINTOSIGMAREMINT);
 }
 
 bool CScript::HasCanonicalPushes() const
