@@ -76,22 +76,8 @@ GENERATED_TEST_FILES = $(JSON_TEST_FILES:.json=.json.h) $(RAW_TEST_FILES:.raw=.r
 
 # test_bitcoin binary #
 BITCOIN_TESTS =\
-  sigma/test/coin_tests.cpp \
-  sigma/test/protocol_tests.cpp \
-  sigma/test/r1_test.cpp \
-  sigma/test/serialize_test.cpp \
-  sigma/test/primitives_tests.cpp \
-  sigma/test/coin_spend_tests.cpp \
-  sigma/test/sigma_primitive_types_test.cpp \
-  test/zerocoin_tests.cpp \
-  test/zerocoin_tests2.cpp \
-  test/zerocoin_tests3.cpp \
-  test/zerocoin_tests2_v3.cpp \
-  test/zerocoin_tests3_v3.cpp \
-  test/remint_tests.cpp \
   test/tnode_tests.cpp \
   test/mtp_trans_tests.cpp \
-  test/mtp_halving_tests.cpp \
   test/mtp_malformed_tests.cpp \
   test/mtp_tests.cpp \
   test/arith_uint256_tests.cpp \
@@ -116,7 +102,6 @@ BITCOIN_TESTS =\
   test/DoS_tests.cpp \
   test/getarg_tests.cpp \
   test/hash_tests.cpp \
-  test/hdmint_tests.cpp \
   test/key_tests.cpp \
   test/limitedmap_tests.cpp \
   test/dbwrapper_tests.cpp \
@@ -142,12 +127,6 @@ BITCOIN_TESTS =\
   test/scriptnum_tests.cpp \
   test/serialize_tests.cpp \
   test/sighash_tests.cpp \
-  test/sigma_state_tests.cpp \
-  test/sigma_mintspend_test.cpp \
-  test/sigma_transition_test.cpp \
-  test/sigma_manymintspend_test.cpp \
-  test/sigma_mintspend_numinputs.cpp \
-  test/sigma_partialspend_mempool_tests.cpp \
   test/sigopcount_tests.cpp \
   test/skiplist_tests.cpp \
   test/streams_tests.cpp \
@@ -174,7 +153,6 @@ BITCOIN_TESTS += \
   wallet/test/accounting_tests.cpp \
   wallet/test/wallet_tests.cpp \
   wallet/test/crypto_tests.cpp \
-  wallet/test/sigma_tests.cpp \
   wallet/test/mnemonic_tests.cpp \
   wallet/test/txbuilder_tests.cpp
 endif

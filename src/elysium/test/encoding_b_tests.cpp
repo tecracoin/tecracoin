@@ -33,7 +33,7 @@ BOOST_AUTO_TEST_CASE(class_b_empty)
     const CScript& scriptPubKey = vTxOuts[0].scriptPubKey;
     CTxDestination dest;
     BOOST_CHECK(ExtractDestination(scriptPubKey, dest));
-    BOOST_CHECK_EQUAL(CBitcoinAddress(dest).ToString(), "ZzzcQkPmXomcTcSVGsDHsGBCvxg67joaj5");
+    BOOST_CHECK_EQUAL(CBitcoinAddress(dest).ToString(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
 }
 
 BOOST_AUTO_TEST_CASE(class_b_maidsafe)

@@ -78,10 +78,12 @@ struct MtpTransTestingSetup : public TestingSetup {
         // IncrementExtraNonce creates a valid coinbase and merkleRoot
         unsigned int extraNonce = 0;
         IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
-
+        
         while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())){
+           
             ++block.nNonce;
         }
+        
         if(mtp) {
             while (!CheckMerkleTreeProof(block, chainparams.GetConsensus())){
                 block.mtpHashValue = mtp::hash(block, Params().GetConsensus().powLimit);
@@ -106,7 +108,6 @@ struct MtpTransTestingSetup : public TestingSetup {
     // Create a new block with just given transactions, coinbase paying to
     // scriptPubKeyMtp, and try to add it to the current chain.
     CBlock CreateAndProcessBlock(const CScript& scriptPubKeyMtp, bool mtp = false){
-
         CBlock block = CreateBlock(scriptPubKeyMtp, mtp);
         BOOST_CHECK_MESSAGE(ProcessBlock(block), "Processing block failed");
         return block;

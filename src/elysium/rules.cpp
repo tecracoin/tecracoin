@@ -195,11 +195,11 @@ CTestNetConsensusParams::CTestNetConsensusParams()
  */
 CRegTestConsensusParams::CRegTestConsensusParams()
 {
-    GENESIS_BLOCK = 101;
+    GENESIS_BLOCK = 1000;
 
     // Notice range for feature activations:
-    MIN_ACTIVATION_BLOCKS = 5;
-    MAX_ACTIVATION_BLOCKS = 10;
+    MIN_ACTIVATION_BLOCKS = 0;
+    MAX_ACTIVATION_BLOCKS = 999999;
 
     // Waiting period for enabling freezing
     ELYSIUM_FREEZE_WAIT_PERIOD = 10;
@@ -237,7 +237,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     // Property creation fee
     PROPERTY_CREATION_FEE_BLOCK = 500;
     PROPERTY_CREATION_FEE = 10 * COIN;
-    PROPERTY_CREATION_FEE_RECEIVER.SetString("TG2ruj59E5b1u9G3F7HQVs6pCcVDBxrQve");
+    PROPERTY_CREATION_FEE_RECEIVER.SetString("fNYXvhBq4hKjRhCvJurfd9kMnZc3urwncb");
 }
 
 //! Consensus parameters for mainnet

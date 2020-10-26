@@ -30,13 +30,15 @@ ELYSIUM_TEST_CPP = \
   elysium/test/sigma_tests.cpp \
   elysium/test/sigmadb_tests.cpp \
   elysium/test/sigmaprimitives_tests.cpp \
-  elysium/test/signaturebuilder_sigmav1_tests.cpp \
   elysium/test/sp_tests.cpp \
   elysium/test/strtoint64_tests.cpp \
   elysium/test/swapbyteorder_tests.cpp \
   elysium/test/tally_tests.cpp \
   elysium/test/uint256_extensions_tests.cpp \
   elysium/test/utils_tx.cpp
+
+# removed ==> tecracoin doesn't implement sigma
+#  elysium/test/signaturebuilder_sigmav1_tests.cpp \
 
 if ENABLE_WALLET
 ELYSIUM_TEST_CPP += \

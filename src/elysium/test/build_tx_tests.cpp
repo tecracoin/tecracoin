@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(wallettxbuilder_create_normal_c)
 BOOST_AUTO_TEST_CASE(wallettxbuilder_create_sigma_without_mints)
 {
     pwalletMain->SetBroadcastTransactions(true);
-    CreateAndProcessEmptyBlocks(200, scriptPubKey);
+    CreateAndProcessEmptyBlocks(1000, scriptPubKey);
 
     std::vector<unsigned char> data(80);
 
@@ -97,10 +97,11 @@ BOOST_AUTO_TEST_CASE(wallettxbuilder_create_sigma_without_mints)
     );
 }
 
+/* not used in tecra
 BOOST_AUTO_TEST_CASE(wallettxbuilder_create_sigma_with_toolarge_data)
 {
     pwalletMain->SetBroadcastTransactions(true);
-    CreateAndProcessEmptyBlocks(200, scriptPubKey);
+    CreateAndProcessEmptyBlocks(1000, scriptPubKey);
 
     string stringError;
     BOOST_CHECK_MESSAGE(pwalletMain->CreateZerocoinMintModel(
@@ -118,11 +119,12 @@ BOOST_AUTO_TEST_CASE(wallettxbuilder_create_sigma_with_toolarge_data)
         elysium::WalletTxBuilder("", "", "", 0, data, txid, rawHex, false, elysium::InputMode::SIGMA)
     );
 }
-
+*/
+/* not used in tecra
 BOOST_AUTO_TEST_CASE(wallettxbuilder_create_sigma_success)
 {
     pwalletMain->SetBroadcastTransactions(true);
-    CreateAndProcessEmptyBlocks(200, scriptPubKey);
+    CreateAndProcessEmptyBlocks(1000, scriptPubKey);
 
     string stringError;
     BOOST_CHECK_MESSAGE(pwalletMain->CreateZerocoinMintModel(
@@ -150,7 +152,7 @@ BOOST_AUTO_TEST_CASE(wallettxbuilder_create_sigma_success)
         DeterminePacketClass(decTx, chainActive.Height())
     );
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END()
 
 } // namespace elysium

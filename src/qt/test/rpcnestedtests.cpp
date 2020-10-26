@@ -13,11 +13,17 @@
 #include "test/testutil.h"
 #include "univalue.h"
 #include "util.h"
-
+#include "evo/evodb.h"
+#include "evo/cbtx.h"
+#include "evo/specialtx.h"
+#include "evo/deterministicmns.h"
+#include "llmq/quorums_init.h"
 #include <QDir>
 #include <QtGlobal>
 
 #include <boost/filesystem.hpp>
+
+extern CEvoDB* evoDb;
 
 static UniValue rpcNestedTest_rpc(const JSONRPCRequest& request)
 {
@@ -35,20 +41,25 @@ static const CRPCCommand vRPCCommands[] =
 void RPCNestedTests::rpcNestedTests()
 {
     UniValue jsonRPCError;
-
     // do some test setup
     // could be moved to a more generic place when we add more tests on QT level
     const CChainParams& chainparams = Params();
     RegisterAllCoreRPCCommands(tableRPC);
     tableRPC.appendCommand("rpcNestedTest", &vRPCCommands[0]);
     ClearDatadirCache();
-    std::string path = QDir::tempPath().toStdString() + "/" + strprintf("test_bitcoin_qt_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
+    std::string path = QDir::tempPath().toStdString() + "/" + strprintf("test_tecracoin_qt_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
     QDir dir(QString::fromStdString(path));
     dir.mkpath(".");
     ForceSetArg("-datadir", path);
-    //mempool.setSanityCheck(1.0);
+        printf("coming here 2\n");
+    mempool.setSanityCheck(1.0);
     pblocktree = new CBlockTreeDB(1 << 20, true);
     pcoinsdbview = new CCoinsViewDB(1 << 23, true);
+
+    int64_t nEvoDbCache = 1024 * 1024 * 16; // TODO
+    evoDb = new CEvoDB(1 << 20, true, true);
+    deterministicMNManager = new CDeterministicMNManager(*evoDb);
+    llmq::InitLLMQSystem(*evoDb, nullptr, true);
     pcoinsTip = new CCoinsViewCache(pcoinsdbview);
     InitBlockIndex(chainparams);
     {
@@ -56,7 +67,6 @@ void RPCNestedTests::rpcNestedTests()
         bool ok = ActivateBestChain(state, chainparams);
         QVERIFY(ok);
     }
-
     SetRPCWarmupFinished();
 
     std::string result;
@@ -90,7 +100,7 @@ void RPCNestedTests::rpcNestedTests()
     QVERIFY(result == result2);
 
     RPCConsole::RPCExecuteCommandLine(result, "getblock(getbestblockhash())[tx][0]", &filtered);
-    QVERIFY(result == "4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b");
+    QVERIFY(result == "9cb610c4373619597a4e6e2bcf131a09f6aac19edcfbcdf5eb6185d53947f26d");
     QVERIFY(filtered == "getblock(getbestblockhash())[tx][0]");
 
     RPCConsole::RPCParseCommandLine(result, "importprivkey", false, &filtered);

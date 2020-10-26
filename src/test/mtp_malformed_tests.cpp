@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(mtp_malformed)
     CAmount blockReward = 0;
     for(auto txout : b.vtx[0]->vout)
         blockReward += txout.nValue;
-    BOOST_CHECK_MESSAGE(blockReward == 50 * COIN, "Block reward not correct in MTP block");
+    BOOST_CHECK_MESSAGE(blockReward == 112.5 * COIN, "Block reward not correct in MTP block");
     CBlock oldBlock = b;
 
     int previousHeight = chainActive.Height();

@@ -112,7 +112,7 @@ void ZerocoinTestingSetupBase::CreateAndProcessEmptyBlocks(size_t block_numbers,
         // Since sigma V3 implementation also over consensus.nMintV3SigmaStartBlock = 180;
 
         scriptPubKey = CScript() << OP_DUP << OP_HASH160 << ToByteVector(pubkey.GetID()) << OP_EQUALVERIFY << OP_CHECKSIG;
-        for (int i = 0; i < 200; i++)
+        for (int i = 0; i < 1000; i++)
         {
             CBlock b = CreateAndProcessBlock(scriptPubKey);
             coinbaseTxns.push_back(*b.vtx[0]);

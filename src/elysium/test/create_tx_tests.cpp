@@ -9,6 +9,7 @@
 #include "script/standard.h"
 #include "test/test_bitcoin.h"
 #include "utilstrencodings.h"
+#include "elysium/packetencoder.h"
 
 #include <boost/test/unit_test.hpp>
 
@@ -117,13 +118,16 @@ BOOST_AUTO_TEST_CASE(txbuilder_add_outputs)
 
 BOOST_AUTO_TEST_CASE(txbuilder_add_change)
 {
+    
     std::string rawTx("0100000002605842f019601de54248b9fb4a32b498a7762c6513213b39041fbd89890e3a010200000000"
         "ffffffff878b454ca384a37d72762477406003397ed90b1f8d5ad4061af29ee541162c260000000000ffffffff0280d1f0"
         "08000000001976a91474da251d772d3a0dad3ef97d6a5e35892975542a88ac5622b701000000001976a9145d66ebf06ac9"
         "2ecd1ec6c3b67550379bea86885688ac00000000");
+
     std::vector<unsigned char> scriptA = ParseHex("76a9146093da1c808a3a93c7c729ef9b09e9a29bcfc9ed88ac");
     std::vector<unsigned char> scriptB = ParseHex("21036f617ea0d03059cfaf9959b35717906a131a69b1438cc0eaa026"
         "5ddb5faf95dcac");
+
 
     std::vector<PrevTxsEntry> prevTxs;
     prevTxs.push_back(PrevTxsEntry(
@@ -137,17 +141,16 @@ BOOST_AUTO_TEST_CASE(txbuilder_add_change)
         78825000LL,
         CScript(scriptB.begin(), scriptB.end())));
 
-    CBitcoinAddress addrA("aBNKT8rnDdiTymZb5GjgoSrpuFt9c6E4V6");
-    CBitcoinAddress addrB("a9EKssBGHFP6ZnZm98pb64sT1xxyeZCjM7");
-
+    CBitcoinAddress addrA("TLd4iHnt9Zqa5QC7f95GZKETCgW7YUJBEL");
+    CBitcoinAddress addrB("TJV5927NDBWCfRCHj1AAqwF5KPawaV9rPq");
     CCoinsView viewDummy;
     CCoinsViewCache viewTemp(&viewDummy);
     InputsToView(prevTxs, viewTemp);
 
     CMutableTransaction tx = TxBuilder()
         .addInput(prevTxs[0].outPoint)
-        .addOutput(GetScriptForDestination(addrA.Get()), 150000000LL)
         .addInput(prevTxs[1].outPoint)
+        .addOutput(GetScriptForDestination(addrA.Get()), 150000000LL)
         .build();
 
     BOOST_CHECK(viewTemp.HaveInputs(CTransaction(tx)));
@@ -169,7 +172,7 @@ BOOST_AUTO_TEST_CASE(txbuilder_add_change_position)
         "a91474da251d772d3a0dad3ef97d6a5e35892975542a88ac80778e06000000001976a914c656177b31a1cf5f9f319ce67c"
         "6de16bb56922b788ac00000000");
     std::vector<unsigned char> script = ParseHex("76a91453d3a1e3aa03063d660d769acbe2be84821a0b1388ac");
-
+std::vector<unsigned char> script_test = ParseHex("76a91474da251d772d3a0dad3ef97d6a5e35892975542a88ac");
     std::vector<PrevTxsEntry> prevTxs;
     prevTxs.push_back(PrevTxsEntry(
         uint256S("44be28ddf3e5e7da4e976f7fea2d8a9920f4f1fd4fcc1ab28b611c7bce803ee8"),
@@ -177,8 +180,13 @@ BOOST_AUTO_TEST_CASE(txbuilder_add_change_position)
         500000000LL,
         CScript(script.begin(), script.end())));
 
-    CBitcoinAddress addr("aBNKT8rnDdiTymZb5GjgoSrpuFt9c6E4V6");
+   std::string fromAddress = GetSystemAddress().ToString();
 
+
+    CBitcoinAddress addr("TLd4iHnt9Zqa5QC7f95GZKETCgW7YUJBEL"); 
+    if (!addr.IsValid())
+        throw std::runtime_error("invalid TX output address");
+ 
     CMutableTransaction txBasis;
     BOOST_CHECK(DecodeHexTx(txBasis, rawTxBasis));
 
@@ -254,8 +262,8 @@ BOOST_AUTO_TEST_CASE(elysiumtxbuilder_op_return)
 
     tx = ElysiumTxBuilder(tx)
         .addOpReturn(payload)
-        .addReference("aBNKT8rnDdiTymZb5GjgoSrpuFt9c6E4V6", 2730LL)
-        .addChange("a9EKssBGHFP6ZnZm98pb64sT1xxyeZCjM7", viewTemp, 10000LL, 1)
+        .addReference("TLd4iHnt9Zqa5QC7f95GZKETCgW7YUJBEL", 2730LL)
+        .addChange("TJV5927NDBWCfRCHj1AAqwF5KPawaV9rPq", viewTemp, 10000LL, 1)
         .build();
 
     BOOST_CHECK_EQUAL(rawTx, EncodeHexTx(CTransaction(tx)));

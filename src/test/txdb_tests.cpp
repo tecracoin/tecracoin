@@ -39,7 +39,7 @@ void AddTxToView(CTransaction const & tx, int height, CCoinsViewCache & viewCach
 
 BOOST_AUTO_TEST_CASE(dbindexhelper_coinbase)
 {
-    //MTP Testnet: height: 9638, txid: 4f71576181d4855df1737f292db004118ea1cd978c4dcdad8f3581b3c7816957
+    //MTP Testnet: height: 7980, txid: 4f71576181d4855df1737f292db004118ea1cd978c4dcdad8f3581b3c7816957
     CTransaction tx = TxFromStr("01000000010000000000000000000000000000000000000000000000000000000000000000ffffffff0402a62500ffffffff04209db406000000001976a914c304c5ce5897607bdbc3faf33265557eda0d771488ac40230e43000000001976a914cdb439d1a1ddd4ffca74c5baa953f0c4f56ecb1388ac008d380c010000001976a91494d3a168b6ac72b777936621140163e1cd1f70d888ac40230e43000000001976a914e76baf1c8a9d2acfe27046ea05db061e9534be5588ac00000000");
 
     std::vector<CBitcoinAddress> const addresses {"Gbd5u9QKVt7ELtZVDtCXpgh2M1mP1Vz8zi", "GcbaqmHPjnB4JfDAKVhJb3X7g1kCf2e9Pm", "GXQqws2DWjUydoktzCrFAz3fJG177usYY3"
@@ -69,8 +69,7 @@ BOOST_AUTO_TEST_CASE(dbindexhelper_coinbase)
             BOOST_CHECK(dbIndexHelper.getAddressUnspentIndex()[i].first.type == type);
             BOOST_CHECK(dbIndexHelper.getAddressUnspentIndex()[i].first.txhash == tx.GetHash());
             BOOST_CHECK(dbIndexHelper.getAddressUnspentIndex()[i].first.index == i);
-
-            BOOST_CHECK(dbIndexHelper.getAddressUnspentIndex()[i].second.blockHeight == 9638);
+            BOOST_CHECK(dbIndexHelper.getAddressUnspentIndex()[i].second.blockHeight == 7980);
             BOOST_CHECK(dbIndexHelper.getAddressUnspentIndex()[i].second.satoshis == amounts[i]*100000);
             BOOST_CHECK(dbIndexHelper.getAddressUnspentIndex()[i].second.script == tx.vout[i].scriptPubKey);
         }

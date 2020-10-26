@@ -66,6 +66,8 @@ CBlock getHeighestBlock()
 BOOST_AUTO_TEST_CASE(elysium_parse_normal_tx)
 {
     pwalletMain->SetBroadcastTransactions(true);
+ 
+
     std::string fromAddress = CBitcoinAddress(pubkey.GetID()).ToString();
 
     auto ecosystem = 2; // test
@@ -86,9 +88,10 @@ BOOST_AUTO_TEST_CASE(elysium_parse_normal_tx)
 
     CreateAndProcessBlock(scriptPubKey);
     auto block = getHeighestBlock();
-    BOOST_CHECK_EQUAL(2, block.vtx.size());
+ 
+    BOOST_CHECK_EQUAL(4, block.vtx.size());
 
-    CTransactionRef elysiumTx = block.vtx[1];
+    CTransactionRef elysiumTx = block.vtx[3];
     CMPTransaction mp_obj;
 
     BOOST_CHECK_EQUAL(0, ParseTransaction(*elysiumTx, chainActive.Height(), 1, mp_obj, block.GetBlockTime()));
@@ -116,18 +119,18 @@ BOOST_AUTO_TEST_CASE(elysium_parse_normal_tx_with_spend)
     CreateAndProcessBlock(scriptPubKey);
 
     auto block = getHeighestBlock();
-    BOOST_CHECK_EQUAL(2, block.vtx.size());
-
-    CTransactionRef elysiumTx = block.vtx[1];
+    // there are 4 transaction (two from llmq)
+    BOOST_CHECK_EQUAL(4, block.vtx.size());
+    CTransactionRef elysiumTx = block.vtx[3];
     CMPTransaction mp_obj;
 
     BOOST_CHECK_EQUAL(0, ParseTransaction(*elysiumTx, chainActive.Height(), 1, mp_obj, block.GetBlockTime()));
 }
-
+/* tecracoin doesn't use sigma
 BOOST_AUTO_TEST_CASE(elysium_parse_sigma_tx_with_non_spend)
 {
     pwalletMain->SetBroadcastTransactions(true);
-    CreateAndProcessEmptyBlocks(200, scriptPubKey);
+    CreateAndProcessEmptyBlocks(1000, scriptPubKey);
 
     string stringError;
     BOOST_CHECK_MESSAGE(pwalletMain->CreateZerocoinMintModel(
@@ -162,11 +165,12 @@ BOOST_AUTO_TEST_CASE(elysium_parse_sigma_tx_with_non_spend)
 
     BOOST_CHECK_EQUAL(0, ParseTransaction(*sigmaTx, chainActive.Height(), 1, mp_obj, block.GetBlockTime()));
 }
-
+*/
+/* tecracoin doesn't use sigma
 BOOST_AUTO_TEST_CASE(elysium_parse_sigma_tx_with_spend)
 {
     pwalletMain->SetBroadcastTransactions(true);
-    CreateAndProcessEmptyBlocks(200, scriptPubKey);
+    CreateAndProcessEmptyBlocks(1000, scriptPubKey);
 
     string stringError;
     BOOST_CHECK_MESSAGE(pwalletMain->CreateZerocoinMintModel(
@@ -194,5 +198,5 @@ BOOST_AUTO_TEST_CASE(elysium_parse_sigma_tx_with_spend)
 
     BOOST_CHECK_EQUAL(0, ParseTransaction(*sigmaTx, chainActive.Height(), 1, mp_obj, block.GetBlockTime()));
 }
-
+*/
 BOOST_AUTO_TEST_SUITE_END()

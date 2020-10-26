@@ -80,9 +80,9 @@ BOOST_AUTO_TEST_CASE(valid_common_class_b)
     int nBlock = 0;
 
     std::vector<CTxOut> txInputs;
-    txInputs.push_back(createTxOut(1000000, "a1SNP5FDj2HykF2Yg2Jr3Kzu8vMbyuVoyV"));
-    txInputs.push_back(createTxOut(1000000, "a1YSuZWb1vvWx5Fp6oHuCXRjPDmW4nSJ4N"));
-    txInputs.push_back(createTxOut(2000001, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+    txInputs.push_back(createTxOut(1000000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
+    txInputs.push_back(createTxOut(1000000, "TNTkzXXJf8Yw3W1i29iQQgcxVfc3JicS2s"));
+    txInputs.push_back(createTxOut(2000001, "TD6A1JC3jUT91riUxpQpMQZJVBa4xU2vQC"));
 
     std::vector<CTxOut> txOutputs;
     txOutputs.push_back(PayToPubKeyHash_Elysium());
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(valid_common_class_b)
 
     CMPTransaction metaTx;
     BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
-    BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+    BOOST_CHECK_EQUAL(metaTx.getSender(), "TD6A1JC3jUT91riUxpQpMQZJVBa4xU2vQC");
     BOOST_CHECK_EQUAL(metaTx.getRaw().size(), getPayloadSize(10));
 }
 
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(valid_arbitrary_output_number_class_b)
     int nOutputs = 3000 * 8; // due to the junk
 
     std::vector<CTxOut> txInputs;
-    txInputs.push_back(createTxOut(5550000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+    txInputs.push_back(createTxOut(5550000, "TD6A1JC3jUT91riUxpQpMQZJVBa4xU2vQC"));
 
     std::vector<CTxOut> txOutputs;
     for (int i = 0; i < nOutputs / 8; ++i) {
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(valid_arbitrary_output_number_class_b)
 
     CMPTransaction metaTx;
     BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
-    BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+    BOOST_CHECK_EQUAL(metaTx.getSender(), "TD6A1JC3jUT91riUxpQpMQZJVBa4xU2vQC");
     BOOST_CHECK_EQUAL(metaTx.getRaw().size(), getPayloadSize(CLASS_B_MAX_CHUNKS));
 }
 

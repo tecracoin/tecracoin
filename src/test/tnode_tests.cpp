@@ -15,7 +15,7 @@
 #include "consensus/consensus.h"
 #include "consensus/validation.h"
 #include "key.h"
-#include "main.h"
+#include "validation.h"
 #include "miner.h"
 #include "pubkey.h"
 #include "random.h"
@@ -46,6 +46,9 @@ CScript scriptPubKeyTnode;
 
 
 struct TnodeTestingSetup : public TestingSetup {
+
+    static constexpr int initialHeight = 150;
+
     TnodeTestingSetup() : TestingSetup(CBaseChainParams::REGTEST)
     {
         CPubKey newKey;
@@ -55,35 +58,33 @@ struct TnodeTestingSetup : public TestingSetup {
         pwalletMain->SetAddressBook(CBitcoinAddress(strAddress).Get(), "",
                                ( "receive"));
 
-        printf("Balance before %ld\n", pwalletMain->GetBalance());
         scriptPubKeyTnode = CScript() <<  ToByteVector(newKey/*coinbaseKey.GetPubKey()*/) << OP_CHECKSIG;
         bool mtp = false;
         CBlock b;
-        for (int i = 0; i < 150; i++)
+        for (int i = 0; i < initialHeight; i++)
         {
             std::vector<CMutableTransaction> noTxns;
             b = CreateAndProcessBlock(noTxns, scriptPubKeyTnode, mtp);
-            coinbaseTxns.push_back(b.vtx[0]);
+            coinbaseTxns.push_back(*b.vtx[0]);
             LOCK(cs_main);
             {
                 LOCK(pwalletMain->cs_wallet);
-                pwalletMain->AddToWalletIfInvolvingMe(b.vtx[0], &b, true);
+                pwalletMain->AddToWalletIfInvolvingMe(*b.vtx[0], chainActive.Tip(), 0, true);
             }   
         }
-        printf("Balance after 150 blocks: %ld\n", pwalletMain->GetBalance());
     }
 
     CBlock CreateBlock(const std::vector<CMutableTransaction>& txns,
                        const CScript& scriptPubKeyTnode, bool mtp = false) {
         const CChainParams& chainparams = Params();
-        CBlockTemplate *pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKeyTnode);
-        CBlock& block = pblocktemplate->block;
+        std::unique_ptr<CBlockTemplate> pblocktemplate = BlockAssembler(chainparams).CreateNewBlock(scriptPubKeyTnode);
+        CBlock block = pblocktemplate->block;
 
         // Replace mempool-selected txns with just coinbase plus passed-in txns:
         if(txns.size() > 0) {
             block.vtx.resize(1);
             BOOST_FOREACH(const CMutableTransaction& tx, txns)
-                block.vtx.push_back(tx);
+                block.vtx.push_back(MakeTransactionRef(tx));
         }
         // IncrementExtraNonce creates a valid coinbase and merkleRoot
         unsigned int extraNonce = 0;
@@ -107,10 +108,9 @@ struct TnodeTestingSetup : public TestingSetup {
         return block;
     }
 
-    bool ProcessBlock(CBlock &block) {
+    bool ProcessBlock(const CBlock &block) {
         const CChainParams& chainparams = Params();
-        CValidationState state;
-        return ProcessNewBlock(state, chainparams, NULL, &block, true, NULL, false);
+        return ProcessNewBlock(chainparams, std::make_shared<const CBlock>(block), true, NULL);
     }
 
     // Create a new block with just given transactions, coinbase paying to
@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
     CBlock b = CreateAndProcessBlock(noTxns, scriptPubKeyTnode, false);
     const CChainParams& chainparams = Params();
 
-    CTransaction& tx = b.vtx[0];
+    CMutableTransaction tx = *b.vtx[0];
     bool mutated;
     b.fChecked = false;
     b.hashMerkleRoot = BlockMerkleRoot(b, &mutated);
@@ -144,14 +144,14 @@ BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
         ++b.nNonce;
     }
 
-    BOOST_CHECK(tx.IsCoinBase());
+    BOOST_CHECK(CTransaction(tx).IsCoinBase());
 
     CValidationState state;
     BOOST_CHECK(true == CheckBlock(b, state, chainparams.GetConsensus()));
     //BOOST_CHECK(true == CheckTransaction(tx, state, tx.GetHash(), false, INT_MAX));
 
-    auto const before_block = ZC_TNODE_PAYMENT_BUG_FIXED_AT_BLOCK
-             , after_block = ZC_TNODE_PAYMENT_BUG_FIXED_AT_BLOCK + 1;
+    auto const before_block = initialHeight
+             , after_block = initialHeight + 1;
     // Emulates synced state of tnodes.
     for(size_t i =0; i < 4; ++i)
         tnodeSync.SwitchToNextAsset();
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
     CTnodeBlockPayees payees;
     payees.vecPayees.push_back(payee1);
 
-    mnpayments.mapTnodeBlocks[after_block] = payees;
+    tnpayments.mapTnodeBlocks[after_block] = payees;
 
     b.fChecked = false;
     b.hashMerkleRoot = BlockMerkleRoot(b, &mutated);
@@ -175,19 +175,40 @@ BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
         ++b.nNonce;
     }
     BOOST_CHECK(true == CheckBlock(b, state, chainparams.GetConsensus()));
-    BOOST_CHECK(true == CheckTransaction(tx, state, tx.GetHash(), false, after_block));
+    BOOST_CHECK(true == CheckTransaction(tx, state, true, tx.GetHash(), false, after_block));
 
 
     ///////////////////////////////////////////////////////////////////////////
     // Paying to a completely wrong payee
-    tx.vout[1].scriptPubKey = tx.vout[0].scriptPubKey;
+    size_t const tnodeOutput = FindTnodeOutput(tx);
+    CMutableTransaction txCopy = tx;
+    txCopy.vout[tnodeOutput].scriptPubKey = txCopy.vout[0].scriptPubKey;
+    b.vtx[0] = MakeTransactionRef(txCopy);
     b.fChecked = false;
     b.hashMerkleRoot = BlockMerkleRoot(b, &mutated);
     while (!CheckProofOfWork(b.GetHash(), b.nBits, chainparams.GetConsensus())){
         ++b.nNonce;
     }
-    BOOST_CHECK(false == CheckBlock(b, state, chainparams.GetConsensus()));
-    BOOST_CHECK(true == CheckTransaction(tx, state, tx.GetHash(), false, after_block));
+    BOOST_CHECK(false == ContextualCheckBlock(b, state, chainparams.GetConsensus(), chainActive.Tip()->pprev));
+    BOOST_CHECK(state.GetRejectReason().find("invalid tnode payment") != std::string::npos);
+    BOOST_CHECK(true == CheckTransaction(*b.vtx[0], state, true, tx.GetHash(), false, after_block));
+
+
+    ///////////////////////////////////////////////////////////////////////////
+    // Removing the tnode payment
+    CTxOut storedCopy = tx.vout[tnodeOutput];
+    tx.vout.erase(tx.vout.begin() + tnodeOutput);
+    b.fChecked = false;
+    b.hashMerkleRoot = BlockMerkleRoot(b, &mutated);
+    while (!CheckProofOfWork(b.GetHash(), b.nBits, chainparams.GetConsensus())){
+        ++b.nNonce;
+    }
+
+    BOOST_CHECK(false == ContextualCheckBlock(b, state, chainparams.GetConsensus(), chainActive.Tip()->pprev));
+    BOOST_CHECK(state.GetRejectReason().find("invalid tnode payment") != std::string::npos);
+    BOOST_CHECK(true == CheckTransaction(*b.vtx[0], state, true, tx.GetHash(), false, after_block));
+
+    tx.vout.insert(tx.vout.begin() + tnodeOutput, storedCopy);
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -198,7 +219,7 @@ BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
     while (!CheckProofOfWork(b.GetHash(), b.nBits, chainparams.GetConsensus())){
         ++b.nNonce;
     }
-    BOOST_CHECK(true == CheckTransaction(tx, state, tx.GetHash(), false, after_block));
+    BOOST_CHECK(true == CheckTransaction(*b.vtx[0], state, true, tx.GetHash(), false, after_block));
 
 
     ///////////////////////////////////////////////////////////////////////////
@@ -211,39 +232,30 @@ BOOST_AUTO_TEST_CASE(Test_EnforceTnodePayment)
     for(size_t i =0; i < 8; ++i)
         payee2.AddVoteHash(uint256());
 
-    mnpayments.mapTnodeBlocks[after_block].vecPayees.insert(mnpayments.mapTnodeBlocks[after_block].vecPayees.begin(), payee2);
+    tnpayments.mapTnodeBlocks[after_block].vecPayees.insert(tnpayments.mapTnodeBlocks[after_block].vecPayees.begin(), payee2);
 
-    tx.vout[1].scriptPubKey = payee1.GetPayee();
+    txCopy.vout[1].scriptPubKey = payee1.GetPayee();
+    b.vtx[0] = MakeTransactionRef(txCopy);
     b.fChecked = false;
     b.hashMerkleRoot = BlockMerkleRoot(b, &mutated);
     while (!CheckProofOfWork(b.GetHash(), b.nBits, chainparams.GetConsensus())){
         ++b.nNonce;
     }
     BOOST_CHECK(true == CheckBlock(b, state, chainparams.GetConsensus()));
-    BOOST_CHECK(true == CheckTransaction(tx, state, tx.GetHash(), false, after_block));
+    BOOST_CHECK(true == CheckTransaction(*b.vtx[0], state, true, tx.GetHash(), false, after_block));
 
 
     ///////////////////////////////////////////////////////////////////////////
     // Checking the functionality is disabled for previous blocks
-    tx.vout[1].scriptPubKey = tx.vout[2].scriptPubKey;
+
+    b.vtx[0] = MakeTransactionRef(txCopy);
     b.fChecked = false;
     b.hashMerkleRoot = BlockMerkleRoot(b, &mutated);
     while (!CheckProofOfWork(b.GetHash(), b.nBits, chainparams.GetConsensus())){
         ++b.nNonce;
     }
-    BOOST_CHECK(false == CheckBlock(b, state, chainparams.GetConsensus()));
-    BOOST_CHECK(true == CheckTransaction(tx, state, tx.GetHash(), false, after_block));
-
-    mnpayments.mapTnodeBlocks[before_block] = payees;
-
-    b.fChecked = false;
-    b.hashMerkleRoot = BlockMerkleRoot(b, &mutated);
-    while (!CheckProofOfWork(b.GetHash(), b.nBits, chainparams.GetConsensus())){
-        ++b.nNonce;
-    }
-    BOOST_CHECK(true == CheckTransaction(tx, state, tx.GetHash(), false, before_block));
+    BOOST_CHECK(true == ContextualCheckBlock(b, state, chainparams.GetConsensus(), NULL));
+    BOOST_CHECK(true == CheckTransaction(*b.vtx[0], state, true, tx.GetHash(), false, 0));
 }
-
-
 
 BOOST_AUTO_TEST_SUITE_END()

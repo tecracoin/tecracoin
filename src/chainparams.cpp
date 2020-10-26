@@ -733,7 +733,7 @@ public:
         consensus.nFixedDifficulty = 0x207fffff;
         consensus.nPowTargetSpacingMTP = 5*60;
         consensus.nInitialMTPDifficulty = 0x2070ffff;  // !!!! change it to the real value
-        consensus.nMTPRewardReduction = 2;
+        consensus.nMTPRewardReduction = 1;
 
         consensus.nDisableZerocoinStartBlock = INT_MAX;
 

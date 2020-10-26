@@ -213,7 +213,6 @@ int64_t SelectCoins(const std::string& fromAddress, CCoinControl& coinControl, i
     if (NULL == pwalletMain) {
         return 0;
     }
-
     // select coins to cover up to 20 kB max. transaction size
     int64_t nMax = 20 * GetEstimatedFeePerKb();
 

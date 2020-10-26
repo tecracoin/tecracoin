@@ -110,9 +110,12 @@ Please note that we currently don‘t support the GUI when running with Docker. 
     make
     ```
 
-3. It is recommended to build and run the unit tests:
+3. To build and run all the unit tests:
 
     ```sh
+    ./autogen.sh
+    ./configure --enable-tests --enable-gui --enable-elysium
+    cd src
     make check
     ```
 

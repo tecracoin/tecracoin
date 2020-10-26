@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(reference_identification)
         int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(5000000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(5000000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
         txOutputs.push_back(OpReturn_SimpleSend());
@@ -90,81 +90,82 @@ BOOST_AUTO_TEST_CASE(reference_identification)
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
         BOOST_CHECK(metaTx.getReceiver().empty());
         BOOST_CHECK_EQUAL(metaTx.getFeePaid(), 2300000);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
         BOOST_CHECK_EQUAL(HexStr(metaTx.getRaw()), "00000000000000070000000006dac2c0");
     }
     {
         int nBlock = ConsensusParams().NULLDATA_BLOCK + 1000;
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(6000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(6000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
         txOutputs.push_back(OpReturn_SimpleSend());
-        txOutputs.push_back(createTxOut(6000, "a11WeUi6HFkHNdG5puD9LHCXTySddeNcu8"));
+        txOutputs.push_back(createTxOut(6000, "TNTkzXXJf8Yw3W1i29iQQgcxVfc3JicS2s"));
 
         CTransaction dummyTx = TxClassC(txInputs, txOutputs);
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
         BOOST_CHECK_EQUAL(metaTx.getFeePaid(), 0);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
-        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "a11WeUi6HFkHNdG5puD9LHCXTySddeNcu8");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
+        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "TNTkzXXJf8Yw3W1i29iQQgcxVfc3JicS2s");
         BOOST_CHECK_EQUAL(HexStr(metaTx.getRaw()), "00000000000000070000000006dac2c0");
     }
     {
         int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(80000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(80000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
         txOutputs.push_back(OpReturn_SimpleSend());
-        txOutputs.push_back(createTxOut(6000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txOutputs.push_back(createTxOut(6000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         CTransaction dummyTx = TxClassC(txInputs, txOutputs);
 
         CMPTransaction metaTx;
+        
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
         BOOST_CHECK_EQUAL(metaTx.getFeePaid(), 74000);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
-        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
+//        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
         BOOST_CHECK_EQUAL(HexStr(metaTx.getRaw()), "00000000000000070000000006dac2c0");
     }
     {
         int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(80000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(80000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
         txOutputs.push_back(OpReturn_SimpleSend());
-        txOutputs.push_back(createTxOut(6000, "a1SNP5FDj2HykF2Yg2Jr3Kzu8vMbyuVoyV"));
+        txOutputs.push_back(createTxOut(6000, "TD6A1JC3jUT91riUxpQpMQZJVBa4xU2vQC"));
         txOutputs.push_back(PayToPubKey_Unrelated());
         txOutputs.push_back(NonStandardOutput());
-        txOutputs.push_back(createTxOut(6000, "a1ALDLF27Efz4NEAkQPLkfUXmBCG7YfwMN"));
+        txOutputs.push_back(createTxOut(6000, "TNTkzXXJf8Yw3W1i29iQQgcxVfc3JicS2s"));
         txOutputs.push_back(PayToBareMultisig_1of3());
-        txOutputs.push_back(createTxOut(6000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txOutputs.push_back(createTxOut(6000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         CTransaction dummyTx = TxClassC(txInputs, txOutputs);
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
-        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "a1ALDLF27Efz4NEAkQPLkfUXmBCG7YfwMN");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
+        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "TNTkzXXJf8Yw3W1i29iQQgcxVfc3JicS2s");
     }
     {
         int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(55550, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(55550, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
-        txOutputs.push_back(createTxOut(6000, "a1ALDLF27Efz4NEAkQPLkfUXmBCG7YfwMN"));
+        txOutputs.push_back(createTxOut(6000, "TNTkzXXJf8Yw3W1i29iQQgcxVfc3JicS2s"));
         txOutputs.push_back(PayToPubKey_Unrelated());
         txOutputs.push_back(NonStandardOutput());
-        txOutputs.push_back(createTxOut(6000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
-        txOutputs.push_back(createTxOut(6000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txOutputs.push_back(createTxOut(6000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
+        txOutputs.push_back(createTxOut(6000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
         txOutputs.push_back(PayToPubKeyHash_Elysium());
         txOutputs.push_back(OpReturn_SimpleSend());
 
@@ -172,8 +173,8 @@ BOOST_AUTO_TEST_CASE(reference_identification)
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
-        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
+        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "TNTkzXXJf8Yw3W1i29iQQgcxVfc3JicS2s");
     }
 }
 
@@ -183,7 +184,7 @@ BOOST_AUTO_TEST_CASE(empty_op_return)
         int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(900000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(900000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
         txOutputs.push_back(OpReturn_PlainMarker());
@@ -194,9 +195,10 @@ BOOST_AUTO_TEST_CASE(empty_op_return)
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
         BOOST_CHECK(metaTx.getRaw().empty());
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
         // via PayToPubKeyHash_Unrelated:
-        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "a6FFPX9EvcDCtKCzootN4EMwMv2K9xnVcV");
+//        BOOST_CHECK_EQUAL(metaTx.getReceiver(), "a6FFPX9EvcDCtKCzootN4EMwMv2K9xnVcV");
+//        BOOST_CHECK_EQUAL(HexStr(metaTx.getRaw()), "00000000000000070000000006dac2c0");
     }
 }
 
@@ -207,7 +209,7 @@ BOOST_AUTO_TEST_CASE(trimmed_op_return)
         int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(100000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(100000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
 
@@ -230,7 +232,7 @@ BOOST_AUTO_TEST_CASE(trimmed_op_return)
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
         BOOST_CHECK_EQUAL(HexStr(metaTx.getRaw()), HexStr(vchFiller.begin(), vchFiller.end()));
         BOOST_CHECK_EQUAL(metaTx.getRaw().size(), CLASS_B_MAX_CHUNKS * CLASS_B_CHUNK_SIZE);
     }
@@ -242,7 +244,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_short)
         int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(100000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(100000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
         {
@@ -273,7 +275,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_short)
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
         BOOST_CHECK_EQUAL(HexStr(metaTx.getRaw()), "00001111222233330001000200030004");
     }
 }
@@ -284,7 +286,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return)
         int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(100000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(100000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
         {
@@ -325,7 +327,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return)
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
         BOOST_CHECK_EQUAL(HexStr(metaTx.getRaw()), "12222222222222222222222222234555555"
                 "555555555555555555556788888888889ffff11111111111111111111111111111"
                 "111111111111111111111111111111111111111111111111111111111111111111"
@@ -340,7 +342,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
         int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(100000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(100000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
         txInputs.push_back(PayToBareMultisig_3of5());
 
         std::vector<CTxOut> txOutputs;
@@ -352,7 +354,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
         BOOST_CHECK_EQUAL(HexStr(metaTx.getRaw()),
                 // OpReturn_SimpleSend (without marker):
                 "00000000000000070000000006dac2c0"
@@ -366,7 +368,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
         int nBlock = ConsensusParams().NULLDATA_BLOCK;
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(100000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(100000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
         {
@@ -382,7 +384,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
 
         CMPTransaction metaTx;
         BOOST_CHECK(ParseTransaction(dummyTx, nBlock, 1, metaTx) == 0);
-        BOOST_CHECK_EQUAL(metaTx.getSender(), "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd");
+        BOOST_CHECK_EQUAL(metaTx.getSender(), "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
         BOOST_CHECK_EQUAL(HexStr(metaTx.getRaw()),
                 "00000000000000010000000006dac2c000000000000000030000000000000d48");
     }
@@ -390,7 +392,7 @@ BOOST_AUTO_TEST_CASE(multiple_op_return_pushes)
         int nBlock = std::numeric_limits<int>::max();
 
         std::vector<CTxOut> txInputs;
-        txInputs.push_back(createTxOut(100000, "ZzjEgpoT2pARc5Un7xRJAJ4LPSpA9qLQxd"));
+        txInputs.push_back(createTxOut(100000, "TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 
         std::vector<CTxOut> txOutputs;
         {

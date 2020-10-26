@@ -21,8 +21,8 @@ static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
     int maxHalvings = 64;
     CAmount nInitialSubsidy = MAIN_TESTS_INITIAL_SUBSIDY * COIN;
-
-    BOOST_CHECK_EQUAL(GetBlockSubsidy(1, consensusParams, consensusParams.nMTPSwitchTime-1000), nInitialSubsidy);
+    CAmount nPremine = MAIN_TESTS_PREMINE_SUBSIDY * COIN;
+    BOOST_CHECK_EQUAL(GetBlockSubsidy(1, consensusParams, consensusParams.nMTPSwitchTime-1000), nPremine);
     nInitialSubsidy /= consensusParams.nMTPRewardReduction;
     BOOST_CHECK_EQUAL(GetBlockSubsidy(2, consensusParams, consensusParams.nMTPSwitchTime), nInitialSubsidy);
 
@@ -85,12 +85,13 @@ BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 
         CAmount nSubsidy = GetBlockSubsidy(nHeight, consensusParams, nHeight<nMTPFirstBlock ? consensusParams.nMTPSwitchTime-1000 : consensusParams.nMTPSwitchTime);
         if (nHeight == 0)
-            nSubsidy = 50*COIN;
-        BOOST_CHECK(nSubsidy <= 50 * COIN);
+            nSubsidy = 0*COIN;
+        BOOST_CHECK(nSubsidy <= MAIN_TESTS_INITIAL_SUBSIDY * COIN);
         nSum += nSubsidy * step;
         BOOST_CHECK(MoneyRange(nSum));
     }
-    BOOST_CHECK_EQUAL(nSum, 2095751201171875ULL);
+//    BOOST_CHECK_EQUAL(nSum, 2095751201171875ULL);
+      BOOST_CHECK_EQUAL(nSum, 18888557737160000ULL);
 }
 
 //MTP_MERGE: accomodate MTP tests

@@ -19,7 +19,7 @@
 #include <map>
 #include <string>
 
-#include "relic_conf.h"
+#include <relic_conf.h>
 
 #if defined GMP && ARITH == GMP
 #include <gmp.h>

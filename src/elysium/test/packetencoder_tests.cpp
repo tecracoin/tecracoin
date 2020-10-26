@@ -34,14 +34,14 @@ BOOST_AUTO_TEST_CASE(system_address_mainnet)
 {
     SelectParams(CBaseChainParams::MAIN);
 
-    BOOST_CHECK_EQUAL(GetSystemAddress(), CBitcoinAddress("ZzzcQkPmXomcTcSVGsDHsGBCvxg67joaj5"));
+    BOOST_CHECK_EQUAL(GetSystemAddress(), CBitcoinAddress("TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL"));
 }
 
 BOOST_AUTO_TEST_CASE(system_address_testnet)
 {
     SelectParams(CBaseChainParams::TESTNET);
 
-    BOOST_CHECK_EQUAL(GetSystemAddress(), CBitcoinAddress("TTFL4sPFHP22Dzqbw9mPQJEjdG7Wf1ajjZ"));
+    BOOST_CHECK_EQUAL(GetSystemAddress(), CBitcoinAddress("Gf8XeYLLucQjMS8apuwBTPfbPN7eGd7r5h"));
 
     SelectParams(CBaseChainParams::MAIN);
 }
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(system_address_regtest)
 {
     SelectParams(CBaseChainParams::REGTEST);
 
-    BOOST_CHECK_EQUAL(GetSystemAddress(), CBitcoinAddress("TTFL4sPFHP22Dzqbw9mPQJEjdG7Wf1ajjZ"));
+    BOOST_CHECK_EQUAL(GetSystemAddress(), CBitcoinAddress("fdAAqxKZrgvt6o4YKSer2rNWaw1y5C8vZU"));
 
     SelectParams(CBaseChainParams::MAIN);
 }

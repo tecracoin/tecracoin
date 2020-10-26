@@ -2,7 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#define BOOST_TEST_MODULE Zcoin Test Suite
+#define BOOST_TEST_MODULE Tecracoin Test Suite
 
 #if defined(HAVE_CONFIG_H)
 #include "../config/bitcoin-config.h"
@@ -87,7 +87,7 @@ TestingSetup::TestingSetup(const std::string& chainName, std::string suf) : Basi
         CZerocoinState::GetZerocoinState()->Reset();
         RegisterAllCoreRPCCommands(tableRPC);
         ClearDatadirCache();
-        pathTemp = GetTempPath() / strprintf("test_zcoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
+        pathTemp = GetTempPath() / strprintf("test_tetracoin_%lu_%i", (unsigned long)GetTime(), (int)(GetRand(100000)));
         boost::filesystem::create_directories(pathTemp);
         ForceSetArg("-datadir", pathTemp.string());
         mempool.setSanityCheck(1.0);
@@ -218,8 +218,7 @@ CBlock TestChain100Setup::CreateBlock(const std::vector<CMutableTransaction>& tx
     unsigned int extraNonce = 0;
     IncrementExtraNonce(&block, chainActive.Tip(), extraNonce);
 
-    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus())){
-
+    while (!CheckProofOfWork(block.GetHash(), block.nBits, chainparams.GetConsensus()))
         ++block.nNonce;
 
 

@@ -49,10 +49,11 @@ std::array<unsigned char, 32> PacketKeyGenerator::Next()
 
 const CBitcoinAddress& GetSystemAddress()
 {
-    static const CBitcoinAddress mainAddress("ZzzcQkPmXomcTcSVGsDHsGBCvxg67joaj5");
-    static const CBitcoinAddress testAddress("TTFL4sPFHP22Dzqbw9mPQJEjdG7Wf1ajjZ");
+    static const CBitcoinAddress mainAddress("TC4frBMpSm2PF2FuUNqJ3qicn4EHL59ejL");
+    static const CBitcoinAddress regAddress("fdAAqxKZrgvt6o4YKSer2rNWaw1y5C8vZU");    
+    static const CBitcoinAddress testAddress("Gf8XeYLLucQjMS8apuwBTPfbPN7eGd7r5h");
 
-    return isNonMainNet() ? testAddress : mainAddress;
+    return isNonMainNet() ? (RegTest()? regAddress : testAddress) : mainAddress;
 }
 
 boost::optional<PacketClass> DeterminePacketClass(const CTransaction& tx, int height)

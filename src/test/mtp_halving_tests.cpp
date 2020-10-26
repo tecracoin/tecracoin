@@ -44,6 +44,7 @@ CScript scriptPubKeyMtpHalving;
 #define MTP_TESTS_INITIAL_SUBSIDY 112.5
 
 // TECRA: this test could be just deleted, but for future easier-maintaining it is left here. TecraCoin doesnt use MTPRewardReductionFactor
+
 struct MtpHalvingTestingSetup : public TestingSetup {
     MtpHalvingTestingSetup() : TestingSetup(CBaseChainParams::REGTEST)
     {
