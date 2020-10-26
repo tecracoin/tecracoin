@@ -231,8 +231,8 @@ public:
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
 
         // evo tnodes TecraCoin
-        consensus.DIP0003Height = 400000; // Approximately 2020-10-21T20:20:34+00:00 unix ts 1603311634
-        consensus.DIP0003EnforcementHeight = 450000; // Approximately 2021-01-16T15:40:34+00:00 unix ts 1610811634
+        consensus.DIP0003Height = 450000; // Approximately 2021-01-16T15:40:34+00:00 unix ts 1610811634
+        consensus.DIP0003EnforcementHeight = 470000; // Approx 2021-02-20T09:00:34+00:00 ts 1613811634
         consensus.DIP0008Height = INT_MAX; //chainlocks not ready
         consensus.nEvoTnodeMinimumConfirmations = 15;
 
