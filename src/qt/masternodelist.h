@@ -40,16 +40,16 @@ public:
     void setWalletModel(WalletModel* walletModel);
 
 private:
-    QMenu* contextMenuDIP3;
-    int64_t nTimeFilterUpdatedDIP3;
-    int64_t nTimeUpdatedDIP3;
-    int64_t numColumn;
-    bool fFilterUpdatedDIP3;
-
-    QTimer* timer;
     Ui::MasternodeList* ui;
     ClientModel* clientModel;
     WalletModel* walletModel;
+    QMenu* contextMenuDIP3;
+    bool fFilterUpdatedDIP3;
+    int64_t nTimeFilterUpdatedDIP3;
+    int64_t nTimeUpdatedDIP3;
+    int64_t numColumn;
+
+    QTimer* timer;
 
     // Protects tableWidgetMasternodesDIP3
     CCriticalSection cs_dip3list;

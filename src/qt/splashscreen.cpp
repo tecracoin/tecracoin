@@ -75,6 +75,8 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) : QSplashSc
     pixPaint.end();
 
     this->setPixmap(newPixmap);
+    subscribeToCoreSignals();
+
 }
 
 
@@ -184,10 +186,10 @@ SplashScreen::SplashScreen(const QPixmap &pixmap, Qt::WindowFlags f) : QSplashSc
 //    subscribeToCoreSignals();
 //}
 //
-//SplashScreen::~SplashScreen()
-//{
-//    unsubscribeFromCoreSignals();
-//}
+SplashScreen::~SplashScreen()
+{
+    unsubscribeFromCoreSignals();
+}
 
 void SplashScreen::slotFinish(QWidget *mainWin)
 {

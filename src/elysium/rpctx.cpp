@@ -198,7 +198,7 @@ UniValue elysium_senddexsell(const JSONRPCRequest& request)
         throw runtime_error(
             "elysium_senddexsell \"fromaddress\" propertyidforsale \"amountforsale\" \"amountdesired\" paymentwindow minacceptfee action\n"
 
-            "\nPlace, update or cancel a sell offer on the traditional distributed ELYSIUM/BTC exchange.\n"
+            "\nPlace, update or cancel a sell offer on the traditional distributed ELYSIUM/TCR exchange.\n"
 
             "\nArguments:\n"
 

@@ -109,8 +109,8 @@ protected:
     };
 
 public:
-    std::unique_ptr<Database> database;
     std::string walletFile;
+    std::unique_ptr<Database> database;
     MintPool mintPool;
     uint160 masterId;
 

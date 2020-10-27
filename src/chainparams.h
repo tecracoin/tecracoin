@@ -85,7 +85,6 @@ public:
     int PoolMaxTransactions() const { return nPoolMaxTransactions; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
     std::string SporkPubKey() const { return strSporkPubKey; }
-    std::string TnodePaymentPubKey() const { return strTnodePaymentsPubKey; }
 
     //TecraCoin TODO: remove/disable Sigma+zerocoin
 	/** Zerocoin-related block numbers when features are changed */
@@ -122,7 +121,6 @@ protected:
     int nPoolMaxTransactions;
     int nFulfilledRequestExpireTime;
     std::string strSporkPubKey;
-    std::string strTnodePaymentsPubKey;
     ChainTxData chainTxData;
     const char* foundersAddr[4];
 };

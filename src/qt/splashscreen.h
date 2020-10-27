@@ -23,7 +23,7 @@ class SplashScreen : public QSplashScreen
 public:
     explicit SplashScreen(const QPixmap &pixmap = QPixmap(), Qt::WindowFlags f = 0);
 //    explicit SplashScreen(Qt::WindowFlags f, const NetworkStyle *networkStyle);
-//    ~SplashScreen();
+    ~SplashScreen();
 
 protected:
     void paintEvent(QPaintEvent *event);
