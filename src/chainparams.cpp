@@ -166,14 +166,6 @@ static Consensus::LLMQParams llmq400_85 = {
 /**
  * Main network
  */
-/**
- * What makes a good checkpoint block?
- * + Is surrounded by blocks with reasonable timestamps
- *   (no blocks before with a timestamp after, none after with
- *    timestamp before)
- * + Contains no strange transactions
- */
-
 class CMainParams : public CChainParams {
 public:
     CMainParams() {
@@ -217,12 +209,6 @@ public:
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nStartTime = SWITCH_TO_MTP_BLOCK_HEADER - 2*60; // 2 hours leeway
         consensus.vDeployments[Consensus::DEPLOYMENT_MTP].nTimeout = SWITCH_TO_MTP_BLOCK_HEADER + consensus.nMinerConfirmationWindow*2 * 5*60;
 
-        // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x000000000000000000000000000000000000000000000000019acb099d323987");
-
-        // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("04a68a5c150d913c24ea45a15eb91fae7f8827743602f018f70114035143592a"); //358240
-
         consensus.nCheckBugFixedAtBlock = ZC_CHECK_BUG_FIXED_AT_BLOCK;
         consensus.nTnodePaymentsBugFixedAtBlock = ZC_TNODE_PAYMENT_BUG_FIXED_AT_BLOCK;
         consensus.nSpendV15StartBlock = ZC_V1_5_STARTING_BLOCK;
@@ -245,8 +231,8 @@ public:
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
 
         // evo tnodes TecraCoin
-        consensus.DIP0003Height = 400000; // Approximately 2020-10-21T20:20:34+00:00 unix ts 1603311634
-        consensus.DIP0003EnforcementHeight = 450000; // Approximately 2021-01-16T15:40:34+00:00 unix ts 1610811634
+        consensus.DIP0003Height = 450000; // Approximately 2021-01-16T15:40:34+00:00 unix ts 1610811634
+        consensus.DIP0003EnforcementHeight = 470000; // Approx 2021-02-20T09:00:34+00:00 ts 1613811634
         consensus.DIP0008Height = INT_MAX; //chainlocks not ready
         consensus.nEvoTnodeMinimumConfirmations = 15;
 
@@ -259,13 +245,6 @@ public:
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
         consensus.nMTPStartBlock = 192804; //TecraCoin
 
-        consensus.nMTPFiveMinutesStartBlock = SWITCH_TO_MTP_5MIN_BLOCK;// NOT USED IN TECRACOIN
-        consensus.nDifficultyAdjustStartBlock = 0;// NOT USED IN TECRACOIN
-        consensus.nFixedDifficulty = 0x2000ffff;// NOT USED IN TECRACOIN
-        consensus.nPowTargetSpacingMTP = defaultPowTargetSpacing;// NOT USED IN TECRACOIN
-        consensus.nInitialMTPDifficulty = 0x1c021e57;// NOT USED IN TECRACOIN
-        consensus.nMTPRewardReduction = 1; // NOT USED IN TECRACOIN
-
         consensus.nDisableZerocoinStartBlock = 108500;
 
         nMaxTipAge = 6 * 60 * 60; // ~144 blocks behind -> 2 x fork detection time, was 24 * 60 * 60 in bitcoin
@@ -273,7 +252,6 @@ public:
         nPoolMaxTransactions = 3;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
         strSporkPubKey = "043e62180057b1fcbd3ca534f0a32ec83b967ae663a6fc7321ce0cf9f866ca909be062575c1aad9cd7ef0823938d0cc6b37161f9da5136731816db7e5794ec4063";
-        strTnodePaymentsPubKey = "04af8ad2afb4a6f5e57a3571c8fdbc504fe8ee80c15c89cb06c470d7d3d39c9c774099f3d2be33f341f5fe1ddf914a51ff12dd4a925a524bedf54ccd4bd6052ddf";
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -331,21 +309,36 @@ public:
         fMineBlocksOnDemand = false;
         fAllowMultiplePorts = false;
 
+        /**
+         * What makes a good checkpoint block?
+         * + Is surrounded by blocks with reasonable timestamps
+         *   (no blocks before with a timestamp after, none after with
+         *    timestamp before)
+         * + Contains no strange transactions
+         */
         checkpointData = (CCheckpointData) {
                 boost::assign::map_list_of
                 (0, uint256S("0x000008c721bdb1312f1954156f64828a052e8e8ce5a914f7b301a44eba154989"))
                 (2500, uint256S("0x00000179620d5efd4770d98f43474fd54045d6e4723445cb1907e12b576ee14e"))
                 (6860, uint256S("0x0000001a85edff4034839d410fd4efc6ed36a4e9b9a92ed399a1343acce44a32"))
-                (291588, uint256S("a7d8afb46a810bc3a53cd7f036085a4d776f86bd035bf8d64eb82e27dfcbb32b"))
-                (311766, uint256S("7d828dd2b55cef5dfc376177dda08a02e780d9fd5dea3f192671adadbd6632d2"))
+                (291588, uint256S("0xa7d8afb46a810bc3a53cd7f036085a4d776f86bd035bf8d64eb82e27dfcbb32b"))
+                (311766, uint256S("0x7d828dd2b55cef5dfc376177dda08a02e780d9fd5dea3f192671adadbd6632d2"))
+                (398849, uint256S("0x3b1309eb011eaab8b86aca32d2d30df3c892f7374b4cc0e2a51ed06a57c126f2"))
         };
 
         chainTxData = ChainTxData{
-                1589474612, // * UNIX timestamp of last checkpoint block
-                339663,     // * total number of transactions between genesis and last checkpoint
+                1603196462, // * UNIX timestamp of last checkpoint block
+                454351,     // * total number of transactions between genesis and last checkpoint
                             //   (the tx=... number in the SetBestChain debug.log lines)
                 0.014       // * estimated number of transactions per second after checkpoint
         };
+
+        // The best chain should have at least this much work.
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000001d2adb54c0eb6b1");
+
+        // By default assume that the signatures in ancestors of this block are valid.
+        consensus.defaultAssumeValid = uint256S("0x3b1309eb011eaab8b86aca32d2d30df3c892f7374b4cc0e2a51ed06a57c126f2"); //398849
+
         consensus.nSpendV15StartBlock = ZC_V1_5_STARTING_BLOCK;
         consensus.nSpendV2ID_1 = ZC_V2_SWITCH_ID_1;
         consensus.nSpendV2ID_10 = ZC_V2_SWITCH_ID_10;
@@ -486,19 +479,12 @@ public:
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET;
         consensus.nMTPStartBlock = 15593; // TecraCoin
-        consensus.nMTPFiveMinutesStartBlock = INT_MAX; // NOT USED IN TECRACOIN
-        consensus.nDifficultyAdjustStartBlock = 100;// NOT USED IN TECRACOIN
-        consensus.nFixedDifficulty = 0x2000ffff;// NOT USED IN TECRACOIN
-        consensus.nPowTargetSpacingMTP = defaultPowTargetSpacing; // NOT USED IN TECRACOIN
-        consensus.nInitialMTPDifficulty = 0x2000ffff;  // NOT USED IN TECRACOIN
-        consensus.nMTPRewardReduction = 1; // NOT USED IN TECRACOIN
 
         consensus.nDisableZerocoinStartBlock = 1;
 
         nPoolMaxTransactions = 3;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
         strSporkPubKey = "048779365ea4301c3da88204a79f202ad51fc5497727ae11a804b95091dfbd0ad3ef88456e0d09428ae97b70be75f8f49b0b52dad6900c6933717dcfe4ba9302d2";
-        strTnodePaymentsPubKey = "04287c0c51473073b2654396dfe853d80275f90e3027680a1c5d66864dfe1d05a34524bd10b968692cb0827179949e4ba8622c759e9d417e7bf9a5449043885b17";
 
         pchMessageStart[0] = 0x2c;
         pchMessageStart[1] = 0xc2;
@@ -551,20 +537,21 @@ public:
                         (1, uint256S("0x00b360392b7230eef10baec8fe24a0a5590164681028b868a57ae0c1754365ec"))
                         (1097, uint256S("0x0000083dcce10b707687d6f15074976b541fc7d72d760931292227d0f0ea9122"))
                         (10572, uint256S("0x00065ba00de7f8b4f3dbf085b8e3ed25fa396692e816f7f2953a851c904626f3"))
-                        (58000,  uint256S("0x5d4051eb81d2eb32faa536ccc2e576141b062993caa0ed1814b51dda26d70b19"))
+                        (58000, uint256S("0x5d4051eb81d2eb32faa536ccc2e576141b062993caa0ed1814b51dda26d70b19"))
+                        (77910, uint256S("0x8fafbb35ee9b6383d24cefd3e96cf4504a751c44d0757c4123ca27174242c9d9"))
         };
 
         chainTxData = ChainTxData{
-            1599313321, //timestamp
-            58047,      //transactions
+            1603196161, //timestamp
+            94569,      //transactions
             0.001       //tx/s
         };
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000008663e0e62"); //58000
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000000000009c4bc7c84"); //77910
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x5d4051eb81d2eb32faa536ccc2e576141b062993caa0ed1814b51dda26d70b19"); //58000
+        consensus.defaultAssumeValid = uint256S("0x8fafbb35ee9b6383d24cefd3e96cf4504a751c44d0757c4123ca27174242c9d9"); //77910
 
         consensus.nSpendV15StartBlock = ZC_V1_5_TESTNET_STARTING_BLOCK;
         consensus.nSpendV2ID_1 = ZC_V2_TESTNET_SWITCH_ID_1;
@@ -692,12 +679,6 @@ public:
         consensus.nDontAllowDupTxsStartBlock = 1;
 
         consensus.nMTPSwitchTime = INT_MAX;
-        consensus.nMTPFiveMinutesStartBlock = 0; // NOT USED IN TECRACOIN
-        consensus.nDifficultyAdjustStartBlock = 5000; // NOT USED IN TECRACOIN
-        consensus.nFixedDifficulty = 0x2000ffff; // NOT USED IN TECRACOIN
-        consensus.nPowTargetSpacingMTP = defaultPowTargetSpacing; // NOT USED IN TECRACOIN
-        consensus.nInitialMTPDifficulty = 0x2070ffff; // NOT USED IN TECRACOIN
-        consensus.nMTPRewardReduction = 1; // NOT USED IN TECRACOIN
 
         consensus.nCheckBugFixedAtBlock = 120;
         consensus.nTnodePaymentsBugFixedAtBlock = 1;
@@ -728,12 +709,6 @@ public:
 
         consensus.nMTPSwitchTime = INT_MAX;
         consensus.nMTPStartBlock = 0;
-        consensus.nMTPFiveMinutesStartBlock = 0;
-        consensus.nDifficultyAdjustStartBlock = 5000;
-        consensus.nFixedDifficulty = 0x207fffff;
-        consensus.nPowTargetSpacingMTP = 5*60;
-        consensus.nInitialMTPDifficulty = 0x2070ffff;  // !!!! change it to the real value
-        consensus.nMTPRewardReduction = 1;
 
         consensus.nDisableZerocoinStartBlock = INT_MAX;
 

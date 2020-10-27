@@ -259,22 +259,6 @@ struct Params {
     uint32_t nMTPSwitchTime;
     /** number of block when MTP switch occurs or 0 if not clear yet */
     int nMTPStartBlock;
-    /** block number to reduce distance between blocks */
-    int nMTPFiveMinutesStartBlock;
-
-    /** don't adjust difficulty until some block number */
-    int nDifficultyAdjustStartBlock;
-    /** fixed diffuculty to use before adjustment takes place */
-    int nFixedDifficulty;
-
-    /** pow target spacing after switch to MTP */
-    int64_t nPowTargetSpacingMTP;
-
-    /** initial MTP difficulty */
-    int nInitialMTPDifficulty;
-
-    /** reduction coefficient for rewards after MTP kicks in */
-    int nMTPRewardReduction;
 
     /** block number to disable zerocoin on consensus level */
     int nDisableZerocoinStartBlock;
@@ -297,7 +281,7 @@ struct Params {
     /** Time between blocks for LLMQ random time purposes. Can be less than actual average distance between blocks */
     int nLLMQPowTargetSpacing;
 	
-    int64_t DifficultyAdjustmentInterval(bool fMTP = false) const { return nPowTargetTimespan / (fMTP ? nPowTargetSpacingMTP : nPowTargetSpacing); }
+    int64_t DifficultyAdjustmentInterval(bool fMTP = false) const { return nPowTargetTimespan / nPowTargetSpacing; }
     uint256 nMinimumChainWork;
     uint256 defaultAssumeValid;
 

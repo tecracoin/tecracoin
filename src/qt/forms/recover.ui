@@ -2,19 +2,19 @@
 <ui version="4.0">
  <class>Recover</class>
  <widget class="QDialog" name="Recover">
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
     <width>674</width>
-    <height>620</height>
+    <height>860</height>
    </rect>
+  </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="MinimumExpanding" vsizetype="MinimumExpanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
   </property>
   <property name="windowTitle">
    <string>Create or Recover Wallet</string>
@@ -43,7 +43,7 @@ Warning:
 * Do not store it electronically.
 * If you encrypt your seed with an additional passphrase, please also record this.
 
-If you have an existing seed that you wish to restore, please select "Recover existing wallet" and enter your passphrase (if you have set one for your seed).
+If you have an existing seed that you wish to restore, please select &quot;Recover existing wallet&quot; and enter your passphrase (if you have set one for your seed).
 
 Advanced: If you don't wish to generate a wallet with a seed phrase backup (not recommended), you can set usemnemonic=0 in tecracoin.conf.
       </string>

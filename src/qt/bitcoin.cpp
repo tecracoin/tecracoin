@@ -463,6 +463,17 @@ void BitcoinApplication::initializeResult(int retval)
     {
         // Log this only after AppInit2 finishes, as then logging setup is guaranteed complete
         qWarning() << "Platform customization:" << platformStyle->getName();
+        
+        // If -min option passed, start window minimized.
+        if(GetBoolArg("-min", false))
+        {
+            window->showMinimized();
+        }
+        else
+        {
+            window->show();
+        }
+
 #ifdef ENABLE_WALLET
         PaymentServer::LoadRootCAs();
         paymentServer->setOptionsModel(optionsModel);
@@ -484,15 +495,6 @@ void BitcoinApplication::initializeResult(int retval)
 
 #endif
 
-        // If -min option passed, start window minimized.
-        if(GetBoolArg("-min", false))
-        {
-            window->showMinimized();
-        }
-        else
-        {
-            window->show();
-        }
         Q_EMIT splashFinished(window);
 
 #ifdef ENABLE_WALLET

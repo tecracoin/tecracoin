@@ -494,7 +494,7 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
     const int64_t amountRemaining = p_accept->getAcceptAmountRemaining(); // actual amount desired, in the Accept
 
     if (elysium_debug_dex) PrintToLog(
-            "%s: BTC desired: %s, offered amount: %s, amount to purchase: %s, amount remaining: %s\n", __func__,
+            "%s: TCR desired: %s, offered amount: %s, amount to purchase: %s, amount remaining: %s\n", __func__,
             FormatDivisibleMP(amountDesired), FormatDivisibleMP(amountOffered),
             FormatDivisibleMP(amountPurchased), FormatDivisibleMP(amountRemaining));
 
@@ -506,9 +506,9 @@ int DEx_payment(const uint256& txid, unsigned int vout, const std::string& addre
     }
 
     if (amountPurchased > 0) {
-        PrintToLog("%s: seller %s offered %s %s for %s BTC\n", __func__,
+        PrintToLog("%s: seller %s offered %s %s for %s TCR\n", __func__,
                 addressSeller, FormatDivisibleMP(amountOffered), strMPProperty(propertyId), FormatDivisibleMP(amountDesired));
-        PrintToLog("%s: buyer %s pays %s BTC to purchase %s %s\n", __func__,
+        PrintToLog("%s: buyer %s pays %s TCR to purchase %s %s\n", __func__,
                 addressBuyer, FormatDivisibleMP(amountPaid), FormatDivisibleMP(amountPurchased), strMPProperty(propertyId));
 
         assert(update_tally_map(addressSeller, propertyId, -amountPurchased, ACCEPT_RESERVE));

@@ -549,10 +549,6 @@ bool CheckFoundersInputs(const CTransaction &tx, CValidationState &state, const 
         CScript FOUNDER_2_SCRIPT = Params().GetFounderScript(2);
         CScript FOUNDER_3_SCRIPT = Params().GetFounderScript(3);
 
-        // Reduce everything by a factor of two when MTP is in place
-        // TecraCoin doesnt use reductionFactor
-        // int reductionFactor = fMTP ? params.nMTPRewardReduction : 1;
-
         bool found_0 = false,
              found_1 = false,
              found_2 = false,
