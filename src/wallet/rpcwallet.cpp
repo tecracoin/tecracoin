@@ -4733,7 +4733,7 @@ extern UniValue removeprunedfunds(const JSONRPCRequest& request);
 extern UniValue importmulti(const JSONRPCRequest& request);
 
 static const CRPCCommand commands[] =
-{ //  category              name                        actor (function)           okSafeMode
+{   //  category              name                        actor (function)           okSafeMode
     //  --------------------- ------------------------    -----------------------    ----------
     { "rawtransactions",    "fundrawtransaction",       &fundrawtransaction,       false,  {"hexstring","options"} },
     { "hidden",             "resendwallettransactions", &resendwallettransactions, true,   {} },
@@ -4785,8 +4785,8 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",         &walletpassphrase,         true,   {"passphrase","timeout"} },
     { "wallet",             "removeprunedfunds",        &removeprunedfunds,        true,   {"txid"} },
 
-    { "wallet",             "removetxmempool",          &removetxmempool,          false },
-    { "wallet",             "removetxwallet",           &removetxwallet,           false },
+    { "wallet",             "removetxmempool",          &removetxmempool,          false,  {"txid"} },
+    { "wallet",             "removetxwallet",           &removetxwallet,           false,  {"txid"} },
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)

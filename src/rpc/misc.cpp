@@ -1316,22 +1316,22 @@ static const CRPCCommand commands[] =
     { "util",               "signmessagewithprivkey", &signmessagewithprivkey, true,  {"privkey","message"} },
 
         /* Address index */
-    { "addressindex",       "getaddressmempool",      &getaddressmempool,      true  },
-    { "addressindex",       "getaddressutxos",        &getaddressutxos,        false },
-    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       false },
-    { "addressindex",       "getaddresstxids",        &getaddresstxids,        false },
-    { "addressindex",       "getaddressbalance",      &getaddressbalance,      false },
-    { "addressindex",       "gettotalsupply",         &gettotalsupply,         false },
+    { "addressindex",       "getaddressmempool",      &getaddressmempool,      true,    {"addresses"} },
+    { "addressindex",       "getaddressutxos",        &getaddressutxos,        false,   {"addresses"} },
+    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       false,   {"addresses"} },
+    { "addressindex",       "getaddresstxids",        &getaddresstxids,        false,   {"addresses"} },
+    { "addressindex",       "getaddressbalance",      &getaddressbalance,      false,   {"addresses"} },
+    { "addressindex",       "gettotalsupply",         &gettotalsupply,         false,   {} },
 
     /* Tnode features */
-    { "tnode",              "evotnsync",              &mnsync,                 true,  {} },
+    { "tnode",              "evotnsync",              &mnsync,                 true,  {"command"} },
 
     /* Not shown in help */
-    { "hidden",             "getzerocoinsupply",      &getzerocoinsupply,      false },
-    { "hidden",             "getinfoex",              &getinfoex,              false },
+    { "hidden",             "getzerocoinsupply",      &getzerocoinsupply,      false,   {} },
+    { "hidden",             "getinfoex",              &getinfoex,              false,   {} },
     { "hidden",             "setmocktime",            &setmocktime,            true,  {"timestamp"}},
     { "hidden",             "echo",                   &echo,                   true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
-    { "hidden",             "echojson",               &echo,                  true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
+    { "hidden",             "echojson",               &echo,                   true,  {"arg0","arg1","arg2","arg3","arg4","arg5","arg6","arg7","arg8","arg9"}},
 };
 
 void RegisterMiscRPCCommands(CRPCTable &t)

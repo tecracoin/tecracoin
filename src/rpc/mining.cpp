@@ -1052,7 +1052,7 @@ static const CRPCCommand commands[] =
     { "mining",             "getblocktemplate",       &getblocktemplate,       true,  {"template_request"} },
     { "mining",             "submitblock",            &submitblock,            true,  {"hexdata","parameters"} },
 
-    { "generating",         "setgenerate",            &setgenerate,            true  },
+    { "generating",         "setgenerate",            &setgenerate,            true,  {"generate","genproclimit"} },
     { "generating",         "generate",               &generate,               true,  {"nblocks","maxtries"} },
     { "generating",         "generatetoaddress",      &generatetoaddress,      true,  {"nblocks","address","maxtries"} },
 
