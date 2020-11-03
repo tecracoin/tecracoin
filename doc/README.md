@@ -1,12 +1,11 @@
-TecraCoin Core 1.6.0.x
-=====================
+# TecraCoin Core
 
-Setup
----------------------
-[TecraCoin Core] (https://tecracoin.io/get-tecracoin/) is the original TecraCoin client and it builds the backbone of the network. However, it downloads and stores the entire history of TecraCoin transactions (which is currently several hundreds MBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to a day or more.
+## Setup
 
-Running
----------------------
+[TecraCoin Core] (https://tecracoin.io/get-tecracoin/) is the original TecraCoin client and it builds the backbone of the network. However, it downloads and stores the entire history of TecraCoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few minutes to an hour or more.
+
+## Running
+
 The following are some helpful notes on how to run TecraCoin on your native platform.
 
 ### Unix
@@ -24,15 +23,15 @@ Unpack the files into a directory, and then run tecracoin-qt.exe.
 
 Drag TecraCoin-Core to your applications folder, and then run TecraCoin-Core.
 
-### Need Help?
+## Need Help?
 
-* See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
+- See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
 for help and more information.
-* Ask for help on [#bitcoin](http://webchat.freenode.net?channels=bitcoin) on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net?channels=bitcoin).
-* Ask for help on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Technical Support board](https://bitcointalk.org/index.php?board=4.0).
+- Ask for help on [#TecraCoin](https://t.me/tecracoinio) on Telegram.
+- Ask for help on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [TecraCoin thread](https://bitcointalk.org/index.php?topic=5059685.960).
 
-Building
----------------------
+## Building
+
 The following are developer notes on how to build TecraCoin on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
 
 - [OS X Build Notes](build-osx.md)
@@ -41,8 +40,8 @@ The following are developer notes on how to build TecraCoin on your native platf
 - [OpenBSD Build Notes](build-openbsd.md)
 - [Gitian Building Guide](gitian-building.md)
 
-Development
----------------------
+## Development
+
 The TecraCoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
 
 - [Developer Notes](developer-notes.md)
@@ -58,12 +57,13 @@ The TecraCoin repo's [root README](/README.md) contains relevant information on 
 - [Dnsseed Policy](dnsseed-policy.md)
 - [Benchmarking](benchmarking.md)
 
-### Resources
-* Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
-* Discuss project-specific development on #bitcoin-core-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=bitcoin-core-dev).
-* Discuss general Bitcoin development on #bitcoin-dev on Freenode. If you don't have an IRC client use [webchat here](http://webchat.freenode.net/?channels=bitcoin-dev).
+## Resources
 
-### Miscellaneous
+- Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [TecraCoin thread](https://bitcointalk.org/index.php?topic=5059685.960).
+- Discuss project-specific development on [#TecraCoin](https://t.me/tecracoinio) on Telegram.
+
+## Miscellaneous
+
 - [Assets Attribution](assets-attribution.md)
 - [Files](files.md)
 - [Fuzz-testing](fuzzing.md)
@@ -72,8 +72,8 @@ The TecraCoin repo's [root README](/README.md) contains relevant information on 
 - [Init Scripts (systemd/upstart/openrc)](init.md)
 - [ZMQ](zmq.md)
 
-License
----------------------
+## License
+
 Distributed under the [MIT software license](/COPYING).
 This product includes software developed by the OpenSSL Project for use in the [OpenSSL Toolkit](https://www.openssl.org/). This product includes
 cryptographic software written by Eric Young ([eay@cryptsoft.com](mailto:eay@cryptsoft.com)), and UPnP software written by Thomas Bernard.
