@@ -531,9 +531,7 @@ libbitcoin_consensus_a_SOURCES = \
   flat-database.h \
   hash.h \
   prevector.h \
-  crypto/scrypt.h \
   primitives/block.h \
-  primitives/precomputed_hash.h \
   primitives/transaction.cpp \
   primitives/transaction.h \
   pubkey.cpp \
@@ -629,7 +627,6 @@ libbitcoin_util_a_SOURCES = \
   utilmoneystr.cpp \
   utilstrencodings.cpp \
   utiltime.cpp \
-  crypto/scrypt.cpp \
   primitives/block.cpp \
   libzerocoin/bitcoin_bignum/allocators.h \
   libzerocoin/bitcoin_bignum/bignum.h \

@@ -28,7 +28,6 @@
 #include "validationinterface.h"
 #include "wallet/wallet.h"
 #include "definition.h"
-#include "crypto/scrypt.h"
 #include "crypto/MerkleTreeProof/mtp.h"
 #include "crypto/Lyra2Z/Lyra2Z.h"
 #include "crypto/Lyra2Z/Lyra2.h"

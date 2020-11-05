@@ -12,7 +12,6 @@
 #include "utilstrencodings.h"
 #include "crypto/common.h"
 #include "chainparams.h"
-#include "crypto/scrypt.h"
 #include "crypto/Lyra2Z/Lyra2Z.h"
 #include "crypto/Lyra2Z/Lyra2.h"
 #include "crypto/MerkleTreeProof/mtp.h"
@@ -22,8 +21,6 @@
 #include <fstream>
 #include <algorithm>
 #include <string>
-#include "precomputed_hash.h"
-
 
 
 unsigned char GetNfactor(int64_t nTimestamp) {
