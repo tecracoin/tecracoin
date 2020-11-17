@@ -4722,7 +4722,8 @@ UniValue bumpfee(const JSONRPCRequest& request)
     return result;
 }
 
-extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
+//extern UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
+extern UniValue dumpprivkey_tecracoin(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
 extern UniValue importaddress(const JSONRPCRequest& request);
 extern UniValue importpubkey(const JSONRPCRequest& request);

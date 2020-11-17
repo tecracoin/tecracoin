@@ -98,7 +98,7 @@ class WalletDumpTest(BitcoinTestFramework):
         # dump unencrypted wallet
         key = None
         try:
-            self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
+         self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump")
         except Exception as ex:
             key = get_dumpwallet_otp (ex.error['message'])
             self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.unencrypted.dump", key)
@@ -108,7 +108,7 @@ class WalletDumpTest(BitcoinTestFramework):
             read_dump(tmpdir + "/node0/wallet.unencrypted.dump", addrs, None)
         assert_equal(found_addr, test_addr_count)  # all keys must be in the dump
 
-        assert_equal(found_addr_chg, 50) # 50 block were mined
+        assert_equal(found_addr_chg, 200) # 50 block were mined
         assert_equal(found_addr_sigma, hdmint_key_count) # hdmint keys
         assert_equal(found_addr_rsv, 90 + 1)  # keypool size (TODO: fix off-by-one)
 
@@ -121,7 +121,7 @@ class WalletDumpTest(BitcoinTestFramework):
         self.nodes[0].keypoolrefill()
         key = None
         try:
-            self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.encrypted.dump")
+         self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.encrypted.dump")
         except Exception as ex:
             key = get_dumpwallet_otp (ex.error['message'])
             self.nodes[0].dumpwallet(tmpdir + "/node0/wallet.encrypted.dump", key)
@@ -131,7 +131,7 @@ class WalletDumpTest(BitcoinTestFramework):
             read_dump(tmpdir + "/node0/wallet.encrypted.dump", addrs, hd_master_addr_unenc)
         assert_equal(found_addr, test_addr_count)
         
-        assert_equal(found_addr_chg, 50) # 50 block were mined
+        assert_equal(found_addr_chg, 200) # 50 block were mined
         # Wallet encryption doesn't change master key anymore, therefore we just verify hdmint_key_count is the same as before.
         assert_equal(found_addr_sigma, hdmint_key_count) # hdmint keys
         assert_equal(found_addr_rsv, 90 + 1)  # keypool size (TODO: fix off-by-one)

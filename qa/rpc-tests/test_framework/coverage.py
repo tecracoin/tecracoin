@@ -90,17 +90,17 @@ def write_all_rpc_commands(dirname, node):
     if os.path.isfile(filename):
         return False
 
-    help_output = node.help().split('\n')
-    commands = set()
+#    help_output = node.help().split('\n')
+#    commands = set()
 
-    for line in help_output:
-        line = line.strip()
+#    for line in help_output:
+#        line = line.strip()
 
         # Ignore blanks and headers
-        if line and not line.startswith('='):
-            commands.add("%s\n" % line.split()[0])
+#        if line and not line.startswith('='):
+#            commands.add("%s\n" % line.split()[0])
 
-    with open(filename, 'w', encoding='utf8') as f:
-        f.writelines(list(commands))
+#    with open(filename, 'w', encoding='utf8') as f:
+#        f.writelines(list(commands))
 
     return True
