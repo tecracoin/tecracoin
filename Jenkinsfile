@@ -13,7 +13,7 @@ pipeline {
                 sh './configure'
                 sh 'make dist'
                 sh 'mkdir -p dist'
-                sh 'tar -C dist --strip-components=1 -xzf zcoin-*.tar.gz'
+                sh 'tar -C dist --strip-components=1 -xzf tecracoin-*.tar.gz'
                 dir('dist') {
                     sh './configure --enable-elysium --enable-tests'
                     sh 'make -j6'
