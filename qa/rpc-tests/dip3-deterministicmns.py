@@ -62,8 +62,8 @@ class DIP3Test(BitcoinTestFramework):
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 10000:
             self.nodes[0].generate(1) # generate enough for collaterals
             self.sync_all()
-        self.log.info("controller node has {} XZC".format(self.nodes[0].getbalance()))
-        self.log.info("blockcount {} XZC".format(self.nodes[0].getblockcount()))
+        self.log.info("controller node has {} TCR".format(self.nodes[0].getbalance()))
+        self.log.info("blockcount {} TCR".format(self.nodes[0].getblockcount()))
 
         # Make sure we're below block 7000 (which activates dip3)
         self.log.info("testing rejection of ProTx before dip3 activation: {}".format(self.nodes[0].getblockchaininfo()['blocks']))
