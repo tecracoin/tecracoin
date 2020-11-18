@@ -51,14 +51,14 @@ class PortSeed:
 #cached version of the blockchain.  If the cached
 #version of the blockchain is used without MOCKTIME
 #then the mempools will not sync due to IBD.
-MOCKTIME = 0
+MOCKTIME = 1604188800
 
 def enable_mocktime():
     #For backwared compatibility of the python scripts
     #with previous versions of the cache, set MOCKTIME
     #to Jan 1, 2014 + (201 * 10 * 60)
     global MOCKTIME
-    MOCKTIME = 1414776313 + (201 * 10 * 60)
+    MOCKTIME = 1604188800 + (801 * 150)
 
 def set_mocktime(t):
     global MOCKTIME
@@ -102,21 +102,21 @@ def get_rpc_proxy(url, node_number, timeout=None):
 
     return coverage.AuthServiceProxyWrapper(proxy, coverage_logfile)
 
-def get_evoznsync_status(node):
-    result = node.evoznsync("status")
+def get_evotnsync_status(node):
+    result = node.evotnsync("status")
     return result['IsSynced']
 
-def wait_to_sync(node, fast_znsync=False):
+def wait_to_sync(node, fast_tnsync=False):
     tm = 0
     synced = False
     while tm < 30:
-        synced = get_evoznsync_status(node)
+        synced = get_evotnsync_status(node)
         if synced:
             return
         time.sleep(0.2)
-        if fast_znsync:
+        if fast_tnsync:
             # skip mnsync states
-            node.znsync("next")
+            node.tnsync("next")
         tm += 0.2
     assert(synced)
 
@@ -146,7 +146,7 @@ def hex_str_to_bytes(hex_str):
 def str_to_b64str(string):
     return b64encode(string.encode('utf-8')).decode('ascii')
 
-def sync_blocks(rpc_connections, *, wait=1, timeout=60):
+def sync_blocks(rpc_connections, *, wait=1, timeout=360):
     """
     Wait until everybody has the same tip.
 
@@ -173,13 +173,13 @@ def sync_blocks(rpc_connections, *, wait=1, timeout=60):
     raise AssertionError("Block sync to height {} timed out:{}".format(
                          maxheight, "".join("\n  {!r}".format(tip) for tip in tips)))
 
-def sync_znodes(rpc_connections, *, timeout=60):
+def sync_tnodes(rpc_connections, *, timeout=60):
     """
-    Waits until every node has their znsync status is synced.
+    Waits until every node has their tnsync status is synced.
     """
     start_time = cur_time = time.time()
     while cur_time <= start_time + timeout:
-        statuses = [r.znsync("status") for r in rpc_connections]
+        statuses = [r.tnsync("status") for r in rpc_connections]
         if all(stat["IsSynced"] == True for stat in statuses):
             return
         cur_time = time.time()
@@ -197,7 +197,7 @@ def sync_chain(rpc_connections, *, wait=1, timeout=60):
         timeout -= wait
     raise AssertionError("Chain sync failed: Best block hashes don't match")
 
-def sync_mempools(rpc_connections, *, wait=1, timeout=60):
+def sync_mempools(rpc_connections, *, wait=1, timeout=240):
     """
     Wait until everybody has the same transactions in their memory
     pools
@@ -214,7 +214,7 @@ def sync_mempools(rpc_connections, *, wait=1, timeout=60):
         timeout -= wait
     raise AssertionError("Mempool sync failed")
 
-def sync_znodes(rpc_connections, fast_mnsync=False):
+def sync_tnodes(rpc_connections, fast_mnsync=False):
     for node in rpc_connections:
         wait_to_sync(node, fast_mnsync)
 
@@ -251,12 +251,12 @@ def rpc_url(i, rpchost=None):
 
 def wait_for_bitcoind_start(process, url, i):
     '''
-    Wait for zcoind to start. This means that RPC is accessible and fully initialized.
-    Raise an exception if zcoind exits during initialization.
+    Wait for tecracoind to start. This means that RPC is accessible and fully initialized.
+    Raise an exception if tecracoind exits during initialization.
     '''
     while True:
         if process.poll() is not None:
-            raise Exception('zcoind exited with status %i during initialization' % process.returncode)
+            raise Exception('tecracoind exited with status %i during initialization' % process.returncode)
         try:
             rpc = get_rpc_proxy(url, i)
             blocks = rpc.getblockcount()
@@ -274,7 +274,8 @@ def initialize_chain(test_dir, num_nodes, cachedir):
     Create a cache of a 200-block-long chain (with wallet) for MAX_NODES
     Afterward, create num_nodes copies from the cache
     """
-
+    print("the testdir ",test_dir)
+    print("the cachedir ",cachedir)
     assert num_nodes <= MAX_NODES
     create_cache = False
     for i in range(MAX_NODES):
@@ -297,7 +298,7 @@ def initialize_chain(test_dir, num_nodes, cachedir):
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
             bitcoind_processes[i] = subprocess.Popen(args)
             if os.getenv("PYTHON_DEBUG", ""):
-                print("initialize_chain: bitcoind started, waiting for RPC to come up")
+                print("initialize_chain: bitcoind started, waiting for RPC to come up for",i)
             wait_for_bitcoind_start(bitcoind_processes[i], rpc_url(i), i)
             if os.getenv("PYTHON_DEBUG", ""):
                 print("initialize_chain: RPC successfully started")
@@ -315,22 +316,25 @@ def initialize_chain(test_dir, num_nodes, cachedir):
         # Note: To preserve compatibility with older versions of
         # initialize_chain, only 4 nodes will generate coins.
         #
-        # blocks are created with timestamps 10 minutes apart
+        # blocks are created with timestamps 2.5 minutes apart
         # starting from 2010 minutes in the past
+        print("Coming Here: RPC successfully started")
         enable_mocktime()
-        block_time = get_mocktime() - (201 * 10 * 60)
+        block_time = get_mocktime() - (801 * 150)
         for i in range(2):
             for peer in range(4):
-                for j in range(25):
+                for j in range(100):
                     set_node_times(rpcs, block_time)
                     rpcs[peer].generate(1)
-                    block_time += 10*60
+                    block_time += 150
                 # Must sync before next peer starts generating blocks
                 sync_blocks(rpcs)
-
+        print("Coming Here 2: RPC successfully started")
         # Shut them down, and clean up cache directories:
         stop_nodes(rpcs)
         disable_mocktime()
+        print("Coming Here 3: before remove cachedir ",cachedir)
+        print("Coming Here 3: before remove testdir",test_dir)        
         for i in range(MAX_NODES):
             try:
                 os.remove(log_filename(cachedir, i, "debug.log"))
@@ -338,13 +342,17 @@ def initialize_chain(test_dir, num_nodes, cachedir):
                 os.remove(log_filename(cachedir, i, "peers.dat"))
                 os.remove(log_filename(cachedir, i, "fee_estimates.dat"))
             except OSError:
+                print("Coming Here 3: problem removing ")  
                 pass
-
+        print("Coming Here 3: before copy ")      
     for i in range(num_nodes):
         from_dir = os.path.join(cachedir, "node"+str(i))
+        print("from dir ",from_dir)
         to_dir = os.path.join(test_dir,  "node"+str(i))
+        print("to dir ",to_dir)
         if from_dir != to_dir:
             shutil.copytree(from_dir, to_dir)
+        print("Coming Here 3: after copy ")    
         initialize_datadir(test_dir, i) # Overwrite port/rpcport in bitcoin.conf
 
 def initialize_chain_clean(test_dir, num_nodes):
@@ -819,19 +827,19 @@ def dumpprivkey_otac(node, address):
         raise JSONRPCException(error_text)
     return node.dumpprivkey(address, otac_match.groups()[0])
 
-def get_znsync_status(node):
-    result = node.znsync("status")
+def get_tnsync_status(node):
+    result = node.tnsync("status")
     return result['IsSynced']
 
-def wait_to_sync_znodes(node, fast_znsync=False):
+def wait_to_sync_tnodes(node, fast_tnsync=False):
     while True:
-        synced = get_znsync_status(node)
+        synced = get_tnsync_status(node)
         if synced:
             break
         time.sleep(0.2)
-        if fast_znsync:
+        if fast_tnsync:
             # skip mnsync states
-            node.znsync("next")
+            node.tnsync("next")
 
 def get_full_balance(node):
     wallet_info = node.getwalletinfo()

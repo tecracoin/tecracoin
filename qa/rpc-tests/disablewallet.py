@@ -27,12 +27,12 @@ class DisableWalletTest (BitcoinTestFramework):
         # Check regression: https://github.com/bitcoin/bitcoin/issues/6963#issuecomment-154548880
         x = self.nodes[0].validateaddress('3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy')
         assert(x['isvalid'] == False)
-        x = self.nodes[0].validateaddress('TNsivqpE8sqfsRtyu3aC6EUs2PXSbZ8vFQ')
+        x = self.nodes[0].validateaddress('fc52erY95gPPodezPd3Rfj6h4DWKPN8pkM')
         assert(x['isvalid'] == True)
 
         # Checking mining to an address without a wallet
         try:
-            self.nodes[0].generatetoaddress(1, 'TNsivqpE8sqfsRtyu3aC6EUs2PXSbZ8vFQ')
+            self.nodes[0].generatetoaddress(1, 'fT5R28XFJx7A618pNVjBoQmyYNQviqCzBs')
         except JSONRPCException as e:
             assert("Invalid address" not in e.error['message'])
             assert("ProcessNewBlock, block not accepted" not in e.error['message'])

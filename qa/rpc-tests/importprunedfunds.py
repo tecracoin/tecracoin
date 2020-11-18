@@ -5,7 +5,7 @@
 
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import *
-
+from test_framework.authproxy import JSONRPCException
 
 class ImportPrunedFundsTest(BitcoinTestFramework):
 
@@ -22,9 +22,9 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
 
     def run_test(self):
         print("Mining blocks...")
-        self.nodes[0].generate(101)
-
-        self.sync_all()
+        for n in range(402):
+            self.nodes[0].generate(1)
+            self.sync_all()
 
 
         # address
@@ -34,8 +34,14 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         error_message = ''
         try:
             self.nodes[0].dumpprivkey(address1)
+#        except Exception as e:
+#            self.log.info("Unexpected exception raised: "+e.error['message'])           
         except JSONRPCException as e:
-            error_message = e.error['message']
+           self.log.info("Unexpected JSONRPC error code %i" % e.error["code"])
+           self.log.info("Expected substring not found:"+e.error['message'])
+           error_message = e.error['message']
+           self.log.info("message "+error_message)
+       
         assert_greater_than(error_message.find('Your one time authorization code is:'), -1)
 
         # pubkey
@@ -52,7 +58,7 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         self.sync_all()
 
         #Node 1 sync test
-        assert_equal(self.nodes[1].getblockcount(),101)
+        assert_equal(self.nodes[1].getblockcount(),402)
 
         #Address Test - before import
         address_info = self.nodes[1].validateaddress(address1)

@@ -31,9 +31,9 @@ static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransaction>& txs)
     CAmount balance = 0;
     for (size_t i = 0; i < txs.size(); i++) {
         auto& tx = txs[i];
-        size_t const znode_output = tx.vout.size() > 6 ? FindTnodeOutput(tx) : 0;
+        size_t const tnode_output = tx.vout.size() > 6 ? FindTnodeOutput(tx) : 0;
         for (size_t j = 0; j < tx.vout.size(); j++) {
-            if(j == 0 || j == znode_output) {
+            if(j == 0 || j == tnode_output) {
                 balance += tx.vout[j].nValue;
                 utxos.emplace(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue));
             }

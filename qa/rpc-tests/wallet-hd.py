@@ -13,7 +13,7 @@ from test_framework.util import (
 import os
 import shutil
 from test_framework.test_helper import get_dumpwallet_otp 
-
+from test_framework.authproxy import JSONRPCException
 
 class WalletHDTest(BitcoinTestFramework):
 
@@ -31,6 +31,7 @@ class WalletHDTest(BitcoinTestFramework):
     def run_test (self):
         tmpdir = self.options.tmpdir
 
+
         # Make sure we use hd, keep masterkeyid
         masterkeyid = self.nodes[1].getwalletinfo()['hdmasterkeyid']
         assert_equal(len(masterkeyid), 40)
@@ -41,11 +42,13 @@ class WalletHDTest(BitcoinTestFramework):
         key = None
         try:
             self.nodes[1].importprivkey(self.nodes[0].dumpprivkey(non_hd_add))
-        except Exception as ex:
-            key = get_dumpwallet_otp (ex.error['message'])
+        except JSONRPCException as e:
+            self.log.info("Unexpected JSONRPC error code %i" % e.error["code"])
+            self.log.info("Expected substring not found:"+e.error['message'])
+            key = get_dumpwallet_otp(e.error['message'])
             self.nodes[1].importprivkey(self.nodes[0].dumpprivkey(non_hd_add, key))
-        assert key, 'Import wallet did not raise exception when was called first time without one-time code.'
-        
+        else:
+            raise AssertionError("No exception raised")
 
         # This should be enough to keep the master key and the non-HD key 
         self.nodes[1].backupwallet(tmpdir + "/hd.bak")
@@ -53,12 +56,17 @@ class WalletHDTest(BitcoinTestFramework):
 
         # Derive some HD addresses and remember the last
         # Also send funds to each add
-        self.nodes[0].generate(101)
+#        self.nodes[0].keypoolrefill(300)
+#        self.nodes[0].generate(101)
+        for i in range(800):
+            self.nodes[0].generate(1)
+            self.sync_all()
         hd_add = None
         num_hd_adds = 300
         for i in range(num_hd_adds):
             hd_add = self.nodes[1].getnewaddress()
             hd_info = self.nodes[1].validateaddress(hd_add)
+            self.log.info("hdkeypath"+hd_info["hdkeypath"])
             assert_equal(hd_info["hdkeypath"], "m/44'/1'/0'/0/" + str(i+1))
             assert_equal(hd_info["hdmasterkeyid"], masterkeyid)
             self.nodes[0].sendtoaddress(hd_add, 1)

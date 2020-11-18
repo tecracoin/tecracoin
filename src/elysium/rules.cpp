@@ -235,7 +235,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     SIGMA_SPENDV1_FEATURE_BLOCK = 550;
 
     // Property creation fee
-    PROPERTY_CREATION_FEE_BLOCK = 500;
+    PROPERTY_CREATION_FEE_BLOCK = 6000;
     PROPERTY_CREATION_FEE = 10 * COIN;
     PROPERTY_CREATION_FEE_RECEIVER.SetString("fNYXvhBq4hKjRhCvJurfd9kMnZc3urwncb");
 }

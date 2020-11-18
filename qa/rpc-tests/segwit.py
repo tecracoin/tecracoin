@@ -46,7 +46,7 @@ def create_witnessprogram(version, node, utxo, pubkey, encode_p2sh, amount):
     inputs = []
     outputs = {}
     inputs.append({ "txid" : utxo["txid"], "vout" : utxo["vout"]} )
-    DUMMY_P2SH = "2MySexEGVzZpRgNQ1JdjdP5bRETznm3roQ2" # P2SH of "OP_1 OP_DROP"
+    DUMMY_P2SH = "fc52erY95gPPodezPd3Rfj6h4DWKPN8pkM" # P2SH of "OP_1 OP_DROP"
     outputs[DUMMY_P2SH] = amount
     tx_to_witness = node.createrawtransaction(inputs,outputs)
     #replace dummy output with our own
@@ -125,23 +125,33 @@ class SegWitTest(BitcoinTestFramework):
         sync_blocks(self.nodes)
 
     def run_test(self):
-        self.nodes[0].generate(161) #block 161
+        for n in range(462):
+            self.nodes[0].generate(1) #block 462
+            self.sync_all()
 
         print("Verify sigops are counted in GBT with pre-BIP141 rules before the fork")
         txid = self.nodes[0].sendtoaddress(self.nodes[0].getnewaddress(), 1)
         tmpl = self.nodes[0].getblocktemplate({})
-        assert(tmpl['sizelimit'] == 1000000)
-        assert('weightlimit' not in tmpl)
-        assert(tmpl['sigoplimit'] == 20000)
+        self.log.info("sizelimit {}".format(tmpl['sizelimit']))
+        self.log.info("weightlimit {}".format(tmpl['weightlimit']))
+        self.log.info("transaction sigop {}".format(tmpl['transactions'][0]['sigops']))
+
+        assert(tmpl['sizelimit'] == 2000000)
+        assert(tmpl['weightlimit'] == 2000000)
+        assert(tmpl['sigoplimit'] == 400000)
         assert(tmpl['transactions'][0]['hash'] == txid)
-        assert(tmpl['transactions'][0]['sigops'] == 2)
+        assert(tmpl['transactions'][0]['sigops'] == 8)
         tmpl = self.nodes[0].getblocktemplate({'rules':['segwit']})
-        assert(tmpl['sizelimit'] == 1000000)
-        assert('weightlimit' not in tmpl)
-        assert(tmpl['sigoplimit'] == 20000)
+        self.log.info("sizelimit {}".format(tmpl['sizelimit']))
+        self.log.info("weightlimit {}".format(tmpl['weightlimit']))
+        self.log.info("sigoplimit {}".format(tmpl['sigoplimit']))
+        self.log.info("transaction sigop {}".format(tmpl['transactions'][0]['sigops']))
+        assert(tmpl['sizelimit'] == 2000000)
+        assert(tmpl['weightlimit'] == 2000000)
+        assert(tmpl['sigoplimit'] == 400000)
         assert(tmpl['transactions'][0]['hash'] == txid)
-        assert(tmpl['transactions'][0]['sigops'] == 2)
-        self.nodes[0].generate(1) #block 162
+        assert(tmpl['transactions'][0]['sigops'] == 8)
+        self.nodes[0].generate(1) #block 463
 
         balance_presetup = self.nodes[0].getbalance()
         self.pubkey = []
@@ -159,11 +169,14 @@ class SegWitTest(BitcoinTestFramework):
                 p2sh_ids[i].append([])
                 wit_ids[i].append([])
 
+        for utxo in self.nodes[0].listunspent():
+            self.log.info("unspent amount "+format(utxo['amount']))
+
         for i in range(5):
             for n in range(3):
                 for v in range(2):
-                    wit_ids[n][v].append(send_to_witness(v, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[n], False, Decimal("49.999")))
-                    p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], find_unspent(self.nodes[0], 50), self.pubkey[n], True, Decimal("49.999")))
+                    wit_ids[n][v].append(send_to_witness(v, self.nodes[0], find_unspent(self.nodes[0], 16.87500000), self.pubkey[n], False, Decimal("16.87400000")))
+                    p2sh_ids[n][v].append(send_to_witness(v, self.nodes[0], find_unspent(self.nodes[0], 16.87500000), self.pubkey[n], True, Decimal("16.87400000")))
 
         self.nodes[0].generate(1) #block 163
         sync_blocks(self.nodes)

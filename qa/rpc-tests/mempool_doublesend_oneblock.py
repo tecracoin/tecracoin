@@ -30,18 +30,28 @@ class MempoolDoubleSpendOneBlock(BitcoinTestFramework):
 
     def run_test(self):
         node0_address = self.nodes[0].getnewaddress()
-        self.nodes[0].generate(200)
+#        self.nodes[0].generate(800)
         b_count = self.nodes[0].getblockcount()
 
-        b1 = self.nodes[0].getblockhash(b_count - 100)
+        b1 = self.nodes[0].getblockhash(b_count - 700) # using the test chain...
         coinbase_txids1 = self.nodes[0].getblock(b1)['tx'][0]
+        rawtx1 = self.nodes[0].getrawtransaction(coinbase_txids1, 1)
+        for txout in rawtx1['vout']:
+                self.log.info("vout of txid {} tcr".format(txout['value']))
 
-        b = self.nodes[0].getblockhash(b_count-101)
+        self.log.info("value of rawtix1 {} tcr".format(rawtx1['vout'][0]['value']))
+
+        b = self.nodes[0].getblockhash(b_count-701)
         coinbase_txids2 = self.nodes[0].getblock(b)['tx'][0]
+        rawtx2 = self.nodes[0].getrawtransaction(coinbase_txids2, 1)
+        for txout in rawtx2['vout']:
+                self.log.info("vout of txid {} tcr".format(txout['value']))
 
-        spends1_raw = create_tx(self.nodes[0], coinbase_txids1, node0_address, 26)
+        self.log.info("value of rawtix1 {} tcr".format(rawtx2['vout'][0]['value']))
+
+        spends1_raw = create_tx(self.nodes[0], coinbase_txids1, node0_address, rawtx1['vout'][0]['value'])
         inputs = [{"txid": coinbase_txids1, "vout": 0}, {"txid": coinbase_txids2, "vout": 0}]
-        outputs = {node0_address: 13, node0_address: 13}
+        outputs = {node0_address: rawtx1['vout'][0]['value']/2, node0_address: rawtx1['vout'][0]['value']/2}
         spends2_raw = create_tx_multi_input(self.nodes[0], inputs, outputs)
 
         self.nodes[0].sendrawtransaction(spends1_raw)

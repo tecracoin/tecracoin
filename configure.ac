@@ -277,12 +277,9 @@ AC_ARG_WITH([daemon],
 AC_ARG_ENABLE(unsafe-dumpprivkey,
     [],
     [unsafe_dumpprivkey=x$enableval],
-    [unsafe_dumpprivkey=xno])
+    [unsafe_dumpprivkey=no])
 
 
-AS_IF([test "x$enable_unsafe_dumpprivkey" != "xno"], [
-    CPPFLAGS="$CPPFLAGS -DUNSAFE_DUMPPRIVKEY"
-])
 
 use_pkgconfig=yes
 case $host in
