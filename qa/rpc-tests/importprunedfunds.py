@@ -35,13 +35,13 @@ class ImportPrunedFundsTest(BitcoinTestFramework):
         try:
             self.nodes[0].dumpprivkey(address1)
 #        except Exception as e:
-#            self.log.info("Unexpected exception raised: "+e.error['message'])           
+#            self.log.info("Unexpected exception raised: "+e.error['message'])
         except JSONRPCException as e:
            self.log.info("Unexpected JSONRPC error code %i" % e.error["code"])
            self.log.info("Expected substring not found:"+e.error['message'])
            error_message = e.error['message']
            self.log.info("message "+error_message)
-       
+
         assert_greater_than(error_message.find('Your one time authorization code is:'), -1)
 
         # pubkey

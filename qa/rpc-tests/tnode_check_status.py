@@ -65,7 +65,6 @@ class TnodeCheckStatus(TnodeTestFramework):
                 if (k!=0):
                     self.nodes[k].setmocktime(get_mocktime())
             sync_blocks(self.nodes[1:])
-          
 
         tnode_list = self.nodes[self.num_nodes - 1].tnodelist()
         self.log.info("2 tnode list {} ".format(tnode_list))
@@ -80,6 +79,6 @@ class TnodeCheckStatus(TnodeTestFramework):
                 assert_equal(status, "NEW_START_REQUIRED")
 
         self.nodes[0] = start_node(0,self.options.tmpdir)
-        
+
 if __name__ == '__main__':
     TnodeCheckStatus().main()

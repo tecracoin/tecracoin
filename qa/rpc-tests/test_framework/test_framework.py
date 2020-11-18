@@ -289,14 +289,13 @@ class ElysiumTestFramework(BitcoinTestFramework):
         super().__init__()
         self.addrs = []
 
- 
     def run_test(self):
 
-        for rpc in self.nodes:  
+        for rpc in self.nodes:
             rpc.generate(600)
             self.log.info("The block count {} blocks".format(rpc.getblockcount()))
 
-        for rpc in self.nodes:  
+        for rpc in self.nodes:
             rpc.generate(600)
             self.log.info("The block count {} blocks".format(rpc.getblockcount()))
 

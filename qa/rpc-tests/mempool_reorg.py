@@ -28,7 +28,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         connect_nodes(self.nodes[1], 0)
         self.is_network_split = False
 
-#        for j in range(800):  
+#        for j in range(800):
 #                self.nodes[0].generate(1)
 #                self.sync_all()
 
@@ -53,7 +53,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
 
         b = [ self.nodes[0].getblockhash(n) for n in range(401, 405) ]
         coinbase_txids = [ self.nodes[0].getblock(h)['tx'][0] for h in b ]
-        
+
         for n in range(4):
            rawtx = self.nodes[0].getrawtransaction(coinbase_txids[n], 1)
            self.log.info("value of rawtix1 {} tcr".format(rawtx['vout'][0]['value']))
@@ -62,7 +62,7 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         spend_101_raw = create_tx(self.nodes[0], coinbase_txids[1], node1_address, 0.924)
         spend_102_raw = create_tx(self.nodes[0], coinbase_txids[2], node0_address, 0.925)
         spend_103_raw = create_tx(self.nodes[0], coinbase_txids[3], node0_address, 0.924)
-      
+
         # Create a block-height-locked transaction which will be invalid after reorg
         timelock_tx = self.nodes[0].createrawtransaction([{'txid': coinbase_txids[0], 'vout': 0}], {node0_address: 0.924})
         self.log.info("theraw transaction "+timelock_tx)
@@ -78,12 +78,11 @@ class MempoolCoinbaseTest(BitcoinTestFramework):
         self.log.info("value of rawtix1 {} tcr".format(rawtx))
 
         assert_raises(JSONRPCException, self.nodes[0].sendrawtransaction, timelock_tx)
-        self.sync_all()       
+        self.sync_all()
         # Broadcast and mine spend_102 and 103:
         spend_102_id = self.nodes[0].sendrawtransaction(spend_102_raw)
 
         spend_103_id = self.nodes[0].sendrawtransaction(spend_103_raw)
-    
 
         assert_raises(JSONRPCException, self.nodes[0].sendrawtransaction, timelock_tx)
         self.nodes[0].generate(1)

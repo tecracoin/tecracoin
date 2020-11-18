@@ -118,7 +118,7 @@ testScripts = [
     # 'p2p-fullblocktest.py',
     # 'p2p-dandelion.py',
     # 'bip68-112-113-p2p.py',
-    #              'fundrawtransaction.py',
+    # 'fundrawtransaction.py',
     # 'p2p-compactblocks.py',
     # 'segwit.py',
     # vv Tests less than 2m vv

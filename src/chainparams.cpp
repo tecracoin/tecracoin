@@ -631,7 +631,7 @@ public:
         consensus.nPowTargetSpacing = 1;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
-        
+
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;

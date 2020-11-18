@@ -15,7 +15,7 @@ class ElysiumSendMintTest(ElysiumTestFramework):
             self.nodes[0].generate(1)
 
         assert self.nodes[0].getblockcount() > sigma_start_block , 'block count below sigma start block: {}, should be at least {}'.format(self.nodes[0].getblockcount(), sigma_start_block)
-        
+
         # create non-sigma
         self.nodes[0].elysium_sendissuancefixed(
             self.addrs[0], 1, 1, 0, '', '', 'Non-Sigma', '', '', '1000000'
@@ -93,8 +93,8 @@ class ElysiumSendMintTest(ElysiumTestFramework):
         # success to mint should be shown on pending
         addr3 = self.nodes[1].getnewaddress()
         self.log.info("(sigma) balance addr 0 {}".format(self.nodes[0].elysium_getbalance(self.addrs[0], sigmaProperty)))
-        self.log.info("(non sigma) balance addr 0 {}".format(self.nodes[0].elysium_getbalance(self.addrs[0], nonSigmaProperty))) 
-        self.log.info("listspendmint  {}".format(self.nodes[0].elysium_listpendingmints()))        
+        self.log.info("(non sigma) balance addr 0 {}".format(self.nodes[0].elysium_getbalance(self.addrs[0], nonSigmaProperty)))
+        self.log.info("listspendmint  {}".format(self.nodes[0].elysium_listpendingmints()))
         self.log.info("blockcount {}".format(self.nodes[0].getblockcount()))
 #        self.nodes[0].elysium_send(self.addrs[0], addr3, sigmaProperty, "100")
         self.nodes[0].sendtoaddress(addr1, 100)
