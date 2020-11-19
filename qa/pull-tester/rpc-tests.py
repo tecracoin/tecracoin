@@ -56,10 +56,10 @@ ENABLE_COVERAGE=0
 opts = set()
 passon_args = []
 PASSON_REGEX = re.compile("^--")
-PARALLEL_REGEX = re.compile('^-parallel=')
+
 
 print_help = False
-run_parallel = 4
+run_parallel = 1 # not working in parallel
 
 for arg in sys.argv[1:]:
     if arg == "--help" or arg == "-h" or arg == "-?":
@@ -69,8 +69,6 @@ for arg in sys.argv[1:]:
         ENABLE_COVERAGE = 1
     elif PASSON_REGEX.match(arg):
         passon_args.append(arg)
-    elif PARALLEL_REGEX.match(arg):
-        run_parallel = int(arg.split(sep='=', maxsplit=1)[1])
     else:
         opts.add(arg)
 
@@ -126,16 +124,16 @@ testScripts = [
      'wallet-hd.py',
      'wallet-dump.py',
      'walletbackup.py',
-    # 'wallet-accounts.py',
+     'wallet-accounts.py',
     # 'p2p-segwit.py',
-    # 'listtransactions.py',
+     'listtransactions.py',
     # vv Tests less than 60s vv
     # 'sendheaders.py',
-    # 'importmulti.py',
-    # 'mempool_limit.py',
-    # 'merkle_blocks.py',
-    'receivedby.py',
-    # 'abandonconflict.py',
+     'importmulti.py',
+     'mempool_limit.py',
+     'merkle_blocks.py',
+     'receivedby.py',
+     'abandonconflict.py',
     # 'bip68-112-113-p2p.py',
     # 'rawtransactions.py',
     # vv Tests less than 30s vv
@@ -168,17 +166,16 @@ testScripts = [
     # 'bumpfee.py',
     # 'rpcnamedargs.py',
     # 'listsinceblock.py',
-    # 'p2p-leaktests.py',
-
+     'p2p-leaktests.py',
     # Tnode (to be deprecated),
     'tnode_check_payments.py',
     'tnode_check_status.py',
 
     # Evo Tnodes
-    'dip3-deterministicmns.py'
+    'dip3-deterministicmns.py',
 
-    # Unstable tests
-    #, 'dip4-coinbasemerkleroots.py'
+    # Unstable tests,
+    'dip4-coinbasemerkleroots.py'
 ]
 # if ENABLE_ZMQ:
 #     testScripts.append('zmq_test.py')
@@ -260,6 +257,7 @@ def runtests():
         print('' if stderr == '' else 'stderr:\n' + stderr + '\n', end='')
         results += "%s | %s | %s s\n" % (name.ljust(max_len_name), str(passed).ljust(6), duration)
         print("Pass: %s%s%s, Duration: %s s\n" % (BOLD[1], passed, BOLD[0], duration))
+
     results += BOLD[1] + "\n%s | %s | %s s (accumulated)" % ("ALL".ljust(max_len_name), str(all_passed).ljust(6), time_sum) + BOLD[0]
     print(results)
     print("\nRuntime: %s s" % (int(time.time() - time0)))
@@ -277,8 +275,9 @@ class RPCTestHandler:
     """
     Trigger the testscrips passed in via the list.
     """
-
+   
     def __init__(self, num_tests_parallel, test_list=None, flags=None):
+        
         assert(num_tests_parallel >= 1)
         self.num_jobs = num_tests_parallel
         self.test_list = test_list
@@ -320,6 +319,7 @@ class RPCTestHandler:
                     passed = stderr == "" and proc.returncode == 0
                     self.num_running -= 1
                     self.jobs.remove(j)
+#                    shutil.rmtree("cache")
                     return name, stdout, stderr, passed, int(time.time() - time0)
             print('.', end='', flush=True)
 

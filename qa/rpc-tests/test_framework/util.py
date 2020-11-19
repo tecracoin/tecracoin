@@ -714,8 +714,12 @@ def satoshi_round(amount):
 
 # Helper to create at least "count" utxos
 # Pass in a fee that is sufficient for relay and mining new transactions.
-def create_confirmed_utxos(fee, node, count):
-    node.generate(int(0.5*count)+101)
+def create_confirmed_utxos(self, fee, node, count):
+#    node.generate(int(0.5*count))
+    for i in range(402+int(0.5*count)):
+        node.generate(1)
+        self.sync_all()
+
     utxos = node.listunspent()
     iterations = count - len(utxos)
     addr1 = node.getnewaddress()
@@ -728,11 +732,13 @@ def create_confirmed_utxos(fee, node, count):
         inputs.append({ "txid" : t["txid"], "vout" : t["vout"]})
         outputs = {}
         send_value = t['amount'] - fee
-        outputs[addr1] = satoshi_round(send_value/2)
-        outputs[addr2] = satoshi_round(send_value/2)
-        raw_tx = node.createrawtransaction(inputs, outputs)
-        signed_tx = node.signrawtransaction(raw_tx)["hex"]
-        txid = node.sendrawtransaction(signed_tx)
+        self.log.info("send value {}".format(send_value))
+        if send_value>0:
+            outputs[addr1] = satoshi_round(send_value/2)
+            outputs[addr2] = satoshi_round(send_value/2)
+            raw_tx = node.createrawtransaction(inputs, outputs)
+            signed_tx = node.signrawtransaction(raw_tx)["hex"]
+            txid = node.sendrawtransaction(signed_tx)
 
     while (node.getmempoolinfo()['size'] > 0):
         node.generate(1)
@@ -777,7 +783,7 @@ def create_tx_multi_input(node, inputs, outputs):
 
 # Create a spend of each passed-in utxo, splicing in "txouts" to each raw
 # transaction to make it large.  See gen_return_txouts() above.
-def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
+def create_lots_of_big_transactions(self,node, txouts, utxos, num, fee):
     addr = node.getnewaddress()
     txids = []
     for _ in range(num):
@@ -785,14 +791,16 @@ def create_lots_of_big_transactions(node, txouts, utxos, num, fee):
         inputs=[{ "txid" : t["txid"], "vout" : t["vout"]}]
         outputs = {}
         change = t['amount'] - fee
-        outputs[addr] = satoshi_round(change)
-        rawtx = node.createrawtransaction(inputs, outputs)
-        newtx = rawtx[0:92]
-        newtx = newtx + txouts
-        newtx = newtx + rawtx[94:]
-        signresult = node.signrawtransaction(newtx, None, None, "NONE")
-        txid = node.sendrawtransaction(signresult["hex"], True)
-        txids.append(txid)
+        self.log.info("change {}".format(change))
+        if change>0:
+            outputs[addr] = satoshi_round(change)
+            rawtx = node.createrawtransaction(inputs, outputs)
+            newtx = rawtx[0:92]
+            newtx = newtx + txouts
+            newtx = newtx + rawtx[94:]
+            signresult = node.signrawtransaction(newtx, None, None, "NONE")
+            txid = node.sendrawtransaction(signresult["hex"], True)
+            txids.append(txid)
     return txids
 
 def mine_large_block(node, utxos=None):

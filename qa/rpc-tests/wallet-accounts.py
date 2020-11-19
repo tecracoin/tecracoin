@@ -10,7 +10,7 @@ from test_framework.util import (
     assert_equal,
     connect_nodes_bi,
 )
-
+from decimal import *
 
 class WalletAccountsTest(BitcoinTestFramework):
 
@@ -29,9 +29,9 @@ class WalletAccountsTest(BitcoinTestFramework):
         # Check that there's no UTXO on any of the nodes
         assert_equal(len(node.listunspent()), 0)
         
-        node.generate(101)
+        node.generate(411)
         
-        assert_equal(node.getbalance(), 50)
+        assert_equal(node.getbalance(), 11.25)
         
         accounts = ["a","b","c","d","e"]
         amount_to_send = 1.0
@@ -64,13 +64,13 @@ class WalletAccountsTest(BitcoinTestFramework):
         
         node.generate(101)
         
-        expected_account_balances = {"": 5200}
+        expected_account_balances = {"": Decimal('127.12217000')}
         for account in accounts:
-            expected_account_balances[account] = 0
+            expected_account_balances[account] = Decimal('0')
         
         assert_equal(node.listaccounts(), expected_account_balances)
         
-        assert_equal(node.getbalance(""), 5200)
+        assert_equal(node.getbalance(""), Decimal('127.12217000'))
         
         for account in accounts:
             address = node.getaccountaddress("")
@@ -83,12 +83,12 @@ class WalletAccountsTest(BitcoinTestFramework):
             for x in range(10):
                 addresses.append(node.getnewaddress())
             multisig_address = node.addmultisigaddress(5, addresses, account)
-            node.sendfrom("", multisig_address, 50)
+            node.sendfrom("", multisig_address, 5)
         
         node.generate(101)
         
         for account in accounts:
-            assert_equal(node.getbalance(account), 50)
+            assert_equal(node.getbalance(account), 5)
 
 if __name__ == '__main__':
     WalletAccountsTest().main ()

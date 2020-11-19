@@ -207,7 +207,6 @@ class BitcoinTestFramework(object):
 
         if not self.options.nocleanup and not self.options.noshutdown and success:
             self.log.info("Cleaning up")
-            shutil.rmtree(self.options.tmpdir)
             if not os.listdir(self.options.root):
                 os.rmdir(self.options.root)
         else:
@@ -224,9 +223,11 @@ class BitcoinTestFramework(object):
                     print("".join(deque(open(f), MAX_LINES_TO_PRINT)))
         if success:
             self.log.info("Tests successful")
+            shutil.rmtree(self.options.cachedir) #always remove cache dir
             sys.exit(0)
         else:
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
+            shutil.rmtree(self.options.cachedir) #always remove cache dir
             logging.shutdown()
             sys.exit(1)
 
@@ -567,7 +568,7 @@ class EvoTnodeTestFramework(BitcoinTestFramework):
 
     def remove_mastermode(self, idx):
         mn = self.mninfo[idx]
-        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 999.9999})
+        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 9999.99})
         rawtx = self.nodes[0].signrawtransaction(rawtx)
         self.nodes[0].sendrawtransaction(rawtx["hex"])
         self.nodes[0].generate(1)
@@ -638,19 +639,22 @@ class EvoTnodeTestFramework(BitcoinTestFramework):
         # create faucet node for collateral and transactions
         self.nodes.append(start_node(0, self.options.tmpdir, self.extra_args[0]))
         required_balance = tnode_COLLATERAL * self.mn_count + 1
-        while self.nodes[0].getbalance() < required_balance:
-            set_mocktime(get_mocktime() + 1)
+        while self.nodes[0].getbalance() < required_balance*1.1:
+            set_mocktime(get_mocktime() + 150)
             set_node_times(self.nodes, get_mocktime())
             self.nodes[0].generate(1)
+            self.sync_all()
         # create connected simple nodes
         for i in range(0, self.num_nodes - self.mn_count - 1):
             self.create_simple_node()
         sync_tnodes(self.nodes, True)
 
         # activate DIP3
-        while self.nodes[0].getblockcount() < 550:
-            self.nodes[0].generate(10)
-        self.sync_all()
+        while self.nodes[0].getblockcount() < 11500:
+            set_mocktime(get_mocktime() + 150)
+            set_node_times(self.nodes, get_mocktime())           
+            self.nodes[0].generate(1)
+            self.sync_all()
 
         # create masternodes
         self.prepare_masternodes()
