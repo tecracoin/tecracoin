@@ -10,7 +10,7 @@ class ElysiumCreateDenominationTest(ElysiumTestFramework):
         # create non-sigma token
         self.nodes[0].elysium_sendissuancefixed(self.addrs[0], 1, 1, 0, '', '', 'non-sigma', '', '', '1000000')
         self.nodes[0].generate(1)
-        self.sync_all()        
+        self.sync_all()
 
         info = self.nodes[0].elysium_getproperty(3)
         self.log.info("3 elysium prop {}".format(info))

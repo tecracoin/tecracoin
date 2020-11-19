@@ -48,10 +48,10 @@ class ElysiumPropertyCreationFeeTest(ElysiumTestFramework):
         self.test(ecosystem = 1)
         self.test(ecosystem = 1, amount = "10000")
         self.test(ecosystem = 2)
-        self.test(ecosystem = 2, amount = "10000") 
-        
+        self.test(ecosystem = 2, amount = "10000")
+
         # make sure, property creation fee is activated
-        while self.nodes[0].getblockcount() < creation_fee_start_block:       
+        while self.nodes[0].getblockcount() < creation_fee_start_block:
             self.nodes[0].generate(1)
             self.sync_all()
 

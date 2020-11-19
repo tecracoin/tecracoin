@@ -62,8 +62,8 @@ class DIP3Test(BitcoinTestFramework):
         while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 10000:
             self.nodes[0].generate(1) # generate enough for collaterals
             self.sync_all()
-        self.log.info("controller node has {} XZC".format(self.nodes[0].getbalance()))
-        self.log.info("blockcount {} XZC".format(self.nodes[0].getblockcount()))
+        self.log.info("controller node has {} TCR".format(self.nodes[0].getbalance()))
+        self.log.info("blockcount {} TCR".format(self.nodes[0].getblockcount()))
 
         # Make sure we're below block 7000 (which activates dip3)
         self.log.info("testing rejection of ProTx before dip3 activation: {}".format(self.nodes[0].getblockchaininfo()['blocks']))
@@ -98,7 +98,7 @@ class DIP3Test(BitcoinTestFramework):
         # We have hundreds of blocks to sync here, give it more time
         self.log.info("syncing blocks for all nodes")
         sync_blocks(self.nodes, timeout=120)
-        self.log.info("after syncing blocks for all nodes")        
+        self.log.info("after syncing blocks for all nodes")
 
 #        time.sleep(720)
 
@@ -243,7 +243,7 @@ class DIP3Test(BitcoinTestFramework):
         mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 10000)
         mn.collateral_vout = -1
         node.generate(1)
-        node.generate(1)        
+        node.generate(1)
         node.generate(1)
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
         for txout in rawtx['vout']:
@@ -295,7 +295,7 @@ class DIP3Test(BitcoinTestFramework):
         n = start_node(mn.idx, self.options.tmpdir, extra_args, redirect_stderr=True)
         self.nodes[mn.idx] = n
         for i in range(0, self.num_nodes):
-            if i < len(self.nodes) and self.nodes[i] is not None and i != mn.idx:                
+            if i < len(self.nodes) and self.nodes[i] is not None and i != mn.idx:
                 connect_nodes_bi(self.nodes, mn.idx, i)
                 self.sync_all()
         mn.node = self.nodes[mn.idx]
@@ -310,7 +310,7 @@ class DIP3Test(BitcoinTestFramework):
         n = start_node(mn.idx, self.options.tmpdir, extra_args, redirect_stderr=True)
         self.nodes[mn.idx] = n
         for i in range(0, self.num_nodes):
-            if i < len(self.nodes) and self.nodes[i] is not None and i != mn.idx:                
+            if i < len(self.nodes) and self.nodes[i] is not None and i != mn.idx:
                 connect_nodes_bi(self.nodes, mn.idx, i)
                 self.sync_all()
         mn.node = self.nodes[mn.idx]

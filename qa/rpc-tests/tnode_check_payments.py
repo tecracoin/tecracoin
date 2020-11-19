@@ -29,13 +29,13 @@ class TnodeCheckPayments(TnodeTestFramework):
 
         self.generate_tnode_collateral()
         collateral3 = self.send_mature_tnode_collateral(4)
-        
+
         for zn in range(self.num_tnodes):
             self.restart_as_tnode(zn)
             self.tnode_start(zn)
 
 
-        self.generate(1)  
+        self.generate(1)
         self.sync_all()
         self.wait_tnode_enabled(self.num_tnodes)
         self.generate(4 + 3*6)
@@ -53,12 +53,7 @@ class TnodeCheckPayments(TnodeTestFramework):
 
         self.wait_tnode_enabled(4)
 
-       
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1)  
+        self.generate(5)
         for zn in range(self.num_tnodes):
             self.log.info("full balance {}".format(get_full_balance(self.nodes[zn])))
             assert_equal(10219.375, get_full_balance(self.nodes[zn]))
@@ -71,32 +66,17 @@ class TnodeCheckPayments(TnodeTestFramework):
         self.nodes[3].lockunspent(True, tnode_output)
         self.nodes[3].sendtoaddress(generator_address, 10000, "", "", True)
 
-        self.generate(1) #The Tnode has been scheduled already, need one run for the schedule to get updated
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1)        
+        self.generate(6) #The Tnode has been scheduled already, need one run for the schedule to get updated
+
         self.log.info("full balance {}".format(get_full_balance(self.nodes[3])))
-        self.log.info("full balance node 0 {}".format(get_full_balance(self.nodes[0])))        
+        self.log.info("full balance node 0 {}".format(get_full_balance(self.nodes[0])))
         assert_equal(263.25, get_full_balance(self.nodes[3]))
 
-#        self.generate(2*6)
-        self.generate(1) #The Tnode has been scheduled already, need one run for the schedule to get updated
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1)        
-        self.generate(1) #The Tnode has been scheduled already, need one run for the schedule to get updated
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1) 
-        self.generate(1)        
-        self.sync_all()        
+        self.generate(12) #The Tnode has been scheduled already, need one run for the schedule to get updated
+
+        self.sync_all()
         self.log.info("full balance {}".format(get_full_balance(self.nodes[3])))
-        self.log.info("full balance node 0 {}".format(get_full_balance(self.nodes[0])))           
+        self.log.info("full balance node 0 {}".format(get_full_balance(self.nodes[0])))
         assert_equal(351, get_full_balance(self.nodes[3]))
 
         for zn in range(self.num_tnodes-1):

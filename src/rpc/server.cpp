@@ -324,20 +324,20 @@ static const CRPCCommand vRPCCommands[] =
 { //  category              name                      actor (function)         okSafe argNames
   //  --------------------- ------------------------  -----------------------  ------ ----------
     /* Overall control/query calls */
-    { "control",            "help",                   &help,                   true  },
-    { "control",            "stop",                   &stop,                   true  },
+    { "control",            "help",                   &help,                   true,    {"command"} },
+    { "control",            "stop",                   &stop,                   true,    {} },
         /* Address index */
-    { "addressindex",       "getaddressmempool",      &getaddressmempool,      true  },
-    { "addressindex",       "getaddressutxos",        &getaddressutxos,        false },
-    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       false },
-    { "addressindex",       "getaddresstxids",        &getaddresstxids,        false },
-    { "addressindex",       "getaddressbalance",      &getaddressbalance,      false },
+    { "addressindex",       "getaddressmempool",      &getaddressmempool,      true,    {"addresses"} },
+    { "addressindex",       "getaddressutxos",        &getaddressutxos,        false,   {"addresses"} },
+    { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       false,   {"addresses"} },
+    { "addressindex",       "getaddresstxids",        &getaddresstxids,        false,   {"addresses"} },
+    { "addressindex",       "getaddressbalance",      &getaddressbalance,      false,   {"addresses"} },
         /* Masternode features */
-    { "tnode",               "tnode",                 &tnode,                  true  },
-    { "tnode",               "tnsync",                &tnsync,                 true  },
-    { "tnode",               "tnodelist",             &tnodelist,              true  },
-    { "tnode",               "tnodebroadcast",        &tnodebroadcast,         true  },
-    { "tnode",               "getpoolinfo",           &getpoolinfo,            true  },
+    { "tnode",               "tnode",                 &tnode,                  true,    {"command"}  },
+    { "tnode",               "tnsync",                &tnsync,                 true,    {"command"}  },
+    { "tnode",               "tnodelist",             &tnodelist,              true,    {"mode","filter"}  },
+    { "tnode",               "tnodebroadcast",        &tnodebroadcast,         true,    {"command"}  },
+    { "tnode",               "getpoolinfo",           &getpoolinfo,            true,    {}  },
 };
 
 CRPCTable::CRPCTable()

@@ -135,7 +135,7 @@ class RawTransactionsTest(BitcoinTestFramework):
         #########################################################################
         # test a fundrawtransaction with a VIN greater than the required amount #
         #########################################################################
-        
+
         for utx in self.nodes[2].listunspent():
             self.log.info("amount {}"+format(utx['amount']))
 

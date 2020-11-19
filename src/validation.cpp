@@ -602,10 +602,14 @@ bool CheckTransaction(const CTransaction &tx, CValidationState &state, bool fChe
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-txouttotal-toolarge");
     }
 
-    // Check for duplicate inputs - note that this check is slow so we skip it in CheckBlock
+    //Tecra: deny Zerocoin/Sigma transactions
+    bool fRejectSigma = (nHeight > Params().GetConsensus().DIP0003Height);
+
+    // Check for duplicate inputs
     if (fCheckDuplicateInputs) {
         std::set<COutPoint> vInOutPoints;
         if (tx.IsZerocoinSpend() || tx.IsSigmaSpend() || tx.IsZerocoinRemint()) {
+            if (fRejectSigma) return state.DoS(100, false, REJECT_INVALID, "bad-sigma");
             std::set<CScript> spendScripts;
             for (const auto& txin: tx.vin)
             {
@@ -640,7 +644,7 @@ bool CheckTransaction(const CTransaction &tx, CValidationState &state, bool fChe
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
                 
         if (tx.IsZerocoinV3SigmaTransaction()) {
-            if (!CheckSigmaTransaction(tx, state, hashTx, isVerifyDB, nHeight, isCheckWallet, fStatefulZerocoinCheck, sigmaTxInfo))
+            if (fRejectSigma || !CheckSigmaTransaction(tx, state, hashTx, isVerifyDB, nHeight, isCheckWallet, fStatefulZerocoinCheck, sigmaTxInfo))
                 return false;
         }
 
@@ -800,6 +804,13 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     vector<GroupElement> zcMintPubcoinsV3;
     {
     LOCK(pool.cs); // protect pool.mapNextTx
+
+    //Tecracoin: deny zerocoin/sigma transactions
+    if ((tx.IsZerocoinSpend() || tx.IsSigmaSpend() || tx.IsZerocoinRemint())&& chainActive.Height()>consensus.DIP0003Height) {
+            return state.DoS(100, error("Zerocoin/sigma transactions no more allowed in mempool"),
+                             REJECT_INVALID, "bad-txns-zerocoin");
+    }
+
     if (tx.IsZerocoinSpend()) {
         BOOST_FOREACH(const CTxIn &txin, tx.vin)
         {
@@ -887,6 +898,10 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     BOOST_FOREACH(const CTxOut &txout, tx.vout)
     {
         if (txout.scriptPubKey.IsSigmaMint()) {
+            //Tecra: deny minting new Sigma
+            if (chainActive.Height()>consensus.DIP0003Height){
+                return state.DoS(100, false, REJECT_INVALID, "bad-sigma-mint");
+            }
             GroupElement pubCoinValue;
             try {
                 pubCoinValue = sigma::ParseSigmaMintScript(txout.scriptPubKey);
@@ -3788,6 +3803,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
     if (!block.sigmaTxInfo)
         block.sigmaTxInfo = std::make_shared<sigma::CSigmaTxInfo>();
         
+    if (nHeight == INT_MAX)
+        nHeight = ZerocoinGetNHeight(block.GetBlockHeader());
+
     LogPrintf("CheckBlock() nHeight=%s, blockHash= %s, isVerifyDB = %s\n", nHeight, block.GetHash().ToString(), isVerifyDB);
 
     // These are checks that are independent of context.
@@ -3836,40 +3854,7 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         if (block.vtx[i]->IsCoinBase())
             return state.DoS(100, false, REJECT_INVALID, "bad-cb-multiple", false, "more than one coinbase");
 
-    // DASH : CHECK TRANSACTIONS FOR INSTANTSEND
-    /*
-    if(sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
-        // We should never accept block which conflicts with completed transaction lock,
-        // that's why this is in CheckBlock unlike coinbase payee/amount.
-        // Require other nodes to comply, send them some data in case they are missing it.
-        BOOST_FOREACH(CTransactionRef tx, block.vtx) {
-            // skip coinbase, it has no inputs
-            if (tx->IsCoinBase()) continue;
-            // LOOK FOR TRANSACTION LOCK IN OUR MAP OF OUTPOINTS
-            BOOST_FOREACH(const CTxIn& txin, tx->vin) {
-                uint256 hashLocked;
-                if(instantsend.GetLockedOutPointTxHash(txin.prevout, hashLocked) && hashLocked != tx->GetHash()) {
-                    // Every node which relayed this block to us must invalidate it
-                    // but they probably need more data.
-                    // Relay corresponding transaction lock request and all its votes
-                    // to let other nodes complete the lock.
-                    instantsend.Relay(hashLocked);
-                    LOCK(cs_main);
-                    mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-                    return state.DoS(0, error("CheckBlock(TCR): transaction %s conflicts with transaction lock %s",
-                                                tx->GetHash().ToString(), hashLocked.ToString()),
-                                        REJECT_INVALID, "conflict-tx-lock");
-                }
-            }
-        }
-    } else {
-        LogPrintf("CheckBlock(TCR): spork is off, skipping transaction locking checks\n");
-    }
-    */
-
     // Check transactions
-    if (nHeight == INT_MAX)
-        nHeight = ZerocoinGetNHeight(block.GetBlockHeader());
 
     for (CTransactionRef tx : block.vtx)
         // We don't check transactions against zerocoin state here, we'll check it again later in ConnectBlock

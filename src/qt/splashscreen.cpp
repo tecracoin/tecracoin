@@ -205,11 +205,15 @@ void SplashScreen::slotFinish(QWidget *mainWin)
 
 static void InitMessage(SplashScreen *splash, const std::string &message)
 {
+    QColor textColor = QColor(255,255,255);
+    if (GetBoolArg("-testnet", false))
+        textColor = QColor(55,55,55);
     QMetaObject::invokeMethod(splash, "showMessage",
         Qt::QueuedConnection,
         Q_ARG(QString, QString::fromStdString(message)),
         Q_ARG(int, Qt::AlignBottom|Qt::AlignHCenter),
-        Q_ARG(QColor, QColor(55,55,55)));
+        Q_ARG(QColor, textColor));
+    splash -> raise();
 }
 
 static void ShowProgress(SplashScreen *splash, const std::string &title, int nProgress)

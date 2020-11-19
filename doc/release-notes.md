@@ -1,20 +1,19 @@
-Bitcoin Core version 0.14.x is now available from:
+# TecraCoin Core version 0.17.0 is now available from:
 
-  <https://bitcoin.org/bin/bitcoin-core-0.14.x/>
+  <https://github.com/tecracoin/tecracoin/releases/>
 
-This is a new minor version release, including various bugfixes and
+This is a new major version release, including various bugfixes and
 performance improvements.
 
 Please report bugs using the issue tracker at github:
 
-  <https://github.com/bitcoin/bitcoin/issues>
+  <https://github.com/tecracoin/tecracoin/issues>
 
 To receive security and update notifications, please subscribe to:
 
   <https://bitcoincore.org/en/list/announcements/join/>
 
-Compatibility
-==============
+## Compatibility
 
 Bitcoin Core is extensively tested on multiple operating systems using
 the Linux kernel, macOS 10.8+, and Windows Vista and later.
@@ -27,49 +26,618 @@ Please do not report issues about Windows XP to the issue tracker.
 Bitcoin Core should also work on most other Unix-like systems but is not
 frequently tested on them.
 
-From 0.13.1 onwards OS X 10.7 is no longer supported. 0.13.0 was intended to work on 10.7+, 
-but severe issues with the libc++ version on 10.7.x keep it from running reliably. 
+From 0.13.1 onwards OS X 10.7 is no longer supported. 0.13.0 was intended to work on 10.7+,
+but severe issues with the libc++ version on 10.7.x keep it from running reliably.
 0.13.1 now requires 10.8+, and will communicate that to 10.7 users, rather than crashing unexpectedly.
 
-Notable changes
-===============
-
+## Notable changes
 
 Detailed release notes follow. This overview includes changes that affect
 behavior, not code moves, refactors and string updates. For convenience in locating
 the code changes and accompanying discussion, both the pull request and
 git merge commit are mentioned.
 
-[to be filled in at release]
+- Update to upstream Zcoin code (that follows Bitcoin Core v14) — over 10k commits
+- Release deterministic masternodes on testnet
+- Activate Elysium on testnet
+- Activate mainnet deterministic masternodes registration at block 450000
+- Activate maimmet deterministic masternodes earnings at block 470000
+- Remove/disable Zerocoin/Sigma
 
-Credits
-=======
+## Credits
 
 Thanks to everyone who directly contributed to this release:
 
-[to be filled in at release]
+- 0xflotus
+- 21E14
+- a-bezrukov
+- Abraham Jewowich
+- accraze
+- Adam Brown
+- Adam Weiss
+- Addy Yeow
+- adlawren
+- Admin
+- Aitor Pazos
+- Akshay CM
+- Alex
+- Alex B
+- Alex Morcos
+- Alex van der Peet
+- Alex Waters
+- Alexander Block
+- Alexander Jeng
+- Alexander Kjeldaas
+- Alexander Regueiro
+- Alexey Vesnin
+- Alexey Zilber
+- Alfie John
+- Alice Wonder
+- Alistair Buxton
+- Alon Muroch
+- AlSzacrel
+- Altoidnerd
+- Amir Abrams
+- Amir Yalon
+- Anders Øyvind Urke-Sætre
+- Anditto Heristyo
+- Andrea D'Amore
+- Andreas Schildbach
+- Andrew
+- Andrew C
+- Andrew Chow
+- Andrew Poelstra
+- Andrey
+- Andrey Alekseenko
+- Andrey Bezrukov
+- Andriy Voskoboinyk
+- Andrés G. Aragoneses
+- anduck
+- Andy Alness
+- Ang Iong Chun
+- Anonymous
+- Anthony Towns
+- Anton Suprunchuk
+- antonio-fr
+- APerson241
+- ariel
+- Arnav Singh
+- Arne Brutschy
+- Ashley Holman
+- Awemany
+- ayeowch
+- azeteki
+- b6393ce9-d324-4fe1-996b-acf82dbc3d53
+- Bardi Harborow
+- Ben Holden-Crowther
+- Benedict Chan
+- bikinibabe
+- BitcoinPRReadingGroup
+- bitsofproof
+- Blake Jakopovic
+- Blitzboom
+- Bob McElrath
+- Brandon Dahler
+- Braydon Fuller
+- Brenden Matthews
+- Brian Deery
+- Bryan Bishop
+- BtcDrak
+- burger2
+- calebogden
+- Calvin Owens
+- Calvin Tam
+- cardpuncher
+- Carlo Alberto Ferraris
+- Carlos Pizarro
+- Casey Rodarmor
+- catchingknives
+- Cédric Félizard
+- Celil
+- celil-kj
+- centaur1
+- charlescharles
+- Chirag Davé
+- Chris
+- Chris Arnesen
+- Chris Beams
+- Chris Howie
+- Chris Kleeschulte
+- Chris Moore
+- Chris Stewart
+- Chris Wheeler
+- Christian Barcenas
+- Christian Decker
+- Christian von Roques
+- Christopher Latham
+- Chuck
+- Chuck LeDuc Díaz
+- Ciemon
+- cjdelisle
+- Clark Gaebel
+- Clinton Christian
+- coblee
+- coderrr
+- CohibAA
+- Colin Dean
+- constantined
+- Corinne Dashjr
+- Cory Fields
+- Cozz Lovan
+- crowning-
+- CryptAxe
+- CryptoVote
+- dabaopku
+- Dagur Valberg Johannsson
+- Daira Hopwood
+- Dan Helfman
+- Dan Loewenherz
+- daniel
+- Daniel Cousens
+- Daniel Folkinshteyn
+- Daniel Holbert
+- Daniel Kraft
+- Daniel Larimer
+- Daniel Newton
+- Danube
+- Dave Collins
+- David A. Harding
+- David FRANCOIS
+- David Griffith
+- David Grogan
+- David Hill
+- David Joel Schwartz
+- David Perry
+- David Serrano
+- Dawid Spiechowicz
+- Dean Lee
+- default
+- Denis Lukianov
+- Derek Miller
+- Derek701
+- Dev Random
+- devrandom
+- dexX7
+- Diego Viola
+- ditto-b
+- djm34
+- djpnewton
+- dllud
+- Dmitry Smirnov
+- Dominyk Tiller
+- Don Patterson
+- Doug
+- Doug Huff
+- Douglas Huff
+- Douglas Roark
+- Drak
+- duanemoody
+- Dwayne C. Litzenberger
+- Dylan Noblesmith
+- Earlz
+- Elias Rohrer
+- elichai
+- elkingtowa
+- Elliot Olds
+- ENikS
+- Eric Hosmer
+- Eric Lombrozo
+- Eric R. Schulz
+- Eric S. Bullington
+- Eric Shaw
+- Eric Swanson
+- Erik Mossberg
+- error10
+- Esteban Ordano
+- Ethan Heilman
+- EthanHeilman
+- Everett Forth
+- Fabian H jr.
+- Fabian Raetz
+- Fabrice Triboix
+- face
+- fanquake
+- fcicq
+- Federico Bond
+- Federico Faggiano
+- Flavien Charlon
+- Florian Schmaus
+- Florin
+- flower
+- Fordy
+- formal
+- Forrest Voight
+- Francesco 'makevoid' Canessa
+- Francis GASCHET
+- freakymaryk
+- freewil
+- fsb4000
+- Gaurav Rana
+- Gavin Andresen
+- gavinandresen
+- Geoffrey Tsui
+- Giel van Schijndel
+- Giuseppe Mazzotta
+- gjs278
+- gladoscc
+- Glenn Willen
+- globalcitizen
+- gmaxwell
+- graingert
+- Greg Walker
+- Gregory Maxwell
+- Gregory Sanders
+- grimd34th
+- gubatron
+- Guillermo Céspedes Tabárez
+- Haakon Nilsen
+- HaltingState
+- Hampus Sjöberg
+- Han Lin Yap
+- harry
+- HarryWu
+- Heath
+- Hector Jusforgues
+- himynameismartin
+- HostFat
+- Huang Le
+- Ian Carroll
+- Ian Kelling
+- Ian T
+- imharrywu
+- instagibbs
+- Irving Ruan
+- Isidoro Ghezzi
+- isle2983
+- Ivan Pustogarov
+- Ivo van der Sangen
+- J Ross Nicoll
+- Jacob Welsh
+- Jakob Kramer
+- James Burkle
+- James Evans
+- James O'Beirne
+- James White
+- Jameson Lopp
+- Janne Pulkkinen
+- Jannes Faber
+- Janusz Lenar
+- Jaromil
+- Jarret Dyrbye
+- JaSK
+- Jason Lewicki
+- Jay Weisskopf
+- Jeff Garzik
+- Jeremy Rubin
+- JeremyRand
+- Jeroenz0r
+- jess
+- Jiaxing Wang
+- jl2012
+- JL2035
+- jloughry
+- jmacwhyte
+- jnewbery
+- Joao Fonseca
+- Joel Kaartinen
+- JoelKatz
+- Joerie de Gram
+- Johannes Henninger
+- John Maguire
+- John Newbery
+- Johnathan Corgan
+- Johnson Lau
+- Jon Lund Steffensen
+- Jonas Nick
+- Jonas Schnelli
+- Jonathan Brown
+- Jonathan Cross
+- jonnynewbs
+- João Barbosa
+- Jordan Lewis
+- Jorge Timón
+- JOSEPH NICHOLAS R. ALCANTARA
+- josephnicholas
+- Josh Lehan
+- Josh Triplett
+- joshr
+- Jörn Röder
+- jtimon
+- Julian Haight
+- Julian Langschaedel
+- Julian Yap
+- justanwar
+- Justin Camarena
+- justmoon
+- Kamil Domanski
+- Kangmo
+- Karl-Johan Alm
+- Kaz Wesley
+- kazcw
+- Kefkius
+- kevin
+- Kevin Cooper
+- Khalahan
+- kirit93
+- kirkalx
+- kiwigb
+- kjj2
+- Koki Takahashi
+- Kosta Zertsekel
+- Krzysztof Jurewicz
+- kwaaak
+- Lake Denman
+- langerhans
+- Larry Gilbert
+- Lars Rasmusson
+- laszloh
+- Lauda
+- leijurv
+- Leviathn
+- Levon Petrosyan
+- levonpetrosyan93
+- lewuathe
+- lizhi
+- LongShao007
+- lpescher
+- Luca Venturini
+- Luke
+- Luke Dashjr
+- Luv Khemani
+- m0ray
+- maiiz
+- Manuel Araoz
+- Marcel Krüger
+- Marco
+- MarcoFalke
+- Mariia
+- Mariia Kren
+- Mariia.Kren
+- Marijn Stollenga
+- Marius Hanne
+- mark
+- Mark Friedenbach
+- martun
+- Martun Karapetyan
+- Marty Jones
+- Masahiko Hyuga
+- Mathy Vanvoorden
+- Matt
+- Matt Bogosian
+- Matt Corallo
+- Matt Giuca
+- Matt Quinn
+- Matthew Bogosian
+- Matthew English
+- Matthew King
+- Matthew Zipkin
+- matthias
+- mattt21
+- mb300sd
+- Meeh
+- mewantsbitcoins
+- mfrankovi
+- Micha
+- Michael
+- Michael Bauer
+- Michael Bemmerl
+- Michael Ford
+- Michael Hendricks
+- Michael Rotarius
+- Michagogo
+- Michal Zima
+- Midnight Magic
+- Mikael Wikman
+- Mike Cassano
+- Mike Hearn
+- Mikerah
+- Misbakh-Soloviev Vadim A
+- Mitchell Cash
+- MJ
+- mrbandrews
+- mruddy
+- Murch
+- Mustafa
+- Nathaniel Mahieu
+- Nick
+- Nick Bosma
+- Nicolas Benoit
+- Nicolas DORIER
+- NicolasDorier
+- Nils Schneider
+- Noel Tiernan
+- nomnombtc
+- Nopslide
+- ntrgn
+- ojab
+- olalonde
+- Olivier Langlois
+- osmosis
+- Otto Allmendinger
+- ovdeathiam
+- p2k
+- Panu
+- Pasta
+- PastaPastaPasta
+- Patick Strateman
+- Patrick Brown
+- patrick s
+- Patrick Strateman
+- Patrick Varilly
+- Paul Georgiou
+- Paul Rabahy
+- Pavel Janík
+- Pavel Vasin
+- paveljanik
+- Pavol Rusnak
+- Pedro Branco
+- peryaudo
+- Peter Josling
+- Peter Shugalev
+- Peter Todd
+- Petter Reinholdtsen
+- phantomcircuit
+- phelixbtc
+- Philip Kaufmann
+- philsong
+- Pierre Pronchery
+- Pieter Wuille
+- poole_party
+- Poramin Insom
+- practicalswift
+- Prayag Verma
+- pryds
+- psolstice
+- pstratem
+- ptschip
+- Puru
+- Putta Khunchalee
+- R E Broadley
+- Rafał Kiełbus
+- randy-waterhouse
+- Rasikh Morani
+- Rav3nPL
+- redshark1802
+- regergregregerrge
+- Reuben Yap
+- Ricardo M. Correia
+- Richard Kiss
+- Richard Schwab
+- richierichrawr
+- rion
+- riordant
+- Rob Van Mieghem
+- Robert Backhaus
+- Robert McLaughlin
+- rodasmith
+- Roman Mindalev
+- root
+- Rose Toomey
+- Ross Nicoll
+- Roy Badami
+- Ruben Dario Ponticeli
+- Ruben Dario Ponticelli
+- Ruben de Vries
+- Rubén Darío Ponticelli
+- Rune K Svendsen
+- Rune K. Svendsen
+- Russell Yanofsky
+- Rusty Russell
+- rxl
+- Ryan Havar
+- Ryan Niebur
+- Ryan X. Charles
+- S. Matthew English
+- Saivann
+- sandakersmann
+- sandos
+- Sanjay Ghemawat
+- Santiago M. Mola
+- Satoshi Nakamoto
+- Scott Ellis
+- Scott Howard
+- Scott Willeke
+- Sergey Kazenyuk
+- SergioDemianLerner
+- Sev
+- Shane Wegner
+- Shaul Kfir
+- Shawn Wilkinson
+- Shigeya Suzuki
+- shshshsh
+- Simon de la Rouviere
+- Simon Males
+- Sined
+- sinetek
+- sirius-m
+- sje
+- sje397
+- Sjors Provoost
+- sn-ntu
+- Spencer Lievens
+- Stanislas Marion
+- Stephane Glondu
+- Stephen
+- Steven
+- Stéphane Gimenez
+- Stuart Cardall
+- Subo1978
+- Suhas Daftuar
+- super3
+- Suriyaa Kudo
+- Sven Slootweg
+- svost
+- s_nakamoto
+- tadhg
+- Tadhg Riordan
+- tailsjoin
+- Tamas Blummer
+- Tariq Bashir
+- Tawanda Kembo
+- tcatm
+- ฿tcDrak
+- Telepatheic
+- Teran McKinney
+- thebevrishot
+- TheLazieR Yip
+- thephez
+- theuni
+- Thomas Holenstein
+- Thomas Kerin
+- Thomas Snider
+- Thomas Zander
+- Timon Rapp
+- Timothy Redaelli
+- Timothy Stranex
+- tm314159
+- Tom Harding
+- Torstein Husebø
+- Trevin Hofmann
+- tucenaber
+- tulip
+- Tyler Hardin
+- UdjinM6
+- unsystemizer
+- Vaclav Vobornik
+- Vegard Nossum
+- Venkatesh Srinivas
+- Veres Lajos
+- vhf / victor felder
+- Victor Leschuk
+- Vinnie Falco
+- Virgil Dupras
+- Vitalii Demianets
+- Warren Togami
+- Whit J
+- whythat
+- Wil Bown
+- Will Binns
+- William Yager
+- Witchspace
+- Wladimir J. van der Laan
+- Wladimir van der Laan
+- wodry
+- xanatos
+- xHire
+- Yoichi Hirai
+- Yuri Zhykin
+- Zak Wilcox
+- zathras-crypto
 
 As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
-=======
-...
 
-Known Bugs
-==========
+## Known Bugs
 
-Since 0.14.0 the approximate transaction fee shown in Bitcoin-Qt when using coin
+Since 0.17.0 the approximate transaction fee shown in TecraCoin-Qt when using coin
 control and smart fee estimation does not reflect any change in target from the
 smart fee slider. It will only present an approximate fee calculated using the
 default target. The fee calculated using the correct target is still applied to
 the transaction and shown in the final send confirmation dialog.
 
-0.14.x Change log
-=================
+## 0.17.0 Change log
 
-...
+As it is major fast-forward update posting just shortlog produces over 12k lines
+and over 10k commits.
 
-Credits
-=======
-
-Thanks to everyone who directly contributed to this release:
-
-...
+Refer to Bitcoin Core updates 0.9 to 0.14, last Zcoin 0.14 update
+and relese information on github.

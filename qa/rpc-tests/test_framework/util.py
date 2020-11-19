@@ -334,7 +334,7 @@ def initialize_chain(test_dir, num_nodes, cachedir):
         stop_nodes(rpcs)
         disable_mocktime()
         print("Coming Here 3: before remove cachedir ",cachedir)
-        print("Coming Here 3: before remove testdir",test_dir)        
+        print("Coming Here 3: before remove testdir",test_dir)
         for i in range(MAX_NODES):
             try:
                 os.remove(log_filename(cachedir, i, "debug.log"))
@@ -342,9 +342,9 @@ def initialize_chain(test_dir, num_nodes, cachedir):
                 os.remove(log_filename(cachedir, i, "peers.dat"))
                 os.remove(log_filename(cachedir, i, "fee_estimates.dat"))
             except OSError:
-                print("Coming Here 3: problem removing ")  
+                print("Coming Here 3: problem removing ")
                 pass
-        print("Coming Here 3: before copy ")      
+        print("Coming Here 3: before copy ")
     for i in range(num_nodes):
         from_dir = os.path.join(cachedir, "node"+str(i))
         print("from dir ",from_dir)
@@ -352,7 +352,7 @@ def initialize_chain(test_dir, num_nodes, cachedir):
         print("to dir ",to_dir)
         if from_dir != to_dir:
             shutil.copytree(from_dir, to_dir)
-        print("Coming Here 3: after copy ")    
+        print("Coming Here 3: after copy ")
         initialize_datadir(test_dir, i) # Overwrite port/rpcport in bitcoin.conf
 
 def initialize_chain_clean(test_dir, num_nodes):

@@ -119,7 +119,7 @@ class WalletBackupTest(BitcoinTestFramework):
         self.log.info("total number of block {}".format(self.nodes[0].getbalance()))
         self.log.info("total number of block {}".format(self.nodes[1].getbalance()))
         self.log.info("total number of block {}".format(self.nodes[2].getbalance()))
-        self.log.info("total number of block {}".format(self.nodes[3].getbalance()))       
+        self.log.info("total number of block {}".format(self.nodes[3].getbalance()))
         assert_equal(self.nodes[0].getbalance(), 5.625)
         assert_equal(self.nodes[1].getbalance(), 5.625)
         assert_equal(self.nodes[2].getbalance(), 5.625)
@@ -170,7 +170,7 @@ class WalletBackupTest(BitcoinTestFramework):
 
         # Generate 101 more blocks, so any fees paid mature
         for n in range(401):
-            self.nodes[3].generate(1)       
+            self.nodes[3].generate(1)
             self.sync_all()
 
         balance0 = self.nodes[0].getbalance()
