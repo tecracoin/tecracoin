@@ -99,18 +99,44 @@ if ENABLE_ZMQ:
         raise
 
 testScripts = [
-    'elysium_create_denomination.py',
-    'elysium_property_creation_fee.py',
+    'httpbasics.py',
+    'elysium_walletrecovery.py',
+    'disablewallet.py',
+    'decodescript.py',
+    'wallet-accounts.py',
+    'importmulti.py',
+    'merkle_blocks.py',
+    'reindex.py',
+    'mempool_limit.py',
+    'mempool_spendcoinbase.py',
+    'importprunedfunds.py',    
+    'rest.py',
+    'multi_rpc.py',
+    'mempool_reorg.py',
+    'proxy_test.py',
+    'mempool_doublesend_oneblock.py',
+    'wallet-dump.py',
+    'keypool.py',
+    'nodehandling.py',
+    'zapwallettxes.py',
+    'receivedby.py',
+    'listtransactions.py',
+    'wallet-hd.py',
+    'elysium_sigma_reorg.py',    
+    'elysium_sendspend.py',
+    'walletbackup.py',
     'elysium_sendmint.py',
     'elysium_sendmint_wallet_encryption.py',
-    'elysium_sendspend.py',
+    'elysium_create_denomination.py',
     'elysium_sendspend_wallet_encryption.py',
-    'elysium_sigma_reindex.py',
-    'elysium_sigma_reorg.py',
-    'elysium_walletrecovery.py',
-    'mempool_doublesend_oneblock.py',
-    'mempool_reorg.py',
-    'mempool_spendcoinbase.py',
+    'elysium_sigma_reindex.py',    
+    'elysium_property_creation_fee.py',
+    # Tnode (to be deprecated)
+    'tnode_check_status.py',
+    'tnode_check_payments.py',
+    # Evo Tnodes
+    'dip3-deterministicmns.py'   
+    
     # longest test should go first, to favor running tests in parallel
     # vv Tests less than 5m vv
     # 'p2p-fullblocktest.py',
@@ -121,19 +147,10 @@ testScripts = [
     # 'segwit.py',
     # vv Tests less than 2m vv
     # 'wallet.py',
-     'wallet-hd.py',
-     'wallet-dump.py',
-     'walletbackup.py',
-     'wallet-accounts.py',
     # 'p2p-segwit.py',
-     'listtransactions.py',
     # vv Tests less than 60s vv
-    # 'sendheaders.py',
-     'importmulti.py',
-     'mempool_limit.py',
-     'merkle_blocks.py',
-     'receivedby.py',
-     'abandonconflict.py',
+    # 'sendheaders.py',    
+    # 'abandonconflict.py',
     # 'bip68-112-113-p2p.py',
     # 'rawtransactions.py',
     # vv Tests less than 30s vv
@@ -141,41 +158,24 @@ testScripts = [
     # 'txn_doublespend.py --mineblock',
     # 'txn_clone.py',
     # 'getchaintips.py',
-    'rest.py',
-    'httpbasics.py',
-    'reindex.py',
-    'multi_rpc.py',
-    'zapwallettxes.py',
-    'proxy_test.py',
     # 'signrawtransactions.py',
-    'nodehandling.py',
-    'decodescript.py',
     # 'blockchain.py',
-    'disablewallet.py',
-    'keypool.py',
     # 'p2p-mempool.py',
     # 'prioritise_transaction.py',
     # 'invalidblockrequest.py',
     # 'invalidtxrequest.py',
     # 'p2p-versionbits-warning.py',
     # 'preciousblock.py',
-    'importprunedfunds.py',
     # 'signmessages.py',
     # 'nulldummy.py',
     # 'import-rescan.py',
     # 'bumpfee.py',
     # 'rpcnamedargs.py',
     # 'listsinceblock.py',
-     'p2p-leaktests.py',
-    # Tnode (to be deprecated),
-    'tnode_check_payments.py',
-    'tnode_check_status.py',
-
-    # Evo Tnodes
-    'dip3-deterministicmns.py',
+    # 'p2p-leaktests.py',
 
     # Unstable tests,
-    'dip4-coinbasemerkleroots.py'
+    # 'dip4-coinbasemerkleroots.py'
 ]
 # if ENABLE_ZMQ:
 #     testScripts.append('zmq_test.py')
@@ -235,6 +235,9 @@ def runtests():
     flags = ["--srcdir=%s/src" % BUILDDIR] + passon_args
     if coverage:
         flags.append(coverage.flag)
+
+    if len(test_list) > 10:
+        print("Running all tests can take up to 96 minutes \n" )
 
     if len(test_list) > 1 and run_parallel > 1:
         # Populate cache
@@ -319,7 +322,8 @@ class RPCTestHandler:
                     passed = stderr == "" and proc.returncode == 0
                     self.num_running -= 1
                     self.jobs.remove(j)
-#                    shutil.rmtree("cache")
+                    if os.path.exists("cache"):
+                        shutil.rmtree("cache")
                     return name, stdout, stderr, passed, int(time.time() - time0)
             print('.', end='', flush=True)
 

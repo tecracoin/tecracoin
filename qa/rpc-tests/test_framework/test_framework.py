@@ -223,11 +223,9 @@ class BitcoinTestFramework(object):
                     print("".join(deque(open(f), MAX_LINES_TO_PRINT)))
         if success:
             self.log.info("Tests successful")
-            shutil.rmtree(self.options.cachedir) #always remove cache dir
             sys.exit(0)
         else:
             self.log.error("Test failed. Test logging available at %s/test_framework.log", self.options.tmpdir)
-            shutil.rmtree(self.options.cachedir) #always remove cache dir
             logging.shutdown()
             sys.exit(1)
 
