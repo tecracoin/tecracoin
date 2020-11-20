@@ -10,9 +10,11 @@ class ElysiumSendMintTest(ElysiumTestFramework):
         sigma_start_block = 500
 
         self.nodes[0].generatetoaddress(100, self.addrs[0])
-        self.nodes[0].generate(sigma_start_block - self.nodes[0].getblockcount())
+        #useless as we are already passed sigma start block
+        while self.nodes[0].getblockcount() < sigma_start_block:
+            self.nodes[0].generate(1)
 
-        assert_equal(sigma_start_block, self.nodes[0].getblockcount())
+        assert self.nodes[0].getblockcount() > sigma_start_block , 'block count below sigma start block: {}, should be at least {}'.format(self.nodes[0].getblockcount(), sigma_start_block)
 
         # create non-sigma
         self.nodes[0].elysium_sendissuancefixed(
@@ -50,7 +52,7 @@ class ElysiumSendMintTest(ElysiumTestFramework):
         assert_equal("100", self.nodes[0].elysium_getbalance(addr, nonSigmaProperty)['balance'])
 
         # sigma
-        # mint without xzc and token
+        # mint without tcr and token
         addr = self.nodes[0].getnewaddress()
         assert_raises_message(
             JSONRPCException,
@@ -58,44 +60,49 @@ class ElysiumSendMintTest(ElysiumTestFramework):
             self.nodes[0].elysium_sendmint, addr, sigmaProperty, {"0": 1}
         )
 
-        # mint without xzc then fail
-        addr = self.nodes[0].getnewaddress()
-        self.nodes[0].elysium_send(self.addrs[0], addr, sigmaProperty, "100")
+        # mint without tcr then fail
+        addr1 = self.nodes[0].getnewaddress()
+        self.nodes[0].elysium_send(self.addrs[0], addr1, sigmaProperty, "200")
         self.nodes[0].generate(10)
 
-        assert_raises_message(
-            JSONRPCException,
-            'Error choosing inputs for the send transaction',
-            self.nodes[0].elysium_sendmint, addr, sigmaProperty, {"0": 1}
-        )
+        self.nodes[0].elysium_sendmint, addr1, sigmaProperty, {"0": 1}
 
-        assert_equal("100", self.nodes[0].elysium_getbalance(addr, sigmaProperty)['balance'])
+#        assert_raises_message(
+#            JSONRPCException,
+#            'Error choosing inputs for the send transaction',
+#            self.nodes[0].elysium_sendmint, addr, sigmaProperty, {"0": 1}
+#        )
+
+        assert_equal("200", self.nodes[0].elysium_getbalance(addr1, sigmaProperty)['balance'])
         assert_equal(0, len(self.nodes[0].elysium_listpendingmints()))
 
         # mint without token then fail
-        addr = self.nodes[0].getnewaddress()
-        self.nodes[0].sendtoaddress(addr, 100)
+        addr2 = self.nodes[0].getnewaddress()
+        self.nodes[0].sendtoaddress(addr2, 100)
         self.nodes[0].generate(10)
 
         assert_raises_message(
             JSONRPCException,
             'Sender has insufficient balance',
-            self.nodes[0].elysium_sendmint, addr, sigmaProperty, {"0":1}
+            self.nodes[0].elysium_sendmint, addr2, sigmaProperty, {"0":1}
         )
 
-        assert_equal("0", self.nodes[0].elysium_getbalance(addr, sigmaProperty)['balance'])
+        assert_equal("0", self.nodes[0].elysium_getbalance(addr2, sigmaProperty)['balance'])
         assert_equal(0, len(self.nodes[0].elysium_listpendingmints()))
 
         # success to mint should be shown on pending
-        addr = self.nodes[0].getnewaddress()
-
-        self.nodes[0].elysium_send(self.addrs[0], addr, sigmaProperty, "100")
-        self.nodes[0].sendtoaddress(addr, 100)
+        addr3 = self.nodes[1].getnewaddress()
+        self.log.info("(sigma) balance addr 0 {}".format(self.nodes[0].elysium_getbalance(self.addrs[0], sigmaProperty)))
+        self.log.info("(non sigma) balance addr 0 {}".format(self.nodes[0].elysium_getbalance(self.addrs[0], nonSigmaProperty)))
+        self.log.info("listspendmint  {}".format(self.nodes[0].elysium_listpendingmints()))
+        self.log.info("blockcount {}".format(self.nodes[0].getblockcount()))
+#        self.nodes[0].elysium_send(self.addrs[0], addr3, sigmaProperty, "100")
+        self.nodes[0].sendtoaddress(addr1, 100)
         self.nodes[0].generate(10)
-        self.nodes[0].elysium_sendmint(addr, sigmaProperty, {"0":1})
+        self.nodes[0].elysium_sendmint(addr1, sigmaProperty, {"0":1})
 
         assert_equal(1, len(self.nodes[0].elysium_listpendingmints()))
-        assert_equal("99", self.nodes[0].elysium_getbalance(addr, sigmaProperty)['balance'])
+        assert_equal("199", self.nodes[0].elysium_getbalance(addr1, sigmaProperty)['balance'])
 
         self.nodes[0].generate(1)
         assert_equal(0, len(self.nodes[0].elysium_listpendingmints()))

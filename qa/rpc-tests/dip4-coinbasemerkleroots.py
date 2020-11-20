@@ -45,8 +45,9 @@ class LLMQCoinbaseCommitmentsTest(EvoTnodeTestFramework):
         self.test_node = TestNode()
         self.test_node.add_connection(NodeConn('127.0.0.1', p2p_port(0), self.nodes[0], self.test_node))
         NetworkThread().start()  # Start up network handling in another thread
+        self.sync_all()
         self.test_node.wait_for_verack()
-
+ 
         self.confirm_mns()
 
         null_hash = format(0, "064x")
@@ -261,7 +262,7 @@ class LLMQCoinbaseCommitmentsTest(EvoTnodeTestFramework):
         else:
             assert_equal(merkleRootQuorums, 0)
 
-        set_mocktime(get_mocktime() + 1)
+        set_mocktime(get_mocktime() + 150)
         set_node_times(self.nodes, get_mocktime())
         self.nodes[0].spork("SPORK_17_QUORUM_DKG_ENABLED", 0)
         self.wait_for_sporks_same()

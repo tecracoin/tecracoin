@@ -110,11 +110,9 @@ def fill_founders_rewards(coinbaseOutput, halvings):
 def get_founders_rewards(height):
     founderReward = float(1 * 1000 >> get_halvings(height)) / 1000
     return {
-        'TDk19wPKYq91i18qmY6U9FeTdTxwPeSveo': founderReward,
-        'TWZZcDGkNixTAMtRBqzZkkMHbq1G6vUTk5': founderReward,
-        'TRZTFdNCKCKbLMQV8cZDkQN9Vwuuq4gDzT': founderReward,
-        'TG2ruj59E5b1u9G3F7HQVs6pCcVDBxrQve': 3 * founderReward,
-        'TCsTzQZKVn4fao8jDmB9zQBk9YQNEZ3XfS': founderReward,
+        'fdAAqxKZrgvt6o4YKSer2rNWaw1y5C8vZU': founderReward,
+        'fc52erY95gPPodezPd3Rfj6h4DWKPN8pkM': founderReward,
+        'fT5R28XFJx7A618pNVjBoQmyYNQviqCzBs': founderReward,
     }
 
 # Create a transaction.

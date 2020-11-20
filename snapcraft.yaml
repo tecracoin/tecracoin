@@ -3,7 +3,7 @@ version: "0.0.1"
 summary: Tnode for TecraCoin project
 description: |
  Tnodes verify transaction and are used as second layer on top of the normal nodes.
- Tnodes must have access to 1000xzc at a specific address to play the role of Tnode otherwise they are just degraded to a regular node on the network.
+ Tnodes must have access to 10000TCR at a specific address to play the role of Tnode otherwise they are just degraded to a regular node on the network.
 
 confinement: strict
 grade: stable

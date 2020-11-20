@@ -64,12 +64,13 @@ class RESTTest (BitcoinTestFramework):
         url = urllib.parse.urlparse(self.nodes[0].url)
         print("Mining blocks...")
 
-        self.nodes[0].generate(1)
+        self.nodes[0].generate(11) # first block is premine
         self.sync_all()
-        self.nodes[2].generate(100)
-        self.sync_all()
+        for n in range(400):
+            self.nodes[2].generate(1)
+            self.sync_all()
 
-        assert_equal(self.nodes[0].getbalance(), 40)
+        assert_equal(self.nodes[0].getbalance(), 11.25)
 
         txid = self.nodes[0].sendtoaddress(self.nodes[1].getnewaddress(), 0.1)
         self.sync_all()
@@ -148,7 +149,7 @@ class RESTTest (BitcoinTestFramework):
         hashFromBinResponse = hex(deser_uint256(output))[2:].zfill(64)
 
         assert_equal(bb_hash, hashFromBinResponse) #check if getutxo's chaintip during calculation was fine
-        assert_equal(chainHeight, 102) #chain height must be 102
+        assert_equal(chainHeight, 412) #chain height must be 403
 
 
         ############################
@@ -289,9 +290,10 @@ class RESTTest (BitcoinTestFramework):
         # check block tx details
         # let's make 3 tx and mine them on node 1
         txs = []
-        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
-        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
-        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 11))
+        self.log.info("balance {} tcr".format(self.nodes[0].getbalance()))
+        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.1))
+        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.1))
+        txs.append(self.nodes[0].sendtoaddress(self.nodes[2].getnewaddress(), 1.1))
         self.sync_all()
 
         # check that there are exactly 3 transactions in the TX memory pool before generating the block

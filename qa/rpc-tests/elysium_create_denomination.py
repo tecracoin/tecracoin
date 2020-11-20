@@ -8,25 +8,34 @@ class ElysiumCreateDenominationTest(ElysiumTestFramework):
         super().run_test()
 
         # create non-sigma token
-        self.nodes[0].elysium_sendissuancefixed(self.addrs[0], 1, 1, 0, '', '', 'Normal Token', '', '', '1000000')
+        self.nodes[0].elysium_sendissuancefixed(self.addrs[0], 1, 1, 0, '', '', 'non-sigma', '', '', '1000000')
         self.nodes[0].generate(1)
-
         self.sync_all()
 
+        info = self.nodes[0].elysium_getproperty(3)
+        self.log.info("3 elysium prop {}".format(info))
+
+#        info = self.nodes[0].elysium_getproperty(0)
+#        self.log.info("0 elysium prop {}".format(info))
+
         # test feature check
+        # no sigma in tecracoin
         assert_raises_message(
             JSONRPCException,
-            'Sigma feature is not activated yet',
+            'Property has not enabled Sigma',
             self.nodes[0].elysium_sendcreatedenomination, self.addrs[0], 3, '1'
         )
 
         # create sigma token
-        self.nodes[0].generate(300) # sigma on regtest start at block 500
+#        self.nodes[0].generate(300) # sigma on regtest start at block 500
 
-        self.nodes[0].elysium_sendissuancefixed(self.addrs[0], 1, 2, 0, '', '', 'Sigma Token', '', '', '1000000', 1)
+        self.nodes[0].elysium_sendissuancefixed(self.addrs[0], 1, 2, 0, '', '', 'sigma', '', '', '1000000', 1)
         self.nodes[0].generate(1)
 
-        self.sync_all()
+        info = self.nodes[0].elysium_getproperty(4)
+        self.log.info("3 elysium prop {}".format(info))
+
+#        self.sync_all()
 
         # test parameter value validation
         assert_raises_message(
@@ -81,7 +90,7 @@ class ElysiumCreateDenominationTest(ElysiumTestFramework):
         assert_raises_message(
             JSONRPCException,
             'Sender is not authorized to manage the property',
-            self.nodes[0].elysium_sendcreatedenomination, self.addrs[1], 4, '1'
+            self.nodes[0].elysium_sendcreatedenomination, self.addrs[1], 3, '1'
         )
 
         assert_raises_message(
@@ -89,7 +98,7 @@ class ElysiumCreateDenominationTest(ElysiumTestFramework):
             'Property has not enabled Sigma',
             self.nodes[0].elysium_sendcreatedenomination, self.addrs[0], 3, '1'
         )
-
+        self.nodes[0].generate(1)
         # test valid denomination creation
         self.nodes[0].elysium_sendcreatedenomination(self.addrs[0], 4, '0.5')
         self.nodes[0].generate(1)

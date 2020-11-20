@@ -25,7 +25,7 @@ from .util import (
     connect_nodes,
     sync_blocks,
     sync_mempools,
-    sync_znodes,
+    sync_tnodes,
     stop_nodes,
     stop_node,
     start_node,
@@ -34,7 +34,7 @@ from .util import (
     initialize_chain_clean,
     PortSeed,
     p2p_port,
-    wait_to_sync_znodes,
+    wait_to_sync_tnodes,
     satoshi_round,
     wait_to_sync,
     copy_datadir,
@@ -67,6 +67,7 @@ class BitcoinTestFramework(object):
 
     def setup_chain(self):
         self.log.info("Initializing test directory "+self.options.tmpdir)
+        self.log.info("Initializing cache directory "+self.options.cachedir)
         if self.setup_clean_chain:
             initialize_chain_clean(self.options.tmpdir, self.num_nodes)
         else:
@@ -117,12 +118,12 @@ class BitcoinTestFramework(object):
             sync_blocks(self.nodes)
             sync_mempools(self.nodes)
 
-    def znsync_all(self):
+    def tnsync_all(self):
         if self.is_network_split:
-            sync_znodes(self.nodes[:2])
-            sync_znodes(self.nodes[2:])
+            sync_tnodes(self.nodes[:2])
+            sync_tnodes(self.nodes[2:])
         else:
-            sync_znodes(self.nodes)
+            sync_tnodes(self.nodes)
 
     def join_network(self):
         """
@@ -141,7 +142,7 @@ class BitcoinTestFramework(object):
                           help="Don't stop bitcoinds after the test execution")
         parser.add_option("--srcdir", dest="srcdir", default=os.path.normpath(os.path.dirname(os.path.realpath(__file__))+"/../../../src"),
                           help="Source directory containing bitcoind/bitcoin-cli (default: %default)")
-        parser.add_option("--cachedir", dest="cachedir", default="",
+        parser.add_option("--cachedir", dest="cachedir", default="cache",
                           help="Directory for caching pregenerated datadirs")
         parser.add_option("--tmpdir", dest="tmpdir", default=tempfile.mkdtemp(prefix="test"),
                           help="Root directory for datadirs")
@@ -206,7 +207,6 @@ class BitcoinTestFramework(object):
 
         if not self.options.nocleanup and not self.options.noshutdown and success:
             self.log.info("Cleaning up")
-            shutil.rmtree(self.options.tmpdir)
             if not os.listdir(self.options.root):
                 os.rmdir(self.options.root)
         else:
@@ -270,10 +270,10 @@ class ComparisonTestFramework(BitcoinTestFramework):
 
     def add_options(self, parser):
         parser.add_option("--testbinary", dest="testbinary",
-                          default=os.getenv("ZCOIND", "zcoind"),
+                          default=os.getenv("TECRACOIND", "tecracoind"),
                           help="bitcoind binary to test")
         parser.add_option("--refbinary", dest="refbinary",
-                          default=os.getenv("ZCOIND", "zcoind"),
+                          default=os.getenv("TECRACOIND", "tecracoind"),
                           help="bitcoind binary to use for reference nodes (if any)")
 
     def setup_network(self):
@@ -289,13 +289,24 @@ class ElysiumTestFramework(BitcoinTestFramework):
         self.addrs = []
 
     def run_test(self):
+
         for rpc in self.nodes:
+            rpc.generate(600)
+            self.log.info("The block count {} blocks".format(rpc.getblockcount()))
+
+        for rpc in self.nodes:
+            rpc.generate(600)
+            self.log.info("The block count {} blocks".format(rpc.getblockcount()))
+
+        for rpc in self.nodes:
+            self.log.info("The Balance before has {} TCR".format(rpc.getbalance()))
             addr = rpc.getnewaddress()
-            id = rpc.sendtoaddress(addr, 500)
+            id = rpc.sendtoaddress(addr, 50)
             self.nodes[0].sendrawtransaction(rpc.getrawtransaction(id))
             self.addrs.append(addr)
+            self.log.info("The Balance after has {} TCR".format(rpc.getbalance()))
 
-        self.nodes[0].generate(10)
+        self.nodes[0].generate(1)
 
         if len(self.nodes[0].getrawmempool()) > 0:
             raise Exception("Fail to send funds for all initial addresses")
@@ -344,7 +355,7 @@ class ElysiumTestFramework(BitcoinTestFramework):
 # Tnode tests support
 #
 
-ZNODE_COLLATERAL = 1000
+tnode_COLLATERAL = 10000
 
 class TnodeCollateral(object):
     def __init__(self):
@@ -356,7 +367,7 @@ class TnodeCollateral(object):
 
     def parse_collateral_output(self, target_address, tx_text, tx_id):
         for vout in tx_text["vout"]:
-            if vout["value"] == ZNODE_COLLATERAL and vout["scriptPubKey"]["addresses"] == [target_address]:
+            if vout["value"] == tnode_COLLATERAL and vout["scriptPubKey"]["addresses"] == [target_address]:
                 self.tx_id = tx_id
                 self.n = vout["n"]
         return self
@@ -364,9 +375,9 @@ class TnodeCollateral(object):
 class TnodeTestFramework(BitcoinTestFramework):
     def __init__(self):
         super().__init__()
-        self.znode_priv_keys = dict()
+        self.tnode_priv_keys = dict()
         self.num_nodes = 4
-        self.num_znodes = 3
+        self.num_tnodes = 3
 
     def setup_chain(self):
         self.log.info("Initializing test directory "+self.options.tmpdir)
@@ -379,85 +390,95 @@ class TnodeTestFramework(BitcoinTestFramework):
             for j in range(i, self.num_nodes):
                 connect_nodes_bi(self.nodes, i, j)
 
-    def write_master_znode_conf(self, znode, collateral):
-        znode_service = get_znode_service(znode)
-        znode_conf = " ".join(["zn"+str(znode), znode_service, self.znode_priv_keys[znode], collateral.tx_id, str(collateral.n)])
-
-        master_node_conf_filename = os.path.join(self.options.tmpdir, "node" + str(znode), "regtest", "znode.conf")
+    def write_master_tnode_conf(self, tnode, collateral):
+        tnode_service = get_tnode_service(tnode)
+        tnode_conf = " ".join(["zn"+str(tnode), tnode_service, self.tnode_priv_keys[tnode], collateral.tx_id, str(collateral.n)])
+        self.log.info("tnode conf {}".format(tnode_conf))
+        master_node_conf_filename = os.path.join(self.options.tmpdir, "node" + str(tnode), "regtest", "tnode.conf")
         with open(master_node_conf_filename, "a") as master_node_conf:
-            master_node_conf.write(znode_conf)
+            master_node_conf.write(tnode_conf)
             master_node_conf.write("\n")
             master_node_conf.close()
 
-    def generate_znode_collateral(self, generator_node=None):
+    def generate_tnode_collateral(self, generator_node=None):
         if generator_node is None:
             generator_node = self.num_nodes - 1
         curr_balance = self.nodes[generator_node].getbalance()
-        while curr_balance < ZNODE_COLLATERAL:
-            self.nodes[generator_node].generate(int((ZNODE_COLLATERAL - curr_balance) / 25))
+        while curr_balance < tnode_COLLATERAL*1.1:
+#            self.nodes[generator_node].generate(int((tnode_COLLATERAL - curr_balance) / 25))
+            set_mocktime(get_mocktime() + 150)
+            set_node_times(self.nodes, get_mocktime())
+            self.nodes[generator_node].generate(1)
+            self.sync_all()
             curr_balance = self.nodes[generator_node].getbalance()
         return curr_balance
 
-    def send_znode_collateral(self, znode, collateral_provider=None):
+    def send_tnode_collateral(self, tnode, collateral_provider=None):
         if collateral_provider is None:
             collateral_provider = self.num_nodes - 1
-        znode_address = self.nodes[znode].getaccountaddress("Tnode")
-        tx_id = self.nodes[collateral_provider].sendtoaddress(znode_address, ZNODE_COLLATERAL)
+        tnode_address = self.nodes[tnode].getaccountaddress("Tnode")
+        self.log.info("balance {} ".format(self.nodes[collateral_provider].getbalance()))
+        self.log.info("blockcount {} ".format(self.nodes[collateral_provider].getblockcount()))
+        self.log.info("sending collateral {} ".format(tnode_COLLATERAL))
+        tx_id = self.nodes[collateral_provider].sendtoaddress(tnode_address, tnode_COLLATERAL)
         tx_text = self.nodes[collateral_provider].getrawtransaction(tx_id, 1)
         collateral = TnodeCollateral()
-        return collateral.parse_collateral_output(znode_address, tx_text, tx_id)
+        return collateral.parse_collateral_output(tnode_address, tx_text, tx_id)
 
-    def send_mature_znode_collateral(self, znode, collateral_provider=None):
+    def send_mature_tnode_collateral(self, tnode, collateral_provider=None):
         if collateral_provider is None:
             collateral_provider = self.num_nodes - 1
-        result = self.send_znode_collateral(znode, collateral_provider)
+        result = self.send_tnode_collateral(tnode, collateral_provider)
         self.nodes[collateral_provider].generate(10)
-        sync_blocks(self.nodes)
+        sync_blocks(self.nodes, timeout=240)
         time.sleep(3)
         return result
 
-    def configure_znode(self, znode, master_znode=None):
-        if master_znode is None:
-            master_znode = self.num_nodes - 1
-        self.znode_priv_keys[znode] = self.nodes[znode].znode("genkey")
-        stop_node(self.nodes[znode], znode)
-        znode_service = get_znode_service(znode)
-        self.nodes[znode] = start_node(znode, self.options.tmpdir, ["-znode", "-znodeprivkey="+self.znode_priv_keys[znode], "-externalip="+znode_service, "-listen"])
-        connect_nodes(self.nodes[znode], znode)
+    def configure_tnode(self, tnode, master_tnode=None):
+        if master_tnode is None:
+            master_tnode = self.num_nodes - 1
+        self.tnode_priv_keys[tnode] = self.nodes[tnode].tnode("genkey")
+        stop_node(self.nodes[tnode], tnode)
+        tnode_service = get_tnode_service(tnode)
+        self.nodes[tnode] = start_node(tnode, self.options.tmpdir, ["-tnode", "-tnodeprivkey="+self.tnode_priv_keys[tnode], "-externalip="+tnode_service, "-listen"])
+        connect_nodes(self.nodes[tnode], tnode)
         for i in range(self.num_nodes):
-            if i != znode:
-                connect_nodes_bi(self.nodes, i, znode)
+            if i != tnode:
+                connect_nodes_bi(self.nodes, i, tnode)
 
-    def generate_znode_privkey(self, znode):
-        self.znode_priv_keys[znode] = self.nodes[znode].znode("genkey")
+    def generate_tnode_privkey(self, tnode):
+        self.tnode_priv_keys[tnode] = self.nodes[tnode].tnode("genkey")
 
-    def restart_as_znode(self, znode):
-        stop_node(self.nodes[znode], znode)
-        znode_service = get_znode_service(znode)
-        self.nodes[znode] = start_node(znode, self.options.tmpdir, ["-znode", "-znodeprivkey="+self.znode_priv_keys[znode], "-externalip="+znode_service, "-listen"])
-        connect_nodes(self.nodes[znode], znode)
+    def restart_as_tnode(self, tnode):
+        stop_node(self.nodes[tnode], tnode)
+        tnode_service = get_tnode_service(tnode)
+        self.nodes[tnode] = start_node(tnode, self.options.tmpdir, ["-tnode", "-tnodeprivkey="+self.tnode_priv_keys[tnode], "-externalip="+tnode_service, "-listen"])
+        connect_nodes(self.nodes[tnode], tnode)
         for i in range(self.num_nodes):
-            if i != znode:
-                connect_nodes_bi(self.nodes, i, znode)
-        for i in range(self.num_nodes):
-            wait_to_sync_znodes(self.nodes[i])
+            if i != tnode:
+                connect_nodes_bi(self.nodes, i, tnode)
+                self.sync_all()
+#        for i in range(self.num_nodes):
+        wait_to_sync_tnodes(self.nodes[tnode],fast_tnsync=False)
 
-    def znode_start(self, znode):
-        assert_equal("Tnode successfully started", self.nodes[znode].znode("start"))
+    def tnode_start(self, tnode):
+        assert_equal("Tnode successfully started", self.nodes[tnode].tnode("start"))
 
-    def configure_znode(self, znode, master_znode=None ):
-        self.generate_znode_privkey(znode, master_znode)
-        self.restart_as_znode(znode)
+    def configure_tnode(self, tnode, master_tnode=None ):
+        self.generate_tnode_privkey(tnode, master_tnode)
+        self.restart_as_tnode(tnode)
 
-    def wait_znode_enabled(self, enabled_znode_number, znode_to_wait_on = None, timeout = 10):
-        if znode_to_wait_on is None:
-            znode_to_wait_on = self.num_nodes - 1
-        wait_to_sync_znodes(self.nodes[znode_to_wait_on])
+    def wait_tnode_enabled(self, enabled_tnode_number, tnode_to_wait_on = None, timeout = 20):
+        if tnode_to_wait_on is None:
+            tnode_to_wait_on = self.num_nodes - 1
+        wait_to_sync_tnodes(self.nodes[tnode_to_wait_on], fast_tnsync=False)
         for j in range (timeout):
-            if self.nodes[znode_to_wait_on].znode("count", "enabled") == enabled_znode_number:
+            if self.nodes[tnode_to_wait_on].tnode("count", "enabled") == enabled_tnode_number:
                 return
-            time.sleep(1)
-        raise Exception("Cannot wait until znodes enabled")
+            self.log.info("enabled tnode {}".format(self.nodes[tnode_to_wait_on].tnode("count", "enabled")))
+            time.sleep(60)
+            self.nodes[0].generate(1)
+#        raise Exception("Cannot wait until tnodes enabled")
 
     def generate(self, blocks, generator_node=None):
         if generator_node is None:
@@ -468,10 +489,10 @@ class TnodeTestFramework(BitcoinTestFramework):
             time.sleep(1)
 
 
-def get_znode_service(znode):
-    znode_ip_str = "127.0.1." + str(znode + 1)
-    znode_port_str = str(p2p_port(znode))
-    return znode_ip_str + ":" + znode_port_str
+def get_tnode_service(tnode):
+    tnode_ip_str = "127.0.1." + str(tnode + 1)
+    tnode_port_str = str(p2p_port(tnode))
+    return tnode_ip_str + ":" + tnode_port_str
 
 class TnodeInfo:
     def __init__(self, proTxHash, ownerAddr, votingAddr, pubKeyOperator, keyOperator, collateral_address, collateral_txid, collateral_vout, priv_key):
@@ -513,13 +534,13 @@ class EvoTnodeTestFramework(BitcoinTestFramework):
     def prepare_masternode(self, idx):
         bls = self.nodes[0].bls('generate')
         address = self.nodes[0].getnewaddress()
-        txid = self.nodes[0].sendtoaddress(address, ZNODE_COLLATERAL)
+        txid = self.nodes[0].sendtoaddress(address, tnode_COLLATERAL)
 
         txraw = self.nodes[0].getrawtransaction(txid, True)
         collateral_vout = 0
         for vout_idx in range(0, len(txraw["vout"])):
             vout = txraw["vout"][vout_idx]
-            if vout["value"] == ZNODE_COLLATERAL:
+            if vout["value"] == tnode_COLLATERAL:
                 collateral_vout = vout_idx
         self.nodes[0].lockunspent(False, [{'txid': txid, 'vout': collateral_vout}])
 
@@ -539,12 +560,12 @@ class EvoTnodeTestFramework(BitcoinTestFramework):
             proTxHash = self.nodes[0].protx('register', txid, collateral_vout, '127.0.0.1:%d' % port, ownerAddr, bls['public'], votingAddr, 0, rewardsAddr, address)
         self.nodes[0].generate(1)
 
-        self.mninfo.append(TnodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout, self.nodes[0].znode("genkey")))
+        self.mninfo.append(TnodeInfo(proTxHash, ownerAddr, votingAddr, bls['public'], bls['secret'], address, txid, collateral_vout, self.nodes[0].tnode("genkey")))
         self.sync_all()
 
     def remove_mastermode(self, idx):
         mn = self.mninfo[idx]
-        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 999.9999})
+        rawtx = self.nodes[0].createrawtransaction([{"txid": mn.collateral_txid, "vout": mn.collateral_vout}], {self.nodes[0].getnewaddress(): 9999.99})
         rawtx = self.nodes[0].signrawtransaction(rawtx)
         self.nodes[0].sendrawtransaction(rawtx["hex"])
         self.nodes[0].generate(1)
@@ -570,9 +591,9 @@ class EvoTnodeTestFramework(BitcoinTestFramework):
         executor = ThreadPoolExecutor(max_workers=20)
 
         def do_start(idx):
-            args = ['-znode=1',
+            args = ['-tnode=1',
                     '-zblsprivkey=%s' % self.mninfo[idx].keyOperator,
-                    '-znodeprivkey=%s' % self.mninfo[idx].priv_key
+                    '-tnodeprivkey=%s' % self.mninfo[idx].priv_key
                     ] + self.extra_args[idx + start_idx]
             node = start_node(idx + start_idx, self.options.tmpdir, args)
             self.mninfo[idx].nodeIdx = idx + start_idx
@@ -605,7 +626,7 @@ class EvoTnodeTestFramework(BitcoinTestFramework):
 
         sync_blocks(self.nodes)
         self.nodes[0].generate(1)
-        sync_znodes(self.nodes, True)
+        sync_tnodes(self.nodes, True)
 
         executor.shutdown()
 
@@ -614,20 +635,23 @@ class EvoTnodeTestFramework(BitcoinTestFramework):
         enable_mocktime()
         # create faucet node for collateral and transactions
         self.nodes.append(start_node(0, self.options.tmpdir, self.extra_args[0]))
-        required_balance = ZNODE_COLLATERAL * self.mn_count + 1
-        while self.nodes[0].getbalance() < required_balance:
-            set_mocktime(get_mocktime() + 1)
+        required_balance = tnode_COLLATERAL * self.mn_count + 1
+        while self.nodes[0].getbalance() < required_balance*1.1:
+            set_mocktime(get_mocktime() + 150)
             set_node_times(self.nodes, get_mocktime())
             self.nodes[0].generate(1)
+            self.sync_all()
         # create connected simple nodes
         for i in range(0, self.num_nodes - self.mn_count - 1):
             self.create_simple_node()
-        sync_znodes(self.nodes, True)
+        sync_tnodes(self.nodes, True)
 
         # activate DIP3
-        while self.nodes[0].getblockcount() < 550:
-            self.nodes[0].generate(10)
-        self.sync_all()
+        while self.nodes[0].getblockcount() < 11500:
+            set_mocktime(get_mocktime() + 150)
+            set_node_times(self.nodes, get_mocktime())           
+            self.nodes[0].generate(1)
+            self.sync_all()
 
         # create masternodes
         self.prepare_masternodes()
@@ -649,7 +673,7 @@ class EvoTnodeTestFramework(BitcoinTestFramework):
         set_mocktime(get_mocktime() + 1)
         set_node_times(self.nodes, get_mocktime())
 
-        mn_info = self.nodes[0].evoznodelist("status")
+        mn_info = self.nodes[0].evotnodelist("status")
         assert (len(mn_info) == self.mn_count)
         for status in mn_info.values():
             assert (status == 'ENABLED')

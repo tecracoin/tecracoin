@@ -42,8 +42,8 @@ class ElysiumPropertyCreationFeeTest(ElysiumTestFramework):
     def run_test(self):
         super().run_test()
 
-        creation_fee_start_block = 500
-
+        creation_fee_start_block = 6000
+        self.log.info("Block count before activating creation fee {}".format(self.nodes[0].getblockcount()))
         # before creation fee is activated, all properies type should be able to create with low fee.
         self.test(ecosystem = 1)
         self.test(ecosystem = 1, amount = "10000")
@@ -51,9 +51,11 @@ class ElysiumPropertyCreationFeeTest(ElysiumTestFramework):
         self.test(ecosystem = 2, amount = "10000")
 
         # make sure, property creation fee is activated
-        self.nodes[0].generate(creation_fee_start_block - self.nodes[0].getblockcount())
+        while self.nodes[0].getblockcount() < creation_fee_start_block:
+            self.nodes[0].generate(1)
+            self.sync_all()
 
-        # after the activation, 100 XZC is required for creating main ecosystem property
+        # after the activation, 10 TCR is required for creating main ecosystem property
         self.test_insufficient(ecosystem = 1)
         self.test_insufficient(ecosystem = 1, amount = "10000")
 
@@ -61,7 +63,7 @@ class ElysiumPropertyCreationFeeTest(ElysiumTestFramework):
         self.test(ecosystem = 2)
         self.test(ecosystem = 2, amount = "10000")
 
-        # creating main ecosystem property with 100 XZC fee, should success
+        # creating main ecosystem property with 10 TCR fee, should success
         self.test(balance = 101, ecosystem = 1)
         self.test(balance = 101, ecosystem = 1, amount = "10000")
 

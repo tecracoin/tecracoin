@@ -631,7 +631,7 @@ public:
         consensus.nPowTargetSpacing = 1;
         consensus.fPowAllowMinDifficultyBlocks = true;
         consensus.fPowNoRetargeting = true;
-        consensus.nTnodePaymentsStartBlock = 120;
+
         consensus.nRuleChangeActivationThreshold = 108; // 75% for testchains
         consensus.nMinerConfirmationWindow = 144; // Faster than normal for regtest (144 instead of 2016)
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
@@ -650,7 +650,7 @@ public:
         // The best chain should have at least this much work.
         consensus.nMinimumChainWork = uint256S("0x00");
         // Tnode code
-        consensus.nTnodePaymentsStartBlock = 2;// for testing purposes this needs to be low
+        consensus.nTnodePaymentsStartBlock = 400;//4000;// for testing purposes this needs to be low
         consensus.nTnodeMinimumConfirmations = 1;
         consensus.nPremineSubsidy = 21000000; // 21mln TCR
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
@@ -695,8 +695,8 @@ public:
         consensus.nDontAllowDupTxsStartBlock = 1;
 
         // evo tnodes
-        consensus.DIP0003Height = 500;
-        consensus.DIP0003EnforcementHeight = 550;
+        consensus.DIP0003Height = 10500;//500;//10500;
+        consensus.DIP0003EnforcementHeight = 11500;//600;//11500;
         consensus.DIP0008Height = INT_MAX;
         consensus.nEvoTnodeMinimumConfirmations = 1;
 
@@ -811,9 +811,9 @@ public:
         foundersAddr[2] = "fc52erY95gPPodezPd3Rfj6h4DWKPN8pkM";
         foundersAddr[3] = "fT5R28XFJx7A618pNVjBoQmyYNQviqCzBs";
 
-        consensus.rewardsStage2Start = 3;// for testing purposes this needs to be low
+        consensus.rewardsStage2Start = 13000;//3;// for testing purposes this needs to be low
         // Some random thresholds
-        consensus.rewardsStage3Start = 10;
+        consensus.rewardsStage3Start = 18000;//10;
         consensus.rewardsStage4Start = 200000;
         consensus.rewardsStage5Start = 300000;
         consensus.rewardsStage6Start = 400000;

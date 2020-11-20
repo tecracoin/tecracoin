@@ -61,7 +61,7 @@ class WalletBackupTest(BitcoinTestFramework):
 
     def one_send(self, from_node, to_address):
         if (randint(1,2) == 1):
-            amount = Decimal(randint(1,10)) / Decimal(10)
+            amount = Decimal(randint(1,5)) / Decimal(10)
             self.nodes[from_node].sendtoaddress(to_address, amount)
 
     def do_one_round(self):
@@ -104,18 +104,25 @@ class WalletBackupTest(BitcoinTestFramework):
 
     def run_test(self):
         logging.info("Generating initial blockchain")
-        self.nodes[0].generate(1)
+        self.nodes[0].generate(6)  # first block is the premine
         sync_blocks(self.nodes)
-        self.nodes[1].generate(1)
+        self.nodes[1].generate(5)
         sync_blocks(self.nodes)
-        self.nodes[2].generate(1)
+        self.nodes[2].generate(5)
         sync_blocks(self.nodes)
-        self.nodes[3].generate(100)
-        sync_blocks(self.nodes)
+        for n in range(400):
+            self.nodes[3].generate(1)
+            sync_blocks(self.nodes)
+            self.log.info("total number of block {}".format(self.nodes[0].getblockcount()))
 
-        assert_equal(self.nodes[0].getbalance(), 40)
-        assert_equal(self.nodes[1].getbalance(), 40)
-        assert_equal(self.nodes[2].getbalance(), 40)
+        self.sync_all()
+        self.log.info("total number of block {}".format(self.nodes[0].getbalance()))
+        self.log.info("total number of block {}".format(self.nodes[1].getbalance()))
+        self.log.info("total number of block {}".format(self.nodes[2].getbalance()))
+        self.log.info("total number of block {}".format(self.nodes[3].getbalance()))
+        assert_equal(self.nodes[0].getbalance(), 5.625)
+        assert_equal(self.nodes[1].getbalance(), 5.625)
+        assert_equal(self.nodes[2].getbalance(), 5.625)
         assert_equal(self.nodes[3].getbalance(), 0)
 
         logging.info("Creating transactions")
@@ -162,8 +169,9 @@ class WalletBackupTest(BitcoinTestFramework):
             self.do_one_round()
 
         # Generate 101 more blocks, so any fees paid mature
-        self.nodes[3].generate(101)
-        self.sync_all()
+        for n in range(401):
+            self.nodes[3].generate(1)
+            self.sync_all()
 
         balance0 = self.nodes[0].getbalance()
         balance1 = self.nodes[1].getbalance()
@@ -171,9 +179,10 @@ class WalletBackupTest(BitcoinTestFramework):
         balance3 = self.nodes[3].getbalance()
         total = balance0 + balance1 + balance2 + balance3
 
-        # At this point, there are 214 blocks (103 for setup, then 10 rounds, then 101.)
-        # 114 are mature, so the sum of all wallets should be 114 * 40 = 4560.
-        assert_equal(total, 4560)
+        # At this point, there are 815 blocks (404 for setup, then 10 rounds, then 401.)
+        # 414 are mature, so the sum of all wallets should be 45 + 7 * 18 + 406 * 22.5.
+        self.log.info("total number of block {}".format(self.nodes[0].getblockcount()))
+        assert_equal(total, 1707.75)
 
         ##
         # Test restoring spender wallets from backups

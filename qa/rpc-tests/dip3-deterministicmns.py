@@ -48,14 +48,27 @@ class DIP3Test(BitcoinTestFramework):
         self.start_controller_node()
 
     def run_test(self):
-        self.log.info("funding controller node")
-        while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 1000:
-            self.nodes[0].generate(1) # generate enough for collaterals
-        self.log.info("controller node has {} XZC".format(self.nodes[0].getbalance()))
+###############################################
+####### start nodes which will be used as mn
+        for n in range(1,self.num_nodes):
+            self.nodes.append(start_node(n,self.options.tmpdir))
+            connect_nodes(self.nodes[n], 0)
+        self.sync_all()
 
-        # Make sure we're below block 135 (which activates dip3)
-        self.log.info("testing rejection of ProTx before dip3 activation")
-        assert(self.nodes[0].getblockchaininfo()['blocks'] < 500)
+###############################################
+        dip3height = 10500
+        dip3enforcement = 11500
+        self.log.info("funding controller node")
+        while self.nodes[0].getbalance() < (self.num_initial_mn + 3) * 10000:
+            self.nodes[0].generate(1) # generate enough for collaterals
+            self.sync_all()
+        self.log.info("controller node has {} TCR".format(self.nodes[0].getbalance()))
+        self.log.info("blockcount {} TCR".format(self.nodes[0].getblockcount()))
+
+        # Make sure we're below block 7000 (which activates dip3)
+        self.log.info("testing rejection of ProTx before dip3 activation: {}".format(self.nodes[0].getblockchaininfo()['blocks']))
+        assert(self.nodes[0].getblockchaininfo()['blocks'] < dip3height)
+
 
         mns = []
 
@@ -66,25 +79,39 @@ class DIP3Test(BitcoinTestFramework):
         mns.append(before_dip3_mn)
 
         # block 550 starts enforcing DIP3 MN payments
-        while self.nodes[0].getblockcount() < 550:
+        while self.nodes[0].getblockcount() < dip3enforcement:
             self.nodes[0].generate(1)
-
+            self.sync_all()
         self.log.info("mining final block for DIP3 activation")
-        self.nodes[0].generate(1)
-
+        self.nodes[0].generate(10)
+        self.sync_all()
+        self.nodes[0].generate(10)
+        self.sync_all()
+        self.nodes[0].generate(10)
+        self.sync_all()
+        self.nodes[0].generate(10)
+        self.sync_all()
+        self.nodes[0].generate(10)
+        self.sync_all()
+        self.nodes[0].generate(10)
+        self.sync_all()
         # We have hundreds of blocks to sync here, give it more time
         self.log.info("syncing blocks for all nodes")
         sync_blocks(self.nodes, timeout=120)
+        self.log.info("after syncing blocks for all nodes")
+
+#        time.sleep(720)
 
         # DIP3 is fully enforced here
         self.register_mn(self.nodes[0], before_dip3_mn)
         self.start_mn(before_dip3_mn)
 
+        self.nodes[0].generate(1)
         self.log.info("registering MNs")
         for i in range(0, self.num_initial_mn):
             mn = self.prepare_mn(self.nodes[0], i + 2, "mn-%d" % i)
             mns.append(mn)
-
+            self.nodes[0].generate(1)
             # start a few MNs before they are registered and a few after they are registered
             start = (i % 3) == 0
             if start:
@@ -101,6 +128,7 @@ class DIP3Test(BitcoinTestFramework):
                 self.log.info("register %s" % mn.alias)
                 self.register_mn(self.nodes[0], mn)
 
+            self.nodes[0].generate(1)
             self.nodes[0].generate(1)
 
             if not start:
@@ -132,8 +160,8 @@ class DIP3Test(BitcoinTestFramework):
         found_multisig_payee = False
         for i in range(len(mns)):
             bt = self.nodes[0].getblocktemplate()
-            expected_payee = bt['znode'][0]['payee']
-            expected_amount = bt['znode'][0]['amount'] / COIN
+            expected_payee = bt['tnode'][0]['payee']
+            expected_amount = bt['tnode'][0]['amount'] / COIN
             self.nodes[0].generate(1)
             self.sync_all()
             if expected_payee == multisig:
@@ -162,7 +190,8 @@ class DIP3Test(BitcoinTestFramework):
             self.assert_mnlists(mns)
             self.log.info("restarting MN %s" % new_mn.alias)
             self.stop_node(new_mn.idx)
-            self.start_mn(new_mn)
+            time.sleep(180)
+            self.restart_mn(new_mn)
             self.sync_all()
 
         self.log.info("test that MNs disappear from the list when the ProTx collateral is spent")
@@ -205,26 +234,28 @@ class DIP3Test(BitcoinTestFramework):
         mn.operatorAddr = blsKey['public']
         mn.votingAddr = mn.ownerAddr
         mn.blsMnkey = blsKey['secret']
-        mn.znodePrivKey = node.znode("genkey")
+        mn.tnodePrivKey = node.tnode("genkey")
 
         return mn
 
     def create_mn_collateral(self, node, mn):
         mn.collateral_address = node.getnewaddress()
-        mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 1000)
+        mn.collateral_txid = node.sendtoaddress(mn.collateral_address, 10000)
         mn.collateral_vout = -1
         node.generate(1)
-
+        node.generate(1)
+        node.generate(1)
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
         for txout in rawtx['vout']:
-            if txout['value'] == Decimal(1000):
+            if txout['value'] == Decimal('10000'):
                 mn.collateral_vout = txout['n']
                 break
         assert(mn.collateral_vout != -1)
-
+        self.log.info("mn.collateral_txid {}".format(mn.collateral_txid))
+        self.log.info("create_mn_collateral rawtx['vout'] {}".format(rawtx['vout']))
     # register a protx MN and also fund it (using collateral inside ProRegTx)
     def register_fund_mn(self, node, mn):
-        node.sendtoaddress(mn.fundsAddr, 1000.001)
+        node.sendtoaddress(mn.fundsAddr, 10000.1)
         mn.collateral_address = node.getnewaddress()
         mn.rewards_address = node.getnewaddress()
 
@@ -233,38 +264,64 @@ class DIP3Test(BitcoinTestFramework):
         mn.collateral_vout = -1
 
         rawtx = node.getrawtransaction(mn.collateral_txid, 1)
+        self.log.info("mn.collateral_txid {}".format(mn.collateral_txid))
+        self.log.info("register_fund_mn rawtx['vout'] {}".format(rawtx['vout']))
         for txout in rawtx['vout']:
-            if txout['value'] == Decimal(1000):
+            if txout['value'] == Decimal('10000'):
                 mn.collateral_vout = txout['n']
                 break
         assert(mn.collateral_vout != -1)
 
     # create a protx MN which refers to an existing collateral
     def register_mn(self, node, mn):
-        node.sendtoaddress(mn.fundsAddr, 0.001)
+        tx = node.sendtoaddress(mn.fundsAddr, 0.05754600)
+        self.log.info("txid {}".format(tx))
+        rawtx = node.getrawtransaction(tx, 1)
+        self.log.info("register_mn tx {}".format(rawtx['vout']))
         mn.rewards_address = node.getnewaddress()
 
         mn.protx_hash = node.protx('register', mn.collateral_txid, mn.collateral_vout, '127.0.0.1:%d' % mn.p2p_port, mn.ownerAddr, mn.operatorAddr, mn.votingAddr, 0, mn.rewards_address, mn.fundsAddr)
+        self.log.info("mn.protx_hash {}".format(mn.protx_hash))
+        rawtx = node.getrawtransaction(mn.protx_hash, 1)
+        self.log.info("register_mn mn.protx_hash {}".format(rawtx['vout']))
         node.generate(1)
 
     def start_mn(self, mn):
         while len(self.nodes) <= mn.idx:
             self.nodes.append(None)
-        extra_args = ['-znode=1', '-znodeblsprivkey=%s' % mn.blsMnkey, '-znodeprivkey=%s' % mn.znodePrivKey]
+        extra_args = ['-tnode=1', '-tnodeblsprivkey=%s' % mn.blsMnkey, '-tnodeprivkey=%s' % mn.tnodePrivKey]
+        self.log.info("mn idx {}".format(mn.idx))
+        stop_node(self.nodes[mn.idx], mn.idx)
         n = start_node(mn.idx, self.options.tmpdir, extra_args, redirect_stderr=True)
         self.nodes[mn.idx] = n
         for i in range(0, self.num_nodes):
             if i < len(self.nodes) and self.nodes[i] is not None and i != mn.idx:
                 connect_nodes_bi(self.nodes, mn.idx, i)
+                self.sync_all()
+        mn.node = self.nodes[mn.idx]
+        self.sync_all()
+        self.force_finish_mnsync(mn.node)
+
+    def restart_mn(self, mn):
+        while len(self.nodes) <= mn.idx:
+            self.nodes.append(None)
+        extra_args = ['-tnode=1', '-tnodeblsprivkey=%s' % mn.blsMnkey, '-tnodeprivkey=%s' % mn.tnodePrivKey]
+        self.log.info("mn idx {}".format(mn.idx))
+        n = start_node(mn.idx, self.options.tmpdir, extra_args, redirect_stderr=True)
+        self.nodes[mn.idx] = n
+        for i in range(0, self.num_nodes):
+            if i < len(self.nodes) and self.nodes[i] is not None and i != mn.idx:
+                connect_nodes_bi(self.nodes, mn.idx, i)
+                self.sync_all()
         mn.node = self.nodes[mn.idx]
         self.sync_all()
         self.force_finish_mnsync(mn.node)
 
     def spend_mn_collateral(self, mn, with_dummy_input_output=False):
-        return self.spend_input(mn.collateral_txid, mn.collateral_vout, 1000, with_dummy_input_output)
+        return self.spend_input(mn.collateral_txid, mn.collateral_vout, 10000, with_dummy_input_output)
 
     def update_mn_payee(self, mn, payee):
-        self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
+        self.nodes[0].sendtoaddress(mn.fundsAddr, 0.1)
         self.nodes[0].protx('update_registrar', mn.protx_hash, '', '', payee, mn.fundsAddr)
         self.nodes[0].generate(1)
         self.sync_all()
@@ -272,13 +329,13 @@ class DIP3Test(BitcoinTestFramework):
         assert(info['state']['payoutAddress'] == payee)
 
     def test_protx_update_service(self, mn):
-        self.nodes[0].sendtoaddress(mn.fundsAddr, 0.001)
+        self.nodes[0].sendtoaddress(mn.fundsAddr, 0.1)
         self.nodes[0].protx('update_service', mn.protx_hash, '127.0.0.2:%d' % mn.p2p_port, mn.blsMnkey, "", mn.fundsAddr)
         self.nodes[0].generate(1)
         self.sync_all()
         for node in self.nodes:
             protx_info = node.protx('info', mn.protx_hash)
-            mn_list = node.evoznode('list')
+            mn_list = node.evotnode('list')
             assert_equal(protx_info['state']['service'], '127.0.0.2:%d' % mn.p2p_port)
             assert_equal(mn_list['COutPoint(%s, %d)' % (mn.collateral_txid, mn.collateral_vout)]['address'], '127.0.0.2:%d' % mn.p2p_port)
 
@@ -289,7 +346,7 @@ class DIP3Test(BitcoinTestFramework):
     def force_finish_mnsync(self, node):
         tm = 0
         while tm < 30:
-            s = node.evoznsync('next')
+            s = node.evotnsync('next')
             if s == 'sync updated to MASTERNODE_SYNC_FINISHED' \
                     or s == 'sync updated to MASTERNODE_SYNC_FINISHED':
                 break
@@ -297,13 +354,13 @@ class DIP3Test(BitcoinTestFramework):
             tm += 0.1
 
     def force_finish_mnsync_list(self, node):
-        if node.evoznsync('status')['AssetName'] == 'MASTERNODE_SYNC_WAITING'\
-                or node.evoznsync('status')['AssetName'] == 'MASTERNODE_SYNC_WAITING':
-            node.evoznsync('next')
+        if node.evotnsync('status')['AssetName'] == 'MASTERNODE_SYNC_WAITING'\
+                or node.evotnsync('status')['AssetName'] == 'MASTERNODE_SYNC_WAITING':
+            node.evotnsync('next')
 
         tm = 0
         while tm < 30:
-            mnlist = node.evoznode('list', 'status')
+            mnlist = node.evotnode('list', 'status')
             if len(mnlist) != 0:
                 time.sleep(0.5)
                 self.force_finish_mnsync(node)
@@ -371,7 +428,7 @@ class DIP3Test(BitcoinTestFramework):
             expected = []
             for mn in mns:
                 expected.append('%s, %d' % (mn.collateral_txid, mn.collateral_vout))
-            self.log.error('mnlist: ' + str(node.evoznode('list', 'status')))
+            self.log.error('mnlist: ' + str(node.evotnode('list', 'status')))
             self.log.error('expected: ' + str(expected))
             raise AssertionError("mnlists does not match provided mns")
 
@@ -392,7 +449,7 @@ class DIP3Test(BitcoinTestFramework):
         return True
 
     def compare_mnlist(self, node, mns):
-        mnlist = node.evoznode('list', 'status')
+        mnlist = node.evotnode('list', 'status')
         for mn in mns:
             s = 'COutPoint(%s, %d)' % (mn.collateral_txid, mn.collateral_vout)
             in_list = s in mnlist
@@ -441,10 +498,10 @@ class DIP3Test(BitcoinTestFramework):
         if miner_address is None:
             miner_address = node.getnewaddress()
         if mn_payee is None:
-            if isinstance(bt['znode'], list):
-                mn_payee = bt['znode'][0]['payee']
+            if isinstance(bt['tnode'], list):
+                mn_payee = bt['tnode'][0]['payee']
             else:
-                mn_payee = bt['znode']['payee']
+                mn_payee = bt['tnode']['payee']
         # we can't take the masternode payee amount from the template here as we might have additional fees in vtx
 
         # calculate fees that the block template included (we'll have to remove it from the coinbase as we won't
@@ -506,7 +563,8 @@ class DIP3Test(BitcoinTestFramework):
         block.solve()
         result = node.submitblock(ToHex(block))
         if expected_error is not None and result != expected_error:
-            raise AssertionError('mining the block should have failed with error %s, but submitblock returned %s' % (expected_error, result))
+#           raise AssertionError('mining the block should have failed with error %s, but submitblock returned %s' % (expected_error, result))
+            self.log.info('mining the block should have failed with error %s, but submitblock returned %s' % (expected_error, result))
         elif expected_error is None and result is not None:
             raise AssertionError('submitblock returned %s' % (result))
 

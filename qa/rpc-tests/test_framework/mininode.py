@@ -1828,8 +1828,8 @@ class NodeConnCB(object):
             with mininode_lock:
                 if self.verack_received:
                     return
-            time.sleep(0.05)
-            tm += 0.05
+            time.sleep(1)
+            tm += 1
         assert self.verack_received
 
     def deliver(self, conn, message):
@@ -1912,7 +1912,7 @@ class SingleNodeConnCB(NodeConnCB):
         self.connection = conn
 
     # Wrapper for the NodeConn's send_message function
-        self.send_message(vt, True)
+    #   self.send_message(vt, True)
     def send_message(self, message):
         self.connection.send_message(message)
 

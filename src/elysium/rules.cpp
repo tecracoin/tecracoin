@@ -235,7 +235,7 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     SIGMA_SPENDV1_FEATURE_BLOCK = 550;
 
     // Property creation fee
-    PROPERTY_CREATION_FEE_BLOCK = 500;
+    PROPERTY_CREATION_FEE_BLOCK = 6000;
     PROPERTY_CREATION_FEE = 10 * COIN;
     PROPERTY_CREATION_FEE_RECEIVER.SetString("fNYXvhBq4hKjRhCvJurfd9kMnZc3urwncb");
 }
@@ -598,8 +598,8 @@ bool IsTransactionTypeAllowed(int txBlock, uint32_t txProperty, uint16_t txType,
         if (entry.txType != txType || entry.txVersion != version) {
             continue;
         }
-        // a property identifier of 0 (= XZC) may be used as wildcard
-        if (ELYSIUM_PROPERTY_XZC == txProperty && !entry.allowWildcard) {
+        // a property identifier of 0 (= TCR) may be used as wildcard
+        if (ELYSIUM_PROPERTY_TCR == txProperty && !entry.allowWildcard) {
             continue;
         }
         // transactions are not restricted in the test ecosystem
