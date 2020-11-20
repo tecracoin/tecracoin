@@ -64,6 +64,12 @@ UniValue getinfo(const JSONRPCRequest& request)
             "  \"proxy\": \"host:port\",     (string, optional) the proxy used by the server\n"
             "  \"difficulty\": xxxxxx,       (numeric) the current difficulty\n"
             "  \"testnet\": true|false,      (boolean) if the server is using testnet or not\n"
+            "  \"notarizedhash\": xxxxxx,    (string) last notarized dPoW hash\n"
+            "  \"notarizedtxid\": xxxxxx,    (string) last notarized dPoW txid\n"
+            "  \"notarized\": xxxxxx,        (numeric) last notarized height\n"
+            "  \"prevMoMheight\": xxxxxx,    (numeric) previous notarized height\n"
+            "  \"notarized_MoMdepth\": xxx,  (numeric) notarized MoM depth\n"
+            "  \"notarized_MoM\": xxxxxx,    (string) notarized MoM hash\n"
             "  \"keypoololdest\": xxxxxx,    (numeric) the timestamp (seconds since Unix epoch) of the oldest pre-generated key in the key pool\n"
             "  \"keypoolsize\": xxxx,        (numeric) how many new keys are pre-generated\n"
             "  \"unlocked_until\": ttt,      (numeric) the timestamp in seconds since epoch (midnight Jan 1 1970 GMT) that the wallet is unlocked for transfers, or 0 if the wallet is locked\n"
@@ -103,6 +109,15 @@ UniValue getinfo(const JSONRPCRequest& request)
     obj.push_back(Pair("proxy",         (proxy.IsValid() ? proxy.proxy.ToStringIPPort() : string())));
     obj.push_back(Pair("difficulty",    (double)GetDifficulty()));
     obj.push_back(Pair("testnet",       Params().NetworkIDString() == CBaseChainParams::TESTNET));
+    int32_t komodo_prevMoMheight();
+    extern uint256 NOTARIZED_HASH,NOTARIZED_DESTTXID,NOTARIZED_MOM;
+    extern int32_t NOTARIZED_HEIGHT,NOTARIZED_MOMDEPTH;
+    obj.pushKV("notarizedhash",         NOTARIZED_HASH.GetHex());
+    obj.pushKV("notarizedtxid",         NOTARIZED_DESTTXID.GetHex());
+    obj.pushKV("notarized",             (int)NOTARIZED_HEIGHT);
+    obj.pushKV("prevMoMheight",         (int)komodo_prevMoMheight());
+    obj.pushKV("notarized_MoMdepth",    (int)NOTARIZED_MOMDEPTH);
+    obj.pushKV("notarized_MoM",         NOTARIZED_MOM.GetHex());
 #ifdef ENABLE_WALLET
     if (pwallet) {
         obj.push_back(Pair("keypoololdest", pwallet->GetOldestKeyPoolTime()));

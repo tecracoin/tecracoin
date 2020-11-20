@@ -34,6 +34,9 @@
 
 #include <mutex>
 #include <condition_variable>
+
+#include "komodo_rpcblockchain.h"
+
 using namespace std;
 
 struct CUpdatedBlock
@@ -1646,6 +1649,8 @@ static const CRPCCommand commands[] =
 
     { "blockchain",         "preciousblock",          &preciousblock,          true,  {"blockhash"} },
 
+    { "blockchain",         "calc_MoM",               &calc_MoM,               true,  {"height", "MoMdepth"}  },
+    { "blockchain",         "height_MoM",             &height_MoM,             true,  {"height"}  },
     /* Not shown in help */
     { "hidden",             "invalidateblock",        &invalidateblock,        true,  {"blockhash"} },
     { "hidden",             "reconsiderblock",        &reconsiderblock,        true,  {"blockhash"} },
