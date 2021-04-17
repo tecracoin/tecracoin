@@ -633,22 +633,8 @@ bool CheckFoundersInputs(const CTransaction &tx, CValidationState &state, const 
             return state.DoS(100, false, REJECT_FOUNDER_REWARD_MISSING,
                              "CTransaction::CheckTransaction() : founders reward missing");
         }
-
-        bool validTnodePayment = true;
-
-//        LogPrintf("Checking %d total_payment_tx %d, issynced: %s\n", nHeight, total_payment_tx,tnodeSync.IsSynced() ? "yes" : "no");
-        if (total_payment_tx > 1) {
-            validTnodePayment = false;
-        } else if (total_payment_tx == 1 && tnodeSync.IsSynced()){
-            validTnodePayment = tnpayments.IsTransactionValid(tx, nHeight, fMTP);
-        }
-
-        if(!validTnodePayment){
-            return state.DoS(100, false, REJECT_INVALID_TNODE_PAYMENT,
-                             "CTransaction::CheckTransaction() : invalid tnode payment");
-        }
     }
-
+    
     return true;
 }
 

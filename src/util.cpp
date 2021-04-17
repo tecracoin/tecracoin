@@ -622,7 +622,7 @@ boost::filesystem::path GetConfigFile(const std::string& confPath)
         // upgrade heuristics: if dataDir ends with either "tecracoin" or ".tecracoin" and confPath is set
         // to default value we use "tecracoin.conf" as config file name
 
-        if (confPath == BITCOIN_CONF_FILENAME && (dataDir.filename() == "tecracoin" || dataDir.filename() == ".zcoin"))
+        if (confPath == BITCOIN_CONF_FILENAME && (dataDir.filename() == "tecracoin" || dataDir.filename() == ".tecracoin"))
             pathConfigFile = dataDir / "tecracoin.conf";
         else
             pathConfigFile = dataDir / pathConfigFile;
@@ -655,43 +655,6 @@ void ReadConfigFile(const std::string& confPath)
     }
     // If datadir is changed in .conf file:
     ClearDatadirCache();
-}
-
-bool RenameDirectoriesFromZcoinToFiro()
-{
-    namespace fs = boost::filesystem;
-
-    fs::path zcoinPath = GetDefaultDataDirForCoinName("zcoin");
-    fs::path firoPath = GetDefaultDataDirForCoinName("firo");
-
-    // rename is possible only if zcoin directory exists and firo doesn't
-    if (fs::exists(firoPath) || !fs::is_directory(zcoinPath))
-        return false;
-
-    fs::path zcoinConfFileName = zcoinPath / "zcoin.conf";
-    fs::path firoConfFileName = zcoinPath / "firo.conf";
-    if (fs::exists(firoConfFileName))
-        return false;
-
-    try {
-        if (fs::is_regular_file(zcoinConfFileName))
-            fs::rename(zcoinConfFileName, firoConfFileName);
-
-        try {
-            fs::rename(zcoinPath, firoPath);
-        }
-        catch (const fs::filesystem_error &) {
-            // rename config file back
-            fs::rename(firoConfFileName, zcoinConfFileName);
-            throw;
-        }
-    }
-    catch (const fs::filesystem_error &) {
-        return false;
-    }
-
-    ClearDatadirCache();
-    return true;
 }
 
 #ifndef WIN32

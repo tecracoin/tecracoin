@@ -41,10 +41,7 @@ public Q_SLOTS:
         const CAmount& immatureBalance,
         const CAmount& watchOnlyBalance,
         const CAmount& watchUnconfBalance,
-        const CAmount& watchImmatureBalance,
-        const CAmount& privateBalance,
-        const CAmount& unconfirmedPrivateBalance,
-        const CAmount& anonymizableBalance);
+        const CAmount& watchImmatureBalance);
 
     void updateDisplayUnit(int unit);
     void updateGlobalState();

@@ -144,9 +144,9 @@ void LelantusDialog::setWalletModel(WalletModel *_walletModel)
     if (_walletModel) {
         connect(
             _walletModel,
-            SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
+            SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
             this,
-            SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+            SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
 
         connect(
             _walletModel->getOptionsModel(),
@@ -154,11 +154,7 @@ void LelantusDialog::setWalletModel(WalletModel *_walletModel)
             this,
             SLOT(updateDisplayUnit(int)));
 
-        auto privateBalance = _walletModel->getLelantusModel()->getPrivateBalance();
-        setBalance(0, 0, 0, 0, 0, 0,
-            privateBalance.first,
-            privateBalance.second,
-            _walletModel->getAnonymizableBalance());
+        setBalance(0, 0, 0, 0, 0, 0);
 
         // Coin Control
         connect(

@@ -2,7 +2,7 @@
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include "activetnode.h"
+#include "activemasternode.h"
 #include "consensus/validation.h"
 //#include "governance-classes.h"
 #include "base58.h"

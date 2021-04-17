@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import EvoZnodeTestFramework
+from test_framework.test_framework import EvoTnodeTestFramework
 from test_framework.util import *
 
 '''
@@ -13,7 +13,7 @@ Simulate and check DKG errors
 
 '''
 
-class LLMQDKGErrors(EvoZnodeTestFramework):
+class LLMQDKGErrors(EvoTnodeTestFramework):
     def __init__(self):
         super().__init__(6, 5)
 

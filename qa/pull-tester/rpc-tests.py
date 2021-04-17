@@ -218,7 +218,7 @@ testScripts = [
     'hdmint_mempool_zap.py',
 #    'sigma_zapwalletmints_unconf_trans.py',
 
-    # Evo Znodes
+    # Evo Tnodes
     'dip3-deterministicmns.py',
     'llmq-signing.py',
     'llmq-dkgerrors.py',

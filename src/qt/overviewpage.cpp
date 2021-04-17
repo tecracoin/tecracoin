@@ -204,19 +204,11 @@ void OverviewPage::on_anonymizeButton_clicked()
     if (!walletModel) {
         return;
     }
-
-    auto lelantusModel = walletModel->getLelantusModel();
-    if (!lelantusModel) {
-        return;
-    }
-
-    lelantusModel->mintAll(AutoMintMode::MintAll);
 }
 
 void OverviewPage::setBalance(
     const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance,
-    const CAmount& privateBalance, const CAmount& unconfirmedPrivateBalance, const CAmount& anonymizableBalance)
+    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
 {
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     currentBalance = balance;
@@ -295,8 +287,6 @@ void OverviewPage::setWalletModel(WalletModel *model)
         ui->listTransactions->setModel(filter.get());
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
-        auto privateBalance = walletModel->getLelantusModel()->getPrivateBalance();
-
         // Keep up to date with wallet
         setBalance(
                     model->getBalance(),
@@ -304,15 +294,12 @@ void OverviewPage::setWalletModel(WalletModel *model)
                     model->getImmatureBalance(),
                     model->getWatchBalance(),
                     model->getWatchUnconfirmedBalance(),
-                    model->getWatchImmatureBalance(),
-                    privateBalance.first,
-                    privateBalance.second,
-                    model->getAnonymizableBalance());
+                    model->getWatchImmatureBalance();
         connect(
             model,
-            SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
+            SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
             this,
-            SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+            SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 

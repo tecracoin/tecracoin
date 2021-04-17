@@ -1,7 +1,7 @@
 #ifndef ADDRESSTYPE_H
 #define ADDRESSTYPE_H
 
-enum struct AddressType //Tecra TODO: eradicate zerocoin thingy
+enum struct AddressType //Tecra TODO: eradicate zerocoin/sigma/lelantus thingy
 {
       unknown = 0
     , payToPubKeyHash = 1

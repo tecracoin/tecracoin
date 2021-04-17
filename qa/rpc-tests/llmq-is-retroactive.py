@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.mininode import *
-from test_framework.test_framework import EvoZnodeTestFramework
+from test_framework.test_framework import EvoTnodeTestFramework
 from test_framework.util import sync_blocks, set_node_times, \
     isolate_node, reconnect_isolated_node, set_mocktime, get_mocktime
 
@@ -18,7 +18,7 @@ Mempool inconsistencies are simulated via disconnecting/reconnecting node 3
 and by having a higher relay fee on nodes 4 and 5.
 '''
 
-class LLMQ_IS_RetroactiveSigning(EvoZnodeTestFramework):
+class LLMQ_IS_RetroactiveSigning(EvoTnodeTestFramework):
     def __init__(self):
         # -whitelist is needed to avoid the trickling logic on node0
         super().__init__(6, 5, [["-whitelist=127.0.0.1"], [], [], [], ["-minrelaytxfee=0.001"], ["-minrelaytxfee=0.001"]])

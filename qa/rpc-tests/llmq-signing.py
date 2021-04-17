@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.mininode import *
-from test_framework.test_framework import EvoZnodeTestFramework
+from test_framework.test_framework import EvoTnodeTestFramework
 from test_framework.util import *
 from time import *
 
@@ -15,7 +15,7 @@ Checks LLMQs signing sessions
 
 '''
 
-class LLMQSigningTest(EvoZnodeTestFramework):
+class LLMQSigningTest(EvoTnodeTestFramework):
     def __init__(self):
         super().__init__(6, 5)
 

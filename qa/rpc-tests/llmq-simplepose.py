@@ -3,7 +3,7 @@
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-from test_framework.test_framework import EvoZnodeTestFramework
+from test_framework.test_framework import EvoTnodeTestFramework
 from test_framework.util import *
 from time import *
 
@@ -14,7 +14,7 @@ Checks simple PoSe system based on LLMQ commitments
 
 '''
 
-class LLMQSimplePoSeTest(EvoZnodeTestFramework):
+class LLMQSimplePoSeTest(EvoTnodeTestFramework):
     def __init__(self):
         super().__init__(6, 5)
 

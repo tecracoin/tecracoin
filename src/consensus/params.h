@@ -140,8 +140,8 @@ struct Params {
     std::string stage2DevelopmentFundAddress;
     /** percentage of block subsidy going to developer fund */
     int stage2DevelopmentFundShare;
-    /** percentage of block subsidy going to znode */
-    int stage2ZnodeShare;
+    /** percentage of block subsidy going to tnode */
+    int stage2TnodeShare;
 
     int nStartDuplicationCheck;
     int nStartBlacklist;

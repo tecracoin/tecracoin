@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 from test_framework.blocktools import get_masternode_payment, create_coinbase, create_block
 from test_framework.mininode import *
-from test_framework.test_framework import EvoZnodeTestFramework
+from test_framework.test_framework import EvoTnodeTestFramework
 from test_framework.util import *
 from time import *
 
@@ -43,7 +43,7 @@ class TestNode(SingleNodeConnCB):
                 self.send_message(self.islocks[inv.hash])
 
 
-class LLMQ_IS_CL_Conflicts(EvoZnodeTestFramework):
+class LLMQ_IS_CL_Conflicts(EvoTnodeTestFramework):
     def __init__(self):
         super().__init__(6, 5)
         #disable_mocktime()

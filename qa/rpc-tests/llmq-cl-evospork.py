@@ -4,7 +4,7 @@
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 from test_framework.mininode import *
-from test_framework.test_framework import EvoZnodeTestFramework
+from test_framework.test_framework import EvoTnodeTestFramework
 from test_framework.util import *
 from time import *
 
@@ -21,7 +21,7 @@ Checks LLMQs based ChainLocks
 - 
 '''
 
-class LLMQChainLocksTest(EvoZnodeTestFramework):
+class LLMQChainLocksTest(EvoTnodeTestFramework):
     def __init__(self):
         super().__init__(6, 5, extra_args=[['-debug=chainlocks']] * 6)
         self.sporkprivkey = "cW2YM2xaeCaebfpKguBahUAgEzLXgSserWRuD29kSyKHq1TTgwRQ"

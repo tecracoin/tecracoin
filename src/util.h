@@ -127,7 +127,6 @@ boost::filesystem::path GetDefaultDataDirForCoinName(const std::string &coinName
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 const boost::filesystem::path &GetBackupsDir();
-bool RenameDirectoriesFromZcoinToFiro();
 void ClearDatadirCache();
 boost::filesystem::path GetConfigFile(const std::string& confPath);
 #ifndef WIN32

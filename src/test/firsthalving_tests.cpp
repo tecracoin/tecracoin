@@ -20,9 +20,9 @@ static SimpleUTXOMap BuildSimpleUtxoMap(const std::vector<CTransaction>& txs)
     CAmount balance = 0;
     for (size_t i = 0; i < txs.size(); i++) {
         auto& tx = txs[i];
-        size_t const znode_output = tx.vout.size() > 6 ? FindZnodeOutput(tx) : 0;
+        size_t const tnode_output = tx.vout.size() > 6 ? FindTnodeOutput(tx) : 0;
         for (size_t j = 0; j < tx.vout.size(); j++) {
-            if(j == 0 || j == znode_output) {
+            if(j == 0 || j == tnode_output) {
                 balance += tx.vout[j].nValue;
                 utxos.emplace(COutPoint(tx.GetHash(), j), std::make_pair((int)i + 1, tx.vout[j].nValue));
             }
@@ -169,9 +169,9 @@ BOOST_FIXTURE_TEST_CASE(devpayout, TestChainDIP3BeforeActivationSetup)
 
     CKey ownerKey;
     CBLSSecretKey operatorSecretKey;
-    CScript znodePayoutScript = GenerateRandomAddress();
+    CScript tnodePayoutScript = GenerateRandomAddress();
 
-    auto tx = CreateProRegTx(utxos, 4444, znodePayoutScript, coinbaseKey, ownerKey, operatorSecretKey);
+    auto tx = CreateProRegTx(utxos, 4444, tnodePayoutScript, coinbaseKey, ownerKey, operatorSecretKey);
     CreateAndProcessBlock({tx}, coinbaseKey);
     deterministicMNManager->UpdatedBlockTip(chainActive.Tip());
 
@@ -196,7 +196,7 @@ BOOST_FIXTURE_TEST_CASE(devpayout, TestChainDIP3BeforeActivationSetup)
         CValidationState state;
         BOOST_ASSERT(CheckZerocoinFoundersInputs(*block.vtx[0], state, consensusParams, chainActive.Height(), false));
 
-        BOOST_ASSERT(nValue == 15*COIN);    // znode reward before the first halving
+        BOOST_ASSERT(nValue == 15*COIN);    // tnode reward before the first halving
     }
 
     // halving occurs at block 600

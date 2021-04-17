@@ -94,11 +94,6 @@
 #include <event2/util.h>
 #include <event2/event.h>
 #include <event2/thread.h>
-#include "activetnode.h"
-#include "tnode-payments.h"
-#include "tnode-sync.h"
-#include "tnodeman.h"
-#include "tnodeconfig.h"
 #include "netfulfilledman.h"
 #include "flat-database.h"
 
@@ -268,11 +263,6 @@ void Shutdown()
         pwalletMain->Flush(false);
 #endif
     GenerateBitcoins(false, 0, Params());
-    CFlatDB<CTnodeMan> flatdb1("tncache.dat", "magicTnodeCache");
-    flatdb1.Dump(mnodeman);
-    CFlatDB<CTnodePayments> flatdb2("tnpayments.dat", "magicTnodePaymentsCache");
-    flatdb2.Dump(tnpayments);
-    
     MapPort(false);
     UnregisterValidationInterface(peerLogic.get());
     peerLogic.reset();
@@ -891,14 +881,14 @@ void InitParameterInteraction()
             LogPrintf("%s: parameter interaction: -whitebind set -> setting -listen=1\n", __func__);
     }
 
-    if (IsArgSet("-znodeblsprivkey")) {
+    if (IsArgSet("-tnodeblsprivkey")) {
         // masternodes MUST accept connections from outside
         ForceSetArg("-listen", "1");
-        LogPrintf("%s: parameter interaction: -znodeblsprivkey=... -> setting -listen=1\n", __func__);
+        LogPrintf("%s: parameter interaction: -tnodeblsprivkey=... -> setting -listen=1\n", __func__);
         if (GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS) < DEFAULT_MAX_PEER_CONNECTIONS) {
             // masternodes MUST be able to handle at least DEFAULT_MAX_PEER_CONNECTIONS connections
             ForceSetArg("-maxconnections", itostr(DEFAULT_MAX_PEER_CONNECTIONS));
-            LogPrintf("%s: parameter interaction: -znodeblsprivkey=... -> setting -maxconnections=%d instead of specified -maxconnections=%d\n",
+            LogPrintf("%s: parameter interaction: -tnodeblsprivkey=... -> setting -maxconnections=%d instead of specified -maxconnections=%d\n",
                     __func__, DEFAULT_MAX_PEER_CONNECTIONS, GetArg("-maxconnections", DEFAULT_MAX_PEER_CONNECTIONS));
         }
     }
@@ -2016,7 +2006,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
                                  "Please add txindex=1 to your configuration and start with -reindex");
     }
 
-    // evo znode system
+    // evo tnode system
     if(fLiteMode && fMasternodeMode) {
         return InitError(_("You can not start a tnode in lite mode."));
     }
@@ -2137,7 +2127,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     // Generate coins in the background
     GenerateBitcoins(GetBoolArg("-gen", DEFAULT_GENERATE), GetArg("-genproclimit", DEFAULT_GENERATE_THREADS),
                      chainparams);
-    // ********************************************************* Step 13: Znode - obsoleted
+    // ********************************************************* Step 13: Tnode - obsoleted
 
     // ********************************************************* Step 14: finished
 

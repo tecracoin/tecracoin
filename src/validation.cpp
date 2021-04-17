@@ -1766,7 +1766,7 @@ CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
 {
     const Consensus::Params &params = Params().GetConsensus();
     if (nHeight >= params.nSubsidyHalvingFirst)
-        return blockValue*params.stage2ZnodeShare/100;
+        return blockValue*params.stage2TnodeShare/100;
     else
         return blockValue*3/10; // 30%
 }
