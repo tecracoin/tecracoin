@@ -36,7 +36,7 @@ Build TecraCoin Core
 ------------------------
 1.  Build TecraCoin-core:
 
-    Configure and build the headless tecracoin binaries as well as the GUI (if Qt is found).
+    Configure and build the headless TecraCoin binaries as well as the GUI (if Qt is found).
     
     In case you want to build the disk image with `make deploy` (.dmg / optional), by passing `--with-gui` to configure.
     

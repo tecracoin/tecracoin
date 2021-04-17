@@ -11,6 +11,24 @@ AM_CPPFLAGS = $(HARDENED_CPPFLAGS)
 AM_LIBTOOLFLAGS = --preserve-dup-deps
 EXTRA_LIBRARIES =
 
+if ENABLE_CRASH_HOOKS
+if CRASH_HOOKS_WRAPPED_CXX_ABI
+# Wrap internal C++ ABI's so that we can attach stacktraces to exceptions
+LDFLAGS_WRAP_EXCEPTIONS = -Wl,-wrap,__cxa_allocate_exception -Wl,-wrap,__cxa_free_exception
+if TARGET_WINDOWS
+LDFLAGS_WRAP_EXCEPTIONS += -Wl,-wrap,_assert -Wl,-wrap,_wassert
+else
+LDFLAGS_WRAP_EXCEPTIONS += -Wl,-wrap,__assert_fail
+endif
+endif
+
+if TARGET_WINDOWS
+BACKTRACE_LIB = -ldbghelp -lbacktrace
+else
+BACKTRACE_LIB = -lbacktrace
+endif
+endif
+
 if EMBEDDED_UNIVALUE
 LIBUNIVALUE = univalue/libunivalue.la
 
@@ -95,11 +113,12 @@ LIBBITCOIN_COMMON=libbitcoin_common.a
 LIBBITCOIN_CONSENSUS=libbitcoin_consensus.a
 LIBBITCOIN_CLI=libbitcoin_cli.a
 LIBBITCOIN_UTIL=libbitcoin_util.a
+LIBLELANTUS=liblelantus.a
 LIBBITCOIN_CRYPTO=crypto/libbitcoin_crypto.a
 LIBBITCOINQT=qt/libtecracoinqt.a
 LIBSECP256K1=secp256k1/libsecp256k1.la
 
-LIBZCOIN_SIGMA=libsigma.a
+LIBFIRO_SIGMA=libsigma.a
 
 if ENABLE_ZMQ
 LIBBITCOIN_ZMQ=libbitcoin_zmq.a
@@ -125,7 +144,8 @@ EXTRA_LIBRARIES += \
   $(LIBBITCOIN_CLI) \
   $(LIBBITCOIN_WALLET) \
   $(LIBBITCOIN_ZMQ) \
-  $(LIBZCOIN_SIGMA)
+  $(LIBFIRO_SIGMA) \
+  $(LIBLELANTUS)
 
 lib_LTLIBRARIES = $(LIBBITCOINCONSENSUS)
 
@@ -145,7 +165,6 @@ endif
 .PHONY: FORCE check-symbols check-security
 # bitcoin core #
 BITCOIN_CORE_H = \
-  activetnode.h \
   activemasternode.h \
   addressindex.h \
   spentindex.h \
@@ -171,6 +190,7 @@ BITCOIN_CORE_H = \
   evo/providertx.h \
   evo/simplifiedmns.h \
   evo/specialtx.h \
+  evo/spork.h \
   dsnotificationinterface.h \
   coins.h \
   compat.h \
@@ -182,24 +202,17 @@ BITCOIN_CORE_H = \
   core_io.h \
   core_memusage.h \
   cuckoocache.h \
+  fs.h \
   httprpc.h \
   httpserver.h \
   indirectmap.h \
-  darksend.h \
-  darksend-relay.h \
   init.h \
-  instantx.h \
   key.h \
   keystore.h \
   dbwrapper.h \
   limitedmap.h \
   threadinterrupt.h \
-  tnode.h \
-  tnode-payments.h \
-  tnode-sync.h \
   masternode-utils.h \
-  tnodeman.h \
-  tnodeconfig.h \
   mbstring.h \
   memusage.h \
   merkleblock.h \
@@ -250,6 +263,7 @@ BITCOIN_CORE_H = \
   util.h \
   utilmoneystr.h \
   utiltime.h \
+  batchproof_container.h \
   validation.h \
   validationinterface.h \
   versionbits.h \
@@ -260,6 +274,7 @@ BITCOIN_CORE_H = \
   wallet/rpcwallet.h \
   wallet/sigmaspendbuilder.h \
   wallet/txbuilder.h \
+  wallet/lelantusjoinsplitbuilder.h \
   wallet/wallet.h \
   wallet/walletexcept.h \
   wallet/walletdb.h \
@@ -277,15 +292,15 @@ BITCOIN_CORE_H = \
   hdmint/wallet.h \
   zerocoin.h \
   sigma.h \
+  lelantus.h \
+  blacklists.h \
   coin_containers.h \
   zerocoin_params.h \
   addresstype.h \
   mtpstate.h \
   messagesigner.h \
-  masternode-meta.h \
   masternode-payments.h \
   masternode-sync.h \
-  tnodesync-interface.h \
   saltedhasher.h \
   unordered_lru_cache.h \
   llmq/quorums.h \
@@ -384,6 +399,7 @@ libbitcoin_server_a_SOURCES = \
   evo/providertx.cpp \
   evo/simplifiedmns.cpp \
   evo/specialtx.cpp \
+  evo/spork.cpp \
   llmq/quorums.cpp \
   llmq/quorums_blockprocessor.cpp \
   llmq/quorums_commitment.cpp \
@@ -397,15 +413,12 @@ libbitcoin_server_a_SOURCES = \
   llmq/quorums_signing.cpp \
   llmq/quorums_signing_shares.cpp \
   llmq/quorums_utils.cpp \
-  masternode-meta.cpp \
   masternode-payments.cpp \
   masternode-sync.cpp \
-  tnodesync-interface.cpp \
   masternode-utils.cpp \
   httprpc.cpp \
   httpserver.cpp \
   init.cpp \
-  instantx.cpp \
   dbwrapper.cpp \
   threadinterrupt.cpp \
   merkleblock.cpp \
@@ -426,7 +439,6 @@ libbitcoin_server_a_SOURCES = \
   rpc/misc.cpp \
   rpc/net.cpp \
   rpc/rawtransaction.cpp \
-  rpc/rpctnode.cpp \
   rpc/server.cpp \
   rpc/rpcevo.cpp \
   rpc/rpcquorums.cpp \
@@ -437,17 +449,19 @@ libbitcoin_server_a_SOURCES = \
   txdb.cpp \
   txmempool.cpp \
   ui_interface.cpp \
+  batchproof_container.cpp \
   validation.cpp \
   validationinterface.cpp \
   versionbits.cpp \
   zerocoin.cpp \
   sigma.cpp \
+  lelantus.cpp \
   coin_containers.cpp \
   mtpstate.cpp \
   $(BITCOIN_CORE_H)
 
 if ENABLE_ZMQ
-libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS)
+libbitcoin_zmq_a_CPPFLAGS = $(BITCOIN_INCLUDES) $(ZMQ_CFLAGS) $(LIBBLSSIG_INCLUDES)
 libbitcoin_zmq_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_zmq_a_SOURCES = \
   zmq/zmqabstractnotifier.cpp \
@@ -461,20 +475,13 @@ endif
 libbitcoin_wallet_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(LIBBLSSIG_INCLUDES)
 libbitcoin_wallet_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_wallet_a_SOURCES = \
-  activetnode.cpp \
   activemasternode.cpp \
-  darksend.cpp \
   hdmint/hdmint.cpp \
-  tnode.cpp \
-  tnode-payments.cpp \
-  tnode-sync.cpp \
   masternode-sync.cpp \
-  tnodesync-interface.cpp \
-  tnodeconfig.cpp \
-  tnodeman.cpp \
   hdmint/mintpool.cpp \
   hdmint/wallet.cpp \
   sigma.cpp \
+  lelantus.cpp \
   wallet/crypter.cpp \
   wallet/bip39.cpp \
   wallet/mnemoniccontainer.cpp \
@@ -483,6 +490,7 @@ libbitcoin_wallet_a_SOURCES = \
   wallet/rpcwallet.cpp \
   wallet/sigmaspendbuilder.cpp \
   wallet/txbuilder.cpp \
+  wallet/lelantusjoinsplitbuilder.cpp \
   wallet/walletexcept.cpp \
   wallet/wallet.cpp \
   wallet/walletdb.cpp \
@@ -544,7 +552,6 @@ libbitcoin_consensus_a_SOURCES = \
   script/script_error.cpp \
   script/script_error.h \
   serialize.h \
-  spork.h \
   tinyformat.h \
   uint256.cpp \
   uint256.h \
@@ -576,7 +583,7 @@ libbitcoin_consensus_a_SOURCES = \
   crypto/MerkleTreeProof/blake2/blake2b.c
 
 # common: shared between tecracoind, and tecracoin-qt and non-server tools
-libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+libbitcoin_common_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(LIBBLSSIG_INCLUDES)
 libbitcoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libbitcoin_common_a_SOURCES = \
   amount.cpp \
@@ -596,7 +603,6 @@ libbitcoin_common_a_SOURCES = \
   scheduler.cpp \
   script/sign.cpp \
   script/standard.cpp \
-  spork.cpp \
   warnings.cpp \
   $(BITCOIN_CORE_H)
 
@@ -618,6 +624,7 @@ libbitcoin_util_a_SOURCES = \
   compat/glibcxx_sanity.cpp \
   compat/strnlen.cpp \
   mbstring.cpp \
+  fs.cpp \
   random.cpp \
   rpc/protocol.cpp \
   support/cleanse.cpp \
@@ -658,6 +665,47 @@ libbitcoin_util_a_SOURCES = \
   crypto/MerkleTreeProof/merkle-tree.cpp \
   $(BITCOIN_CORE_H)
 
+liblelantus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
+liblelantus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
+liblelantus_a_SOURCES = \
+  liblelantus/challenge_generator.h \
+  liblelantus/challenge_generator.cpp \
+  liblelantus/lelantus_primitives.h \
+  liblelantus/lelantus_primitives.cpp \
+  liblelantus/lelantus_proof.h \
+  liblelantus/lelantus_prover.h \
+  liblelantus/lelantus_prover.cpp \
+  liblelantus/lelantus_verifier.h \
+  liblelantus/lelantus_verifier.cpp \
+  liblelantus/sigmaextended_proof.h \
+  liblelantus/sigmaextended_prover.h \
+  liblelantus/sigmaextended_prover.cpp \
+  liblelantus/sigmaextended_verifier.h \
+  liblelantus/sigmaextended_verifier.cpp \
+  liblelantus/schnorr_proof.h \
+  liblelantus/schnorr_prover.h \
+  liblelantus/schnorr_prover.cpp \
+  liblelantus/schnorr_verifier.h \
+  liblelantus/schnorr_verifier.cpp \
+  liblelantus/innerproduct_proof.h \
+  liblelantus/innerproduct_proof_verifier.h \
+  liblelantus/innerproduct_proof_verifier.cpp \
+  liblelantus/innerproduct_proof_generator.h \
+  liblelantus/innerproduct_proof_generator.cpp \
+  liblelantus/range_proof.h \
+  liblelantus/range_prover.h \
+  liblelantus/range_prover.cpp \
+  liblelantus/range_verifier.h \
+  liblelantus/range_verifier.cpp \
+  liblelantus/coin.h \
+  liblelantus/coin.cpp \
+  liblelantus/joinsplit.h \
+  liblelantus/joinsplit.cpp \
+  liblelantus/spend_metadata.h \
+  liblelantus/spend_metadata.cpp \
+  liblelantus/params.h \
+  liblelantus/params.cpp
+
 libsigma_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) -Werror
 libsigma_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS) -Werror
 libsigma_a_SOURCES = \
@@ -691,6 +739,11 @@ libbitcoin_util_a_SOURCES += compat/glibc_compat.cpp
 AM_LDFLAGS += $(COMPAT_LDFLAGS)
 endif
 
+if ENABLE_CRASH_HOOKS
+libbitcoin_util_a_SOURCES += stacktraces.cpp
+libbitcoin_consensus_a_SOURCES += stacktraces.h
+endif
+
 # cli: shared between tecracoin-cli and tecracoin-qt
 libbitcoin_cli_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 libbitcoin_cli_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
@@ -705,7 +758,7 @@ nodist_libbitcoin_util_a_SOURCES = $(srcdir)/obj/build.h
 tecracoind_SOURCES = bitcoind.cpp
 tecracoind_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 tecracoind_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-tecracoind_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+tecracoind_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 EXTRA_tecracoind_DEPENDENCIES = $(LIBBLSSIG_LIBS)
 
 if TARGET_WINDOWS
@@ -718,7 +771,8 @@ tecracoind_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_WALLET) \
-  $(LIBZCOIN_SIGMA) \
+  $(LIBFIRO_SIGMA) \
+  $(LIBLELANTUS) \
   $(LIBBITCOIN_ZMQ) \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
@@ -727,38 +781,38 @@ tecracoind_LDADD = \
   $(LIBSECP256K1) \
   $(LIBBLSSIG_LIBS)
 
-tecracoind_LDADD += $(TOR_LIBS) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBBLSSIG_DEPENDS) -lz
+tecracoind_LDADD += $(BACKTRACE_LIB) $(TOR_LIBS) $(BOOST_LIBS) $(BDB_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(MINIUPNPC_LIBS) $(EVENT_PTHREADS_LIBS) $(EVENT_LIBS) $(ZMQ_LIBS) $(LIBBLSSIG_DEPENDS) -lz
 
 # bitcoin-cli binary #
 tecracoin_cli_SOURCES = bitcoin-cli.cpp
 tecracoin_cli_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES) $(EVENT_CFLAGS)
 tecracoin_cli_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-tecracoin_cli_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+tecracoin_cli_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
 tecracoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-tecracoin_cli_LDADD = \
+firo_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
   $(LIBBITCOIN_CRYPTO)
 
-tecracoin_cli_LDADD += $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
+tecracoin_cli_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(SSL_LIBS) $(CRYPTO_LIBS) $(EVENT_LIBS)
 #
 
 # bitcoin-tx binary #
 tecracoin_tx_SOURCES = bitcoin-tx.cpp
 tecracoin_tx_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 tecracoin_tx_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
-tecracoin_tx_LDFLAGS = $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
+tecracoin_tx_LDFLAGS = $(LDFLAGS_WRAP_EXCEPTIONS) $(RELDFLAGS) $(AM_LDFLAGS) $(LIBTOOL_APP_LDFLAGS)
 
 if TARGET_WINDOWS
 tecracoin_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
-tecracoin_tx_LDADD = \
+firo_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -766,7 +820,7 @@ tecracoin_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-tecracoin_tx_LDADD += $(BOOST_LIBS) $(CRYPTO_LIBS)
+firo_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # bitcoinconsensus library #
@@ -828,6 +882,7 @@ clean-local:
 	-rm -f leveldb/*/*.gcda leveldb/*/*.gcno leveldb/helpers/memenv/*.gcda leveldb/helpers/memenv/*.gcno
 	-rm -f config.h
 	-rm -rf test/__pycache__
+	-rm -rf *.dSYM test/*.dSYM bench/*.dSYM qt/*.dSYM qt/test/*.dSYM
 
 distclean-local:
 	-rm -rf bls-signatures/build
@@ -852,6 +907,9 @@ if HARDEN
 	@echo "Checking binary security..."
 	$(AM_V_at) READELF=$(READELF) OBJDUMP=$(OBJDUMP) $(PYTHON) $(top_srcdir)/contrib/devtools/security-check.py < $(bin_PROGRAMS)
 endif
+
+osx_debug: $(bin_PROGRAMS)
+	for i in $(bin_PROGRAMS); do mkdir -p $$i.dSYM/Contents/Resources/DWARF && $(DSYMUTIL_FLAT) -o $$i.dSYM/Contents/Resources/DWARF/$$(basename $$i) $$i &> /dev/null ; done
 
 %.pb.cc %.pb.h: %.proto
 	@test -f $(PROTOC)

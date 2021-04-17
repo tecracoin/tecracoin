@@ -144,7 +144,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "echojson", 7, "arg7" },
     { "echojson", 8, "arg8" },
     { "echojson", 9, "arg9" },
-        //[zcoin]
+    //[zcoin]
     { "setmininput", 0, "amount" },
     { "mint", 0, "amount" },
     { "spendmany", 1, "accounts" },
@@ -300,6 +300,9 @@ static const CRPCConvertParam vRPCConvertParams[] =
 	{ "trade_MP", 1, "propertyidforsale" }, // depreciated
 	{ "trade_MP", 3, "propertiddesired" }, // depreciated
 	{ "trade_MP", 5, "action" }, // depreciated
+
+    /* Evo spork */
+    { "spork", 2, "features"},
 };
 
 class CRPCConvertTable

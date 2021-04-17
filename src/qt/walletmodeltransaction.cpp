@@ -98,3 +98,18 @@ CReserveKey *WalletModelTransaction::getPossibleKeyChange()
 {
     return keyChange;
 }
+
+std::vector<CLelantusEntry>& WalletModelTransaction::getSpendCoins()
+{
+    return spendCoins;
+}
+
+std::vector<CSigmaEntry>& WalletModelTransaction::getSigmaSpendCoins()
+{
+    return sigmaSpendCoins;
+}
+
+std::vector<CHDMint>& WalletModelTransaction::getMintCoins()
+{
+    return mintCoins;
+}

@@ -35,7 +35,7 @@ struct TestingSetup: public BasicTestingSetup {
     boost::filesystem::path pathTemp;
     boost::thread_group threadGroup;
     CConnman* connman;
-    
+
     TestingSetup(const std::string& chainName = CBaseChainParams::MAIN, std::string suf = "");
     ~TestingSetup();
 };
@@ -65,6 +65,8 @@ struct TestChain100Setup : public TestingSetup {
 
     std::vector<CTransaction> coinbaseTxns; // For convenience, coinbase transactions
     CKey coinbaseKey; // private/public key needed to spend coinbase transactions
+
+    bool fAllowMempoolTxsInCreateBlock{false}; // do not remove transactions from mempool during CreateBlock processing
 };
 
 struct TestChainDIP3Setup : public TestChain100Setup {
@@ -92,7 +94,7 @@ struct TestMemPoolEntryHelper
     TestMemPoolEntryHelper() :
         nFee(0), nTime(0), dPriority(0.0), nHeight(1),
         spendsCoinbase(false), sigOpCost(4) { }
-    
+
     CTxMemPoolEntry FromTx(const CMutableTransaction &tx, CTxMemPool *pool = NULL);
     CTxMemPoolEntry FromTx(const CTransaction &tx, CTxMemPool *pool = NULL);
 

@@ -2060,7 +2060,7 @@ UniValue elysium_getinfo(const JSONRPCRequest& request)
     // provide the Elysium and TecraCoin version
     infoResponse.push_back(Pair("elysiumversion_int", ELYSIUM_VERSION));
     infoResponse.push_back(Pair("elysiumversion", ElysiumVersion()));
-    infoResponse.push_back(Pair("tecracoincoreversion", ZcoinCoreVersion()));
+    infoResponse.push_back(Pair("tecracoincoreversion", TecraCoinCoreVersion()));
 
     // provide the current block details
     int block = GetHeight();

@@ -31,12 +31,11 @@
 #include "crypto/MerkleTreeProof/mtp.h"
 #include "crypto/Lyra2Z/Lyra2Z.h"
 #include "crypto/Lyra2Z/Lyra2.h"
-#include "tnode-payments.h"
-#include "tnode-sync.h"
-#include "tnodeman.h"
 #include "zerocoin.h"
 #include "sigma.h"
+#include "lelantus.h"
 #include "sigma/remint.h"
+#include "evo/spork.h"
 #include <algorithm>
 #include <boost/thread.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -49,6 +48,7 @@
 #include "evo/cbtx.h"
 #include "evo/simplifiedmns.h"
 #include "evo/deterministicmns.h"
+#include "evo/spork.h"
 
 #include "llmq/quorums_blockprocessor.h"
 
@@ -152,13 +152,16 @@ void BlockAssembler::resetBlock()
 
     nSigmaSpendAmount = 0;
     nSigmaSpendInputs = 0;
+
+    nLelantusSpendAmount = 0;
+    nLelantusSpendInputs = 0;
 }
 
 std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& scriptPubKeyIn, bool fMineWitnessTx)
 {
     // Create new block
     LogPrintf("BlockAssembler::CreateNewBlock()\n");
-    
+
     int64_t nTimeStart = GetTimeMicros();
 
     // fMTP is always true currently
@@ -177,11 +180,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     pblocktemplate->vTxFees.push_back(-1); // updated at end
     pblocktemplate->vTxSigOpsCost.push_back(-1); // updated at end
 
-    LOCK2(cs_main, mempool.cs);
+    LOCK(cs_main);
     CBlockIndex* pindexPrev = chainActive.Tip();
     nHeight = pindexPrev->nHeight + 1;
 
     bool fDIP0003Active_context = nHeight >= chainparams.GetConsensus().DIP0003Height;
+    bool fDIP0008Active_context = nHeight >= chainparams.GetConsensus().DIP0008Height;
 
     pblock->nTime = GetAdjustedTime();
     bool fMTP = pblock->nTime >= params.nMTPSwitchTime;
@@ -218,12 +222,15 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     // transaction (which in most cases can be a no-op).
     fIncludeWitness = IsWitnessEnabled(pindexPrev, chainparams.GetConsensus()) && fMineWitnessTx;
 
-    FillBlackListForBlockTemplate();
-
-    addPriorityTxs();
     int nPackagesSelected = 0;
     int nDescendantsUpdated = 0;
-    addPackageTxs(nPackagesSelected, nDescendantsUpdated);
+    {
+        LOCK(mempool.cs);
+        FillBlackListForBlockTemplate();
+
+        addPriorityTxs();
+        addPackageTxs(nPackagesSelected, nDescendantsUpdated);
+    }
 
     int64_t nTime1 = GetTimeMicros();
 
@@ -239,6 +246,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
     coinbaseTx.vin[0].prevout.SetNull();
     coinbaseTx.vout.resize(1);
     coinbaseTx.vout[0].scriptPubKey = scriptPubKeyIn;
+
     coinbaseTx.vout[0].nValue = nFees + nBlockSubsidy;
     coinbaseTx.vin[0].scriptSig = CScript() << nHeight << OP_0;
 
@@ -252,15 +260,12 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
 
         CCbTx cbTx;
 
-        /*
+
         if (fDIP0008Active_context) {
             cbTx.nVersion = 2;
         } else {
-        */
             cbTx.nVersion = 1;
-        /*
         }
-        */
 
         cbTx.nHeight = nHeight;
 
@@ -268,34 +273,21 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
         if (!CalcCbTxMerkleRootMNList(*pblock, pindexPrev, cbTx.merkleRootMNList, state)) {
             throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootMNList failed: %s", __func__, FormatStateMessage(state)));
         }
-        /*
         if (fDIP0008Active_context) {
             if (!CalcCbTxMerkleRootQuorums(*pblock, pindexPrev, cbTx.merkleRootQuorums, state)) {
                 throw std::runtime_error(strprintf("%s: CalcCbTxMerkleRootQuorums failed: %s", __func__, FormatStateMessage(state)));
             }
         }
-        */
 
         SetTxPayload(coinbaseTx, cbTx);
     }
         
-    if (nHeight >= params.DIP0003EnforcementHeight) {
-        std::vector<CTxOut> sbPayments;
-        FillBlockPayments(coinbaseTx, nHeight, nBlockSubsidy, pblocktemplate->voutMasternodePayments, sbPayments);
-    }
-    else {
-        // Update coinbase transaction with additional info about tnode and governance payments,
-        // get some info back to pass to getblocktemplate
-        if (nHeight >= params.nTnodePaymentsStartBlock) {
-            CAmount tnodePayment = GetTnodePayment(nHeight, chainparams.GetConsensus(), fMTP);
-            coinbaseTx.vout[0].nValue -= tnodePayment;
-            FillTnodeBlockPayments(coinbaseTx, nHeight, tnodePayment, pblock->txoutTnode, pblock->voutSuperblock);
-        }
-    }
+    std::vector<CTxOut> sbPayments;
+    FillBlockPayments(coinbaseTx, nHeight, nBlockSubsidy, pblocktemplate->voutMasternodePayments, sbPayments);
 
     pblock->vtx[0] = MakeTransactionRef(std::move(coinbaseTx));
     pblocktemplate->vTxFees[0] = -nFees;
-    
+
     uint64_t nSerializeSize = GetSerializeSize(*pblock, SER_NETWORK, PROTOCOL_VERSION);
     LogPrintf("CreateNewBlock(): total size: %u block weight: %u txs: %u fees: %ld sigops %d\n", nSerializeSize, GetBlockWeight(*pblock), nBlockTx, nFees, nBlockSigOpsCost);
 
@@ -450,6 +442,22 @@ bool BlockAssembler::TestForBlock(CTxMemPool::txiter iter)
             return false;
     }
 
+    // Check transaction against lelantus limits
+    if(tx.IsLelantusJoinSplit()) {
+        CAmount spendAmount = lelantus::GetSpendTransparentAmount(tx);
+        size_t spendNumber = lelantus::GetSpendInputs(tx);
+        auto &params = chainparams.GetConsensus();
+
+        if (spendNumber > params.nMaxLelantusInputPerTransaction || spendAmount > params.nMaxValueLelantusSpendPerTransaction)
+            return false;
+
+        if (spendNumber + nLelantusSpendInputs > params.nMaxLelantusInputPerBlock)
+            return false;
+
+        if (spendAmount + nLelantusSpendAmount > params.nMaxValueLelantusSpendPerBlock)
+            return false;
+    }
+
     return true;
 }
 
@@ -462,11 +470,26 @@ void BlockAssembler::AddToBlock(CTxMemPool::txiter iter)
 
         if ((nSigmaSpendAmount += spendAmount) > chainparams.GetConsensus().nMaxValueSigmaSpendPerBlock)
             return;
-        
+
         if ((nSigmaSpendInputs += tx.vin.size()) > chainparams.GetConsensus().nMaxSigmaInputPerBlock)
             return;
     }
-    
+
+    if(tx.IsLelantusJoinSplit()) {
+        CAmount spendAmount = lelantus::GetSpendTransparentAmount(tx);
+        size_t spendNumber = lelantus::GetSpendInputs(tx);
+        auto &params = chainparams.GetConsensus();
+
+        if (spendAmount > params.nMaxValueLelantusSpendPerTransaction)
+            return;
+
+        if ((nLelantusSpendAmount += spendAmount) > params.nMaxValueLelantusSpendPerBlock)
+            return;
+
+        if ((nLelantusSpendInputs += spendNumber) > params.nMaxLelantusInputPerBlock)
+            return;
+    }
+
     pblock->vtx.emplace_back(iter->GetSharedTx());
     pblocktemplate->vTxFees.push_back(iter->GetFee());
     pblocktemplate->vTxSigOpsCost.push_back(iter->GetSigOpCost());
@@ -866,8 +889,9 @@ void BlockAssembler::FillFoundersReward(CMutableTransaction &coinbaseTx, CAmount
 }
 
 void BlockAssembler::FillBlackListForBlockTemplate() {
-    for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
-            mi != mempool.mapTx.end(); ++mi)
+    CTxMemPool::setEntries sporkTxs;
+
+    for (CTxMemPool::txiter mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi)
     {
         if (txBlackList.count(mi) > 0)
             continue;
@@ -882,12 +906,73 @@ void BlockAssembler::FillBlackListForBlockTemplate() {
             txBlackList.erase(mi);
         }
 
-        // ProRegTx referencing external collateral can't be in same block with the collateral itself
         if (tx.nVersion >= 3 && tx.nType == TRANSACTION_PROVIDER_REGISTER) {
             CProRegTx proTx;
-            if (GetTxPayload(tx, proTx) && !proTx.collateralOutpoint.hash.IsNull() && mempool.get(proTx.collateralOutpoint.hash))
+            if (GetTxPayload(tx, proTx) && !proTx.collateralOutpoint.hash.IsNull() &&
+                    // ProRegTx referencing external collateral can't be in same block with the collateral itself
+                    (mempool.get(proTx.collateralOutpoint.hash) ||
+                    // ProRegTx cannot be in the same block as transaction spending external collateral
+                        mempool.isSpent(proTx.collateralOutpoint)))
                 mempool.CalculateDescendants(mi, txBlackList);
         }
+
+        if (tx.nVersion >= 3 && tx.nType == TRANSACTION_SPORK) {
+            CSporkTx sporkTx;
+            if (GetTxPayload<CSporkTx>(tx, sporkTx)) {
+                sporkTxs.insert(mi);
+            }
+        }
+    }
+
+    // Update spork map with sporks to be included in block
+    std::vector<CTransactionRef> sporkTxRefs;
+    for (auto sporkTx: sporkTxs) {
+        if (txBlackList.count(sporkTx) == 0)
+            sporkTxRefs.push_back(sporkTx->GetSharedTx());
+    }
+    CSporkManager *sporkManager = CSporkManager::GetSporkManager();
+    ActiveSporkMap prevSporkMap = chainActive.Tip()->activeDisablingSporks;
+    ActiveSporkMap sporkMap;
+    sporkManager->UpdateActiveSporkMap(sporkMap, prevSporkMap, chainActive.Tip()->nHeight+1, sporkTxRefs);
+
+    // blacklist all the transactions not allowed under the spork set
+    if (!sporkMap.empty()) {
+        for (CTxMemPool::txiter mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi) {
+            CValidationState state;
+            if (!sporkManager->IsTransactionAllowed(mi->GetTx(), sporkMap, state))
+                mempool.CalculateDescendants(mi, txBlackList);
+        }
+    }
+
+    // Now if we have limit on lelantus transparent outputs scan mempool and drop all the transactions exceeding the limit
+    if (sporkMap.count(CSporkAction::featureLelantusTransparentLimit) > 0) {
+        CAmount limit = sporkMap[CSporkAction::featureLelantusTransparentLimit].second;
+
+        std::vector<CTxMemPool::txiter> joinSplitTxs;
+        for (CTxMemPool::txiter mi = mempool.mapTx.begin(); mi != mempool.mapTx.end(); ++mi) {
+            if (txBlackList.count(mi) == 0 && mi->GetTx().IsLelantusJoinSplit())
+                joinSplitTxs.push_back(mi);
+        }
+
+        // sort join splits in order of their transparent outputs so large txs won't block smaller ones
+        // from getting into the mempool
+        std::sort(joinSplitTxs.begin(), joinSplitTxs.end(), 
+            [](CTxMemPool::txiter a, CTxMemPool::txiter b) -> bool {
+                return lelantus::GetSpendTransparentAmount(a->GetTx()) < lelantus::GetSpendTransparentAmount(b->GetTx());
+            });
+
+        CAmount transparentAmount = 0;
+        std::vector<CTxMemPool::txiter>::const_iterator it;
+        for (it = joinSplitTxs.cbegin(); it != joinSplitTxs.cend(); ++it) {
+            CAmount output = lelantus::GetSpendTransparentAmount((*it)->GetTx());
+            if (transparentAmount + output > limit)
+                break;
+            transparentAmount += output;
+        }
+
+        // found all the joinsplit transaction fitting in the limit, blacklist the rest
+        while (it != joinSplitTxs.cend())
+            mempool.CalculateDescendants(*it++, txBlackList);
     }
 }
 
@@ -984,9 +1069,7 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
                         int nCount = 0;
                         fHasTnodesWinnerForNextBlock =
                                 params.IsRegtest() ||
-                                chainActive.Height()+1 >= chainparams.GetConsensus().DIP0003EnforcementHeight ||
-                                chainActive.Height() < params.nTnodePaymentsStartBlock ||
-                                mnodeman.GetNextTnodeInQueueForPayment(chainActive.Height(), true, nCount);
+                                chainActive.Height()+1 >= chainparams.GetConsensus().DIP0003EnforcementHeight;
                     }
                     if (!fvNodesEmpty && fHasTnodesWinnerForNextBlock && !IsInitialBlockDownload()) {
                         break;
@@ -1045,7 +1128,7 @@ void static TecraCoinMiner(const CChainParams &chainparams) {
                     }
 
                     boost::this_thread::interruption_point();
-                    
+
                     //LogPrintf("*****\nhash   : %s  \ntarget : %s\n", UintToArith256(thash).ToString(), hashTarget.ToString());
 
                     if (UintToArith256(thash) <= hashTarget) {

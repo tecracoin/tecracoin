@@ -86,7 +86,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
 
     if (request.fHelp || request.params.size() < 1 || request.params.size() > 3)
         throw runtime_error(
-            "importprivkey \"tecracoinprivkey\" ( \"label\" rescan )\n"
+            "importprivkey \"tecracoinprivkey\" ( \"label\" ) ( rescan )\n"
             "\nAdds a private key (as returned by dumpprivkey) to your wallet.\n"
             "\nArguments:\n"
             "1. \"tecracoinprivkey\"   (string, required) The private key (see dumpprivkey)\n"
@@ -116,6 +116,7 @@ UniValue importprivkey(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_WALLET_ERROR, "Importing wallets and private keys is disabled for mnemonic-enabled wallets."
                                              "To import your dump file, create a non-mnemonic wallet by setting \"usemnemonic=0\" in your tecracoin.conf file, after backing up and removing your existing wallet.");
     }
+
 
     string strSecret = request.params[0].get_str();
     string strLabel = "";
@@ -574,7 +575,7 @@ UniValue importwallet(const JSONRPCRequest& request)
             if(!masterKeyID.IsNull() && fHd){
                 // If change component in HD path is 2, this is a mint seed key. Add to mintpool. (Have to call after key addition)
                 if(pwallet->mapKeyMetadata[keyid].nChange.first==2){
-                    zwalletMain->RegenerateMintPoolEntry(hdMasterKeyID, keyid, pwallet->mapKeyMetadata[keyid].nChild.first);
+                    pwallet->zwallet->RegenerateMintPoolEntry(walletdb, hdMasterKeyID, keyid, pwallet->mapKeyMetadata[keyid].nChild.first);
                     fMintUpdate = true;
                 }
             }
@@ -594,8 +595,8 @@ UniValue importwallet(const JSONRPCRequest& request)
     pwallet->MarkDirty();
 
     if(fMintUpdate){
-        zwalletMain->SyncWithChain();
-        zwalletMain->GetTracker().ListMints(false, false);
+        pwallet->zwallet->SyncWithChain();
+        pwallet->zwallet->GetTracker().ListMints(false, false);
     }
 
     if (!fGood)
@@ -674,9 +675,9 @@ UniValue dumpprivkey_tecracoin(const JSONRPCRequest& request)
             "TecraCoin team members will never ask for this command's output and it is not needed for Tnode setup or diagnosis!\n"
             "\n"
             " Please seek help on one of our public channels. \n"
-            " Telegram: https://t.me/tecracoinproject \n"
-            " Discord: https://discordapp.com/invite/4FjnQ2q\n"
-            " Reddit: https://www.reddit.com/r/tecracoin/\n"
+            " Telegram: https://t.me/tecracoinio \n"
+            " Discord: https://discord.gg/wA9Cpkd\n"
+            " Reddit: https://www.reddit.com/r/TecraCoin/\n"
             "\n"
             ;
         throw runtime_error(warning);
@@ -877,9 +878,9 @@ UniValue dumpwallet_tecracoin(const JSONRPCRequest& request)
             "TecraCoin team members will never ask for this command's output and it is not needed for Tnode setup or diagnosis!\n"
             "\n"
             " Please seek help on one of our public channels. \n"
-            " Telegram: https://t.me/tecracoinproject \n"
-            " Discord: https://discordapp.com/invite/4FjnQ2q\n"
-            " Reddit: https://www.reddit.com/r/tecracoin/\n"
+            " Telegram: https://t.me/tecracoinio \n"
+            " Discord: https://discord.gg/wA9Cpkd\n"
+            " Reddit: https://www.reddit.com/r/TecraCoin/\n"
             "\n"
             ;
         throw runtime_error(warning);

@@ -32,6 +32,11 @@
 #include <boost/thread/exceptions.hpp>
 #include <boost/optional.hpp>
 
+#include <boost/bind/bind.hpp>
+// workaround for boost::placeholders namespace missing during use
+namespace boost { namespace placeholders {}}
+using namespace boost::placeholders;
+
 static const bool DEFAULT_LOGTIMEMICROS = false;
 static const bool DEFAULT_LOGIPS        = false;
 static const bool DEFAULT_LOGTIMESTAMPS = true;
@@ -110,7 +115,7 @@ bool error(const char* fmt, const Args&... args)
     return false;
 }
 
-void PrintExceptionContinue(const std::exception *pex, const char* pszThread);
+void PrintExceptionContinue(const std::exception_ptr pex, const char* pszThread);
 void ParseParameters(int argc, const char*const argv[]);
 void FileCommit(FILE *file);
 bool TruncateFile(FILE *file, unsigned int length);
@@ -118,12 +123,13 @@ int RaiseFileDescriptorLimit(int nMinFD);
 void AllocateFileRange(FILE *file, unsigned int offset, unsigned int length);
 bool RenameOver(boost::filesystem::path src, boost::filesystem::path dest);
 bool TryCreateDirectory(const boost::filesystem::path& p);
+boost::filesystem::path GetDefaultDataDirForCoinName(const std::string &coinName);
 boost::filesystem::path GetDefaultDataDir();
 const boost::filesystem::path &GetDataDir(bool fNetSpecific = true);
 const boost::filesystem::path &GetBackupsDir();
+bool RenameDirectoriesFromZcoinToFiro();
 void ClearDatadirCache();
 boost::filesystem::path GetConfigFile(const std::string& confPath);
-boost::filesystem::path GetTnodeConfigFile();
 #ifndef WIN32
 boost::filesystem::path GetPidFile();
 void CreatePidFile(const boost::filesystem::path &path, pid_t pid);
@@ -261,12 +267,8 @@ template <typename Callable> void TraceThread(const char* name,  Callable func)
         LogPrintf("%s thread interrupt\n", name);
         throw;
     }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, name);
-        throw;
-    }
     catch (...) {
-        PrintExceptionContinue(NULL, name);
+        PrintExceptionContinue(std::current_exception(), name);
         throw;
     }
 }

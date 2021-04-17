@@ -7,12 +7,12 @@
 #include "quorums_instantsend.h"
 #include "quorums_signing.h"
 #include "quorums_utils.h"
+#include "evo/spork.h"
 
 #include "chain.h"
 #include "masternode-sync.h"
 #include "net_processing.h"
 #include "scheduler.h"
-#include "spork.h"
 #include "txmempool.h"
 #include "validation.h"
 
@@ -74,8 +74,10 @@ bool CChainLocksHandler::GetChainLockByHash(const uint256& hash, llmq::CChainLoc
 
 void CChainLocksHandler::ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStream& vRecv, CConnman& connman)
 {
-    if (!sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED)) {
-        return;
+    {
+        LOCK(cs_main);
+        if(!IsChainlocksEnabled(chainActive.Tip()))
+            return;
     }
 
     if (strCommand == NetMsgType::CLSIG) {
@@ -210,14 +212,15 @@ void CChainLocksHandler::CheckActiveState()
     {
         LOCK(cs_main);
         fDIP0008Active = chainActive.Height() >= Params().GetConsensus().DIP0008Height;
+        isChainLocksActive = IsChainlocksEnabled(chainActive.Tip());
     }
 
     LOCK(cs);
     bool oldIsEnforced = isEnforced;
-    isSporkActive = sporkManager.IsSporkActive(SPORK_19_CHAINLOCKS_ENABLED);
+
     // TODO remove this after DIP8 is active
-    bool fEnforcedBySpork = (Params().NetworkIDString() == CBaseChainParams::TESTNET) && (sporkManager.GetSporkValue(SPORK_19_CHAINLOCKS_ENABLED) == 1);
-    isEnforced = (fDIP0008Active && isSporkActive) || fEnforcedBySpork;
+    bool fEnforcedBySpork = (Params().NetworkIDString() == CBaseChainParams::TESTNET) && (isChainLocksActive);
+    isEnforced = (fDIP0008Active && isChainLocksActive) || fEnforcedBySpork;
 
     if (!oldIsEnforced && isEnforced) {
         // ChainLocks got activated just recently, but it's possible that it was already running before, leaving
@@ -259,7 +262,7 @@ void CChainLocksHandler::TrySignChainTip()
     {
         LOCK(cs);
 
-        if (!isSporkActive) {
+        if (!isChainLocksActive) {
             return;
         }
 
@@ -286,7 +289,7 @@ void CChainLocksHandler::TrySignChainTip()
     // considered safe when it is ixlocked or at least known since 10 minutes (from mempool or block). These checks are
     // performed for the tip (which we try to sign) and the previous 5 blocks. If a ChainLocked block is found on the
     // way down, we consider all TXs to be safe.
-    if (IsNewInstantSendEnabled() && sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+    if (IsNewInstantSendEnabled() && IsBlockFilteringEnabled()) {
         auto pindexWalk = pindex;
         while (pindexWalk) {
             if (pindex->nHeight - pindexWalk->nHeight > 5) {
@@ -438,7 +441,7 @@ CChainLocksHandler::BlockTxs::mapped_type CChainLocksHandler::GetBlockTxs(const 
 
 bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
 {
-    if (!sporkManager.IsSporkActive(SPORK_3_INSTANTSEND_BLOCK_FILTERING)) {
+    if (!IsBlockFilteringEnabled()) {
         return true;
     }
     if (!IsNewInstantSendEnabled()) {
@@ -448,7 +451,7 @@ bool CChainLocksHandler::IsTxSafeForMining(const uint256& txid)
     int64_t txAge = 0;
     {
         LOCK(cs);
-        if (!isSporkActive) {
+        if (!isChainLocksActive) {
             return true;
         }
         auto it = txFirstSeenTime.find(txid);
@@ -519,8 +522,10 @@ void CChainLocksHandler::EnforceBestChainLock()
     }
 
     CValidationState state;
-    if (activateNeeded && !ActivateBestChain(state, Params())) {
-        LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, FormatStateMessage(state));
+    if (activateNeeded) {
+        LogPrintf("CChainLocksHandler::%s -- Activated best chain tip: %s\n", __func__, currentBestChainLockBlockIndex->GetBlockHash().ToString());
+        if (!ActivateBestChain(state, Params()))
+            LogPrintf("CChainLocksHandler::%s -- ActivateBestChain failed: %s\n", __func__, FormatStateMessage(state));
     }
 
     const CBlockIndex* pindexNotify = nullptr;
@@ -544,7 +549,7 @@ void CChainLocksHandler::HandleNewRecoveredSig(const llmq::CRecoveredSig& recove
     {
         LOCK(cs);
 
-        if (!isSporkActive) {
+        if (!isChainLocksActive) {
             return;
         }
 

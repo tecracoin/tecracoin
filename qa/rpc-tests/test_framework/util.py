@@ -116,7 +116,7 @@ def wait_to_sync(node, fast_tnsync=False):
         time.sleep(0.2)
         if fast_tnsync:
             # skip mnsync states
-            node.tnsync("next")
+            node.evotnsync("next")
         tm += 0.2
     assert(synced)
 
@@ -292,7 +292,7 @@ def initialize_chain(test_dir, num_nodes, cachedir):
 
         # Create cache directories, run bitcoinds:
         for i in range(MAX_NODES):
-            datadir=initialize_datadir("cache", i)
+            datadir=initialize_datadir(cachedir, i)
             args = [ os.getenv("TECRACOIND", "tecracoind"), "-server", "-keypool=1", "-datadir="+datadir, "-discover=0" ]
             if i > 0:
                 args.append("-connect=127.0.0.1:"+str(p2p_port(0)))
@@ -392,7 +392,11 @@ def start_node(i, dirname, extra_args=None, rpchost=None, timewait=None, binary=
     if binary is None:
         binary = os.getenv("TECRACOIND", "tecracoind")
     args = [ binary, "-datadir="+datadir, "-server", "-keypool=1", "-discover=0", "-rest", "-dandelion=0", "-usemnemonic=0", "-mocktime="+str(get_mocktime()) ]
-    # Don't try auto backups (they fail a lot when running tests)
+#Useful args for debugging
+#        "screen", "--",
+#        "gdb", "-x", "/tmp/gdb_run", "--args",
+
+# Don't try auto backups (they fail a lot when running tests)
     args += [ "-createwalletbackups=0" ]
     if extra_args is not None: args.extend(extra_args)
     # Allow to redirect stderr to stdout in case we expect some non-critical warnings/errors printed to stderr
@@ -852,4 +856,3 @@ def wait_to_sync_tnodes(node, fast_tnsync=False):
 def get_full_balance(node):
     wallet_info = node.getwalletinfo()
     return wallet_info["balance"] + wallet_info["immature_balance"] + wallet_info["unconfirmed_balance"]
-

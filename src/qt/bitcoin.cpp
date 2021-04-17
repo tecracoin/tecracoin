@@ -21,7 +21,6 @@
 #include "splashscreen.h"
 #include "utilitydialog.h"
 #include "winshutdownmonitor.h"
-#include "tnodeconfig.h"
 
 #ifdef ENABLE_WALLET
 #include "paymentserver.h"
@@ -31,6 +30,7 @@
 #include "init.h"
 #include "rpc/server.h"
 #include "scheduler.h"
+#include "stacktraces.h"
 #include "ui_interface.h"
 #include "util.h"
 #include "warnings.h"
@@ -53,6 +53,8 @@
 #include <QThread>
 #include <QTimer>
 #include <QTranslator>
+#include <QSslConfiguration>
+#include <QCheckBox>
 
 #if defined(QT_STATICPLUGIN)
 #include <QtPlugin>
@@ -191,7 +193,7 @@ private:
     CScheduler scheduler;
 
     /// Pass fatal exception message to UI thread
-    void handleRunawayException(const std::exception *e);
+    void handleRunawayException(const std::exception_ptr e);
 };
 
 /** Main Bitcoin application object */
@@ -214,6 +216,12 @@ public:
     void createWindow(const NetworkStyle *networkStyle);
     /// Create splash screen
     void createSplashScreen(const NetworkStyle *networkStyle);
+    // migrate settings to firo. Returns true if there was migration
+    bool migrateSettings(const QString &oldOrganizationName, const QString &newOrganizationName, const QString &oldApplicationName, const QString &newApplicationName);
+    // set data directory in settings file
+    void setDataDirInSettings(const QString &organization, const QString &application, const QString &dataDir);
+    // migrate directories to firo if needed
+    void migrateToFiro();
 
     /// Request core initialization
     void requestInitialize();
@@ -262,7 +270,7 @@ BitcoinCore::BitcoinCore():
 {
 }
 
-void BitcoinCore::handleRunawayException(const std::exception *e)
+void BitcoinCore::handleRunawayException(const std::exception_ptr e)
 {
     PrintExceptionContinue(e, "Runaway exception");
     Q_EMIT runawayException(QString::fromStdString(GetWarnings("gui")));
@@ -290,10 +298,9 @@ void BitcoinCore::initialize()
         }
         int rv = AppInitMain(threadGroup, scheduler);
         Q_EMIT initializeResult(rv);
-    } catch (const std::exception& e) {
-        handleRunawayException(&e);
-    } catch (...) {
-        handleRunawayException(NULL);
+    }
+    catch (...) {
+        handleRunawayException(std::current_exception());
     }
 }
 
@@ -307,10 +314,9 @@ void BitcoinCore::shutdown()
         Shutdown();
         qDebug() << __func__ << ": Shutdown finished";
         Q_EMIT shutdownResult(1);
-    } catch (const std::exception& e) {
-        handleRunawayException(&e);
-    } catch (...) {
-        handleRunawayException(NULL);
+    }
+    catch (...) {
+        handleRunawayException(std::current_exception());
     }
 }
 
@@ -501,7 +507,7 @@ void BitcoinApplication::initializeResult(int retval)
         if(newWallet)
             NotifyMnemonic::notify();
         }
-        
+
         // Now that initialization/startup is done, process any command-line
         // tecracoin: URIs or payment requests:
         connect(paymentServer, SIGNAL(receivedPaymentRequest(SendCoinsRecipient)),
@@ -537,9 +543,105 @@ WId BitcoinApplication::getMainWinId() const
     return window->winId();
 }
 
+bool BitcoinApplication::migrateSettings(const QString &oldOrganizationName, const QString &newOrganizationName,
+                                            const QString &oldApplicationName, const QString &newApplicationName)
+{
+    QSettings newSettings(newOrganizationName, newApplicationName);
+    if (!newSettings.allKeys().empty())
+        // no migration is needed
+        return false;
+
+    QSettings oldSettings(oldOrganizationName, oldApplicationName);
+    QList<QString> keys = oldSettings.allKeys();
+    if (!keys.empty()) {
+        Q_FOREACH(const QString &key, keys) {
+            newSettings.setValue(key, oldSettings.value(key));
+        }
+        newSettings.sync();
+
+        return true;
+    }
+
+    return false;
+}
+
+void BitcoinApplication::setDataDirInSettings(const QString &organization, const QString &application, const QString &dataDir)
+{
+    QSettings settings(organization, application);
+    if (!settings.value("strDataDir").isNull()) {
+        boost::filesystem::path zcoinDataDir = GetDefaultDataDirForCoinName("zcoin");
+        boost::filesystem::path settingsDataDir = GUIUtil::qstringToBoostPath(settings.value("strDataDir", GUIUtil::boostPathToQString(zcoinDataDir)).toString());
+
+        if (settingsDataDir == zcoinDataDir) {
+            settings.setValue("strDataDir", dataDir);
+            settings.sync();
+        }
+    }
+}
+
+void BitcoinApplication::migrateToFiro()
+{
+    migrateSettings("Zcoin", "Firo", "Zcoin-Qt", "Firo-Qt");
+    migrateSettings("Zcoin", "Firo", "Zcoin-Qt-testnet", "Firo-Qt-testnet");
+
+    QSettings settings;
+    if (IsArgSet("-datadir"))
+        return;
+
+    boost::filesystem::path dataDir = GetDefaultDataDir();
+    dataDir = GUIUtil::qstringToBoostPath(settings.value("strDataDir", GUIUtil::boostPathToQString(GetDefaultDataDir())).toString());
+    boost::filesystem::path zcoinDefaultDataDir = GetDefaultDataDirForCoinName("zcoin");
+    boost::filesystem::path firoDefaultDataDir = GetDefaultDataDirForCoinName("firo");
+
+    if (dataDir != zcoinDefaultDataDir)
+        return;
+
+    boost::filesystem::path dontMigrateFilePath = dataDir / ".dontmigratetofiro";
+    if (boost::filesystem::exists(dontMigrateFilePath) && !GetBoolArg("-migratetofiro", false))
+        return;
+
+    QCheckBox *doNotAskMeAgainCheckbox = new QCheckBox("Do not ask me again");
+    QMessageBox messageBox;
+    QString messageText;
+    QTextStream(&messageText) <<
+        "Migrate directory structure from zcoin to firo? "
+        "Directory " << GUIUtil::boostPathToQString(zcoinDefaultDataDir) <<
+          " will be renamed to " << GUIUtil::boostPathToQString(firoDefaultDataDir) <<
+          " and file zcoin.conf in it will be renamed to firo.conf";
+    messageBox.setText(messageText);
+
+    messageBox.setIcon(QMessageBox::Icon::Question);
+    messageBox.addButton(QMessageBox::Yes);
+    messageBox.addButton(QMessageBox::No);
+    messageBox.setDefaultButton(QMessageBox::Yes);
+    messageBox.setCheckBox(doNotAskMeAgainCheckbox);
+
+    bool doNotShowAgain = false;
+
+    QObject::connect(doNotAskMeAgainCheckbox, &QCheckBox::stateChanged, [&doNotShowAgain] (int state) {
+        doNotShowAgain = static_cast<Qt::CheckState>(state) == Qt::CheckState::Checked;
+    });
+
+    if (messageBox.exec() == QMessageBox::Yes) {
+        if (RenameDirectoriesFromZcoinToFiro()) {
+            // Update path in settings if not set to non-default value
+            setDataDirInSettings("Firo", "Firo-Qt", GUIUtil::boostPathToQString(firoDefaultDataDir));
+            setDataDirInSettings("Firo", "Firo-Qt-testnet", GUIUtil::boostPathToQString(firoDefaultDataDir));
+        }
+    }
+    else if (doNotShowAgain) {
+        // create file to block migration in the future
+        boost::filesystem::ofstream(dontMigrateFilePath).flush();
+    }
+}
+
 #ifndef BITCOIN_QT_TEST
 int main(int argc, char *argv[])
 {
+#ifdef ENABLE_CRASH_HOOKS
+    RegisterPrettyTerminateHander();
+    RegisterPrettySignalHandlers();
+#endif    
     SetupEnvironment();
 
     /// 1. Parse command-line options. These take precedence over anything else.
@@ -575,6 +677,7 @@ int main(int argc, char *argv[])
     //   Need to pass name here as CAmount is a typedef (see http://qt-project.org/doc/qt-5/qmetatype.html#qRegisterMetaType)
     //   IMPORTANT if it is no longer a typedef use the normal variant above
     qRegisterMetaType< CAmount >("CAmount");
+    qRegisterMetaType< uint256 >("uint256");
 
     /// 3. Application identification
     // must be set before OptionsModel is initialized or translations are loaded,
@@ -589,6 +692,15 @@ int main(int argc, char *argv[])
     QTranslator qtTranslatorBase, qtTranslator, translatorBase, translator;
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
     translationInterface.Translate.connect(Translate);
+
+#ifdef ENABLE_CRASH_HOOKS
+    if (IsArgSet("-printcrashinfo")) {
+        auto crashInfo = GetCrashInfoStrFromSerializedStr(GetArg("-printcrashinfo", ""));
+        std::cout << crashInfo << std::endl;
+        QMessageBox::critical(0, QObject::tr(PACKAGE_NAME), QString::fromStdString(crashInfo));
+        return EXIT_SUCCESS;
+    }
+#endif
 
     // Show help message immediately after parsing command-line options (for "-lang") and setting locale,
     // but before showing splash screen.
@@ -634,19 +746,6 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 #ifdef ENABLE_WALLET
-    // Determine if user wants to create new wallet or recover existing one.
-    // Only show if:
-    // - Using mnemonic (-usemnemonic on (default)) and
-    // - mnemonic not set (default, not setting mnemonic from conf file instead) and
-    // - hdseed not set (default, not setting hd seed from conf file instead)
-
-    if(GetBoolArg("-usemnemonic", DEFAULT_USE_MNEMONIC) &&
-       GetArg("-mnemonic", "").empty() &&
-       GetArg("-hdseed", "not hex")=="not hex"){
-        if(!Recover::askRecover(newWallet))
-            return EXIT_SUCCESS;
-    }
-
     // Parse URIs on command line -- this can affect Params()
     PaymentServer::ipcParseCommandLine(argc, argv);
 #endif
@@ -659,14 +758,19 @@ int main(int argc, char *argv[])
     initTranslations(qtTranslatorBase, qtTranslator, translatorBase, translator);
 
 #ifdef ENABLE_WALLET
-    /// 7a. parse tnode.conf
-    std::string strErr;
-    if(!tnodeConfig.read(strErr)) {
-        QMessageBox::critical(0, QObject::tr("TecraCoin Core"),
-                              QObject::tr("Error reading tnode configuration file: %1").arg(strErr.c_str()));
-        return EXIT_FAILURE;
-    }
+    // Determine if user wants to create new wallet or recover existing one.
+    // Only show if:
+    // - Using mnemonic (-usemnemonic on (default)) and
+    // - mnemonic not set (default, not setting mnemonic from conf file instead) and
+    // - hdseed not set (default, not setting hd seed from conf file instead)
 
+    if(GetBoolArg("-usemnemonic", DEFAULT_USE_MNEMONIC) &&
+       !GetBoolArg("-disablewallet", false) &&
+       GetArg("-mnemonic", "").empty() &&
+       GetArg("-hdseed", "not hex")=="not hex"){
+        if(!Recover::askRecover(newWallet))
+            return EXIT_SUCCESS;
+    }
     /// 8. URI IPC sending
     // - Do this early as we don't want to bother initializing if we are just calling IPC
     // - Do this *after* setting up the data directory, as the data directory hash is used in the name
@@ -715,11 +819,8 @@ int main(int argc, char *argv[])
         app.exec();
         app.requestShutdown();
         app.exec();
-    } catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "Runaway exception");
-        app.handleRunawayException(QString::fromStdString(GetWarnings("gui")));
     } catch (...) {
-        PrintExceptionContinue(NULL, "Runaway exception");
+        PrintExceptionContinue(std::current_exception(), "Runaway exception");
         app.handleRunawayException(QString::fromStdString(GetWarnings("gui")));
     }
     return app.getReturnValue();

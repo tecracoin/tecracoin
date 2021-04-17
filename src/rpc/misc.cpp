@@ -15,7 +15,6 @@
 #include "util.h"
 #include "utilstrencodings.h"
 #ifdef ENABLE_WALLET
-#include "tnode-sync.h"
 #include "wallet/rpcwallet.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
@@ -313,43 +312,6 @@ CScript _createmultisig_redeemScript(CWallet * const pwallet, const UniValue& pa
     return result;
 }
 
-UniValue tnsync(const JSONRPCRequest& request)
-{
-    if (request.fHelp || request.params.size() != 1)
-        throw runtime_error(
-                "tnsync [status|next|reset]\n"
-                        "Returns the sync status, updates to the next step or resets it entirely.\n"
-        );
-
-    std::string strMode = request.params[0].get_str();
-
-    if(strMode == "status") {
-        UniValue objStatus(UniValue::VOBJ);
-        objStatus.push_back(Pair("AssetID", tnodeSync.GetAssetID()));
-        objStatus.push_back(Pair("AssetName", tnodeSync.GetAssetName()));
-        objStatus.push_back(Pair("Attempt", tnodeSync.GetAttempt()));
-        objStatus.push_back(Pair("IsBlockchainSynced", tnodeSync.IsBlockchainSynced()));
-        objStatus.push_back(Pair("IsTnodeListSynced", tnodeSync.IsTnodeListSynced()));
-        objStatus.push_back(Pair("IsWinnersListSynced", tnodeSync.IsWinnersListSynced()));
-        objStatus.push_back(Pair("IsSynced", tnodeSync.IsSynced()));
-        objStatus.push_back(Pair("IsFailed", tnodeSync.IsFailed()));
-        return objStatus;
-    }
-
-    if(strMode == "next")
-    {
-        tnodeSync.SwitchToNextAsset();
-        return "sync updated to " + tnodeSync.GetAssetName();
-    }
-
-    if(strMode == "reset")
-    {
-        tnodeSync.Reset();
-        return "success";
-    }
-    return "failure";
-}
-
 UniValue mnsync(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -443,7 +405,7 @@ UniValue verifymessage(const JSONRPCRequest& request)
             "verifymessage \"address\" \"signature\" \"message\"\n"
             "\nVerify a signed message\n"
             "\nArguments:\n"
-            "1. \"address\"  (string, required) The TecraCoin address to use for the signature.\n"
+            "1. \"address\"         (string, required) The TecraCoin address to use for the signature.\n"
             "2. \"signature\"       (string, required) The signature provided by the signer in base 64 encoding (see signmessage).\n"
             "3. \"message\"         (string, required) The message that was signed.\n"
             "\nResult:\n"
@@ -618,6 +580,7 @@ void handleSingleAddress(const UniValue& uniAddress, std::vector<std::pair<uint1
     } else if(zerocoin::utils::isZerocoin(addr)) {
         addresses.push_back(std::make_pair(uint160(), AddressType::zerocoinMint));
         addresses.push_back(std::make_pair(uint160(), AddressType::zerocoinSpend));
+
     } else if(zerocoin::utils::isSigmaMint(addr)) {
         addresses.push_back(std::make_pair(uint160(), AddressType::sigmaMint));
     } else if(zerocoin::utils::isSigmaSpend(addr)) {
@@ -625,6 +588,18 @@ void handleSingleAddress(const UniValue& uniAddress, std::vector<std::pair<uint1
     } else if(zerocoin::utils::isSigma(addr)) {
         addresses.push_back(std::make_pair(uint160(), AddressType::sigmaMint));
         addresses.push_back(std::make_pair(uint160(), AddressType::sigmaSpend));
+
+    } else if(zerocoin::utils::isLelantusMint(addr)) {
+        addresses.push_back(std::make_pair(uint160(), AddressType::lelantusMint));
+    } else if(zerocoin::utils::isLelantusJMint(addr)) {
+        addresses.push_back(std::make_pair(uint160(), AddressType::lelantusJMint));
+    } else if(zerocoin::utils::isLelantusJSplit(addr)) {
+        addresses.push_back(std::make_pair(uint160(), AddressType::lelantusJSplit));
+    } else if(zerocoin::utils::isLelantus(addr)) {
+        addresses.push_back(std::make_pair(uint160(), AddressType::lelantusMint));
+        addresses.push_back(std::make_pair(uint160(), AddressType::lelantusJMint));
+        addresses.push_back(std::make_pair(uint160(), AddressType::lelantusJSplit));
+
     } else if(zerocoin::utils::isZerocoinRemint(addr)) {
         addresses.push_back(std::make_pair(uint160(), AddressType::zerocoinRemint));
     } else {
@@ -953,6 +928,187 @@ UniValue getaddressbalance(const JSONRPCRequest& request)
 
 }
 
+UniValue getanonymityset(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2)
+        throw runtime_error(
+                "getanonymityset\n"
+                        "\nReturns the anonymity set and latest block hash.\n"
+                        "\nArguments:\n"
+                        "{\n"
+                        "      \"denomination\"  (int64_t) int denomination\n"
+                        "      \"coinGroupId\"  (int)\n"
+                        "}\n"
+                        "\nResult:\n"
+                        "{\n"
+                        "  \"blockHash\"   (string) Latest block hash for anonymity set\n"
+                        "  \"anonymityset\"(std::string[]) array of Serialized GroupElements\n"
+                        "}\n"
+                + HelpExampleCli("getanonymityset", "100000000 1")
+                + HelpExampleRpc("getanonymityset", "\"100000000\", \"1\"")
+        );
+
+
+    int64_t intDenom;
+    int coinGroupId;
+    try {
+        intDenom = std::stol(request.params[0].get_str());
+        coinGroupId = std::stol(request.params[1].get_str());
+    } catch (std::logic_error const & e) {
+        throw runtime_error(std::string("An exception occurred while parsing parameters: ") + e.what());
+    }
+
+    sigma::CoinDenomination denomination;
+    sigma::IntegerToDenomination(intDenom, denomination);
+
+    uint256 blockHash;
+    std::vector<sigma::PublicCoin> coins;
+
+    {
+        LOCK(cs_main);
+        sigma::CSigmaState* sigmaState = sigma::CSigmaState::GetState();
+        sigmaState->GetCoinSetForSpend(
+                &chainActive,
+                chainActive.Height() - (ZC_MINT_CONFIRMATIONS - 1),
+                denomination,
+                coinGroupId,
+                blockHash,
+                coins);
+    }
+
+    UniValue serializedCoins(UniValue::VARR);
+    for(sigma::PublicCoin const & coin : coins) {
+        std::vector<unsigned char> vch = coin.getValue().getvch();
+        serializedCoins.push_back(HexStr(vch.begin(), vch.end()));
+    }
+
+    UniValue ret(UniValue::VOBJ);
+    ret.push_back(Pair("blockHash", blockHash.GetHex()));
+    ret.push_back(Pair("serializedCoins", serializedCoins));
+
+    return ret;
+}
+
+UniValue getmintmetadata(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw runtime_error(
+                "getmintmetadata\n"
+                        "\nReturns the anonymity set id and nHeight of mint.\n"
+                        "\nArguments:\n"
+                        "  \"mints\"\n"
+                        "    [\n"
+                        "      {\n"
+                        "        \"denom\"   (int) The mint denomination\n"
+                        "        \"pubcoin\" (string) The PubCoin value\n"
+                        "      }\n"
+                        "      ,...\n"
+                        "    ]\n"
+                        "\nResult:\n"
+                        "{\n"
+                        "  \"metadata\"   (Pair<string,int>) nHeight and id for each pubcoin\n"
+                        "}\n"
+                + HelpExampleCli("getmintmetadata", "'{\"mints\": [{\"denom\":5000000, \"pubcoin\":\"b476ed2b374bb081ea51d111f68f0136252521214e213d119b8dc67b92f5a390\"}]}'")
+                + HelpExampleRpc("getmintmetadata", "{\"mints\": [{\"denom\":5000000, \"pubcoin\":\"b476ed2b374bb081ea51d111f68f0136252521214e213d119b8dc67b92f5a390\"}]}")
+        );
+
+    UniValue mintValues = find_value(request.params[0].get_obj(), "mints");
+    if (!mintValues.isArray()) {
+            throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "mints is expected to be an array");
+    }
+    sigma::CSigmaState* sigmaState = sigma::CSigmaState::GetState();
+    UniValue ret(UniValue::VARR);
+    for(UniValue const & mintData : mintValues.getValues()){
+        vector<unsigned char> serializedCoin = ParseHex(find_value(mintData, "pubcoin").get_str().c_str());
+
+        secp_primitives::GroupElement pubCoin;
+        pubCoin.deserialize(serializedCoin.data());
+
+        int64_t intDenom = find_value(mintData, "denom").get_int64();
+        sigma::CoinDenomination denomination;
+        sigma::IntegerToDenomination(intDenom, denomination);
+
+        std::pair<int, int> coinHeightAndId;
+        {
+            LOCK(cs_main);
+            coinHeightAndId = sigmaState->GetMintedCoinHeightAndId(sigma::PublicCoin(pubCoin, denomination));
+        }
+        UniValue metaData(UniValue::VOBJ);
+        metaData.pushKV(to_string(coinHeightAndId.first), coinHeightAndId.second);
+        ret.push_back(metaData);
+    }
+    return ret;
+}
+
+UniValue getusedcoinserials(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw runtime_error(
+                "getusedcoinserials\n"
+                "\nReturns the set of used coin serial.\n"
+                "\nResult:\n"
+                "{\n"
+                "  \"serials\" (std::string[]) array of Serialized Scalars\n"
+                "}\n"
+        );
+
+    sigma::CSigmaState* sigmaState = sigma::CSigmaState::GetState();
+    sigma::spend_info_container serials;
+    {
+        LOCK(cs_main);
+        serials = sigmaState->GetSpends();
+    }
+
+    UniValue serializedSerials(UniValue::VARR);
+    for ( auto it = serials.begin(); it != serials.end(); ++it )
+        serializedSerials.push_back(it->first.GetHex());
+
+    UniValue ret(UniValue::VOBJ);
+    ret.push_back(Pair("serials", serializedSerials));
+
+    return ret;
+}
+
+UniValue getlatestcoinids(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 0)
+        throw runtime_error(
+                "getlatestcoinids\n"
+                "\nReturns the set of used coin serial.\n"
+                "\nResult:\n"
+                "{\n"
+                "  [\n"
+                "      {\n"
+                "        \"denom\"       (int64_t) The mint denomination\n"
+                "        \"coinGroupId\" (int) The latest group id\n"
+                "      }\n"
+                "      ,...\n"
+                "    ]\n"
+                "}\n"
+        );
+
+    sigma::CSigmaState* sigmaState = sigma::CSigmaState::GetState();
+    std::unordered_map<sigma::CoinDenomination, int> latestCoinIds;
+    {
+        LOCK(cs_main);
+        latestCoinIds = sigmaState->GetLatestCoinIds();
+    }
+
+    UniValue ret(UniValue::VARR);
+    for (const auto& it : latestCoinIds ) {
+        int64_t denom;
+        sigma::DenominationToInteger(it.first, denom);
+
+        UniValue denomandid(UniValue::VOBJ);
+        denomandid.push_back(Pair("denom", denom));
+        denomandid.push_back(Pair("id", it.second));
+
+        ret.push_back(denomandid);
+    }
+
+    return ret;
+}
+
 UniValue getaddresstxids(const JSONRPCRequest& request)
 {
     if (request.fHelp || request.params.size() != 1)
@@ -1249,7 +1405,6 @@ UniValue getinfoex(const JSONRPCRequest& request)
     return info;
 }
 
-
 static UniValue RPCLockedMemoryInfo()
 {
     LockedPool::Stats stats = LockedPoolManager::Instance().stats();
@@ -1325,7 +1480,8 @@ static const CRPCCommand commands[] =
 
     /* Tnode features */
     { "tnode",              "evotnsync",              &mnsync,                 true,  {"command"} },
-
+    { "tnode",              "tnsync",                 &mnsync,                 true,  {"command"} },
+    
     /* Not shown in help */
     { "hidden",             "getzerocoinsupply",      &getzerocoinsupply,      false,   {} },
     { "hidden",             "getinfoex",              &getinfoex,              false,   {} },

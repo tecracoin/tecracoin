@@ -2,6 +2,7 @@
 from test_framework.authproxy import JSONRPCException
 from test_framework.test_framework import ElysiumTestFramework
 from test_framework.util import assert_equal, assert_raises_message
+import time
 
 class ElysiumSendSpendTest(ElysiumTestFramework):
     def run_test(self):

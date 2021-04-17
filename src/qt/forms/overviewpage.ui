@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>642</width>
-    <height>359</height>
+    <width>769</width>
+    <height>407</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -57,7 +57,7 @@
                </font>
               </property>
               <property name="text">
-               <string>Balances</string>
+               <string>Private Balances</string>
               </property>
              </widget>
             </item>
@@ -114,8 +114,57 @@
             <property name="spacing">
              <number>12</number>
             </property>
-            <item row="3" column="2">
-             <widget class="QLabel" name="labelWatchImmature">
+            <item row="16" column="0">
+             <widget class="QLabel" name="labelAnonymizableText">
+              <property name="text">
+               <string>Anonymizable:</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="3">
+             <spacer name="horizontalSpacer_2">
+              <property name="orientation">
+               <enum>Qt::Horizontal</enum>
+              </property>
+              <property name="sizeHint" stdset="0">
+               <size>
+                <width>40</width>
+                <height>20</height>
+               </size>
+              </property>
+             </spacer>
+            </item>
+            <item row="6" column="0" colspan="2">
+             <widget class="QLabel" name="label">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>Transparent Balances</string>
+              </property>
+             </widget>
+            </item>
+            <item row="16" column="1">
+             <widget class="QLabel" name="labelAnonymizable">
+              <property name="font">
+               <font>
+                <weight>75</weight>
+                <bold>true</bold>
+               </font>
+              </property>
+              <property name="text">
+               <string>0.000 000 00 FIRO</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item row="11" column="2">
+             <widget class="QLabel" name="labelWatchPending">
               <property name="font">
                <font>
                 <weight>75</weight>
@@ -126,7 +175,7 @@
                <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string>Mined balance in watch-only addresses that has not yet matured</string>
+               <string>Unconfirmed transactions to watch-only addresses</string>
               </property>
               <property name="text">
                <string notr="true">0.000 000 00 TCR</string>
@@ -151,7 +200,7 @@
                <cursorShape>IBeamCursor</cursorShape>
               </property>
               <property name="toolTip">
-               <string>Current total balance in watch-only addresses</string>
+               <string>Your current balance in watch-only addresses</string>
               </property>
               <property name="text">
                <string notr="true">0.000 000 00 TCR</string>
@@ -203,14 +252,15 @@
               <property name="toolTip">
                <string>Unconfirmed transactions to watch-only addresses</string>
               </property>
+             </widget>
+            </item>
+            <item row="0" column="2">
+             <widget class="QLabel" name="labelWatchonly">
               <property name="text">
                <string notr="true">0.000 000 00 TCR</string>
               </property>
               <property name="alignment">
                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-              </property>
-              <property name="textInteractionFlags">
-               <set>Qt::LinksAccessibleByMouse|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
               </property>
              </widget>
             </item>
@@ -326,13 +376,10 @@
               </property>
              </widget>
             </item>
-            <item row="0" column="1">
-             <widget class="QLabel" name="labelSpendable">
+            <item row="12" column="0">
+             <widget class="QLabel" name="labelImmatureText">
               <property name="text">
-               <string>Spendable:</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+               <string>Immature:</string>
               </property>
              </widget>
             </item>
@@ -378,7 +425,7 @@
             <item row="2" column="0">
              <widget class="QLabel" name="labelPendingText">
               <property name="text">
-               <string>Pending:</string>
+               <string>Available:</string>
               </property>
              </widget>
             </item>

@@ -14,6 +14,7 @@
 #include "ctpl.h"
 #include "random.h"
 #include "serialize.h"
+#include "stacktraces.h"
 #include "sync.h"
 #include "utilstrencodings.h"
 #include "utiltime.h"
@@ -490,30 +491,23 @@ std::string HelpMessageOpt(const std::string &option, const std::string &message
            std::string("\n\n");
 }
 
-static std::string FormatException(const std::exception* pex, const char* pszThread)
+#ifdef ENABLE_CRASH_HOOKS
+static std::string FormatException(const std::exception_ptr pex, const char* pszThread)
 {
-#ifdef WIN32
-    char pszModule[MAX_PATH] = "";
-    GetModuleFileNameA(NULL, pszModule, sizeof(pszModule));
-#else
-    const char* pszModule = "tecracoin";
-#endif
-    if (pex)
-        return strprintf(
-            "EXCEPTION: %s       \n%s       \n%s in %s       \n", typeid(*pex).name(), pex->what(), pszModule, pszThread);
-    else
-        return strprintf(
-            "UNKNOWN EXCEPTION       \n%s in %s       \n", pszModule, pszThread);
+    return strprintf("EXCEPTION: %s", GetPrettyExceptionStr(pex));
 }
+#endif
 
-void PrintExceptionContinue(const std::exception* pex, const char* pszThread)
+void PrintExceptionContinue(const std::exception_ptr pex, const char* pszThread)
 {
+#ifdef ENABLE_CRASH_HOOKS
     std::string message = FormatException(pex, pszThread);
     LogPrintf("\n\n************************\n%s\n", message);
     fprintf(stderr, "\n\n************************\n%s\n", message.c_str());
+#endif
 }
 
-boost::filesystem::path GetDefaultDataDir()
+boost::filesystem::path GetDefaultDataDirForCoinName(const std::string &coinName)
 {
     namespace fs = boost::filesystem;
     // Windows < Vista: C:\Documents and Settings\Username\Application Data\tecracoin
@@ -522,7 +516,7 @@ boost::filesystem::path GetDefaultDataDir()
     // Unix: ~/.tecracoin
 #ifdef WIN32
     // Windows
-    return GetSpecialFolderPath(CSIDL_APPDATA) / "tecracoin";
+    return GetSpecialFolderPath(CSIDL_APPDATA) / coinName;
 #else
     fs::path pathRet;
     char* pszHome = getenv("HOME");
@@ -532,12 +526,21 @@ boost::filesystem::path GetDefaultDataDir()
         pathRet = fs::path(pszHome);
 #ifdef MAC_OSX
     // Mac
-    return pathRet / "Library/Application Support/tecracoin";
+    return pathRet / "Library/Application Support" / coinName;
 #else
     // Unix
-    return pathRet / ".tecracoin";
+    return pathRet / ("." + coinName);
 #endif
 #endif
+}
+
+boost::filesystem::path GetDefaultDataDir()
+{
+    namespace fs = boost::filesystem;
+
+    fs::path tecraDefaultDir = GetDefaultDataDirForCoinName("tecracoin");
+
+    return tecraDefaultDir;
 }
 
 static boost::filesystem::path pathCached;
@@ -613,17 +616,18 @@ void ClearDatadirCache()
 boost::filesystem::path GetConfigFile(const std::string& confPath)
 {
     boost::filesystem::path pathConfigFile(confPath);
-    if (!pathConfigFile.is_complete())
-        pathConfigFile = GetDataDir(false) / pathConfigFile;
+    if (!pathConfigFile.is_complete()) {
+        boost::filesystem::path dataDir = GetDataDir(false);
 
-    return pathConfigFile;
-}
+        // upgrade heuristics: if dataDir ends with either "tecracoin" or ".tecracoin" and confPath is set
+        // to default value we use "tecracoin.conf" as config file name
 
-boost::filesystem::path GetTnodeConfigFile()
-{
-    boost::filesystem::path pathConfigFile(GetArg("-tnconf", "tnode.conf"));
-    if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir() / pathConfigFile;
-    LogPrintf("pathConfigFile=%s\n", pathConfigFile);
+        if (confPath == BITCOIN_CONF_FILENAME && (dataDir.filename() == "tecracoin" || dataDir.filename() == ".zcoin"))
+            pathConfigFile = dataDir / "tecracoin.conf";
+        else
+            pathConfigFile = dataDir / pathConfigFile;
+    }
+
     return pathConfigFile;
 }
 
@@ -651,6 +655,43 @@ void ReadConfigFile(const std::string& confPath)
     }
     // If datadir is changed in .conf file:
     ClearDatadirCache();
+}
+
+bool RenameDirectoriesFromZcoinToFiro()
+{
+    namespace fs = boost::filesystem;
+
+    fs::path zcoinPath = GetDefaultDataDirForCoinName("zcoin");
+    fs::path firoPath = GetDefaultDataDirForCoinName("firo");
+
+    // rename is possible only if zcoin directory exists and firo doesn't
+    if (fs::exists(firoPath) || !fs::is_directory(zcoinPath))
+        return false;
+
+    fs::path zcoinConfFileName = zcoinPath / "zcoin.conf";
+    fs::path firoConfFileName = zcoinPath / "firo.conf";
+    if (fs::exists(firoConfFileName))
+        return false;
+
+    try {
+        if (fs::is_regular_file(zcoinConfFileName))
+            fs::rename(zcoinConfFileName, firoConfFileName);
+
+        try {
+            fs::rename(zcoinPath, firoPath);
+        }
+        catch (const fs::filesystem_error &) {
+            // rename config file back
+            fs::rename(firoConfFileName, zcoinConfFileName);
+            throw;
+        }
+    }
+    catch (const fs::filesystem_error &) {
+        return false;
+    }
+
+    ClearDatadirCache();
+    return true;
 }
 
 #ifndef WIN32
@@ -988,7 +1029,7 @@ std::string CopyrightHolders(const std::string& strPrefix, unsigned int nStartYe
     if (strprintf(COPYRIGHT_HOLDERS, COPYRIGHT_HOLDERS_SUBSTITUTION).find("Bitcoin Core") == std::string::npos) {
         strCopyrightHolders
                 += '\n' + strPrefix + "The Bitcoin Core developers"
-                +  '\n' + strPrefix + "The Zcoin Core developers";
+                +  '\n' + strPrefix + "The Firo Core developers";
     }
 
     strCopyrightHolders += "\n" + strPrefix + strYear + strprintf(_(COPYRIGHT_HOLDERS), _(COPYRIGHT_HOLDERS_SUBSTITUTION));

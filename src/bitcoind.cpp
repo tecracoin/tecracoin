@@ -18,7 +18,7 @@
 #include "httpserver.h"
 #include "httprpc.h"
 #include "utilstrencodings.h"
-#include "tnodeconfig.h"
+#include "stacktraces.h"
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/filesystem.hpp>
@@ -75,6 +75,12 @@ bool AppInit(int argc, char* argv[])
     // If Qt is used, parameters/bitcoin.conf are parsed in qt/bitcoin.cpp's main()
     ParseParameters(argc, argv);
 
+#ifdef ENABLE_CRASH_HOOKS
+     if (IsArgSet("-printcrashinfo")) {
+        std::cout << GetCrashInfoStrFromSerializedStr(GetArg("-printcrashinfo", "")) << std::endl;
+        return true;
+    }
+#endif
     // Process help and version before taking care about datadir
     if (IsArgSet("-?") || IsArgSet("-h") ||  IsArgSet("-help") || IsArgSet("-version"))
     {
@@ -98,6 +104,11 @@ bool AppInit(int argc, char* argv[])
 
     try
     {
+        if (GetBoolArg("-migratetofiro", false) && !IsArgSet("-datadir")) {
+            // rename directory and config file, do it before it gets accessed
+            RenameDirectoriesFromZcoinToFiro();
+        }
+
         if (!boost::filesystem::is_directory(GetDataDir(false)))
         {
             fprintf(stderr, "Error: Specified data directory \"%s\" does not exist.\n", GetArg("-datadir", "").c_str());
@@ -115,14 +126,6 @@ bool AppInit(int argc, char* argv[])
             SelectParams(ChainNameFromCommandLine());
         } catch (const std::exception& e) {
             fprintf(stderr, "Error: %s\n", e.what());
-            return false;
-        }
-
-        // parse tnode.conf
-        std::string strErr;
-        if(!tnodeConfig.read(strErr)) {
-            fprintf(stderr,"Error reading tnode configuration file: %s\n", strErr.c_str());
-            // TODO: ignore the error after switch to evo tnodes
             return false;
         }
 
@@ -175,10 +178,8 @@ bool AppInit(int argc, char* argv[])
 
         fRet = AppInitMain(threadGroup, scheduler);
     }
-    catch (const std::exception& e) {
-        PrintExceptionContinue(&e, "AppInit()");
-    } catch (...) {
-        PrintExceptionContinue(NULL, "AppInit()");
+    catch (...) {
+        PrintExceptionContinue(std::current_exception(), "AppInit()");
     }
 
     if (!fRet)
@@ -197,6 +198,10 @@ bool AppInit(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
+#ifdef ENABLE_CRASH_HOOKS
+    RegisterPrettyTerminateHander();
+    RegisterPrettySignalHandlers();
+#endif    
     SetupEnvironment();
 
     // Connect bitcoind signal handlers

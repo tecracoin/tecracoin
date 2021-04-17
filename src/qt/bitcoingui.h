@@ -120,8 +120,8 @@ private:
     QAction *openAction;
     QAction *showHelpMessageAction;
     QAction *sigmaAction;
+    QAction *lelantusAction;
     QAction *zc2SigmaAction;
-    QAction *tnodeAction;
     QAction *masternodeAction;
 
     QSystemTrayIcon *trayIcon;
@@ -157,7 +157,7 @@ private:
     void unsubscribeFromCoreSignals();
 
     /** Updates Zc2SigmaPage visibility */
-    void checkZc2SigmaVisibility(int numBlocks);
+//    void checkZc2SigmaVisibility(int numBlocks);
     /** Updates Tnode visibility */
     void checkTnodeVisibility(int numBlocks);
     /** Update UI with latest network info from model. */
@@ -225,8 +225,6 @@ private Q_SLOTS:
     void gotoHistoryPage();
     /** Switch directly to TecraCoin history tab */
     void gotoBitcoinHistoryTab();
-    /** Switch to tnode page */
-    void gotoTnodePage();
     /** Switch to masternode page */
     void gotoMasternodePage();
     /** Switch to receive coins page */
@@ -237,6 +235,8 @@ private Q_SLOTS:
     void gotoSigmaPage();
     /** Switch to ZC->sigma page */
     void gotoZc2SigmaPage();
+    /** Switch to lelantus page */
+    void gotoLelantusPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
@@ -279,6 +279,9 @@ private Q_SLOTS:
     void toggleNetworkActive();
 
     void showModalOverlay();
+
+    /** Update Lelantus page visibility */
+    void updateLelantusPage();
 };
 
 class UnitDisplayStatusBarControl : public QLabel

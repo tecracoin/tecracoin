@@ -44,8 +44,13 @@ public:
     void UpdatePropertyBalance(unsigned int propertyId, uint64_t available, uint64_t reserved);
 
 public Q_SLOTS:
-    void setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-                    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
+    void setBalance(
+        const CAmount& balance,
+        const CAmount& unconfirmedBalance,
+        const CAmount& immatureBalance,
+        const CAmount& watchOnlyBalance,
+        const CAmount& watchUnconfBalance,
+        const CAmount& watchImmatureBalance);
 
     //void updateElysium();
     //void reinitElysium();
@@ -68,8 +73,9 @@ private:
     CAmount currentWatchOnlyBalance;
     CAmount currentWatchUnconfBalance;
     CAmount currentWatchImmatureBalance;
-    CAmount currentSigmaBalance;
-    CAmount currentSigmaUnconfirmedBalance;
+    CAmount currentPrivateBalance;
+    CAmount currentUnconfirmedPrivateBalance;
+    CAmount currentAnonymizableBalance;
 
     QSettings settings;
 
@@ -83,7 +89,6 @@ private Q_SLOTS:
     void updateAlerts(const QString &warnings);
     void updateWatchOnlyLabels(bool showWatchOnly);
     void handleOutOfSyncWarningClicks();
-    void updateCoins(const std::vector<CMintMeta>& spendable, const std::vector<CMintMeta>& pending);
 };
 
 #endif // BITCOIN_QT_OVERVIEWPAGE_H

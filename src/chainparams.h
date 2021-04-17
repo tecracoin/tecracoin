@@ -84,7 +84,7 @@ public:
     int64_t MaxTipAge() const { return nMaxTipAge; }
     int PoolMaxTransactions() const { return nPoolMaxTransactions; }
     int FulfilledRequestExpireTime() const { return nFulfilledRequestExpireTime; }
-    std::string SporkPubKey() const { return strSporkPubKey; }
+    std::string TnodePaymentPubKey() const { return strTnodePaymentsPubKey; }
 
     //TecraCoin TODO: remove/disable Sigma+zerocoin
 	/** Zerocoin-related block numbers when features are changed */
@@ -97,6 +97,8 @@ public:
 
     const ChainTxData& TxData() const { return chainTxData; }
     CScript GetFounderScript(unsigned int founderIndex) const;
+    virtual bool SkipUndoForBlock(int /*nHeight*/) const { return false; }
+    virtual bool ApplyUndoForTxout(int /*nHeight*/, uint256 const & /*txid*/, int /*n*/) const { return true; }
 protected:
     CChainParams() {}
 
@@ -120,7 +122,7 @@ protected:
     long nMaxTipAge;
     int nPoolMaxTransactions;
     int nFulfilledRequestExpireTime;
-    std::string strSporkPubKey;
+    std::string strTnodePaymentsPubKey;
     ChainTxData chainTxData;
     const char* foundersAddr[4];
 };

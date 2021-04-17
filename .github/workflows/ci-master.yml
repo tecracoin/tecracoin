@@ -63,7 +63,7 @@ jobs:
     - name: Build Dependencies
       run: make -C depends -j$(nproc)
       working-directory: ${{ env.SOURCE_ARTIFACT }}
-    - name: Build Zcoin
+    - name: Build Tecracoin
       run: |
         ./configure --disable-jni --enable-elysium --enable-tests --with-comparison-tool=no --prefix=$(realpath depends/x86_64-pc-linux-gnu)
         make -j$(nproc)
@@ -89,7 +89,7 @@ jobs:
       if: failure()
       run: |
         tor_log=$SOURCE_ARTIFACT/src/tor/test-suite.log
-        zcoin_log=$SOURCE_ARTIFACT/src/test-suite.log
+        tecra_log=$SOURCE_ARTIFACT/src/test-suite.log
 
         mkdir -p $TEST_LOG_ARTIFACT_DIR
 
@@ -97,8 +97,8 @@ jobs:
           mv $tor_log $TEST_LOG_ARTIFACT_DIR/tor.log
         fi
 
-        if test -f $zcoin_log; then
-          mv $zcoin_log $TEST_LOG_ARTIFACT_DIR/zcoin.log
+        if test -f $tecra_log; then
+          mv $tecra_log $TEST_LOG_ARTIFACT_DIR/tecra.log
         fi
     - name: Upload Test Logs Artifact
       if: failure()
@@ -133,7 +133,7 @@ jobs:
     - name: Build Dependencies
       run: make -C depends -j$(nproc) HOST=x86_64-w64-mingw32
       working-directory: ${{ env.SOURCE_ARTIFACT }}
-    - name: Build Zcoin
+    - name: Build TecraCoin
       run: |
         ./configure --disable-jni --enable-elysium --prefix=$(realpath depends/x86_64-w64-mingw32)
         make -j$(nproc)
@@ -170,7 +170,7 @@ jobs:
     - name: Build Dependencies
       run: make -C depends -j$(sysctl -n hw.activecpu)
       working-directory: ${{ env.SOURCE_ARTIFACT }}
-    - name: Build Zcoin
+    - name: Build TecraCoin
       run: |
         ./configure --disable-jni --enable-elysium --prefix=$(grealpath depends/x86_64-apple-darwin*)
         make -j$(sysctl -n hw.activecpu)
