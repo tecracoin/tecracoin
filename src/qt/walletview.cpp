@@ -6,13 +6,9 @@
 
 #include "addressbookpage.h"
 #include "askpassphrasedialog.h"
-#include "automintdialog.h"
-#include "automintmodel.h"
 #include "bitcoingui.h"
 #include "clientmodel.h"
 #include "guiutil.h"
-#include "lelantusdialog.h"
-#include "lelantusmodel.h"
 #include "metadexcanceldialog.h"
 #include "metadexdialog.h"
 #include "optionsmodel.h"
@@ -91,9 +87,6 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     toolboxPage = new QWidget(this);
 #endif
     masternodeListPage = new MasternodeList(platformStyle);
-
-    automintNotification = new AutomintNotification(this);
-    automintNotification->setWindowModality(Qt::NonModal);
 
     setupTransactionPage();
     setupSendCoinPage();
@@ -349,8 +342,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     usedSendingAddressesPage->setModel(_walletModel->getAddressTableModel());
     masternodeListPage->setWalletModel(_walletModel);
     sendTecraCoinView->setModel(_walletModel);
-//    zc2SigmaPage->setWalletModel(_walletModel);
-//    automintNotification->setModel(_walletModel);
+
 #ifdef ENABLE_ELYSIUM
     elyAssetsPage->setWalletModel(walletModel);
 
@@ -389,18 +381,6 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
         connect(_walletModel, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
             this, SLOT(checkMintableAmount(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
 
-        auto lelantusModel = _walletModel->getLelantusModel();
-        if (lelantusModel) {
-            connect(lelantusModel, SIGNAL(askMintAll(AutoMintMode)), this, SLOT(askMintAll(AutoMintMode)));
-
-            auto autoMintModel = lelantusModel->getAutoMintModel();
-            connect(autoMintModel, SIGNAL(message(QString,QString,unsigned int)),
-                this, SIGNAL(message(QString,QString,unsigned int)));
-            connect(autoMintModel, SIGNAL(requireShowAutomintNotification()),
-                this, SLOT(showAutomintNotification()));
-            connect(autoMintModel, SIGNAL(closeAutomintNotification()),
-                this, SLOT(closeAutomintNotification()));
-        }
     }
 }
 
@@ -675,83 +655,11 @@ void WalletView::requestedSyncWarningInfo()
     Q_EMIT outOfSyncWarningClicked();
 }
 
-void WalletView::showAutomintNotification()
-{
-    auto lelantusModel = walletModel->getLelantusModel();
-    if (!lelantusModel) {
-        return;
-    }
-
-    if (!isActiveWindow() || !underMouse()) {
-        lelantusModel->sendAckMintAll(AutoMintAck::WaitUserToActive);
-        return;
-    }
-
-    automintNotification->setWindowFlags(automintNotification->windowFlags() | Qt::Popup | Qt::FramelessWindowHint);
-
-    QRect rect(this->mapToGlobal(QPoint(0, 0)), this->size());
-    auto pos = QStyle::alignedRect(
-        Qt::LeftToRight,
-        Qt::AlignRight | Qt::AlignBottom,
-        automintNotification->size(),
-        rect).topLeft();
-
-    pos.setX(pos.x());
-    pos.setY(pos.y());
-    automintNotification->move(pos);
-
-    automintNotification->show();
-    automintNotification->raise();
-}
-
-void WalletView::repositionAutomintNotification()
-{
-    if (automintNotification->isVisible()) {
-        QRect rect(this->mapToGlobal(QPoint(0, 0)), this->size());
-        auto pos = QStyle::alignedRect(
-            Qt::LeftToRight,
-            Qt::AlignRight | Qt::AlignBottom,
-            automintNotification->size(),
-            rect).topLeft();
-
-        pos.setX(pos.x());
-        pos.setY(pos.y());
-        automintNotification->move(pos);
-    }
-}
-
-void WalletView::checkMintableAmount(CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount, CAmount anonymizableBalance)
-{
-    if (automintNotification->isVisible() && anonymizableBalance == 0) {
-        // hide if notification is showing but there no any fund to anonymize
-        closeAutomintNotification();
-    }
-}
-
-void WalletView::closeAutomintNotification()
-{
-    automintNotification->close();
-}
-
-void WalletView::askMintAll(AutoMintMode mode)
-{
-    automintNotification->setVisible(false);
-
-    if (!walletModel) {
-        return;
-    }
-
-    AutoMintDialog dlg(mode, this);
-    dlg.setModel(walletModel);
-    dlg.exec();
-}
-
 bool WalletView::eventFilter(QObject *watched, QEvent *event)
 {
     switch (event->type()) {
     case QEvent::Type::Resize:
     case QEvent::Type::Move:
-        repositionAutomintNotification();
         break;
     }
 

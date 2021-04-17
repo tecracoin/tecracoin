@@ -8,7 +8,6 @@
 #include "consensus/validation.h"
 #include "guiconstants.h"
 #include "guiutil.h"
-#include "lelantusmodel.h"
 #include "paymentserver.h"
 #include "recentrequeststablemodel.h"
 #include "transactiontablemodel.h"
@@ -39,7 +38,6 @@
 
 WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, OptionsModel *_optionsModel, QObject *parent) :
     QObject(parent), wallet(_wallet), optionsModel(_optionsModel), addressTableModel(0),
-    lelantusModel(0),
     transactionTableModel(0),
     recentRequestsTableModel(0),
     cachedBalance(0), cachedUnconfirmedBalance(0), cachedImmatureBalance(0),
@@ -50,7 +48,6 @@ WalletModel::WalletModel(const PlatformStyle *platformStyle, CWallet *_wallet, O
     fForceCheckBalanceChanged = false;
 
     addressTableModel = new AddressTableModel(wallet, this);
-    lelantusModel = new LelantusModel(platformStyle, wallet, _optionsModel, this);
     transactionTableModel = new TransactionTableModel(platformStyle, wallet, this);
     recentRequestsTableModel = new RecentRequestsTableModel(wallet, this);
 
@@ -82,11 +79,6 @@ CAmount WalletModel::getBalance(const CCoinControl *coinControl, bool fExcludeLo
     }
 
     return wallet->GetBalance(fExcludeLocked);
-}
-
-CAmount WalletModel::getAnonymizableBalance() const
-{
-    return lelantus::IsLelantusAllowed() ? lelantusModel->getMintableAmount() : 0;
 }
 
 CAmount WalletModel::getUnconfirmedBalance() const
@@ -195,12 +187,6 @@ void WalletModel::checkBalanceChanged()
     CAmount newWatchOnlyBalance = 0;
     CAmount newWatchUnconfBalance = 0;
     CAmount newWatchImmatureBalance = 0;
-    CAmount newAnonymizableBalance = getAnonymizableBalance();
-
-
-    CAmount newPrivateBalance, newUnconfirmedPrivateBalance;
-    std::tie(newPrivateBalance, newUnconfirmedPrivateBalance) =
-        lelantusModel->getPrivateBalance();
 
     if (haveWatchOnly())
     {
@@ -214,10 +200,7 @@ void WalletModel::checkBalanceChanged()
         || cachedImmatureBalance != newImmatureBalance
         || cachedWatchOnlyBalance != newWatchOnlyBalance
         || cachedWatchUnconfBalance != newWatchUnconfBalance
-        || cachedWatchImmatureBalance != newWatchImmatureBalance
-        || cachedPrivateBalance != newPrivateBalance
-        || cachedUnconfirmedPrivateBalance != newUnconfirmedPrivateBalance
-        || cachedAnonymizableBalance != newAnonymizableBalance)
+        || cachedWatchImmatureBalance != newWatchImmatureBalance)
     {
         cachedBalance = newBalance;
         cachedUnconfirmedBalance = newUnconfirmedBalance;
@@ -225,19 +208,13 @@ void WalletModel::checkBalanceChanged()
         cachedWatchOnlyBalance = newWatchOnlyBalance;
         cachedWatchUnconfBalance = newWatchUnconfBalance;
         cachedWatchImmatureBalance = newWatchImmatureBalance;
-        cachedPrivateBalance = newPrivateBalance;
-        cachedUnconfirmedPrivateBalance = newUnconfirmedPrivateBalance;
-        cachedAnonymizableBalance = newAnonymizableBalance;
         Q_EMIT balanceChanged(
             newBalance,
             newUnconfirmedBalance,
             newImmatureBalance,
             newWatchOnlyBalance,
             newWatchUnconfBalance,
-            newWatchImmatureBalance,
-            newPrivateBalance,
-            newUnconfirmedPrivateBalance,
-            newAnonymizableBalance);
+            newWatchImmatureBalance);
     }
 }
 
@@ -416,142 +393,6 @@ WalletModel::SendCoinsReturn WalletModel::prepareTransaction(WalletModelTransact
         // belt-and-suspenders check)
         if (nFeeRequired > maxTxFee)
             return AbsurdFee;
-    }
-
-    return SendCoinsReturn(OK);
-}
-
-WalletModel::SendCoinsReturn WalletModel::prepareJoinSplitTransaction(
-    WalletModelTransaction &transaction,
-    const CCoinControl *coinControl)
-{
-    CAmount total = 0;
-    bool fSubtractFeeFromAmount = false;
-    QList<SendCoinsRecipient> recipients = transaction.getRecipients();
-    std::vector<CRecipient> vecSend;
-
-    if(recipients.empty())
-    {
-        return OK;
-    }
-
-    QSet<QString> setAddress; // Used to detect duplicates
-    int nAddresses = 0;
-
-    // Pre-check input data for validity
-    Q_FOREACH(const SendCoinsRecipient &rcp, recipients)
-    {
-        if (rcp.fSubtractFeeFromAmount)
-            fSubtractFeeFromAmount = true;
-
-        if (rcp.paymentRequest.IsInitialized())
-        {
-            // PaymentRequest...
-            CAmount subtotal = 0;
-            const payments::PaymentDetails& details = rcp.paymentRequest.getDetails();
-            for (int i = 0; i < details.outputs_size(); i++)
-            {
-                const payments::Output& out = details.outputs(i);
-                if (out.amount() <= 0) continue;
-                subtotal += out.amount();
-                const unsigned char* scriptStr = (const unsigned char*)out.script().data();
-                CScript scriptPubKey(scriptStr, scriptStr+out.script().size());
-                CAmount nAmount = out.amount();
-                CRecipient recipient = {scriptPubKey, nAmount, rcp.fSubtractFeeFromAmount};
-                vecSend.push_back(recipient);
-            }
-            if (subtotal <= 0)
-            {
-                return InvalidAmount;
-            }
-            total += subtotal;
-        }
-        else
-        {
-            // User-entered Firo address / amount:
-            if(!validateAddress(rcp.address))
-            {
-                return InvalidAddress;
-            }
-            if(rcp.amount <= 0)
-            {
-                return InvalidAmount;
-            }
-            setAddress.insert(rcp.address);
-            ++nAddresses;
-
-            CScript scriptPubKey = GetScriptForDestination(CBitcoinAddress(rcp.address.toStdString()).Get());
-            CRecipient recipient = {scriptPubKey, rcp.amount, rcp.fSubtractFeeFromAmount};
-            vecSend.push_back(recipient);
-
-            total += rcp.amount;
-        }
-    }
-    if(setAddress.size() != nAddresses)
-    {
-        return DuplicateAddress;
-    }
-
-    CAmount nBalance;
-    std::tie(nBalance, std::ignore) = lelantusModel->getPrivateBalance();
-
-    if(total > nBalance)
-    {
-        return AmountExceedsBalance;
-    }
-
-    {
-        LOCK2(cs_main, wallet->cs_wallet);
-
-        auto &spendCoins = transaction.getSpendCoins();
-        auto &sigmaSpendCoins = transaction.getSigmaSpendCoins();
-        auto &mintCoins = transaction.getMintCoins();
-
-        CAmount feeRequired = 0;
-        std::string strFailReason;
-
-        CWalletTx *newTx = transaction.getTransaction();
-        try {
-            *newTx = wallet->CreateLelantusJoinSplitTransaction(vecSend, feeRequired, {}, spendCoins, sigmaSpendCoins, mintCoins, coinControl);
-        } catch (InsufficientFunds const&) {
-            transaction.setTransactionFee(feeRequired);
-            return SendCoinsReturn(AmountExceedsBalance);
-        } catch (std::runtime_error const &e) {
-            Q_EMIT message(
-                tr("Send Coins"),
-                QString::fromStdString(e.what()),
-                CClientUIInterface::MSG_ERROR);
-
-            return TransactionCreationFailed;
-        } catch (std::invalid_argument const &e) {
-            Q_EMIT message(
-                    tr("Send Coins"),
-                    QString::fromStdString(e.what()),
-                    CClientUIInterface::MSG_ERROR);
-
-            return TransactionCreationFailed;
-        }
-
-        // reject absurdly high fee. (This can never happen because the
-        // wallet caps the fee at maxTxFee. This merely serves as a
-        // belt-and-suspenders check)
-        if (feeRequired > maxTxFee) {
-            return AbsurdFee;
-        }
-
-        int changePos = -1;
-        if (!mintCoins.empty()) {
-            for (changePos = 0; changePos < newTx->tx->vout.size(); changePos++) {
-                if (newTx->tx->vout[changePos].scriptPubKey.IsLelantusJMint()) {
-                    break;
-                }
-            }
-
-            changePos = changePos >= newTx->tx->vout.size() ? -1 : changePos;
-        }
-
-        transaction.setTransactionFee(feeRequired);
-        transaction.reassignAmounts(changePos);
     }
 
     return SendCoinsReturn(OK);
@@ -813,11 +654,6 @@ OptionsModel *WalletModel::getOptionsModel()
 AddressTableModel *WalletModel::getAddressTableModel()
 {
     return addressTableModel;
-}
-
-LelantusModel *WalletModel::getLelantusModel()
-{
-    return lelantusModel;
 }
 
 TransactionTableModel *WalletModel::getTransactionTableModel()

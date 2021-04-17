@@ -73,9 +73,6 @@ private:
     CAmount currentWatchOnlyBalance;
     CAmount currentWatchUnconfBalance;
     CAmount currentWatchImmatureBalance;
-    CAmount currentPrivateBalance;
-    CAmount currentUnconfirmedPrivateBalance;
-    CAmount currentAnonymizableBalance;
 
     QSettings settings;
 

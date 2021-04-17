@@ -11,7 +11,6 @@
 #include "clientmodel.h"
 #include "guiconstants.h"
 #include "guiutil.h"
-#include "lelantusmodel.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
 #include "transactionfilterproxy.h"
@@ -199,13 +198,6 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::on_anonymizeButton_clicked()
-{
-    if (!walletModel) {
-        return;
-    }
-}
-
 void OverviewPage::setBalance(
     const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
     const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
@@ -217,9 +209,7 @@ void OverviewPage::setBalance(
     currentWatchOnlyBalance = watchOnlyBalance;
     currentWatchUnconfBalance = watchUnconfBalance;
     currentWatchImmatureBalance = watchImmatureBalance;
-    currentPrivateBalance = privateBalance;
-    currentUnconfirmedPrivateBalance = unconfirmedPrivateBalance;
-    currentAnonymizableBalance = anonymizableBalance;
+
     ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways));
     ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance, false, BitcoinUnits::separatorAlways));
     ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance, false, BitcoinUnits::separatorAlways));
@@ -228,11 +218,6 @@ void OverviewPage::setBalance(
     ui->labelWatchPending->setText(BitcoinUnits::formatWithUnit(unit, watchUnconfBalance, false, BitcoinUnits::separatorAlways));
     ui->labelWatchImmature->setText(BitcoinUnits::formatWithUnit(unit, watchImmatureBalance, false, BitcoinUnits::separatorAlways));
     ui->labelWatchTotal->setText(BitcoinUnits::formatWithUnit(unit, watchOnlyBalance + watchUnconfBalance + watchImmatureBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelPrivate->setText(BitcoinUnits::formatWithUnit(unit, privateBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelUnconfirmedPrivate->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedPrivateBalance, false, BitcoinUnits::separatorAlways));
-    ui->labelAnonymizable->setText(BitcoinUnits::formatWithUnit(unit, anonymizableBalance, false, BitcoinUnits::separatorAlways));
-
-    ui->anonymizeButton->setEnabled(lelantus::IsLelantusAllowed() && anonymizableBalance > 0);
 
     // only show immature (newly mined) balance if it's non-zero, so as not to complicate things
     // for the non-mining users
@@ -294,7 +279,7 @@ void OverviewPage::setWalletModel(WalletModel *model)
                     model->getImmatureBalance(),
                     model->getWatchBalance(),
                     model->getWatchUnconfirmedBalance(),
-                    model->getWatchImmatureBalance();
+                    model->getWatchImmatureBalance());
         connect(
             model,
             SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),

@@ -10,7 +10,6 @@
 #include "clientmodel.h"
 #include "coincontroldialog.h"
 #include "guiutil.h"
-#include "lelantusmodel.h"
 #include "optionsmodel.h"
 #include "platformstyle.h"
 #include "sendcoinsentry.h"
@@ -561,7 +560,7 @@ void SendCoinsDialog::setBalance(
     if(model && model->getOptionsModel())
     {
         ui->labelBalance->setText(BitcoinUnits::formatWithUnit(model->getOptionsModel()->getDisplayUnit(),
-            fAnonymousMode ? privateBalance : balance));
+             balance));
     }
 }
 

@@ -20,7 +20,7 @@
 #include <QObject>
 
 class AddressTableModel;
-class LelantusModel;
+
 class OptionsModel;
 class PlatformStyle;
 class RecentRequestsTableModel;
@@ -134,7 +134,7 @@ public:
 
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
-    LelantusModel *getLelantusModel();
+
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
 
@@ -284,7 +284,7 @@ private:
     OptionsModel *optionsModel;
 
     AddressTableModel *addressTableModel;
-    LelantusModel *lelantusModel;
+
     TransactionTableModel *transactionTableModel;
     RecentRequestsTableModel *recentRequestsTableModel;
 
@@ -295,9 +295,6 @@ private:
     CAmount cachedWatchOnlyBalance;
     CAmount cachedWatchUnconfBalance;
     CAmount cachedWatchImmatureBalance;
-    CAmount cachedAnonymizableBalance;
-    CAmount cachedPrivateBalance;
-    CAmount cachedUnconfirmedPrivateBalance;
     EncryptionStatus cachedEncryptionStatus;
     int cachedNumBlocks;
 
@@ -316,9 +313,7 @@ private:
 Q_SIGNALS:
     // Signal that balance in wallet changed
     void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
-                        const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance,
-                        const CAmount& privateBalance, const CAmount& unconfirmedPrivateBalance,
-                        const CAmount& anonymizableBalance);
+                        const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
 
     void updateMintable();
 
