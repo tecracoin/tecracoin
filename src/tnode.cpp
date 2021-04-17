@@ -150,7 +150,7 @@ bool CTnode::UpdateFromNewBroadcast(CTnodeBroadcast &mnb) {
         mnodeman.mapSeenTnodePing.insert(std::make_pair(lastPing.GetHash(), lastPing));
     }
     // if it matches our Tnode privkey...
-    if (fTnodeMode && pubKeyTnode == activeTnode.pubKeyTnode) {
+    if (fMasternodeMode && pubKeyTnode == activeTnode.pubKeyTnode) {
         nPoSeBanScore = -TNODE_POSE_BAN_MAX_SCORE;
         if (nProtocolVersion == LEGACY_TNODES_PROTOCOL_VERSION) {
             // ... and PROTOCOL_VERSION, then we've been remotely activated ...
@@ -229,7 +229,7 @@ void CTnode::Check(bool fForce) {
     }
 
     int nActiveStatePrev = nActiveState;
-    bool fOurTnode = fTnodeMode && activeTnode.pubKeyTnode == pubKeyTnode;
+    bool fOurTnode = fMasternodeMode && activeTnode.pubKeyTnode == pubKeyTnode;
 
     // tnode doesn't meet payment protocol requirements ...
 /*    bool fRequireUpdate = nProtocolVersion < tnpayments.GetMinTnodePaymentsProto() ||
@@ -658,7 +658,7 @@ bool CTnodeBroadcast::Update(CTnode *pmn, int &nDos) {
     }
 
     // if ther was no tnode broadcast recently or if it matches our Tnode privkey...
-    if (!pmn->IsBroadcastedWithin(TNODE_MIN_MNB_SECONDS) || (fTnodeMode && pubKeyTnode == activeTnode.pubKeyTnode)) {
+    if (!pmn->IsBroadcastedWithin(TNODE_MIN_MNB_SECONDS) || (fMasternodeMode && pubKeyTnode == activeTnode.pubKeyTnode)) {
         // take the newest entry
         LogPrintf("CTnodeBroadcast::Update -- Got UPDATED Tnode entry: addr=%s\n", addr.ToString());
         if (pmn->UpdateFromNewBroadcast((*this))) {
@@ -674,7 +674,7 @@ bool CTnodeBroadcast::Update(CTnode *pmn, int &nDos) {
 bool CTnodeBroadcast::CheckOutpoint(int &nDos) {
     // we are a tnode with the same vin (i.e. already activated) and this mnb is ours (matches our Tnode privkey)
     // so nothing to do here for us
-    if (fTnodeMode && vin.prevout == activeTnode.vin.prevout && pubKeyTnode == activeTnode.pubKeyTnode) {
+    if (fMasternodeMode && vin.prevout == activeTnode.vin.prevout && pubKeyTnode == activeTnode.pubKeyTnode) {
         return false;
     }
 

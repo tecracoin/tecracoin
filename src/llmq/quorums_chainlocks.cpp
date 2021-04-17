@@ -236,7 +236,7 @@ void CChainLocksHandler::TrySignChainTip()
 {
     Cleanup();
 
-    if (!fTnodeMode) {
+    if (!fMasternodeMode) {
         return;
     }
 

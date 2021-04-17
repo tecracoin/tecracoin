@@ -252,7 +252,7 @@ UniValue masternode_status(const JSONRPCRequest& request)
     if (request.fHelp)
         masternode_status_help();
 
-    if (!fTnodeMode)
+    if (!fMasternodeMode)
         throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a tnode");
 
     UniValue mnObj(UniValue::VOBJ);

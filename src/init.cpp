@@ -338,7 +338,7 @@ void Shutdown()
         delete pdsNotificationInterface;
         pdsNotificationInterface = NULL;
     }
-    if (fTnodeMode) {
+    if (fMasternodeMode) {
         UnregisterValidationInterface(activeMasternodeManager);
     }
 
@@ -814,7 +814,7 @@ void ThreadImport(std::vector <boost::filesystem::path> vImportFiles) {
     // GetMainSignals().UpdatedBlockTip(chainActive.Tip());
     pdsNotificationInterface->InitializeCurrentBlockTip();
 
-    if (fTnodeMode) {
+    if (fMasternodeMode) {
         assert(activeMasternodeManager);
         activeMasternodeManager->Init();
     }
@@ -2000,14 +2000,14 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
     }
 
     // ********************************************************* Step 10a: Prepare tnode related stuff
-    fTnodeMode = GetBoolArg("-tnode", false);
-    if (fTnodeMode)
+    fMasternodeMode = GetBoolArg("-tnode", false);
+    if (fMasternodeMode)
         // turn off dandelion for tnodes
         ForceSetArg("-dandelion", "0");
 
     LogPrintf("fMasternodeMode = %s\n", fMasternodeMode);
 
-    if(fLiteMode && fTnodeMode) {
+    if(fLiteMode && fMasternodeMode) {
         return InitError(_("You can not start a masternode in lite mode."));
     }
 
@@ -2021,7 +2021,7 @@ bool AppInitMain(boost::thread_group& threadGroup, CScheduler& scheduler)
         return InitError(_("You can not start a tnode in lite mode."));
     }
 
-    if(fTnodeMode) {
+    if(fMasternodeMode) {
         LogPrintf("TNODE:\n");
 
         std::string strMasterNodeBLSPrivKey = GetArg("-tnodeblsprivkey", "");

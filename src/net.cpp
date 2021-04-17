@@ -1020,7 +1020,7 @@ bool CConnman::AttemptToEvictConnection()
             if (node->fDisconnect)
                 continue;
 
-            if (fTnodeMode) {
+            if (fMasternodeMode) {
                 // This handles eviction protected nodes. Nodes are always protected for a short time after the connection
                 // was accepted. This short time is meant for the VERSION/VERACK exchange and the possible MNAUTH that might
                 // follow when the incoming connection is from another masternode. When another message then MNAUTH
@@ -2275,7 +2275,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     if (!fNetworkActive) {
         return false;
     }
-    bool fAllowLocal = fTnodeMode;
+    bool fAllowLocal = fMasternodeMode;
     if (!pszDest) {
         // banned or exact match?
         if (IsBanned(addrConnect) || FindNode(addrConnect.ToStringIPPort()))
@@ -2286,7 +2286,7 @@ bool CConnman::OpenNetworkConnection(const CAddress& addrConnect, bool fCountFai
     } else if (FindNode(std::string(pszDest)))
         return false;
 
-    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, fTnodeMode);
+    CNode* pnode = ConnectNode(addrConnect, pszDest, fCountFailure, fMasternodeMode);
 
     if (!pnode)
         return false;
@@ -2729,7 +2729,7 @@ bool CConnman::Start(CScheduler& scheduler, std::string& strNodeError, Options c
     }
     if (semMasternodeOutbound == NULL) {
         // initialize semaphore
-        semMasternodeOutbound = new CSemaphore(fTnodeMode ? MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN : MAX_OUTBOUND_MASTERNODE_CONNECTIONS);
+        semMasternodeOutbound = new CSemaphore(fMasternodeMode ? MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN : MAX_OUTBOUND_MASTERNODE_CONNECTIONS);
     }
 
     //
@@ -2813,7 +2813,7 @@ void CConnman::Interrupt()
     }
 
     if (semMasternodeOutbound) {
-        int nMaxMasternodeOutbound = fTnodeMode ? MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN : MAX_OUTBOUND_MASTERNODE_CONNECTIONS;
+        int nMaxMasternodeOutbound = fMasternodeMode ? MAX_OUTBOUND_MASTERNODE_CONNECTIONS_ON_MN : MAX_OUTBOUND_MASTERNODE_CONNECTIONS;
         for (int i = 0; i < nMaxMasternodeOutbound; i++) {
             semMasternodeOutbound->post();
         }

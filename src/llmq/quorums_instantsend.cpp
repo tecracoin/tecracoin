@@ -381,7 +381,7 @@ bool CInstantSendManager::ProcessTx(const CTransaction& tx, bool allowReSigning,
     if (llmqType == Consensus::LLMQ_NONE) {
         return true;
     }
-    if (!fTnodeMode) {
+    if (!fMasternodeMode) {
         return true;
     }
 

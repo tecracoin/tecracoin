@@ -224,7 +224,7 @@ void CInstantSend::Vote(const uint256& txHash, CConnman& connman)
 
 void CInstantSend::Vote(CTxLockCandidate& txLockCandidate, CConnman& connman)
 {
-    if (!fTnodeMode) return;
+    if (!fMasternodeMode) return;
     if (!llmq::IsOldInstantSendEnabled()) return;
 
     AssertLockHeld(cs_main);

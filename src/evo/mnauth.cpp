@@ -16,7 +16,7 @@
 
 void CMNAuth::PushMNAUTH(CNode* pnode, CConnman& connman)
 {
-    if (!fTnodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
+    if (!fMasternodeMode || activeMasternodeInfo.proTxHash.IsNull()) {
         return;
     }
 

@@ -1299,7 +1299,7 @@ void CTnodeMan::ProcessPendingMnvRequests(CConnman& connman)
 void CTnodeMan::SendVerifyReply(CNode* pnode, CTnodeVerification& mnv)
 {
     // only tnodes can sign this, why would someone ask regular node?
-    if(!fTnodeMode) {
+    if(!fMasternodeMode) {
         // do not ban, malicious node might be using my IP
         // and trying to confuse the node which tries to verify it
         return;
@@ -1659,7 +1659,7 @@ bool CTnodeMan::CheckMnbAndUpdateTnodeList(CNode* pfrom, CTnodeBroadcast mnb, in
         Add(mnb);
         tnodeSync.AddedTnodeList();
         // if it matches our Tnode privkey...
-        if(fTnodeMode && mnb.pubKeyTnode == activeTnode.pubKeyTnode) {
+        if(fMasternodeMode && mnb.pubKeyTnode == activeTnode.pubKeyTnode) {
             mnb.nPoSeBanScore = -TNODE_POSE_BAN_MAX_SCORE;
             if(mnb.nProtocolVersion == LEGACY_TNODES_PROTOCOL_VERSION) {
                 // ... and PROTOCOL_VERSION, then we've been remotely activated ...
@@ -1694,7 +1694,7 @@ void CTnodeMan::UpdateLastPaid()
     static bool IsFirstRun = true;
     // Do full scan on first run or if we are not a tnode
     // (MNs should update this info on every block, so limited scan should be enough for them)
-    int nMaxBlocksToScanBack = (IsFirstRun || !fTnodeMode) ? tnpayments.GetStorageLimit() : LAST_PAID_SCAN_BLOCKS;
+    int nMaxBlocksToScanBack = (IsFirstRun || !fMasternodeMode) ? tnpayments.GetStorageLimit() : LAST_PAID_SCAN_BLOCKS;
 
     LogPrint("tnpayments", "CTnodeMan::UpdateLastPaid -- nHeight=%d, nMaxBlocksToScanBack=%d, IsFirstRun=%s\n",
                              pCurrentBlockIndex->nHeight, nMaxBlocksToScanBack, IsFirstRun ? "true" : "false");
@@ -1825,7 +1825,7 @@ void CTnodeMan::UpdatedBlockTip(const CBlockIndex *pindex)
 
     CheckSameAddr();
 
-    if(fTnodeMode) {
+    if(fMasternodeMode) {
         // normal wallet does not need to update this every block, doing update on rpc call should be enough
         UpdateLastPaid();
     }

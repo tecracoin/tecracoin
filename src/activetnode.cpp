@@ -22,7 +22,7 @@ CActiveTnode activeTnode;
 
 void CActiveTnode::ManageState() {
     LogPrint("tnode", "CActiveTnode::ManageState -- Start\n");
-    if (!fTnodeMode) {
+    if (!fMasternodeMode) {
         LogPrint("tnode", "CActiveTnode::ManageState -- Not a tnode, returning\n");
         return;
     }

@@ -36,7 +36,7 @@ UniValue privatesend(const JSONRPCRequest &request) {
             EnsureWalletIsUnlocked(pwallet);
         }
 
-        if (fTnodeMode)
+        if (fMasternodeMode)
             return "Mixing is not supported from tnodes";
 
         fEnablePrivateSend = true;
@@ -224,7 +224,7 @@ UniValue tnode(const JSONRPCRequest &request) {
     }
 
     if (strCommand == "start") {
-        if (!fTnodeMode)
+        if (!fMasternodeMode)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "You must set tnode=1 in the configuration");
 
         {
@@ -389,7 +389,7 @@ UniValue tnode(const JSONRPCRequest &request) {
     }
 
     if (strCommand == "status") {
-        if (!fTnodeMode)
+        if (!fMasternodeMode)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "This is not a tnode");
 
         UniValue mnObj(UniValue::VOBJ);
