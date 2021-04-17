@@ -793,7 +793,7 @@ if TARGET_WINDOWS
 tecracoin_cli_SOURCES += bitcoin-cli-res.rc
 endif
 
-firo_cli_LDADD = \
+tecracoin_cli_LDADD = \
   $(LIBBITCOIN_CLI) \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_UTIL) \
@@ -812,7 +812,7 @@ if TARGET_WINDOWS
 tecracoin_tx_SOURCES += bitcoin-tx-res.rc
 endif
 
-firo_tx_LDADD = \
+tecracoin_tx_LDADD = \
   $(LIBUNIVALUE) \
   $(LIBBITCOIN_COMMON) \
   $(LIBBITCOIN_UTIL) \
@@ -820,7 +820,7 @@ firo_tx_LDADD = \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBSECP256K1)
 
-firo_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS)
+tecracoin_tx_LDADD += $(BACKTRACE_LIB) $(BOOST_LIBS) $(CRYPTO_LIBS)
 #
 
 # bitcoinconsensus library #
