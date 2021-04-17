@@ -486,11 +486,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog, bool a
         nQuantity++;
 
         // Amount
-        if(out.tx->tx->vout[out.i].scriptPubKey.IsLelantusJMint()) {
-            nAmount += model->GetJMintCredit(out.tx->tx->vout[out.i]);
-        } else {
-            nAmount += out.tx->tx->vout[out.i].nValue;
-        }
+        nAmount += out.tx->tx->vout[out.i].nValue;
 
         // Priority
         dPriorityInputs += (double)out.tx->tx->vout[out.i].nValue * (out.nDepth+1);
@@ -523,14 +519,7 @@ void CoinControlDialog::updateLabels(WalletModel *model, QDialog* dialog, bool a
     // calculation
     if (nQuantity > 0)
     {
-        if(anonymousMode){
-            std::tie(nPayFee, nBytes) = model->getWallet()->EstimateJoinSplitFee(nPayAmount,CoinControlDialog::fSubtractFeeFromAmount, coinControl);
-            if (nPayAmount > 0) {
-                nChange = nAmount - nPayAmount;
-                if (!CoinControlDialog::fSubtractFeeFromAmount)
-                    nChange -= nPayFee;
-            }
-        } else {
+        {
             // Bytes
             nBytes = nBytesInputs + ((CoinControlDialog::payAmounts.size() > 0 ? CoinControlDialog::payAmounts.size() + 1 : 2) * 34) + 10; // always assume +1 output for change here
             if (fWitness)
@@ -701,11 +690,7 @@ void CoinControlDialog::updateView()
         int nChildren = 0;
         BOOST_FOREACH(const COutput& out, coins.second) {
             CAmount amount;
-            if(out.tx->tx->vout[out.i].scriptPubKey.IsLelantusJMint()) {
-                amount = model->GetJMintCredit(out.tx->tx->vout[out.i]);
-            } else {
-                amount = out.tx->tx->vout[out.i].nValue;
-            }
+            amount = out.tx->tx->vout[out.i].nValue;
 
             nSum += amount;
             nChildren++;

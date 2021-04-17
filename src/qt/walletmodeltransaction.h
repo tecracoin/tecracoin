@@ -40,20 +40,12 @@ public:
 
     void reassignAmounts(int nChangePosRet); // needed for the subtract-fee-from-amount feature
 
-    std::vector<CLelantusEntry>& getSpendCoins();
-    std::vector<CSigmaEntry>& getSigmaSpendCoins();
-    std::vector<CHDMint>& getMintCoins();
-
 private:
     QList<SendCoinsRecipient> recipients;
     CWalletTx *walletTransaction;
     CReserveKey *keyChange;
     CAmount fee;
 
-    // lelantus transaction
-    std::vector<CLelantusEntry> spendCoins;
-    std::vector<CSigmaEntry> sigmaSpendCoins;
-    std::vector<CHDMint> mintCoins;
 };
 
 #endif // BITCOIN_QT_WALLETMODELTRANSACTION_H

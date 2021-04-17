@@ -16,15 +16,13 @@
 #include "platformstyle.h"
 #include "receivecoinsdialog.h"
 #include "sendcoinsdialog.h"
-#include "sigmadialog.h"
+
 #include "signverifymessagedialog.h"
 #include "tradehistorydialog.h"
 #include "transactiontablemodel.h"
 #include "transactionview.h"
 #include "txhistorydialog.h"
 #include "walletmodel.h"
-#include "zc2sigmapage.h"
-#include "zerocoinpage.h"
 
 #include "ui_interface.h"
 
@@ -61,11 +59,6 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     sendElysiumView(0),
     sendCoinsTabs(0),
 #endif
-//    sigmaView(0),
-//    blankSigmaView(0),
-//    lelantusView(0),
-//    blankLelantusView(0),
-//    zc2SigmaPage(0),
     tecracoinTransactionsView(0),
     platformStyle(_platformStyle)
 {
@@ -77,10 +70,6 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     receiveCoinsPage = new ReceiveCoinsDialog(platformStyle);
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
-//    zerocoinPage = new ZerocoinPage(platformStyle, ZerocoinPage::ForEditing, this);
-    sigmaPage = new QWidget(this);
-//    zc2SigmaPage = new Zc2SigmaPage(platformStyle, this);
-//    lelantusPage = new QWidget(this);
 
     sendCoinsPage = new QWidget(this);
 #ifdef ENABLE_ELYSIUM
@@ -93,8 +82,6 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 #ifdef ENABLE_ELYSIUM
     setupToolboxPage();
 #endif
-//    setupSigmaPage();
-//    setupLelantusPage();
 
     addWidget(overviewPage);
 #ifdef ENABLE_ELYSIUM
@@ -103,10 +90,7 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-//    addWidget(zerocoinPage);
-//    addWidget(sigmaPage);
-//    addWidget(lelantusPage);
-//    addWidget(zc2SigmaPage);
+
 #ifdef ENABLE_ELYSIUM
     addWidget(toolboxPage);
 #endif
@@ -211,43 +195,6 @@ void WalletView::setupSendCoinPage()
     sendCoinsPage->setLayout(pageLayout);
 }
 
-void WalletView::setupSigmaPage()
-{
-    // Set layout for Sigma page
-    auto pageLayout = new QVBoxLayout();
-
-    if (pwalletMain->IsHDSeedAvailable()) {
-        sigmaView = new SigmaDialog(platformStyle);
-        connect(sigmaView, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
-        pageLayout->addWidget(sigmaView);
-        sigmaPage->setLayout(pageLayout);
-    } else {
-        blankSigmaView = new BlankSigmaDialog();
-        pageLayout->addWidget(blankSigmaView);
-        sigmaPage->setLayout(pageLayout);
-    }
-}
-
-void WalletView::setupLelantusPage()
-{
-    auto pageLayout = new QVBoxLayout();
-
-    if (pwalletMain->IsHDSeedAvailable()) {
-        lelantusView = new LelantusDialog(platformStyle);
-        connect(lelantusView,
-            SIGNAL(message(QString, QString, unsigned int)),
-            this,
-            SIGNAL(message(QString, QString, unsigned int)));
-
-        pageLayout->addWidget(lelantusView);
-    } else {
-
-        blankLelantusView = new BlankSigmaDialog();
-        pageLayout->addWidget(blankLelantusView);
-    }
-
-    lelantusPage->setLayout(pageLayout);
-}
 
 #ifdef ENABLE_ELYSIUM
 void WalletView::setupToolboxPage()
@@ -305,11 +252,6 @@ void WalletView::setClientModel(ClientModel *_clientModel)
 #ifdef ENABLE_ELYSIUM
     elyAssetsPage->setClientModel(clientModel);
 #endif
-    if (pwalletMain->IsHDSeedAvailable()) {
-//        sigmaView->setClientModel(clientModel);
-//        lelantusView->setClientModel(clientModel);
-    }
-//    zc2SigmaPage->setClientModel(clientModel);
 
 #ifdef ENABLE_ELYSIUM
     if (elysiumTransactionsView) {
@@ -470,30 +412,6 @@ void WalletView::gotoMasternodePage()
 void WalletView::gotoReceiveCoinsPage()
 {
     setCurrentWidget(receiveCoinsPage);
-}
-
-void WalletView::gotoZerocoinPage()
-{
-    setCurrentWidget(zerocoinPage);
-}
-
-void WalletView::gotoSigmaPage()
-{
-    setCurrentWidget(sigmaPage);
-}
-
-void WalletView::gotoZc2SigmaPage()
-{
-    if (pwalletMain->IsHDSeedAvailable()) {
-        setCurrentWidget(zc2SigmaPage);
-    } else {
-        setCurrentWidget(sigmaPage);
-    }
-}
-
-void WalletView::gotoLelantusPage()
-{
-    setCurrentWidget(lelantusPage);
 }
 
 #ifdef ENABLE_ELYSIUM

@@ -11,7 +11,6 @@
 
 #include "amount.h"
 #include "masternodelist.h"
-#include "sigmadialog.h"
 
 #ifdef ENABLE_ELYSIUM
 #include "elyassetsdialog.h"
@@ -37,8 +36,6 @@ class TransactionView;
 class TXHistoryDialog;
 class WalletModel;
 class AddressBookPage;
-class ZerocoinPage;
-class Zc2SigmaPage;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -83,8 +80,6 @@ private:
 #ifdef ENABLE_ELYSIUM
     void setupToolboxPage();
 #endif
-    void setupSigmaPage();
-    void setupLelantusPage();
 
 private:
     ClientModel *clientModel;
@@ -109,7 +104,7 @@ private:
     TradeHistoryDialog *tradeHistoryTab;
     MetaDExDialog *metaDExTab;
     MetaDExCancelDialog *cancelTab;
-    ZerocoinPage *zerocoinPage;
+
     TransactionView *tecracoinTransactionList;
     QWidget *tecracoinTransactionsView;
     MasternodeList *masternodeListPage;
@@ -142,14 +137,6 @@ public Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-    /** Switch to zerocoin page */
-    void gotoZerocoinPage();
-    /** Switch to sigma page */
-    void gotoSigmaPage();
-    /** Switch to ZC to Sigma page */
-    void gotoZc2SigmaPage();
-    /** Switch to lelantus page */
-    void gotoLelantusPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");

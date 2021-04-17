@@ -119,9 +119,6 @@ private:
     QAction *openRPCConsoleAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
-    QAction *sigmaAction;
-    QAction *lelantusAction;
-    QAction *zc2SigmaAction;
     QAction *masternodeAction;
 
     QSystemTrayIcon *trayIcon;
@@ -229,12 +226,6 @@ private Q_SLOTS:
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-    /** Switch to sigma page */
-    void gotoSigmaPage();
-    /** Switch to ZC->sigma page */
-    void gotoZc2SigmaPage();
-    /** Switch to lelantus page */
-    void gotoLelantusPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");
@@ -277,9 +268,6 @@ private Q_SLOTS:
     void toggleNetworkActive();
 
     void showModalOverlay();
-
-    /** Update Lelantus page visibility */
-    void updateLelantusPage();
 };
 
 class UnitDisplayStatusBarControl : public QLabel

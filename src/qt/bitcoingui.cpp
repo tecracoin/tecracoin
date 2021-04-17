@@ -33,8 +33,7 @@
 
 #include "chainparams.h"
 #include "init.h"
-#include "lelantus.h"
-#include "sigma.h"
+
 #include "ui_interface.h"
 #include "util.h"
 
@@ -42,7 +41,6 @@
 #include "masternode-sync.h"
 #include "masternodelist.h"
 #include "elysium_qtutils.h"
-#include "zc2sigmapage.h"
 
 #ifdef ENABLE_ELYSIUM
 #include "../elysium/elysium.h"
@@ -134,8 +132,6 @@ BitcoinGUI::BitcoinGUI(const PlatformStyle *_platformStyle, const NetworkStyle *
     openRPCConsoleAction(0),
     openAction(0),
     showHelpMessageAction(0),
-    sigmaAction(0),
-    zc2SigmaAction(0),
     masternodeAction(0),
     trayIcon(0),
     trayIconMenu(0),
@@ -355,30 +351,6 @@ void BitcoinGUI::createActions()
 	tabGroup->addAction(historyAction);
 
 #ifdef ENABLE_WALLET
-    sigmaAction = new QAction(platformStyle->SingleColorIcon(":/icons/sigma"), tr("Si&gma"), this);
-    sigmaAction->setStatusTip(tr("Anonymize your coins and perform private transfers using Sigma"));
-    sigmaAction->setToolTip(sigmaAction->statusTip());
-    sigmaAction->setCheckable(true);
-    sigmaAction->setShortcut(QKeySequence(Qt::ALT +  key++));
-    tabGroup->addAction(sigmaAction);
-    sigmaAction->setVisible(false);
-
-    zc2SigmaAction = new QAction(platformStyle->SingleColorIcon(":/icons/zerocoin"), tr("&Remint"), this);
-    zc2SigmaAction->setStatusTip(tr("Show the list of public Zerocoins that could be reminted in Sigma"));
-    zc2SigmaAction->setToolTip(zc2SigmaAction->statusTip());
-    zc2SigmaAction->setCheckable(true);
-    zc2SigmaAction->setShortcut(QKeySequence(Qt::ALT +  key++));
-    tabGroup->addAction(zc2SigmaAction);
-    zc2SigmaAction->setVisible(false);
-
-    lelantusAction = new QAction(platformStyle->SingleColorIcon(":/icons/lelantus"), tr("&Lelantus"), this);
-    lelantusAction->setStatusTip(tr("Anonymize your coins"));
-    lelantusAction->setToolTip(lelantusAction->statusTip());
-    lelantusAction->setCheckable(true);
-    lelantusAction->setShortcut(QKeySequence(Qt::ALT + key++));
-    tabGroup->addAction(lelantusAction);
-    lelantusAction->setVisible(false);
-
     // These showNormalIfMinimized are needed because Send Coins and Receive Coins
     // can be triggered from the tray menu, and need to show the GUI to be useful.
     masternodeAction = new QAction(platformStyle->SingleColorIcon(":/icons/tnodes"), tr("&Masternodes"), this);
@@ -428,9 +400,6 @@ void BitcoinGUI::createActions()
 	connect(receiveCoinsMenuAction, SIGNAL(triggered()), this, SLOT(gotoReceiveCoinsPage()));
 	connect(historyAction, SIGNAL(triggered()), this, SLOT(showNormalIfMinimized()));
 	connect(historyAction, SIGNAL(triggered()), this, SLOT(gotoHistoryPage()));
-	connect(sigmaAction, SIGNAL(triggered()), this, SLOT(gotoSigmaPage()));
-	connect(zc2SigmaAction, SIGNAL(triggered()), this, SLOT(gotoZc2SigmaPage()));
-	connect(lelantusAction, SIGNAL(triggered()), this, SLOT(gotoLelantusPage()));
 
 #ifdef ENABLE_ELYSIUM
     if (elysiumEnabled) {
@@ -574,9 +543,6 @@ void BitcoinGUI::createToolBars()
         toolbar->addAction(sendCoinsAction);
         toolbar->addAction(receiveCoinsAction);
         toolbar->addAction(historyAction);
-        toolbar->addAction(sigmaAction);
-        toolbar->addAction(lelantusAction);
-        toolbar->addAction(zc2SigmaAction);
         toolbar->addAction(masternodeAction);
 
 #ifdef ENABLE_ELYSIUM
@@ -696,7 +662,6 @@ void BitcoinGUI::setWalletActionsEnabled(bool enabled)
     receiveCoinsAction->setEnabled(enabled);
     receiveCoinsMenuAction->setEnabled(enabled);
     historyAction->setEnabled(enabled);
-    sigmaAction->setEnabled(enabled);
     masternodeAction->setEnabled(enabled);
     encryptWalletAction->setEnabled(enabled);
     backupWalletAction->setEnabled(enabled);
@@ -887,23 +852,6 @@ void BitcoinGUI::gotoSendCoinsPage(QString addr)
 void BitcoinGUI::gotoSignMessageTab(QString addr)
 {
     if (walletFrame) walletFrame->gotoSignMessageTab(addr);
-}
-
-void BitcoinGUI::gotoSigmaPage()
-{
-    sigmaAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoSigmaPage();
-}
-
-void BitcoinGUI::gotoZc2SigmaPage()
-{
-    if (walletFrame) walletFrame->gotoZc2SigmaPage();
-}
-
-void BitcoinGUI::gotoLelantusPage()
-{
-    lelantusAction->setChecked(true);
-    if (walletFrame) walletFrame->gotoLelantusPage();
 }
 
 void BitcoinGUI::gotoVerifyMessageTab(QString addr)

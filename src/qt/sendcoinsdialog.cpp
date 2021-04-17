@@ -157,7 +157,7 @@ void SendCoinsDialog::setModel(WalletModel *_model)
 
         setBalance(
             _model->getBalance(), _model->getUnconfirmedBalance(), _model->getImmatureBalance(),
-            _model->getWatchBalance(), _model->getWatchUnconfirmedBalance(), _model->getWatchImmatureBalance();
+            _model->getWatchBalance(), _model->getWatchUnconfirmedBalance(), _model->getWatchImmatureBalance());
         connect(
             _model,
             SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
@@ -271,11 +271,7 @@ void SendCoinsDialog::on_sendButton_clicked()
     else
         ctrl.nConfirmTarget = 0;
 
-    if (fAnonymousMode) {
-        prepareStatus = model->prepareJoinSplitTransaction(currentTransaction, &ctrl);
-    } else {
-        prepareStatus = model->prepareTransaction(currentTransaction, &ctrl);
-    }
+    prepareStatus = model->prepareTransaction(currentTransaction, &ctrl);
 
     // process prepareStatus and on error generate message shown to user
     processSendCoinsReturn(prepareStatus,
@@ -368,11 +364,8 @@ void SendCoinsDialog::on_sendButton_clicked()
     // now send the prepared transaction
     WalletModel::SendCoinsReturn sendStatus;
 
-    if (fAnonymousMode) {
-        sendStatus = model->sendPrivateCoins(currentTransaction);
-    } else {
-        sendStatus = model->sendCoins(currentTransaction);
-    }
+    sendStatus = model->sendCoins(currentTransaction);
+
     // process sendStatus and on error generate message shown to user
     processSendCoinsReturn(sendStatus);
 

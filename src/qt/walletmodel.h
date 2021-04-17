@@ -147,7 +147,6 @@ public:
     CAmount getWatchBalance() const;
     CAmount getWatchUnconfirmedBalance() const;
     CAmount getWatchImmatureBalance() const;
-    CAmount getAnonymizableBalance() const;
 
     EncryptionStatus getEncryptionStatus() const;
 
@@ -169,28 +168,8 @@ public:
     // prepare transaction for getting txfee before sending coins
     SendCoinsReturn prepareTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
 
-    // prepare transaction for getting txfee before sending coins in anonymous mode
-    SendCoinsReturn prepareJoinSplitTransaction(WalletModelTransaction &transaction, const CCoinControl *coinControl = NULL);
-
-    // prepare transaction for getting txfee before anonymizing coins
-    SendCoinsReturn prepareMintTransactions(
-        CAmount amount,
-        std::vector<WalletModelTransaction> &transactions,
-        std::list<CReserveKey> &reserveKeys,
-        std::vector<CHDMint> &mints,
-        const CCoinControl *coinControl);
-
     // Send coins to a list of recipients
     SendCoinsReturn sendCoins(WalletModelTransaction &transaction);
-
-    // Send private coins to a list of recipients
-    SendCoinsReturn sendPrivateCoins(WalletModelTransaction &transaction);
-
-    // Anonymize coins.
-    SendCoinsReturn sendAnonymizingCoins(
-        std::vector<WalletModelTransaction> &transactions,
-        std::list<CReserveKey> &reservekeys,
-        std::vector<CHDMint> &mints);
 
     // Wallet encryption
     bool setWalletEncrypted(bool encrypted, const SecureString &passphrase);
@@ -255,24 +234,6 @@ public:
     bool transactionCanBeRebroadcast(uint256 hash) const;
     bool rebroadcastTransaction(uint256 hash, CValidationState &state);
 
-    // Sigma
-    SendCoinsReturn prepareSigmaSpendTransaction(WalletModelTransaction &transaction,
-        std::vector<CSigmaEntry>& coins, std::vector<CHDMint>& changes,
-        bool& fChangeAddedToFee,
-        const CCoinControl *coinControl = NULL);
-
-    // Send coins to a list of recipients
-    SendCoinsReturn sendSigma(WalletModelTransaction &transaction,
-        std::vector<CSigmaEntry>& coins, std::vector<CHDMint>& changes);
-
-    // Mint sigma
-    void sigmaMint(const CAmount& n, const CCoinControl *coinControl = NULL);
-    void checkSigmaAmount(bool forced);
-
-    std::vector<CSigmaEntry> GetUnsafeCoins(const CCoinControl* coinControl = NULL);
-
-    CAmount GetJMintCredit(const CTxOut& txout) const;
-
 private:
     CWallet *wallet;
 
@@ -308,14 +269,10 @@ private:
     void unsubscribeFromCoreSignals();
     void checkBalanceChanged();
 
-
-
 Q_SIGNALS:
     // Signal that balance in wallet changed
     void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
-
-    void updateMintable();
 
     // Encryption status of wallet changed
     void encryptionStatusChanged(int status);
@@ -337,9 +294,6 @@ Q_SIGNALS:
     // Watch-only address added
     void notifyWatchonlyChanged(bool fHaveWatchonly);
 
-    // Update sigma changed
-    void notifySigmaChanged(const std::vector<CMintMeta>& spendable, const std::vector<CMintMeta>& pending);
-
 public Q_SLOTS:
     /* Wallet status might have changed */
     void updateStatus();
@@ -353,9 +307,6 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
-    /* Update Amount of sigma change */
-    void updateSigmaCoins(const QString &pubCoin, const QString &isUsed, int status);
-
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H
