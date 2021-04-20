@@ -1,5 +1,5 @@
 #include "lelantus_primitives.h"
-#include "challenge_generator_impl.h"
+#include "challenge_generator.h"
 
 namespace lelantus {
     

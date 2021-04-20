@@ -9,7 +9,6 @@
 #include "schnorr_proof.h"
 #include "innerproduct_proof.h"
 #include "range_proof.h"
-#include "challenge_generator.h"
 
 #include "serialize.h"
 #include "../libzerocoin/Zerocoin.h"

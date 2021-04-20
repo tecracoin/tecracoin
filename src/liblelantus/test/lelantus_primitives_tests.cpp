@@ -1,7 +1,6 @@
 #include "lelantus_test_fixture.h"
 
 #include "../lelantus_primitives.h"
-#include "../challenge_generator_impl.h"
 
 #include "../../test/test_bitcoin.h"
 #include "../../utilstrencodings.h"

@@ -669,7 +669,7 @@ liblelantus_a_CPPFLAGS = $(AM_CPPFLAGS) $(BITCOIN_INCLUDES)
 liblelantus_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 liblelantus_a_SOURCES = \
   liblelantus/challenge_generator.h \
-  liblelantus/challenge_generator_impl.h \
+  liblelantus/challenge_generator.cpp \
   liblelantus/lelantus_primitives.h \
   liblelantus/lelantus_primitives.cpp \
   liblelantus/lelantus_proof.h \
@@ -777,7 +777,6 @@ tecracoind_LDADD = \
   $(LIBBITCOIN_CONSENSUS) \
   $(LIBBITCOIN_CRYPTO) \
   $(LIBLEVELDB) \
-  $(LIBLEVELDB_SSE42) \
   $(LIBMEMENV) \
   $(LIBSECP256K1) \
   $(LIBBLSSIG_LIBS)
@@ -920,21 +919,30 @@ if EMBEDDED_LEVELDB
 include Makefile.leveldb.include
 endif
 
-if ENABLE_QT
-include Makefile.qt.include
-endif
 
 if ENABLE_TESTS
 include Makefile.test.include
+#include Makefile.qttest.include
+#
 else
 check-local:
 	$(error Please rerun configure with tests enabling flag)
 endif
 
+
 if ENABLE_ELYSIUM
 include Makefile.elysium.include
+endif
+
+if ENABLE_QT
+include Makefile.qt.include
 endif
 
 if ENABLE_QT_TESTS
 include Makefile.qttest.include
 endif
+
+
+
+
+

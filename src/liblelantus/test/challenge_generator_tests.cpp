@@ -1,7 +1,5 @@
 #include "lelantus_test_fixture.h"
 
-#include "../challenge_generator_impl.h"
-
 #include "../challenge_generator.h"
 
 #include <GroupElement.h>

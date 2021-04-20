@@ -1,6 +1,5 @@
 #include "../innerproduct_proof_generator.h"
 #include "../innerproduct_proof_verifier.h"
-#include "../challenge_generator_impl.h"
 
 #include "./lelantus_test_fixture.h"
 

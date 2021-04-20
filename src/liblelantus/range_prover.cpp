@@ -1,5 +1,5 @@
 #include "range_prover.h"
-#include "challenge_generator_impl.h"
+#include "challenge_generator.h"
 
 namespace lelantus {
     
