@@ -2,6 +2,7 @@
 #define FIRO_LIBLELANTUS_INNER_PRODUCT_PROOF_VERIFIER_H
 
 #include "lelantus_primitives.h"
+#include "challenge_generator_impl.h"
 
 namespace lelantus {
     

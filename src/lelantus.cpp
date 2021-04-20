@@ -13,6 +13,7 @@
 #include "liblelantus/coin.h"
 #include "liblelantus/schnorr_prover.h"
 #include "liblelantus/schnorr_verifier.h"
+#include "liblelantus/challenge_generator_impl.h"
 #include "primitives/zerocoin.h"
 #include "policy/policy.h"
 #include "coins.h"

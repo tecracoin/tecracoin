@@ -1,5 +1,5 @@
 #include "range_verifier.h"
-#include "challenge_generator.h"
+#include "challenge_generator_impl.h"
 
 namespace lelantus {
     

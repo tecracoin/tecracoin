@@ -1,6 +1,7 @@
 #include "../schnorr_proof.h"
 #include "../schnorr_prover.h"
 #include "../schnorr_verifier.h"
+#include "../challenge_generator_impl.h"
 #include "../../streams.h"
 
 #include <boost/test/unit_test.hpp>

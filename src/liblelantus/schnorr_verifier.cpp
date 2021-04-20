@@ -1,4 +1,5 @@
 #include "schnorr_verifier.h"
+#include "challenge_generator_impl.h"
 
 namespace lelantus {
     

@@ -2,6 +2,7 @@
 #define FIRO_LIBLELANTUS_INNERP_RODUCT_PROOF_GENERATOR_H
 
 #include "lelantus_primitives.h"
+#include "challenge_generator_impl.h"
 
 namespace lelantus {
     
