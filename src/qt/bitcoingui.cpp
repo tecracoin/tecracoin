@@ -33,7 +33,8 @@
 
 #include "chainparams.h"
 #include "init.h"
-
+#include "lelantus.h"
+#include "sigma.h"
 #include "ui_interface.h"
 #include "util.h"
 
