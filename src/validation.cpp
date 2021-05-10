@@ -1764,11 +1764,20 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams, i
 
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
 {
-    const Consensus::Params &params = Params().GetConsensus();
-    if (nHeight >= params.nSubsidyHalvingFirst)
-        return blockValue*params.stage2TnodeShare/100;
-    else
-        return blockValue*3/10; // 30%
+    const Consensus::Params& params = Params().GetConsensus();
+    // testnet only
+    if (params.chainType == Consensus::chainTestnet) {
+        return blockValue * 3 / 10;
+    }
+
+    //for mainnet:
+    //values based on stages as WP 1.3
+    //stage 5 mainnet ends 15% for MN
+    if (nHeight < 2520000) return blockValue * 15 / 100;
+    //stage 6 mainnet ends 20% for MN
+    if (nHeight < 3366000) return blockValue * 2 / 10;
+    //after that block 25% for MN
+    return blockValue * 25 / 100;
 }
 
 bool IsInitialBlockDownload() {
