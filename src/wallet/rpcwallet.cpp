@@ -4726,6 +4726,7 @@ UniValue bumpfee(const JSONRPCRequest& request)
 extern UniValue dumpprivkey_tecracoin(const JSONRPCRequest& request); // in rpcdump.cpp
 extern UniValue importprivkey(const JSONRPCRequest& request);
 extern UniValue importaddress(const JSONRPCRequest& request);
+extern UniValue rescanblockchain(const JSONRPCRequest& request);
 extern UniValue importpubkey(const JSONRPCRequest& request);
 extern UniValue dumpwallet(const JSONRPCRequest& request);
 extern UniValue importwallet(const JSONRPCRequest& request);
@@ -4788,6 +4789,8 @@ static const CRPCCommand commands[] =
 
     { "wallet",             "removetxmempool",          &removetxmempool,          false,  {"txid"} },
     { "wallet",             "removetxwallet",           &removetxwallet,           false,  {"txid"} },
+    { "wallet",             "rescanblockchain",         &rescanblockchain,         true,   {"start_height"} },
+
 };
 
 void RegisterWalletRPCCommands(CRPCTable &t)

@@ -272,6 +272,53 @@ UniValue importaddress(const JSONRPCRequest& request)
     return NullUniValue;
 }
 
+UniValue rescanblockchain(const JSONRPCRequest& request)
+{
+    CWallet * const pwallet = GetWalletForJSONRPCRequest(request);
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() > 1)
+        throw runtime_error(
+                "rescanblockchain (start_height)\n"
+                "\nRescans the blockchain looking for transactions that belong to this wallet\n"
+                "\nNote: This call can take minutes to complete\n"
+                "\nArguments:\n"
+                "1. \"start_height\"           (numeric, optional, default=0) Block height to start rescan from\n"
+
+                "\nExamples:\n"
+                + HelpExampleCli("rescanblockchain", "")
+                + HelpExampleRpc("rescanblockchain", "")
+        );
+
+    LOCK2(cs_main, pwallet->cs_wallet);
+
+    EnsureWalletIsUnlocked(pwallet);
+
+    int start_height = 0;
+    if (request.params.size() > 0) {
+        start_height = request.params[0].get_int();
+    }
+
+    if (start_height < 0 || start_height > chainActive.Height()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "Block height out of range");
+    }
+
+    CBlockIndex* rescanIndex = nullptr;
+
+    if (start_height) {
+        rescanIndex = chainActive[start_height];
+    } else {
+        rescanIndex = chainActive.Genesis();
+    }
+
+    pwallet->nTimeFirstKey = 1; // 0 would be considered 'no value'
+    pwallet->ScanForWalletTransactions(rescanIndex, true);
+
+    return "Rescan Completed";
+}
+
 UniValue importprunedfunds(const JSONRPCRequest& request)
 {
     CWallet * const pwallet = GetWalletForJSONRPCRequest(request);

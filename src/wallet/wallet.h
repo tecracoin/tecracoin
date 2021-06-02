@@ -704,8 +704,6 @@ private:
 
     std::set<int64_t> setKeyPool;
 
-    int64_t nTimeFirstKey;
-
     /**
      * Private version of AddWatchOnly method which does not accept a
      * timestamp, and which will reset the wallet's nTimeFirstKey value to 1 if
@@ -801,6 +799,8 @@ public:
     CPubKey vchDefaultKey;
 
     std::set<COutPoint> setLockedCoins;
+
+    int64_t nTimeFirstKey;
 
     const CWalletTx* GetWalletTx(const uint256& hash) const;
 
