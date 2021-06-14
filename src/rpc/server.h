@@ -207,8 +207,6 @@ extern UniValue getaddressdeltas(const JSONRPCRequest &request);
 extern UniValue getaddresstxids(const JSONRPCRequest &request);
 extern UniValue getaddressbalance(const JSONRPCRequest &request);
 
-extern UniValue getpoolinfo(const JSONRPCRequest &request);
-extern UniValue spork(const JSONRPCRequest &request);
 extern UniValue tnode(const JSONRPCRequest &request);
 extern UniValue tnodelist(const JSONRPCRequest &request);
 extern UniValue tnodebroadcast(const JSONRPCRequest &request);

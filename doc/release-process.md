@@ -196,7 +196,6 @@ Create (and optionally verify) the signed Windows binaries:
     ./bin/gsign --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../tecracoin/contrib/gitian-descriptors/gitian-win-signer.yml
     ./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-signed ../tecracoin/contrib/gitian-descriptors/gitian-win-signer.yml
     mv build/out/tecracoin-*win64-setup.exe ../tecracoin-${VERSION}-win64-setup.exe
-    mv build/out/tecracoin-*win32-setup.exe ../tecracoin-${VERSION}-win32-setup.exe
     popd
 
 Commit your signature for the signed OS X/Windows binaries:
@@ -275,7 +274,7 @@ bitcoin.org (see below for bitcoin.org update instructions).
 
   - bitcoin-dev and bitcoin-core-dev mailing list
 
-  - TecraCoin Core announcements list https://bitcoincore.org/en/list/announcements/join/
+  - Bitcoin Core announcements list https://bitcoincore.org/en/list/announcements/join/
 
   - bitcoincore.org blog post
 

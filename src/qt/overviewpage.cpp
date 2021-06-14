@@ -2,6 +2,8 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include "../lelantus.h"
+
 #include "overviewpage.h"
 #include "ui_overviewpage.h"
 
@@ -174,9 +176,9 @@ void OverviewPage::handleTransactionClicked(const QModelIndex &index)
 
 void OverviewPage::handleEnabledTorChanged(){
 
-	QMessageBox msgBox;
+    QMessageBox msgBox;
 
-	if(ui->checkboxEnabledTor->isChecked()){
+    if(ui->checkboxEnabledTor->isChecked()){
         settings.setValue("fTorSetup", true);
         msgBox.setText("Please restart the TecraCoin wallet to route your connection through Tor to protect your IP address. \nSyncing your wallet might be slower with TOR. \nNote that -torsetup in tecracoin.conf will always override any changes made here.");
 	}else{
@@ -196,7 +198,9 @@ OverviewPage::~OverviewPage()
     delete ui;
 }
 
-void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance, const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
+void OverviewPage::setBalance(
+    const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
+    const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance)
 {
     int unit = walletModel->getOptionsModel()->getDisplayUnit();
     currentBalance = balance;
@@ -205,6 +209,7 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     currentWatchOnlyBalance = watchOnlyBalance;
     currentWatchUnconfBalance = watchUnconfBalance;
     currentWatchImmatureBalance = watchImmatureBalance;
+
     ui->labelBalance->setText(BitcoinUnits::formatWithUnit(unit, balance, false, BitcoinUnits::separatorAlways));
     ui->labelUnconfirmed->setText(BitcoinUnits::formatWithUnit(unit, unconfirmedBalance, false, BitcoinUnits::separatorAlways));
     ui->labelImmature->setText(BitcoinUnits::formatWithUnit(unit, immatureBalance, false, BitcoinUnits::separatorAlways));
@@ -223,25 +228,6 @@ void OverviewPage::setBalance(const CAmount& balance, const CAmount& unconfirmed
     ui->labelImmature->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelImmatureText->setVisible(showImmature || showWatchOnlyImmature);
     ui->labelWatchImmature->setVisible(showWatchOnlyImmature); // show watch-only immature balance
-}
-
-void OverviewPage::updateCoins(const std::vector<CMintMeta>& spendable, const std::vector<CMintMeta>& pending)
-{
-    CAmount sum(0);
-    int64_t denom;
-    for (const auto& c : spendable) {
-        DenominationToInteger(c.denom, denom);
-        sum += denom;
-    }
-
-    CAmount pendingSum(0);
-    for (const auto& c : pending) {
-        DenominationToInteger(c.denom, denom);
-        pendingSum += denom;
-    }
-
-    currentSigmaBalance = sum;
-    currentSigmaUnconfirmedBalance = pendingSum;
 }
 
 // show/hide watch-only labels
@@ -287,11 +273,18 @@ void OverviewPage::setWalletModel(WalletModel *model)
         ui->listTransactions->setModelColumn(TransactionTableModel::ToAddress);
 
         // Keep up to date with wallet
-        setBalance(model->getBalance(), model->getUnconfirmedBalance(), model->getImmatureBalance(),
-                   model->getWatchBalance(), model->getWatchUnconfirmedBalance(), model->getWatchImmatureBalance());
-        connect(model, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)), this, SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
-        connect(model, SIGNAL(notifySigmaChanged(const std::vector<CMintMeta>, const std::vector<CMintMeta>)),
-        this, SLOT(updateCoins(const std::vector<CMintMeta>, const std::vector<CMintMeta>)));
+        setBalance(
+                    model->getBalance(),
+                    model->getUnconfirmedBalance(),
+                    model->getImmatureBalance(),
+                    model->getWatchBalance(),
+                    model->getWatchUnconfirmedBalance(),
+                    model->getWatchImmatureBalance());
+        connect(
+            model,
+            SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
+            this,
+            SLOT(setBalance(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
 
         connect(model->getOptionsModel(), SIGNAL(displayUnitChanged(int)), this, SLOT(updateDisplayUnit()));
 

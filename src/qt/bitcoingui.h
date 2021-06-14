@@ -119,9 +119,6 @@ private:
     QAction *openRPCConsoleAction;
     QAction *openAction;
     QAction *showHelpMessageAction;
-    QAction *sigmaAction;
-    QAction *zc2SigmaAction;
-    QAction *tnodeAction;
     QAction *masternodeAction;
 
     QSystemTrayIcon *trayIcon;
@@ -156,8 +153,6 @@ private:
     /** Disconnect core signals from GUI client */
     void unsubscribeFromCoreSignals();
 
-    /** Updates Zc2SigmaPage visibility */
-    void checkZc2SigmaVisibility(int numBlocks);
     /** Updates Tnode visibility */
     void checkTnodeVisibility(int numBlocks);
     /** Update UI with latest network info from model. */
@@ -225,18 +220,12 @@ private Q_SLOTS:
     void gotoHistoryPage();
     /** Switch directly to TecraCoin history tab */
     void gotoBitcoinHistoryTab();
-    /** Switch to tnode page */
-    void gotoTnodePage();
     /** Switch to masternode page */
     void gotoMasternodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-    /** Switch to sigma page */
-    void gotoSigmaPage();
-    /** Switch to ZC->sigma page */
-    void gotoZc2SigmaPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");

@@ -54,7 +54,7 @@ see `contrib/debian/examples/bitcoin.conf`.
 All three configurations assume several paths that might need to be adjusted.
 
 Binary:              `/usr/bin/tecracoind`
-Configuration file:  `/etc/tecracoin/zconf.conf`
+Configuration file:  `/etc/tecracoin/tecracoin.conf`
 Data directory:      `/var/lib/tecracoind`
 PID file:            `/var/run/tecracoind/tecracoind.pid` (OpenRC and Upstart) or `/var/lib/tecracoind/tecracoind.pid` (systemd)
 Lock file:           `/var/lock/subsys/tecracoind` (CentOS)

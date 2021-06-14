@@ -1,4 +1,4 @@
-Debugging tecracoin code using Visual Studio 2017
+Debugging TecraCoin code using Visual Studio 2017
 ---------------------------------------------
 
 Prerequisites:

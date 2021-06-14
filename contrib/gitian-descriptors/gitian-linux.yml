@@ -1,5 +1,5 @@
 ---
-name: "tecracoin-linux-1.7.0"
+name: "tecracoin-linux-1.7.1"
 enable_cache: true
 suites:
 - "bionic"
@@ -41,7 +41,7 @@ script: |
   WRAP_DIR=$HOME/wrapped
   # HOSTS="i686-pc-linux-gnu x86_64-linux-gnu arm-linux-gnueabihf aarch64-linux-gnu"
   HOSTS="x86_64-linux-gnu"
-  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests"
+  CONFIGFLAGS="--enable-glibc-back-compat --enable-reduce-exports --disable-bench --disable-gui-tests --enable-crash-hooks"
   FAKETIME_HOST_PROGS="gcc g++"
   FAKETIME_PROGS="date ar ranlib nm"
   HOST_CFLAGS="-O2 -g"
@@ -182,6 +182,7 @@ script: |
     find . -name "lib*.la" -delete
     find . -name "lib*.a" -delete
     rm -rf ${DISTNAME}/lib/pkgconfig
+    cp -r ${DISTNAME}/bin ${OUTDIR}/bin_debug
     find ${DISTNAME}/bin -type f -executable -exec ../contrib/devtools/split-debug.sh {} {} {}.dbg \;
     find ${DISTNAME}/lib -type f -exec ../contrib/devtools/split-debug.sh {} {} {}.dbg \;
     cp ../doc/README.md ${DISTNAME}/

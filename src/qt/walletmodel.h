@@ -12,6 +12,7 @@
 
 #include "wallet/walletdb.h"
 #include "wallet/wallet.h"
+#include "wallet/coincontrol.h"
 
 #include <map>
 #include <vector>
@@ -19,6 +20,7 @@
 #include <QObject>
 
 class AddressTableModel;
+
 class OptionsModel;
 class PlatformStyle;
 class RecentRequestsTableModel;
@@ -132,8 +134,11 @@ public:
 
     OptionsModel *getOptionsModel();
     AddressTableModel *getAddressTableModel();
+
     TransactionTableModel *getTransactionTableModel();
     RecentRequestsTableModel *getRecentRequestsTableModel();
+
+    CWallet *getWallet() const { return wallet; }
 
     CAmount getBalance(const CCoinControl *coinControl = NULL, bool fExcludeLocked = false) const;
     CAmount getUnconfirmedBalance() const;
@@ -142,6 +147,7 @@ public:
     CAmount getWatchBalance() const;
     CAmount getWatchUnconfirmedBalance() const;
     CAmount getWatchImmatureBalance() const;
+
     EncryptionStatus getEncryptionStatus() const;
 
     // Check address for validity
@@ -202,7 +208,7 @@ public:
     bool getPrivKey(const CKeyID &address, CKey& vchPrivKeyOut) const;
     void getOutputs(const std::vector<COutPoint>& vOutpoints, std::vector<COutput>& vOutputs, boost::optional<bool> fMintTabSelected = boost::none);
     bool isSpent(const COutPoint& outpoint) const;
-    void listCoins(std::map<QString, std::vector<COutput> >& mapCoins, AvailableCoinsType nCoinType=ALL_COINS) const;
+    void listCoins(std::map<QString, std::vector<COutput> >& mapCoins, CoinType nCoinType=CoinType::ALL_COINS) const;
 
     bool isLockedCoin(uint256 hash, unsigned int n) const;
     void lockCoin(COutPoint& output);
@@ -226,26 +232,11 @@ public:
     int getDefaultConfirmTarget() const;
 
     bool transactionCanBeRebroadcast(uint256 hash) const;
-    bool rebroadcastTransaction(uint256 hash);
-
-    // Sigma
-    SendCoinsReturn prepareSigmaSpendTransaction(WalletModelTransaction &transaction,
-        std::vector<CSigmaEntry>& coins, std::vector<CHDMint>& changes,
-        bool& fChangeAddedToFee,
-        const CCoinControl *coinControl = NULL);
-
-    // Send coins to a list of recipients
-    SendCoinsReturn sendSigma(WalletModelTransaction &transaction,
-        std::vector<CSigmaEntry>& coins, std::vector<CHDMint>& changes);
-
-    // Mint sigma
-    void sigmaMint(const CAmount& n, const CCoinControl *coinControl = NULL);
-    void checkSigmaAmount(bool forced);
-
-    std::vector<CSigmaEntry> GetUnsafeCoins(const CCoinControl* coinControl = NULL);
+    bool rebroadcastTransaction(uint256 hash, CValidationState &state);
 
 private:
     CWallet *wallet;
+
     bool fHaveWatchOnly;
     bool fForceCheckBalanceChanged;
 
@@ -254,6 +245,7 @@ private:
     OptionsModel *optionsModel;
 
     AddressTableModel *addressTableModel;
+
     TransactionTableModel *transactionTableModel;
     RecentRequestsTableModel *recentRequestsTableModel;
 
@@ -277,14 +269,10 @@ private:
     void unsubscribeFromCoreSignals();
     void checkBalanceChanged();
 
-
-
 Q_SIGNALS:
     // Signal that balance in wallet changed
     void balanceChanged(const CAmount& balance, const CAmount& unconfirmedBalance, const CAmount& immatureBalance,
                         const CAmount& watchOnlyBalance, const CAmount& watchUnconfBalance, const CAmount& watchImmatureBalance);
-
-    void updateMintable();
 
     // Encryption status of wallet changed
     void encryptionStatusChanged(int status);
@@ -306,9 +294,6 @@ Q_SIGNALS:
     // Watch-only address added
     void notifyWatchonlyChanged(bool fHaveWatchonly);
 
-    // Update sigma changed
-    void notifySigmaChanged(const std::vector<CMintMeta>& spendable, const std::vector<CMintMeta>& pending);
-
 public Q_SLOTS:
     /* Wallet status might have changed */
     void updateStatus();
@@ -322,9 +307,6 @@ public Q_SLOTS:
     void updateWatchOnlyFlag(bool fHaveWatchonly);
     /* Current, immature or unconfirmed balance might have changed - emit 'balanceChanged' if so */
     void pollBalanceChanged();
-    /* Update Amount of sigma change */
-    void updateSigmaCoins(const QString &pubCoin, const QString &isUsed, int status);
-
 };
 
 #endif // BITCOIN_QT_WALLETMODEL_H

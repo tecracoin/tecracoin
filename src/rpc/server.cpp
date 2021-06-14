@@ -15,7 +15,7 @@
 
 #include <univalue.h>
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/foreach.hpp>
 #include <boost/shared_ptr.hpp>
@@ -326,18 +326,12 @@ static const CRPCCommand vRPCCommands[] =
     /* Overall control/query calls */
     { "control",            "help",                   &help,                   true,    {"command"} },
     { "control",            "stop",                   &stop,                   true,    {} },
-        /* Address index */
+    /* Address index */
     { "addressindex",       "getaddressmempool",      &getaddressmempool,      true,    {"addresses"} },
     { "addressindex",       "getaddressutxos",        &getaddressutxos,        false,   {"addresses"} },
     { "addressindex",       "getaddressdeltas",       &getaddressdeltas,       false,   {"addresses"} },
     { "addressindex",       "getaddresstxids",        &getaddresstxids,        false,   {"addresses"} },
     { "addressindex",       "getaddressbalance",      &getaddressbalance,      false,   {"addresses"} },
-        /* Masternode features */
-    { "tnode",               "tnode",                 &tnode,                  true,    {"command"}  },
-    { "tnode",               "tnsync",                &tnsync,                 true,    {"command"}  },
-    { "tnode",               "tnodelist",             &tnodelist,              true,    {"mode","filter"}  },
-    { "tnode",               "tnodebroadcast",        &tnodebroadcast,         true,    {"command"}  },
-    { "tnode",               "getpoolinfo",           &getpoolinfo,            true,    {}  },
 };
 
 CRPCTable::CRPCTable()
@@ -568,7 +562,7 @@ std::vector<std::string> CRPCTable::listCommands() const
 
     std::transform( mapCommands.begin(), mapCommands.end(),
                    std::back_inserter(commandList),
-                   boost::bind(&commandMap::value_type::first,_1) );
+                   boost::bind(&commandMap::value_type::first, _1) );
     return commandList;
 }
 

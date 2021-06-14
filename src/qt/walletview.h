@@ -10,9 +10,7 @@
 #endif
 
 #include "amount.h"
-#include "tnodelist.h"
 #include "masternodelist.h"
-#include "sigmadialog.h"
 
 #ifdef ENABLE_ELYSIUM
 #include "elyassetsdialog.h"
@@ -38,8 +36,6 @@ class TransactionView;
 class TXHistoryDialog;
 class WalletModel;
 class AddressBookPage;
-class ZerocoinPage;
-class Zc2SigmaPage;
 
 QT_BEGIN_NAMESPACE
 class QModelIndex;
@@ -76,13 +72,14 @@ public:
 
     void showOutOfSyncWarning(bool fShow);
 
+    bool eventFilter(QObject *watched, QEvent *event);
+
 private:
     void setupTransactionPage();
     void setupSendCoinPage();
 #ifdef ENABLE_ELYSIUM
     void setupToolboxPage();
 #endif
-    void setupSigmaPage();
 
 private:
     ClientModel *clientModel;
@@ -107,14 +104,9 @@ private:
     TradeHistoryDialog *tradeHistoryTab;
     MetaDExDialog *metaDExTab;
     MetaDExCancelDialog *cancelTab;
-    ZerocoinPage *zerocoinPage;
-    SigmaDialog *sigmaView;
-    BlankSigmaDialog *blankSigmaView;
-    QWidget *sigmaPage;
-    Zc2SigmaPage *zc2SigmaPage;
+
     TransactionView *tecracoinTransactionList;
     QWidget *tecracoinTransactionsView;
-    TnodeList *tnodeListPage;
     MasternodeList *masternodeListPage;
 
     QProgressDialog *progressDialog;
@@ -139,20 +131,12 @@ public Q_SLOTS:
     void gotoBitcoinHistoryTab();
     /** Switch to bitcoin tx history tab and focus on specific transaction */
     void focusBitcoinHistoryTab(const QModelIndex &idx);
-    /** Switch to tnode page */
-    void gotoTnodePage();
     /** Switch to masternode page */
     void gotoMasternodePage();
     /** Switch to receive coins page */
     void gotoReceiveCoinsPage();
     /** Switch to send coins page */
     void gotoSendCoinsPage(QString addr = "");
-    /** Switch to zerocoin page */
-    void gotoZerocoinPage();
-    /** Switch to sigma page */
-    void gotoSigmaPage();
-    /** Switch to ZC to Sigma page */
-    void gotoZc2SigmaPage();
 
     /** Show Sign/Verify Message dialog and switch to sign message tab */
     void gotoSignMessageTab(QString addr = "");

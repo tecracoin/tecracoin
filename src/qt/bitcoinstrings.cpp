@@ -162,7 +162,7 @@ QT_TRANSLATE_NOOP("tecracoin-core", ""
 QT_TRANSLATE_NOOP("tecracoin-core", ""
 "Please add txindex=1 to your configuration file manually.\n"
 "\n"
-"Elysium will now shutdown."),
+"Exodus will now shutdown."),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
 "Please add txindex=1 to your configuration file manually.\n"
 "\n"
@@ -246,7 +246,7 @@ QT_TRANSLATE_NOOP("tecracoin-core", ""
 "Unable to locate enough PrivateSend non-denominated funds for this "
 "transaction that are not equal 1000 TCR."),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
-"Unable to locate enough funds for this transaction that are not equal 1000 "
+"Unable to locate enough funds for this transaction that are not equal 10000 "
 "TCR."),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
 "Unable to rewind the database to a pre-fork state. You will need to "
@@ -305,7 +305,7 @@ QT_TRANSLATE_NOOP("tecracoin-core", ""
 "Whitelisted peers cannot be DoS banned and their transactions are always "
 "relayed, even if they are already in the mempool, useful e.g. for a gateway"),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
-"Would you like Elysium to attempt to update your configuration file "
+"Would you like Exodus to attempt to update your configuration file "
 "accordingly?"),
 QT_TRANSLATE_NOOP("tecracoin-core", ""
 "You must specify a tnodeprivkey in the configuration. Please see "
@@ -442,7 +442,6 @@ QT_TRANSLATE_NOOP("tecracoin-core", "Invalid amount"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Invalid netmask specified in -whitelist: '%s'"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Invalid port detected in tnode.conf"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Invalid script detected."),
-QT_TRANSLATE_NOOP("tecracoin-core", "Invalid tnodeprivkey. Please see documentation."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Keep at most <n> unconnectable transactions in memory (default: %u)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Keep the transaction memory pool below <n> megabytes (default: %u)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Keypool ran out, please call keypoolrefill first"),
@@ -484,7 +483,7 @@ QT_TRANSLATE_NOOP("tecracoin-core", "One of minted coin does not found in the ch
 QT_TRANSLATE_NOOP("tecracoin-core", "One of the minted coin is invalid"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Only connect to nodes in network <net> (ipv4, ipv6 or onion)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Options:"),
-QT_TRANSLATE_NOOP("tecracoin-core", "Parsing Elysium transactions..."),
+QT_TRANSLATE_NOOP("tecracoin-core", "Parsing Exodus transactions..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Pass named instead of positional arguments (default: %s)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Password for JSON-RPC connections"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Port: %d"),
@@ -508,6 +507,7 @@ QT_TRANSLATE_NOOP("tecracoin-core", "Register Commands:"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Relay and mine data carrier transactions (default: %u)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Relay non-P2SH multisig (default: %u)"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Required amount exceed value spend limit"),
+QT_TRANSLATE_NOOP("tecracoin-core", "The required amount exceeds spend limit"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Rescan the block chain for missing wallet transactions on startup"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Rescanning..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Rewinding blocks..."),
@@ -548,7 +548,6 @@ QT_TRANSLATE_NOOP("tecracoin-core", "Submitted to tnode, waiting in queue %s"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Synchronization failed"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Synchronization finished"),
 QT_TRANSLATE_NOOP("tecracoin-core", "Synchronization pending..."),
-QT_TRANSLATE_NOOP("tecracoin-core", "Synchronizing sporks..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Synchronizing tnode payments..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "Synchronizing tnodes..."),
 QT_TRANSLATE_NOOP("tecracoin-core", "The source code is available from %s."),

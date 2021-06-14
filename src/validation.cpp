@@ -41,7 +41,9 @@
 #include "util.h"
 #include "wallet/wallet.h"
 #include "wallet/walletdb.h"
+#include "batchproof_container.h"
 #include "sigma.h"
+#include "lelantus.h"
 #include "utilmoneystr.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
@@ -50,11 +52,9 @@
 #include "utiltime.h"
 #include "mtpstate.h"
 
-#include "instantx.h"
-#include "tnode-payments.h"
-#include "tnode-sync.h"
-#include "tnodeman.h"
 #include "coins.h"
+
+#include "blacklists.h"
 
 #include "sigma/coinspend.h"
 #include "sigma/remint.h"
@@ -70,6 +70,7 @@
 #include "evo/providertx.h"
 #include "evo/deterministicmns.h"
 #include "evo/cbtx.h"
+#include "evo/spork.h"
 
 #include "llmq/quorums_instantsend.h"
 #include "llmq/quorums_chainlocks.h"
@@ -510,7 +511,7 @@ unsigned int GetLegacySigOpCount(const CTransaction& tx)
 
 unsigned int GetP2SHSigOpCount(const CTransaction &tx, const CCoinsViewCache &inputs)
 {
-    if (tx.IsCoinBase() || tx.IsZerocoinSpend() || tx.IsSigmaSpend())
+    if (tx.IsCoinBase() || tx.IsZerocoinSpend() || tx.IsSigmaSpend() || tx.IsLelantusJoinSplit())
         return 0;
 
     unsigned int nSigOps = 0;
@@ -529,7 +530,7 @@ int64_t GetTransactionSigOpCost(const CTransaction &tx, const CCoinsViewCache &i
 {
     int64_t nSigOps = GetLegacySigOpCount(tx) * WITNESS_SCALE_FACTOR;
 
-    if (tx.IsCoinBase() || tx.IsZerocoinSpend() || tx.IsSigmaSpend() || tx.IsZerocoinRemint())
+    if (tx.IsCoinBase() || tx.IsZerocoinSpend() || tx.IsSigmaSpend() || tx.IsZerocoinRemint() || tx.IsLelantusJoinSplit())
         return nSigOps;
 
     if (flags & SCRIPT_VERIFY_P2SH) {
@@ -569,7 +570,7 @@ int GetUTXOConfirmations(const COutPoint& outpoint)
     return (nPrevoutHeight > -1 && chainActive.Tip()) ? chainActive.Height() - nPrevoutHeight + 1 : -1;
 }
 
-bool CheckTransaction(const CTransaction &tx, CValidationState &state, bool fCheckDuplicateInputs, uint256 hashTx,  bool isVerifyDB, int nHeight, bool isCheckWallet, bool fStatefulZerocoinCheck, CZerocoinTxInfo *zerocoinTxInfo, sigma::CSigmaTxInfo *sigmaTxInfo)
+bool CheckTransaction(const CTransaction &tx, CValidationState &state, bool fCheckDuplicateInputs, uint256 hashTx,  bool isVerifyDB, int nHeight, bool isCheckWallet, bool fStatefulZerocoinCheck, CZerocoinTxInfo *zerocoinTxInfo, sigma::CSigmaTxInfo *sigmaTxInfo, lelantus::CLelantusTxInfo* lelantusTxInfo)
 {
     LogPrintf("CheckTransaction nHeight=%s, isVerifyDB=%s, isCheckWallet=%s, txHash=%s\n", nHeight, isVerifyDB, isCheckWallet, tx.GetHash().ToString());
 
@@ -623,7 +624,7 @@ bool CheckTransaction(const CTransaction &tx, CValidationState &state, bool fChe
             {
                 if (!vInOutPoints.insert(txin.prevout).second)
                     return state.DoS(100, false, REJECT_INVALID, "bad-txns-inputs-duplicate");
-            }            
+            }
         }
     }
 
@@ -640,16 +641,33 @@ bool CheckTransaction(const CTransaction &tx, CValidationState &state, bool fChe
     else
     {
         for (const auto& txin : tx.vin)
-            if (txin.prevout.IsNull() && !(txin.scriptSig.IsZerocoinSpend() || txin.IsZerocoinRemint()))
+            if (txin.prevout.IsNull() && !(txin.scriptSig.IsZerocoinSpend()
+                || txin.IsZerocoinRemint()
+                || txin.IsLelantusJoinSplit() ))
                 return state.DoS(10, false, REJECT_INVALID, "bad-txns-prevout-null");
-                
+
         if (tx.IsZerocoinV3SigmaTransaction()) {
             if (fRejectSigma || !CheckSigmaTransaction(tx, state, hashTx, isVerifyDB, nHeight, isCheckWallet, fStatefulZerocoinCheck, sigmaTxInfo))
                 return false;
         }
 
+        if(tx.IsLelantusTransaction()) {
+            if (!CheckLelantusTransaction(tx, state, hashTx, isVerifyDB, nHeight, isCheckWallet, fStatefulZerocoinCheck, sigmaTxInfo, lelantusTxInfo))
+                return false;
+        }
+
         if (!CheckZerocoinTransaction(tx, state, Params().GetConsensus(), hashTx, isVerifyDB, nHeight, isCheckWallet, fStatefulZerocoinCheck, zerocoinTxInfo))
             return false;
+    }
+
+    bool isInWhitelist = Params().GetConsensus().txidWhitelist.count(tx.GetHash()) > 0;
+    if (nHeight >= ::Params().GetConsensus().nStartBlacklist && !isInWhitelist) {
+        for (const auto& vin : tx.vin) {
+            if(txid_blacklist.count(vin.prevout.hash.GetHex()) > 0) {
+                    return state.DoS(100, error("Spending this tx is temporarily disabled"),
+                                 REJECT_INVALID, "bad-txns-zerocoin");
+            }
+        }
     }
 
     return true;
@@ -669,12 +687,17 @@ bool ContextualCheckTransaction(const CTransaction& tx, CValidationState &state,
                 tx.nType != TRANSACTION_PROVIDER_UPDATE_REGISTRAR &&
                 tx.nType != TRANSACTION_PROVIDER_UPDATE_REVOKE &&
                 tx.nType != TRANSACTION_COINBASE &&
-                tx.nType != TRANSACTION_QUORUM_COMMITMENT) {
+                tx.nType != TRANSACTION_QUORUM_COMMITMENT &&
+                tx.nType != TRANSACTION_SPORK) {
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
             }
             if (tx.IsCoinBase() && tx.nType != TRANSACTION_COINBASE)
                 return state.DoS(100, false, REJECT_INVALID, "bad-txns-cb-type");
-        } else if (tx.nType != TRANSACTION_NORMAL) {
+            if (tx.nType == TRANSACTION_SPORK &&
+                    !(nHeight >= consensusParams.nEvoSporkStartBlock && nHeight < consensusParams.nEvoSporkStopBlock))
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
+        }
+        else if (tx.nType != TRANSACTION_NORMAL) {
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-type");
         }
     }
@@ -720,11 +743,11 @@ static bool IsCurrentForFeeEstimation()
 bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const CTransactionRef& ptx, bool fLimitFree,
                               bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                               bool fOverrideMempoolLimit, const CAmount& nAbsurdFee, std::vector<COutPoint>& coins_to_uncache,
-                              bool isCheckWalletTransaction, bool markZcoinSpendTransactionSerial)
+                              bool isCheckWalletTransaction, bool markFiroSpendTransactionSerial)
 {
     bool fTestNet = Params().GetConsensus().IsTestnet();
-    LogPrintf("AcceptToMemoryPoolWorker(), tx.IsZerocoinSpend()=%s, fTestNet=%s\n", ptx->IsZerocoinSpend() || ptx->IsSigmaSpend(), fTestNet);
-    
+    LogPrintf("AcceptToMemoryPoolWorker(), tx.IsZerocoinSpend()=%s, fTestNet=%s\n", ptx->IsZerocoinSpend() || ptx->IsSigmaSpend() || ptx->IsLelantusJoinSplit(), fTestNet);
+
     const CTransaction& tx = *ptx;
     const uint256 hash = tx.GetHash();
     AssertLockHeld(cs_main);
@@ -753,6 +776,25 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         }
     }
 
+    if (tx.IsSigmaMint() || tx.IsSigmaSpend()) {
+        if (consensus.nStartSigmaBlacklist != INT_MAX && chainActive.Height() < consensus.nRestartSigmaWithBlacklistCheck)
+            return state.DoS(100, error("Sigma is temporarily disabled"),
+                             REJECT_INVALID, "bad-txns-zerocoin");
+    }
+
+    bool startLelantusRejectSigma = (chainActive.Height() >= consensus.nLelantusStartBlock);
+    if (startLelantusRejectSigma) {
+        if(tx.IsSigmaMint() || tx.IsSigmaSpend()) {
+            return state.DoS(100, error("Sigma transactions no more allowed in mempool"),
+                             REJECT_INVALID, "bad-txns-zerocoin");
+        }
+    } else {
+        if(tx.IsLelantusTransaction()) {
+            return state.DoS(100, error("Lelantus transactions are not allowed in mempool yet"),
+                             REJECT_INVALID, "bad-txns-zerocoin");
+        }
+    }
+
     if (!CheckTransaction(tx, state, true, hash, false, INT_MAX, isCheckWalletTransaction)) {
         LogPrintf("CheckTransaction() failed!");
         return false; // state filled in by CheckTransaction
@@ -760,6 +802,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
     if (!ContextualCheckTransaction(tx, state, Params().GetConsensus(), chainActive.Tip()))
         return error("%s: ContextualCheckTransaction: %s, %s", __func__, hash.ToString(), FormatStateMessage(state));
+
+    if (!pool.IsTransactionAllowed(tx, state)) {
+        LogPrintf("AcceptToMemoryPool() can't accept transaction because of active mempool spork\n");
+        return false;
+    }
 
     if (tx.nVersion >= 3 && tx.nType == TRANSACTION_QUORUM_COMMITMENT) {
         // quorum commitment is not allowed outside of blocks
@@ -802,6 +849,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     sigma::CSigmaState *sigmaState = sigma::CSigmaState::GetState();
     vector<Scalar> zcSpendSerialsV3;
     vector<GroupElement> zcMintPubcoinsV3;
+
+    //lelantus
+    lelantus::CLelantusState *lelantusState = lelantus::CLelantusState::GetState();
+    vector<Scalar> lelantusSpendSerials;
+    vector<GroupElement> lelantusMintPubcoins;
+    vector<uint64_t> lelantusAmounts;
     {
     LOCK(pool.cs); // protect pool.mapNextTx
 
@@ -851,6 +904,28 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                 return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
             }
             zcSpendSerialsV3.push_back(zcSpendSerial);
+        }
+    }
+    else if (tx.IsLelantusJoinSplit()) {
+        if(tx.vin.size() > 1) {
+            return state.Invalid(false, REJECT_CONFLICT, "txn-invalid-lelantus-joinsplit");
+        }
+        std::vector<Scalar> serials;
+        try {
+            serials = lelantus::GetLelantusJoinSplitSerialNumbers(tx, tx.vin[0]);
+        }
+        catch (CBadTxIn&) {
+            return state.Invalid(false, REJECT_CONFLICT, "txn-invalid-lelantus-joinsplit");
+        }
+        for(const auto& serial : serials) {
+            if(!serial.isMember() || serial.isZero())
+                return state.Invalid(false, REJECT_INVALID, "txn-invalid-lelantus-joinsplit-serial");
+            if (lelantusState->IsUsedCoinSerial(serial) || pool.lelantusState.HasCoinSerial(serial) ||
+                    !sigmaState->CanAddSpendToMempool(serial)) {
+                LogPrintf("AcceptToMemoryPool(): lelantus serial number %s has been used\n", serial.tostring());
+                return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+            }
+            lelantusSpendSerials.push_back(serial);
         }
     }
     else {
@@ -916,6 +991,23 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         }
     }
 
+    BOOST_FOREACH(const CTxOut &txout, tx.vout)
+    {
+        if (txout.scriptPubKey.IsLelantusMint() || txout.scriptPubKey.IsLelantusJMint()) {
+            GroupElement pubCoinValue;
+            try {
+                lelantus::ParseLelantusMintScript(txout.scriptPubKey, pubCoinValue);
+            } catch (std::invalid_argument&) {
+                return state.DoS(100, false, PUBCOIN_NOT_VALIDATE, "bad-txns-zerocoin");
+            }
+            if (lelantusState->HasCoin(pubCoinValue) || pool.lelantusState.HasMint(pubCoinValue)) {
+                LogPrintf("AcceptToMemoryPool(): lelantus mint with the same value %s is already in the mempool\n", pubCoinValue.tostring());
+                return state.Invalid(false, REJECT_CONFLICT, "txn-mempool-conflict");
+            }
+            lelantusMintPubcoins.push_back(pubCoinValue);
+        }
+    }
+
     }
 
     {
@@ -940,7 +1032,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             }
         }
 
-        if (!tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint()) {
+        if (!tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint() && !tx.IsLelantusJoinSplit()) {
             // do all inputs exist?
             BOOST_FOREACH(const CTxIn txin, tx.vin) {
                 if (!pcoinsTip->HaveCoinInCache(txin.prevout)) {
@@ -989,7 +1081,17 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             int64_t nSigOpsCost = GetTransactionSigOpCost(tx, view, STANDARD_SCRIPT_VERIFY_FLAGS);
 
             CAmount nValueOut = tx.GetValueOut();
-            CAmount nFees = nValueIn-nValueOut;
+            CAmount nFees;
+            if(!tx.IsLelantusJoinSplit()) {
+                nFees = nValueIn-nValueOut;
+            } else {
+                try {
+                    nFees = lelantus::ParseLelantusJoinSplit(tx.vin[0])->getFee();
+                }
+                catch (CBadTxIn&) {
+                    return state.DoS(0, false, REJECT_INVALID, "unable to parse joinsplit");
+                }
+            }
             // nModifiedFees includes any fee deltas from PrioritiseTransaction
             CAmount nModifiedFees = nFees;
             double nPriorityDummy = 0;
@@ -997,7 +1099,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 
             CAmount inChainInputValue = 0;
             bool fSpendsCoinbase = false;
-            if (!tx.IsSigmaSpend()) {
+            if (!tx.IsSigmaSpend() && !tx.IsLelantusJoinSplit()) {
                 // Keep track of transactions that spend a coinbase, which we re-scan
                 // during reorgs to ensure COINBASE_MATURITY is still met.
                 BOOST_FOREACH(const CTxIn &txin, tx.vin) {
@@ -1242,7 +1344,9 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
             // Check against previous transactions
             // This is done last to help prevent CPU exhaustion denial-of-service attacks.
             PrecomputedTransactionData txdata(tx);
-            if (!CheckInputs(tx, state, view, true, scriptVerifyFlags, true, txdata)) {
+            // don't check inputs for transactions in whitelist
+            bool isInWhitelist = consensus.txidWhitelist.count(tx.GetHash()) > 0;
+            if (!CheckInputs(tx, state, view, !isInWhitelist, scriptVerifyFlags, true, txdata)) {
                 // SCRIPT_VERIFY_CLEANSTACK requires SCRIPT_VERIFY_WITNESS, so we
                 // need to turn both off, and compare against just turning off CLEANSTACK
                 // to see if the failure is specifically due to witness validation.
@@ -1316,7 +1420,7 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
                 if (!pool.exists(hash))
                     return state.DoS(0, false, REJECT_INSUFFICIENTFEE, "mempool full");
             }
-        } 
+        }
         else {
             LockPoints lp;
             double fSpendsCoinbase = false;
@@ -1333,25 +1437,72 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
         }
     }
 
-    if ((tx.IsZerocoinSpend() || tx.IsZerocoinRemint()) && markZcoinSpendTransactionSerial)
+    if ((tx.IsZerocoinSpend() || tx.IsZerocoinRemint()) && markFiroSpendTransactionSerial)
         zcState->AddSpendToMempool(zcSpendSerials, hash);
-    if (tx.IsSigmaSpend()){
-        if(markZcoinSpendTransactionSerial)
+    if (tx.IsSigmaSpend()) {
+        if(markFiroSpendTransactionSerial)
             sigmaState->AddSpendToMempool(zcSpendSerialsV3, hash);
         LogPrintf("Updating mint tracker state from Mempool..");
 #ifdef ENABLE_WALLET
-        if (zwalletMain) {
+        if (!GetBoolArg("-disablewallet", false) && pwalletMain->zwallet) {
             LogPrintf("Updating spend state from Mempool..");
-            zwalletMain->GetTracker().UpdateSpendStateFromMempool(zcSpendSerialsV3);
+            pwalletMain->zwallet->GetTracker().UpdateSpendStateFromMempool(zcSpendSerialsV3);
         }
 #endif
     }
-    if(markZcoinSpendTransactionSerial)
-        sigmaState->AddMintsToMempool(zcMintPubcoinsV3);
+
+    if (tx.IsLelantusJoinSplit()) {
+        if(markFiroSpendTransactionSerial) {
+            for (const auto &spendSerial: lelantusSpendSerials)
+                pool.lelantusState.AddSpendToMempool(spendSerial, hash);
+        }
+        LogPrintf("Updating mint tracker state from Mempool..");
 #ifdef ENABLE_WALLET
-    if(tx.IsSigmaMint() && zwalletMain) {
+        if (!GetBoolArg("-disablewallet", false) && pwalletMain->zwallet) {
+            LogPrintf("Updating spend state from Mempool..");
+            pwalletMain->zwallet->GetTracker().UpdateJoinSplitStateFromMempool(lelantusSpendSerials);
+            pwalletMain->zwallet->GetTracker().UpdateSpendStateFromMempool(lelantusSpendSerials);
+        }
+#endif
+    }
+
+    if(markFiroSpendTransactionSerial) {
+        sigmaState->AddMintsToMempool(zcMintPubcoinsV3);
+        for (const auto &pubCoin: lelantusMintPubcoins)
+            pool.lelantusState.AddMintToMempool(pubCoin);
+    }
+
+
+#ifdef ENABLE_WALLET
+    if(tx.IsSigmaMint() && !GetBoolArg("-disablewallet", false) && pwalletMain->zwallet) {
         LogPrintf("Updating mint state from Mempool..");
-        zwalletMain->GetTracker().UpdateMintStateFromMempool(zcMintPubcoinsV3);
+        pwalletMain->zwallet->GetTracker().UpdateMintStateFromMempool(zcMintPubcoinsV3);
+    }
+
+    if(tx.IsLelantusMint() && !GetBoolArg("-disablewallet", false) && pwalletMain->zwallet) {
+        LogPrintf("Updating mint state from Mempool..");
+        BOOST_FOREACH(const CTxOut &txout, tx.vout)
+        {
+            if (txout.scriptPubKey.IsLelantusMint() || txout.scriptPubKey.IsLelantusJMint()) {
+                GroupElement pubCoinValue;
+                uint64_t amount = 0;
+                try {
+                    if (txout.scriptPubKey.IsLelantusMint()) {
+                        lelantus::ParseLelantusMintScript(txout.scriptPubKey, pubCoinValue);
+                        amount = txout.nValue;
+                    } else {
+                        std::vector<unsigned char> encryptedValue;
+                        lelantus::ParseLelantusJMintScript(txout.scriptPubKey, pubCoinValue, encryptedValue);
+                        if(!pwalletMain->DecryptMintAmount(encryptedValue, pubCoinValue, amount))
+                            amount = 0;
+                    }
+                } catch (std::invalid_argument&) {
+                    return state.DoS(100, false, PUBCOIN_NOT_VALIDATE, "bad-txns-zerocoin");
+                }
+                lelantusAmounts.push_back(amount);
+            }
+        }
+        pwalletMain->zwallet->GetTracker().UpdateLelantusMintStateFromMempool(lelantusMintPubcoins, lelantusAmounts);
     }
 #endif
     GetMainSignals().SyncTransaction(tx, NULL, CMainSignals::SYNC_TRANSACTION_NOT_IN_BLOCK);
@@ -1364,11 +1515,11 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
 bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
                         bool* pfMissingInputs, int64_t nAcceptTime, std::list<CTransactionRef>* plTxnReplaced,
                         bool fOverrideMempoolLimit, const CAmount nAbsurdFee,
-                        bool isCheckWalletTransaction, bool markZcoinSpendTransactionSerial)
+                        bool isCheckWalletTransaction, bool markFiroSpendTransactionSerial)
 {
     LogPrintf("AcceptToMemoryPool(), transaction: %s\n", tx->GetHash().ToString());
     std::vector<COutPoint> coins_to_uncache;
-    bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, nAcceptTime, plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, coins_to_uncache, isCheckWalletTransaction, markZcoinSpendTransactionSerial);
+    bool res = AcceptToMemoryPoolWorker(pool, state, tx, fLimitFree, pfMissingInputs, nAcceptTime, plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, coins_to_uncache, isCheckWalletTransaction, markFiroSpendTransactionSerial);
     if (!res) {
         BOOST_FOREACH(const COutPoint& hashTx, coins_to_uncache)
             pcoinsTip->Uncache(hashTx);
@@ -1382,16 +1533,16 @@ bool AcceptToMemoryPoolWithTime(CTxMemPool& pool, CValidationState &state, const
 bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
                         bool fOverrideMempoolLimit, const CAmount nAbsurdFee,
-                        bool isCheckWalletTransaction, bool markZcoinSpendTransactionSerial)
+                        bool isCheckWalletTransaction, bool markFiroSpendTransactionSerial)
 {
-    return AcceptToMemoryPoolWithTime(pool, state, tx, fLimitFree, pfMissingInputs, GetTime(), plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, isCheckWalletTransaction, markZcoinSpendTransactionSerial);
+    return AcceptToMemoryPoolWithTime(pool, state, tx, fLimitFree, pfMissingInputs, GetTime(), plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, isCheckWalletTransaction, markFiroSpendTransactionSerial);
 }
 
 
 bool AcceptToMemoryPool(CTxPoolAggregate& poolAggregate, CValidationState &state, const CTransactionRef &tx, bool fLimitFree,
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
-                        bool fOverrideMempoolLimit, const CAmount nAbsurdFee, bool isCheckWalletTransaction, bool markZcoinSpendTransactionSerial) {
-    bool res = AcceptToMemoryPool(mempool, state, tx, fLimitFree, pfMissingInputs, plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, isCheckWalletTransaction, markZcoinSpendTransactionSerial);
+                        bool fOverrideMempoolLimit, const CAmount nAbsurdFee, bool isCheckWalletTransaction, bool markFiroSpendTransactionSerial) {
+    bool res = AcceptToMemoryPool(mempool, state, tx, fLimitFree, pfMissingInputs, plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, isCheckWalletTransaction, markFiroSpendTransactionSerial);
     AcceptToMemoryPool(txpools.getStemTxPool(), state, tx, fLimitFree, pfMissingInputs, plTxnReplaced, fOverrideMempoolLimit, nAbsurdFee, isCheckWalletTransaction, false);
     return res;
 }
@@ -1586,7 +1737,7 @@ bool ReadBlockHeaderFromDisk(CBlock &block, const CDiskBlockPos &pos) {
     return true;
 }
 
-CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams, int nTime) {
+CAmount GetBlockSubsidyWithMTPFlag(int nHeight, const Consensus::Params &consensusParams, bool fMTP) {
     // Genesis block is 0 coin
     if (nHeight == 0)
         return 0;
@@ -1607,10 +1758,17 @@ CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams, i
     return nSubsidy;
 }
 
+CAmount GetBlockSubsidy(int nHeight, const Consensus::Params &consensusParams, int nTime) {
+    return GetBlockSubsidyWithMTPFlag(nHeight, consensusParams, nTime >= (int)consensusParams.nMTPSwitchTime);
+}
+
 CAmount GetMasternodePayment(int nHeight, CAmount blockValue)
 {
-    //for testnet: TODO!
-    //return blockValue*3/10;
+    const Consensus::Params& params = Params().GetConsensus();
+    // testnet only
+    if (params.chainType == Consensus::chainTestnet) {
+        return blockValue * 3 / 10;
+    }
 
     //for mainnet:
     //values based on stages as WP 1.3
@@ -1766,7 +1924,7 @@ void static InvalidBlockFound(CBlockIndex *pindex, const CValidationState &state
 void UpdateCoins(const CTransaction& tx, CCoinsViewCache& inputs, CTxUndo &txundo, int nHeight)
 {
     // mark inputs spent
-    if (!tx.IsCoinBase() && !tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint()) {
+    if (!tx.IsCoinBase() && !tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint() && !tx.IsLelantusJoinSplit()) {
         txundo.vprevout.reserve(tx.vin.size());
         BOOST_FOREACH(const CTxIn &txin, tx.vin) {
             txundo.vprevout.emplace_back();
@@ -1830,12 +1988,22 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
         }
 
-        if (nValueIn < tx.GetValueOut())
-            return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
-                strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(tx.GetValueOut())));
-
-        // Tally transaction fees
-        CAmount nTxFee = nValueIn - tx.GetValueOut();
+        CAmount nTxFee;
+        if(!tx.IsLelantusJoinSplit()) {
+            // at Lelantus JoinSplit we check balance inside cryptographic proof verification
+            if (nValueIn < tx.GetValueOut())
+                return state.DoS(100, false, REJECT_INVALID, "bad-txns-in-belowout", false,
+                        strprintf("value in (%s) < value out (%s)", FormatMoney(nValueIn), FormatMoney(tx.GetValueOut())));
+            // Tally transaction fees
+            nTxFee = nValueIn - tx.GetValueOut();
+        } else {
+            try {
+                nTxFee = lelantus::ParseLelantusJoinSplit(tx.vin[0])->getFee();
+            }
+            catch (CBadTxIn&) {
+                return state.DoS(0, false, REJECT_INVALID, "unable to parse joinsplit");
+            }
+        }
         if (nTxFee < 0)
             return state.DoS(100, false, REJECT_INVALID, "bad-txns-fee-negative");
         nFees += nTxFee;
@@ -1847,7 +2015,7 @@ bool CheckTxInputs(const CTransaction& tx, CValidationState& state, const CCoins
 
 bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fScriptChecks, unsigned int flags, bool cacheStore, PrecomputedTransactionData& txdata, std::vector<CScriptCheck> *pvChecks)
 {
-    if (!tx.IsCoinBase() && !tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint())
+    if (!tx.IsCoinBase() && !tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint() && !tx.IsLelantusJoinSplit())
     {
         if (!Consensus::CheckTxInputs(tx, state, inputs, GetSpendHeight(inputs)))
             return false;
@@ -1916,7 +2084,7 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
                 return state.DoS(
                     100, false,
                     REJECT_MALFORMED,
-                    "CheckSpendZcoinTransaction: can't mix zerocoin spend input with regular ones");
+                    "CheckSpendFiroTransaction: can't mix zerocoin spend input with regular ones");
             }
             CDataStream serializedCoinSpend((const char *)&*(txin.scriptSig.begin() + 1),
                                             (const char *)&*txin.scriptSig.end(),
@@ -1929,6 +2097,13 @@ bool CheckInputs(const CTransaction& tx, CValidationState &state, const CCoinsVi
             return state.DoS(
                 100,
                 error("Spend transaction outputs larger than the inputs."));
+        }
+    } else if (tx.IsLelantusJoinSplit()) {
+        if(tx.vin.size() > 1 || !tx.vin[0].scriptSig.IsLelantusJoinSplit()) {
+            return state.DoS(
+                    100, false,
+                    REJECT_MALFORMED,
+                    " Can't mix Lelantus joinsplit input with regular ones or have more than one input");
         }
     }
 
@@ -2068,6 +2243,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
 
     CBlockUndo blockUndo;
     CDiskBlockPos pos = pindex->GetUndoPos();
+
     if (pos.IsNull()) {
         error("DisconnectBlock(): no undo data available");
         return DISCONNECT_FAILED;
@@ -2111,7 +2287,7 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
         }
 
         // restore inputs
-        if (!tx.IsCoinBase() && !tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint()) { // not coinbases
+        if (!tx.IsCoinBase() && !tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint() && !tx.IsLelantusJoinSplit()) { // not coinbases
             CTxUndo &txundo = blockUndo.vtxundo[i-1];
             if (txundo.vprevout.size() != tx.vin.size()) {
                 error("DisconnectBlock(): transaction and undo data inconsistent");
@@ -2119,15 +2295,20 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
             }
             for (unsigned int j = tx.vin.size(); j-- > 0;) {
                 const COutPoint &out = tx.vin[j].prevout;
-                int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
-                if (res == DISCONNECT_FAILED) return DISCONNECT_FAILED;
-                fClean = fClean && res != DISCONNECT_UNCLEAN;
+                if (Params().ApplyUndoForTxout(pindex->nHeight, tx.GetHash(), j)) {
+                    int res = ApplyTxInUndo(std::move(txundo.vprevout[j]), view, out);
+                    if (res == DISCONNECT_FAILED) return DISCONNECT_FAILED;
+                    fClean = fClean && res != DISCONNECT_UNCLEAN;
+                }
             }
             // At this point, all of txundo.vprevout should have been moved out.
         }
 
         if(tx.IsSigmaSpend())
             nFees += sigma::GetSigmaSpendInput(tx) - tx.GetValueOut();
+        else if (tx.IsLelantusJoinSplit()) {
+            nFees += lelantus::ParseLelantusJoinSplit(tx.vin[0])->getFee();
+        }
 
         dbIndexHelper.DisconnectTransactionInputs(tx, pindex->nHeight, i, view);
     }
@@ -2164,6 +2345,10 @@ static DisconnectResult DisconnectBlock(const CBlock& block, CValidationState& s
     */
 
     evoDb->WriteBestBlock(pindex->pprev->GetBlockHash());
+
+    if(Params().SkipUndoForBlock(pindex->nHeight)) {
+        fClean = true;
+    }
 
     if (pfClean)
         *pfClean = fClean;
@@ -2423,9 +2608,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     set<uint256> txIds;
     bool isMainNet = chainparams.GetConsensus().IsMain();
+    // batch verify Lelantus/Sigma if block is older than a day, that means we are syncing or reindexing
+    BatchProofContainer* batchProofContainer = BatchProofContainer::get_instance();
+    batchProofContainer->fCollectProofs = ((GetSystemTimeInSeconds() - pindex->GetBlockTime()) > 86400) && GetBoolArg("-batching", true);
+    batchProofContainer->init();
 
     block.zerocoinTxInfo = std::make_shared<CZerocoinTxInfo>();
     block.sigmaTxInfo = std::make_shared<sigma::CSigmaTxInfo>();
+    block.lelantusTxInfo = std::make_shared<lelantus::CLelantusTxInfo>();
 
     for (unsigned int i = 0; i < block.vtx.size(); i++)
     {
@@ -2440,7 +2630,12 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
         nInputs += tx.vin.size();
 
-        if (!tx.IsCoinBase() && !tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint())
+        if(tx.IsLelantusJoinSplit() && tx.vin.size() > 1)
+            return state.DoS(100, error("ConnectBlock(): invalid joinsplit tx"),
+                             REJECT_INVALID, "bad-txns-input-invalid");
+
+
+        if (!tx.IsCoinBase() && !tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint() && !tx.IsLelantusJoinSplit())
         {
             if (!view.HaveInputs(tx))
                 return state.DoS(100, error("ConnectBlock(): inputs missing/spent"),
@@ -2460,12 +2655,27 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
             }
         }
 
-        if (tx.IsZerocoinSpend() || tx.IsZerocoinMint() || tx.IsSigmaSpend() || tx.IsSigmaMint() || tx.IsZerocoinRemint()) {
+        if (tx.IsZerocoinSpend()
+        || tx.IsZerocoinMint()
+        || tx.IsSigmaSpend()
+        || tx.IsSigmaMint()
+        || tx.IsZerocoinRemint()
+        || tx.IsLelantusMint()
+        || tx.IsLelantusJoinSplit()) {
             if( tx.IsSigmaSpend())
                 nFees += sigma::GetSigmaSpendInput(tx) - tx.GetValueOut();
 
+            if(tx.IsLelantusJoinSplit()) {
+                try {
+                    nFees += lelantus::ParseLelantusJoinSplit(tx.vin[0])->getFee();
+                }
+                catch (CBadTxIn&) {
+                    return state.DoS(0, false, REJECT_INVALID, "unable to parse joinsplit");
+                }
+            }
+
             // Check transaction against zerocoin state
-            if (!CheckTransaction(tx, state, false, txHash, false, pindex->nHeight, false, true, block.zerocoinTxInfo.get(), block.sigmaTxInfo.get()))
+            if (!CheckTransaction(tx, state, false, txHash, false, pindex->nHeight, false, true, block.zerocoinTxInfo.get(), block.sigmaTxInfo.get(), block.lelantusTxInfo.get()))
                 return state.DoS(100, error("stateful zerocoin check failed"),
                                  REJECT_INVALID, "bad-txns-zerocoin");
         }
@@ -2483,13 +2693,14 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                              REJECT_INVALID, "bad-blk-sigops");
 
         txdata.emplace_back(tx);
-        if (!tx.IsCoinBase() && !tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint())
+        if (!tx.IsCoinBase() && !tx.IsZerocoinSpend() && !tx.IsSigmaSpend() && !tx.IsZerocoinRemint() && !tx.IsLelantusJoinSplit())
         {
             nFees += view.GetValueIn(tx)-tx.GetValueOut();
 
             std::vector<CScriptCheck> vChecks;
             bool fCacheResults = fJustCheck; /* Don't cache results if we're actually connecting blocks (still consult the cache, though) */
-            if (!CheckInputs(tx, state, view, fScriptChecks, flags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : NULL))
+            bool isInWhitelist = chainparams.GetConsensus().txidWhitelist.count(tx.GetHash()) > 0;
+            if (!CheckInputs(tx, state, view, fScriptChecks && !isInWhitelist, flags, fCacheResults, txdata[i], nScriptCheckThreads ? &vChecks : NULL))
                 return error("ConnectBlock(): CheckInputs on %s failed with %s",
                     tx.GetHash().ToString(), FormatStateMessage(state));
             control.Add(vChecks);
@@ -2511,6 +2722,7 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
 
     block.zerocoinTxInfo->Complete();
     block.sigmaTxInfo->Complete();
+    block.lelantusTxInfo->Complete();
 
     int64_t nTime3 = GetTimeMicros(); nTimeConnect += nTime3 - nTime2;
     LogPrint("bench", "      - Connect %u transactions: %.2fms (%.3fms/tx, %.3fms/txin) [%.2fs]\n", (unsigned)block.vtx.size(), 0.001 * (nTime3 - nTime2), 0.001 * (nTime3 - nTime2) / block.vtx.size(), nInputs <= 1 ? 0 : 0.001 * (nTime3 - nTime2) / (nInputs-1), nTimeConnect * 0.000001);
@@ -2530,47 +2742,57 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
                                REJECT_INVALID, "bad-cb-amount");
 
     std::string strError = "";
-    if (deterministicMNManager->IsDIP3Enforced(pindex->nHeight)) {
-        // evo tnodes
-        if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
-            return state.DoS(0, error("ConnectBlock(EVOTNODES): %s", strError), REJECT_INVALID, "bad-cb-amount");
-        }
-       
-        if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockSubsidy)) {
-            mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
-            return state.DoS(0, error("ConnectBlock(EVPTNODES): couldn't find evo tnode payments"),
-                                    REJECT_INVALID, "bad-cb-payee");
-        }
+    if (!IsBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
+        return state.DoS(0, error("ConnectBlock(EVOTNODES): %s", strError), REJECT_INVALID, "bad-cb-amount");
     }
-    else {
-        // legacy tnodes
-        if (!IsTnodeBlockValueValid(block, pindex->nHeight, blockReward, strError)) {
-            return state.DoS(0, error("ConnectBlock(): %s", strError), REJECT_INVALID, "bad-cb-amount");
-        }
 
-        if (!IsTnodeBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockReward, block.IsMTP())) {
-            mapRejectedBlocks.insert(make_pair(block.GetHash(), GetTime()));
-            return state.DoS(0, error("ConnectBlock(): couldn't find tnode or superblock payments"),
-                            REJECT_INVALID, "bad-cb-payee");
-        }
-
+    if (!IsBlockPayeeValid(*block.vtx[0], pindex->nHeight, blockSubsidy)) {
+        mapRejectedBlocks.insert(std::make_pair(block.GetHash(), GetTime()));
+        return state.DoS(0, error("ConnectBlock(EVOTNODES): couldn't find evo tnode payments"),
+                                REJECT_INVALID, "bad-cb-payee");
     }
 
     if (!ProcessSpecialTxsInBlock(block, pindex, state, fJustCheck, fScriptChecks)) {
-        return error("ConnectBlock(): ProcessSpecialTxsInBlock for block %s failed with %s",
-                    pindex->GetBlockHash().ToString(), FormatStateMessage(state));
+        return error("ConnectBlock(): ProcessSpecialTxsInBlock for block %s at height %i failed with %s",
+                    pindex->GetBlockHash().ToString(), pindex->nHeight, FormatStateMessage(state));
     }
     // END tnode
 
     if (!fJustCheck)
         MTPState::GetMTPState()->SetLastBlock(pindex, chainparams.GetConsensus());
 
+    // evo spork handling
+    // back up spork state if fJustCheck is true
+    auto sporkSetBackup = pindex->activeDisablingSporks;
+    CSporkManager *sporkManager = CSporkManager::GetSporkManager();
+
+    if (pindex->nHeight >= chainparams.GetConsensus().nEvoSporkStartBlock &&
+                pindex->nHeight < chainparams.GetConsensus().nEvoSporkStopBlock) {
+        if (!sporkManager->BlockConnected(block, pindex)) {
+            pindex->activeDisablingSporks = sporkSetBackup;
+            return false;
+        }
+
+        // check if transaction is allowed under spork rules
+        for (CTransactionRef tx: block.vtx) {
+            if (!sporkManager->IsTransactionAllowed(*tx, pindex->activeDisablingSporks, state))
+                return false;
+        }
+    }
+
     if (!ConnectBlockZC(state, chainparams, pindex, &block, fJustCheck) ||
-        !sigma::ConnectBlockSigma(state, chainparams, pindex, &block, fJustCheck))
+        !sigma::ConnectBlockSigma(state, chainparams, pindex, &block, fJustCheck) ||
+        !lelantus::ConnectBlockLelantus(state, chainparams, pindex, &block, fJustCheck))
         return false;
 
-    if (fJustCheck)
+    if (!sporkManager->IsBlockAllowed(block, pindex, state))
+        return false;
+
+    if (fJustCheck) {
+        // roll back spork set if needed
+        pindex->activeDisablingSporks = sporkSetBackup;
         return true;
+    }
 
     // Write undo information to disk
     if (pindex->GetUndoPos().IsNull() || !pindex->IsValid(BLOCK_VALID_SCRIPTS))
@@ -2617,6 +2839,9 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
     // add this block to the view's block chain
     view.SetBestBlock(pindex->GetBlockHash());
 
+    // do batch verification if remains a day or collect proofs
+    batchProofContainer->finalize();
+
     int64_t nTime5 = GetTimeMicros(); nTimeIndex += nTime5 - nTime4;
     LogPrint("bench", "    - Index writing: %.2fms [%.2fs]\n", 0.001 * (nTime5 - nTime4), nTimeIndex * 0.000001);
 
@@ -2638,10 +2863,11 @@ bool ConnectBlock(const CBlock& block, CValidationState& state, CBlockIndex* pin
  */
 void static RemoveConflictingPrivacyTransactionsFromMempool(const CBlock &block) {
     LOCK(mempool.cs);
-    
+
     // Erase conflicting zerocoin txs from the mempool
     CZerocoinState *zcState = CZerocoinState::GetZerocoinState();
     sigma::CSigmaState *sigmaState = sigma::CSigmaState::GetState();
+    lelantus::CLelantusState *lelantusState = lelantus::CLelantusState::GetState();
     BOOST_FOREACH(CTransactionRef tx, block.vtx) {
         if (tx->IsZerocoinSpend() || tx->IsZerocoinRemint()) {
             BOOST_FOREACH(const CTxIn &txin, tx->vin)
@@ -2681,6 +2907,33 @@ void static RemoveConflictingPrivacyTransactionsFromMempool(const CBlock &block)
                 sigmaState->RemoveSpendFromMempool(zcSpendSerial);
             }
         }
+        else if (tx->IsLelantusJoinSplit()) {
+           std::vector<Scalar> serials;
+           try {
+               serials = lelantus::GetLelantusJoinSplitSerialNumbers(*tx, tx->vin[0]);
+           } catch (CBadTxIn&) {
+               // nothing
+           }
+
+           uint256 thisTxHash = tx->GetHash();
+            uint256 conflictingTxHash;
+           for(const auto& serial : serials) {
+                conflictingTxHash = lelantusState->GetMempoolConflictingTxHash(serial);
+                if(!conflictingTxHash.IsNull())
+                    break;
+           }
+           if (!conflictingTxHash.IsNull() && conflictingTxHash != thisTxHash) {
+               std::list<CTransaction> removed;
+               auto pTx = mempool.get(conflictingTxHash);
+               if (pTx)
+                   mempool.removeRecursive(*pTx);
+                LogPrintf("ConnectBlock: removed conflicting lelantus joinsplit tx %s from the mempool\n",
+                           conflictingTxHash.ToString());
+           }
+
+           // In any case we need to remove serial from mempool set
+           lelantusState->RemoveSpendFromMempool(serials);
+        }
         BOOST_FOREACH(const CTxOut &txout, tx->vout)
         {
             if (txout.scriptPubKey.IsSigmaMint()) {
@@ -2691,6 +2944,15 @@ void static RemoveConflictingPrivacyTransactionsFromMempool(const CBlock &block)
                     // nothing
                 }
                 sigmaState->RemoveMintFromMempool(pubCoinValue);
+            }
+            if (txout.scriptPubKey.IsLelantusMint() || txout.scriptPubKey.IsLelantusJMint()) {
+                GroupElement pubCoinValue;
+                try {
+                    lelantus::ParseLelantusMintScript(txout.scriptPubKey, pubCoinValue);
+                } catch (std::invalid_argument&) {
+                    // nothing
+                }
+                lelantusState->RemoveMintFromMempool(pubCoinValue);
             }
         }
     }
@@ -2740,7 +3002,7 @@ bool static FlushStateToDisk(CValidationState &state, FlushStateMode mode, int n
     }
     int64_t nMempoolSizeMax = GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000;
     int64_t cacheSize = pcoinsTip->DynamicMemoryUsage() * DB_PEAK_USAGE_FACTOR;
-    cacheSize += evoDb->GetMemoryUsage() * DB_PEAK_USAGE_FACTOR;
+    cacheSize += evoDb->GetMemoryUsage() * EVO_DB_USAGE_FACTOR * DB_PEAK_USAGE_FACTOR;
     int64_t nTotalSpace = nCoinCacheUsage + std::max<int64_t>(nMempoolSizeMax - nMempoolUsage, 0);
     // The cache is large and we're within 10% and 10 MiB of the limit, but we have time now (not in the middle of a block processing).
     bool fCacheLarge = mode == FLUSH_STATE_PERIODIC && cacheSize > std::max((9 * nTotalSpace) / 10, nTotalSpace - MAX_BLOCK_COINSDB_USAGE * 1024 * 1024);
@@ -2826,12 +3088,6 @@ void static UpdateTip(CBlockIndex *pindexNew, const CChainParams &chainParams) {
     LogPrintf("UpdateTip() pindexNew.nHeight=%s\n", pindexNew->nHeight);
     chainActive.SetTip(pindexNew);
 
-    if (pindexNew->nHeight < chainParams.GetConsensus().DIP0003EnforcementHeight) {
-        mnodeman.UpdatedBlockTip(chainActive.Tip());
-        tnpayments.UpdatedBlockTip(chainActive.Tip());
-        tnodeSync.UpdatedBlockTip(chainActive.Tip());
-    }
-
     // New best block
     txpools.AddTransactionsUpdated(1);
 
@@ -2905,18 +3161,79 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     if (!ReadBlockFromDisk(block, pindexDelete, chainparams.GetConsensus()))
         return AbortNode(state, "Failed to read block");
 
+
     // retrieve all mints
     block.sigmaTxInfo = std::make_shared<sigma::CSigmaTxInfo>();
+    block.lelantusTxInfo = std::make_shared<lelantus::CLelantusTxInfo>();
+
+    std::unordered_map<Scalar, int> lelantusSerialsToRemove;
+    sigma::spend_info_container sigmaSerialsToRemove;
+
     for (CTransactionRef tx : block.vtx) {
         CheckTransaction(*tx, state, false, tx->GetHash(), false, pindexDelete->pprev->nHeight,
-            false, false, nullptr, block.sigmaTxInfo.get());
+            false, false, nullptr, block.sigmaTxInfo.get(), block.lelantusTxInfo.get());
+
+        if(GetBoolArg("-batching", true)) {
+            if (tx->IsLelantusJoinSplit()) {
+                const CTxIn &txin = tx->vin[0];
+                std::unique_ptr<lelantus::JoinSplit> joinsplit;
+
+                try {
+                    joinsplit = lelantus::ParseLelantusJoinSplit(txin);
+                }
+                catch (CBadTxIn &) {
+                    continue;
+                }
+
+                const std::vector<uint32_t> &ids = joinsplit->getCoinGroupIds();
+                const std::vector<Scalar>& serials = joinsplit->getCoinSerialNumbers();
+
+                if (serials.size() != ids.size()) {
+                    continue;
+                }
+
+                if (joinsplit->getVersion() == SIGMA_TO_LELANTUS_JOINSPLIT) {
+                    for (size_t i = 0; i < serials.size(); i++) {
+                        int coinGroupId = ids[i] % (CENT / 1000);
+                        int64_t intDenom = (ids[i] - coinGroupId);
+                        intDenom *= 1000;
+                        sigma::CoinDenomination denomination;
+                        if (!sigma::IntegerToDenomination(intDenom, denomination))
+                            lelantusSerialsToRemove.insert(std::make_pair(serials[i], ids[i]));
+                        else
+                            sigmaSerialsToRemove.insert(std::make_pair(
+                                    serials[i], sigma::CSpendCoinInfo::make(denomination, coinGroupId)));
+                    }
+                } else {
+                    for (size_t i = 0; i < serials.size(); i++) {
+                        lelantusSerialsToRemove.insert(std::make_pair(serials[i], ids[i]));
+                    }
+                }
+            } else if (tx->IsSigmaSpend()) {
+                for (const CTxIn &txin : tx->vin) {
+                    std::unique_ptr<sigma::CoinSpend> spend;
+                    uint32_t coinGroupId;
+
+                    try {
+                        std::tie(spend, coinGroupId) = sigma::ParseSigmaSpend(txin);
+                    }
+                    catch (CBadTxIn &) {
+                        continue;
+                    }
+
+                    Scalar serial = spend->getCoinSerialNumber();
+                    sigmaSerialsToRemove.insert(std::make_pair(
+                            serial, sigma::CSpendCoinInfo::make(spend->getDenomination(), coinGroupId)));
+                }
+            }
+        }
     }
 
     // Apply the block atomically to the chain state.
     int64_t nStart = GetTimeMicros();
     {
         auto dbTx = evoDb->BeginTransaction();
-        
+
         CCoinsViewCache view(pcoinsTip);
         if (DisconnectBlock(block, state, pindexDelete, view) != DISCONNECT_OK)
             return error("DisconnectTip(): DisconnectBlock %s failed", pindexDelete->GetBlockHash().ToString());
@@ -2928,6 +3245,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
 
 	DisconnectTipZC(block, pindexDelete);
 	sigma::DisconnectTipSigma(block, pindexDelete);
+    lelantus::DisconnectTipLelantus(block, pindexDelete);
     // Roll back MTP state
     MTPState::GetMTPState()->SetLastBlock(pindexDelete->pprev, chainparams.GetConsensus());
 
@@ -2955,7 +3273,7 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
                     false, /* fOverrideMempoolLimit */
                     0, /* nAbsurdFee */
                     false, /* isCheckWalletTransaction */
-                    false /* markZcoinSpendTransactionSerial */
+                    false /* markFiroSpendTransactionSerial */
                 );
             }
             if (tx.IsCoinBase() || !AcceptToMemoryPool(mempool, stateDummy, MakeTransactionRef(tx), false, NULL)) {
@@ -2974,15 +3292,32 @@ bool static DisconnectTip(CValidationState& state, const CChainParams& chainpara
     // Update chainActive and related variables.
     UpdateTip(pindexDelete->pprev, chainparams);
 
+    BatchProofContainer* batchProofContainer = BatchProofContainer::get_instance();
+    if (sigmaSerialsToRemove.size() > 0) {
+        batchProofContainer->removeSigma(sigmaSerialsToRemove);
+    }
+
+    if (lelantusSerialsToRemove.size() > 0) {
+        batchProofContainer->removeLelantus(lelantusSerialsToRemove);
+    }
+
 #ifdef ENABLE_WALLET
     // update mint/spend wallet
-    if (zwalletMain) {
+    if (!GetBoolArg("-disablewallet", false) && pwalletMain->zwallet) {
         if (block.sigmaTxInfo->spentSerials.size() > 0) {
-            zwalletMain->GetTracker().UpdateSpendStateFromBlock(block.sigmaTxInfo->spentSerials);
+            pwalletMain->zwallet->GetTracker().UpdateSpendStateFromBlock(block.sigmaTxInfo->spentSerials);
         }
 
         if (block.sigmaTxInfo->mints.size() > 0) {
-            zwalletMain->GetTracker().UpdateMintStateFromBlock(block.sigmaTxInfo->mints);
+            pwalletMain->zwallet->GetTracker().UpdateMintStateFromBlock(block.sigmaTxInfo->mints);
+        }
+
+        if (block.lelantusTxInfo->spentSerials.size() > 0) {
+            pwalletMain->zwallet->GetTracker().UpdateSpendStateFromBlock(block.lelantusTxInfo->spentSerials);
+        }
+
+        if (block.lelantusTxInfo->mints.size() > 0) {
+            pwalletMain->zwallet->GetTracker().UpdateMintStateFromBlock(block.lelantusTxInfo->mints);
         }
     }
 #endif
@@ -3115,16 +3450,27 @@ bool static ConnectTip(CValidationState& state, const CChainParams& chainparams,
 
 #ifdef ENABLE_WALLET
     // Sync with HDMint wallet
-    if (zwalletMain && blockConnecting.sigmaTxInfo) {
+
+    if (!GetBoolArg("-disablewallet", false) && pwalletMain->zwallet && blockConnecting.sigmaTxInfo) {
         LogPrintf("Checking if block contains wallet mints..\n");
         if (blockConnecting.sigmaTxInfo->spentSerials.size() > 0) {
             LogPrintf("HDmint: UpdateSpendStateFromBlock. [height: %d]\n", GetHeight());
-            zwalletMain->GetTracker().UpdateSpendStateFromBlock(blockConnecting.sigmaTxInfo->spentSerials);
+            pwalletMain->zwallet->GetTracker().UpdateSpendStateFromBlock(blockConnecting.sigmaTxInfo->spentSerials);
         }
 
         if (blockConnecting.sigmaTxInfo->mints.size() > 0) {
             LogPrintf("HDmint: UpdateMintStateFromBlock. [height: %d]\n", GetHeight());
-            zwalletMain->GetTracker().UpdateMintStateFromBlock(blockConnecting.sigmaTxInfo->mints);
+            pwalletMain->zwallet->GetTracker().UpdateMintStateFromBlock(blockConnecting.sigmaTxInfo->mints);
+        }
+
+        if (blockConnecting.lelantusTxInfo->spentSerials.size() > 0) {
+            LogPrintf("HDmint: UpdateSpendStateFromBlock. [height: %d]\n", GetHeight());
+            pwalletMain->zwallet->GetTracker().UpdateSpendStateFromBlock(blockConnecting.lelantusTxInfo->spentSerials);
+        }
+
+        if (blockConnecting.lelantusTxInfo->mints.size() > 0) {
+            LogPrintf("HDmint: UpdateSpendStateFromBlock. [height: %d]\n", GetHeight());
+            pwalletMain->zwallet->GetTracker().UpdateMintStateFromBlock(blockConnecting.lelantusTxInfo->mints);
         }
     }
 #endif
@@ -3443,6 +3789,25 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
             CBlockIndex *pindexOldTip = chainActive.Tip();
             if (pindexMostWork == NULL) {
                 pindexMostWork = FindMostWorkChain();
+                if (!fReindex && !IsInitialBlockDownload() &&
+                        pindexMostWork != NULL &&
+                        pindexMostWork != chainActive.Tip() &&
+                        chainActive.Height() >= chainparams.GetConsensus().nMaxReorgDepthEnforcementBlock &&
+                        chainActive.Height() < chainparams.GetConsensus().DIP0008Height + 100 &&
+                        !GetBoolArg("-allowdeepreorg", false)) {
+                    const CBlockIndex *pindexFork = chainActive.FindFork(pindexMostWork);
+                    assert(pindexFork != NULL);
+                    if (chainActive.Tip() != pindexFork &&
+                            pindexFork->nHeight < chainActive.Height() - chainparams.GetConsensus().nMaxReorgDepth) {
+                        LogPrintf("Deep reorg of %d blocks blocked (most work block = %s, fork block = %s)\n",
+                                pindexMostWork->nHeight - pindexFork->nHeight,
+                                pindexMostWork->GetBlockHash().ToString(),
+                                pindexFork->GetBlockHash().ToString());
+                        // mark block on wrong chain as invalid
+                        InvalidateBlock(state, chainparams, pindexMostWork->GetAncestor(pindexFork->nHeight+1));
+                        return state.Error("Reorg depth exceeds maximum allowed value");
+                    }
+                }
             }
 
             // Whether we have anything to do at all.
@@ -3491,20 +3856,6 @@ bool ActivateBestChain(CValidationState &state, const CChainParams& chainparams,
     // Write changes periodically to disk, after relay.
     if (!FlushStateToDisk(state, FLUSH_STATE_PERIODIC)) {
         return false;
-    }
-
-    //clear all old sigma spend transaction from mempool, to stat padding
-    if (chainActive.Height() == ::Params().GetConsensus().nSigmaPaddingBlock) {
-        LOCK2(cs_main, mempool.cs);
-        for (CTxMemPool::indexed_transaction_set::iterator mi = mempool.mapTx.begin();
-             mi != mempool.mapTx.end(); ++mi)
-        {
-            auto tx = mi->GetTx();
-            if(tx.IsSigmaSpend()) {
-                std::list<CTransaction> removed;
-                mempool.removeRecursive(tx, MemPoolRemovalReason::CONFLICT);
-            }
-        }
     }
 
     return true;
@@ -3652,7 +4003,7 @@ CBlockIndex* AddToBlockIndex(const CBlockHeader& block)
     // track prevBlockHash -> pindex (multimap)
     if (pindexNew->pprev) {
         mapPrevBlockIndex.emplace(pindexNew->pprev->GetBlockHash(), pindexNew);
-    }    
+    }
 
     return pindexNew;
 }
@@ -3802,7 +4153,7 @@ bool CheckBlockHeader(const CBlockHeader& block, CValidationState& state, const 
     if (nHeight == 0 && !block.hashPrevBlock.IsNull())
         nHeight = INT_MAX;
     if (fCheckPOW && !CheckProofOfWork(block.GetPoWHash(nHeight), block.nBits, consensusParams))
-        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");        
+        return state.DoS(50, false, REJECT_INVALID, "high-hash", false, "proof of work failed");
     return true;
 }
 
@@ -3815,6 +4166,8 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         
     if (nHeight == INT_MAX)
         nHeight = ZerocoinGetNHeight(block.GetBlockHeader());
+    if (!block.lelantusTxInfo)
+        block.lelantusTxInfo = std::make_shared<lelantus::CLelantusTxInfo>();
 
     LogPrintf("CheckBlock() nHeight=%s, blockHash= %s, isVerifyDB = %s\n", nHeight, block.GetHash().ToString(), isVerifyDB);
 
@@ -3866,12 +4219,16 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
 
     // Check transactions
 
-    for (CTransactionRef tx : block.vtx)
+    for (CTransactionRef tx : block.vtx) {
+        if (nHeight >= consensusParams.nStartSigmaBlacklist && nHeight < consensusParams.nRestartSigmaWithBlacklistCheck && (tx->IsSigmaMint() || tx->IsSigmaSpend())) {
+            return state.DoS(100, error("Sigma is temporarily disabled"), REJECT_INVALID, "bad-txns-zerocoin");
+        }
         // We don't check transactions against zerocoin state here, we'll check it again later in ConnectBlock
-        if (!CheckTransaction(*tx, state, true, tx->GetHash(), isVerifyDB, nHeight, false, false, NULL, NULL))
+        if (!CheckTransaction(*tx, state, false, tx->GetHash(), isVerifyDB, nHeight, false, false, NULL, NULL, NULL))
             return state.Invalid(false, state.GetRejectCode(), state.GetRejectReason(),
                                 strprintf("Transaction check failed (tx hash %s) %s", tx->GetHash().ToString(), state.GetDebugMessage()));
 
+    }
     unsigned int nSigOps = 0;
     for (const auto& tx : block.vtx)
     {
@@ -3884,6 +4241,9 @@ bool CheckBlock(const CBlock& block, CValidationState& state, const Consensus::P
         block.fChecked = true;
 
     if (!sigma::CheckSigmaBlock(state, block))
+        return false;
+
+    if (!lelantus::CheckLelantusBlock(state, block))
         return false;
 
     return true;
@@ -4011,7 +4371,7 @@ bool IsBlockHashInChain(const uint256& hashBlock)
     return chainActive.Contains(mapBlockIndex[hashBlock]);
 }
 
-bool IsTransactionInChain(const uint256& txId, int& nHeightTx, CTransactionRef tx)
+bool IsTransactionInChain(const uint256& txId, int& nHeightTx, CTransactionRef & tx)
 {
     uint256 hashBlock;
     if (!GetTransaction(txId, tx, Params().GetConsensus(), hashBlock, true))
@@ -4311,9 +4671,6 @@ bool ProcessNewBlock(const CChainParams& chainparams, const std::shared_ptr<cons
     if (!ActivateBestChain(state, chainparams, pblock))
         return error("%s: ActivateBestChain failed", __func__);
 
-    if (pindex->nHeight < chainparams.GetConsensus().DIP0003EnforcementHeight)
-        tnodeSync.IsBlockchainSynced(true);
-
     return true;
 }
 
@@ -4566,7 +4923,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
         // build mapPrevBlockIndex
         if (pindex->pprev) {
             mapPrevBlockIndex.emplace(pindex->pprev->GetBlockHash(), pindex);
-        }        
+        }
     }
     sort(vSortedByHeight.begin(), vSortedByHeight.end());
     BOOST_FOREACH(const PAIRTYPE(int, CBlockIndex*)& item, vSortedByHeight)
@@ -4672,6 +5029,7 @@ bool static LoadBlockIndexDB(const CChainParams& chainparams)
     set<CBlockIndex *> changes;
     ZerocoinBuildStateFromIndex(&chainActive, changes);
     sigma::BuildSigmaStateFromIndex(&chainActive);
+    lelantus::BuildLelantusStateFromIndex(&chainActive);
     if (!changes.empty()) {
         setDirtyBlockIndex.insert(changes.begin(), changes.end());
         FlushStateToDisk();

@@ -63,7 +63,7 @@ void CActiveMasternodeManager::Init()
 {
     LOCK(cs_main);
 
-    if (!fTnodeMode) return;
+    if (!fMasternodeMode) return;
 
     if (!deterministicMNManager->IsDIP3Enforced()) return;
 
@@ -131,7 +131,7 @@ void CActiveMasternodeManager::UpdatedBlockTip(const CBlockIndex* pindexNew, con
 {
     LOCK(cs_main);
 
-    if (!fTnodeMode) return;
+    if (!fMasternodeMode) return;
 
     if (!deterministicMNManager->IsDIP3Enforced(pindexNew->nHeight)) return;
 

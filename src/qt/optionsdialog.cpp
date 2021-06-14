@@ -256,6 +256,10 @@ void OptionsDialog::on_hideTrayIcon_stateChanged(int fState)
         ui->minimizeToTray->setEnabled(true);
     }
 }
+void OptionsDialog::handleEnabledZapChanged(){
+	QMessageBox msgBox;
+    clearStatusLabel();
+}
 
 void OptionsDialog::showRestartWarning(bool fPersistent)
 {

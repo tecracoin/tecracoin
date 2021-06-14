@@ -10,6 +10,7 @@
 #include "uint256.h"
 #include <map>
 #include <string>
+#include <set>
 
 namespace Consensus {
 
@@ -133,6 +134,18 @@ struct Params {
     int nSubsidyHalvingInterval;
     /** Stop subsidy at this block number */
     int nSubsidyHalvingStopBlock;
+
+    /** parameters for coinbase payment distribution between first and second halvings (aka stage 2) */
+    /** P2PKH or P2SH address for developer funds */
+    std::string stage2DevelopmentFundAddress;
+    /** percentage of block subsidy going to developer fund */
+    int stage2DevelopmentFundShare;
+    /** percentage of block subsidy going to tnode */
+    int stage2TnodeShare;
+
+    int nStartDuplicationCheck;
+    int nStartBlacklist;
+
     /** Used to check majorities for block version upgrade */
     int nMajorityEnforceBlockUpgrade;
     int nMajorityRejectBlockOutdated;
@@ -200,7 +213,7 @@ struct Params {
 
     // Maximum number of outbound peers designated as Dandelion destinations.
     uint32_t nDandelionMaxDestinations;
-    
+
     // Expected time between Dandelion routing shuffles (in seconds).
     uint32_t nDandelionShuffleInterval;
 
@@ -222,8 +235,23 @@ struct Params {
 
     int nDisableUnpaddedSigmaBlock;
 
+    int nStartSigmaBlacklist;
+    int nRestartSigmaWithBlacklistCheck;
+
     // The block number after which old sigma clients are banned.
     int nOldSigmaBanBlock;
+
+    // The block number after which lelantus is accepted.
+    int nLelantusStartBlock;
+
+    // The block number introducing evo sporks
+    int nEvoSporkStartBlock;
+
+    // The block number to stop using evo sporks
+    int nEvoSporkStopBlock;
+
+    // Key to sign spork txs
+    std::string evoSporkKeyID;
 
     // The block number when Bip39 was implemented in Zcoin
     int nMnemonicBlock;
@@ -252,6 +280,21 @@ struct Params {
     // Value of maximum sigma spend per transaction.
     int64_t nMaxValueSigmaSpendPerTransaction;
 
+    // Amount of maximum lelantus spend per block.
+    unsigned nMaxLelantusInputPerBlock;
+
+    // Value of maximum lelantus spend per block.
+    int64_t nMaxValueLelantusSpendPerBlock;
+
+    // Amount of maximum lelantus spend per transaction.
+    unsigned nMaxLelantusInputPerTransaction;
+
+    // Value of maximum lelantus spend per transaction.
+    int64_t nMaxValueLelantusSpendPerTransaction;
+
+    // Value of maximum lelantus mint.
+    int64_t nMaxValueLelantusMint;
+
     // Number of blocks with allowed zerocoin to sigma remint transaction (after nSigmaStartBlock)
     int nZerocoinToSigmaRemintWindowSize;
 
@@ -268,9 +311,18 @@ struct Params {
 
     /** block to switch to evo tnode payments */
     int DIP0003EnforcementHeight;
+    uint256 DIP0003EnforcementHash;
 
     /** block to start using chainlocks */
     int DIP0008Height;
+
+    /** maximum reorg depth */
+    int nMaxReorgDepth;
+    /** block to start reorg depth enforcement */
+    int nMaxReorgDepthEnforcementBlock;
+
+    /** whitelisted transactions */
+    std::set<uint256> txidWhitelist;
 
     int nEvoTnodeMinimumConfirmations;
 

@@ -2,7 +2,7 @@
 
 ## Setup
 
-[TecraCoin Core] (https://tecracoin.io/get-tecracoin/) is the original TecraCoin client and it builds the backbone of the network. However, it downloads and stores the entire history of TecraCoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few minutes to an hour or more.
+[TecraCoin Core] (https://tecracoin.io/wallets) is the original TecraCoin client and it builds the backbone of the network. However, it downloads and stores the entire history of TecraCoin transactions (which is currently several GBs); depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few minutes to an hour or more.
 
 ## Running
 

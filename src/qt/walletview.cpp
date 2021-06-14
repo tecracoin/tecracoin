@@ -5,20 +5,18 @@
 #include "walletview.h"
 
 #include "addressbookpage.h"
-#include "zerocoinpage.h"
-#include "sigmadialog.h"
-#include "zc2sigmapage.h"
 #include "askpassphrasedialog.h"
 #include "bitcoingui.h"
 #include "clientmodel.h"
 #include "guiutil.h"
+#include "metadexcanceldialog.h"
+#include "metadexdialog.h"
 #include "optionsmodel.h"
 #include "overviewpage.h"
 #include "platformstyle.h"
 #include "receivecoinsdialog.h"
 #include "sendcoinsdialog.h"
-#include "metadexcanceldialog.h"
-#include "metadexdialog.h"
+
 #include "signverifymessagedialog.h"
 #include "tradehistorydialog.h"
 #include "transactiontablemodel.h"
@@ -61,9 +59,6 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     sendElysiumView(0),
     sendCoinsTabs(0),
 #endif
-    sigmaView(0),
-    blankSigmaView(0),
-    zc2SigmaPage(0),
     tecracoinTransactionsView(0),
     platformStyle(_platformStyle)
 {
@@ -75,14 +70,11 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     receiveCoinsPage = new ReceiveCoinsDialog(platformStyle);
     usedSendingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::SendingTab, this);
     usedReceivingAddressesPage = new AddressBookPage(platformStyle, AddressBookPage::ForEditing, AddressBookPage::ReceivingTab, this);
-    zerocoinPage = new ZerocoinPage(platformStyle, ZerocoinPage::ForEditing, this);
-    sigmaPage = new QWidget(this);
-    zc2SigmaPage = new Zc2SigmaPage(platformStyle, this);
+
     sendCoinsPage = new QWidget(this);
 #ifdef ENABLE_ELYSIUM
     toolboxPage = new QWidget(this);
 #endif
-    tnodeListPage = new TnodeList(platformStyle);
     masternodeListPage = new MasternodeList(platformStyle);
 
     setupTransactionPage();
@@ -90,7 +82,6 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
 #ifdef ENABLE_ELYSIUM
     setupToolboxPage();
 #endif
-    setupSigmaPage();
 
     addWidget(overviewPage);
 #ifdef ENABLE_ELYSIUM
@@ -99,13 +90,10 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-    addWidget(zerocoinPage);
-    addWidget(sigmaPage);
-    addWidget(zc2SigmaPage);
+
 #ifdef ENABLE_ELYSIUM
     addWidget(toolboxPage);
 #endif
-    addWidget(tnodeListPage);
     addWidget(masternodeListPage);
 
     // Clicking on a transaction on the overview pre-selects the transaction on the transaction history page
@@ -207,22 +195,6 @@ void WalletView::setupSendCoinPage()
     sendCoinsPage->setLayout(pageLayout);
 }
 
-void WalletView::setupSigmaPage()
-{
-    // Set layout for Sigma page
-    auto pageLayout = new QVBoxLayout();
-
-    if (pwalletMain->IsHDSeedAvailable()) {
-        sigmaView = new SigmaDialog(platformStyle);
-        connect(sigmaView, SIGNAL(message(QString, QString, unsigned int)), this, SIGNAL(message(QString, QString, unsigned int)));
-        pageLayout->addWidget(sigmaView);
-        sigmaPage->setLayout(pageLayout);
-    } else {
-        blankSigmaView = new BlankSigmaDialog();
-        pageLayout->addWidget(blankSigmaView);
-        sigmaPage->setLayout(pageLayout);
-    }
-}
 
 #ifdef ENABLE_ELYSIUM
 void WalletView::setupToolboxPage()
@@ -265,7 +237,7 @@ void WalletView::setBitcoinGUI(BitcoinGUI *gui)
         // Pass through transaction notifications
         connect(this, SIGNAL(incomingTransaction(QString,int,CAmount,QString,QString,QString)), gui, SLOT(incomingTransaction(QString,int,CAmount,QString,QString,QString)));
 
-        // Connect HD enabled state signal 
+        // Connect HD enabled state signal
         connect(this, SIGNAL(hdEnabledStatusChanged(int)), gui, SLOT(setHDStatus(int)));
     }
 }
@@ -276,15 +248,10 @@ void WalletView::setClientModel(ClientModel *_clientModel)
 
     overviewPage->setClientModel(clientModel);
     sendTecraCoinView->setClientModel(clientModel);
-    tnodeListPage->setClientModel(clientModel);
     masternodeListPage->setClientModel(clientModel);
 #ifdef ENABLE_ELYSIUM
     elyAssetsPage->setClientModel(clientModel);
 #endif
-    if (pwalletMain->IsHDSeedAvailable()) {
-        sigmaView->setClientModel(clientModel);
-    }
-    zc2SigmaPage->setClientModel(clientModel);
 
 #ifdef ENABLE_ELYSIUM
     if (elysiumTransactionsView) {
@@ -307,17 +274,17 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     receiveCoinsPage->setModel(_walletModel);
     // TODO: fix this
     //sendCoinsPage->setModel(_walletModel);
-    zerocoinPage->setModel(_walletModel->getAddressTableModel());
+//    zerocoinPage->setModel(_walletModel->getAddressTableModel());
     if (pwalletMain->IsHDSeedAvailable()) {
-        sigmaView->setWalletModel(_walletModel);
+//        sigmaView->setWalletModel(_walletModel);
+//        lelantusView->setWalletModel(_walletModel);
     }
-    zc2SigmaPage->createModel();
+//    zc2SigmaPage->createModel();
     usedReceivingAddressesPage->setModel(_walletModel->getAddressTableModel());
     usedSendingAddressesPage->setModel(_walletModel->getAddressTableModel());
-    tnodeListPage->setWalletModel(_walletModel);
     masternodeListPage->setWalletModel(_walletModel);
     sendTecraCoinView->setModel(_walletModel);
-    zc2SigmaPage->setWalletModel(_walletModel);
+
 #ifdef ENABLE_ELYSIUM
     elyAssetsPage->setWalletModel(walletModel);
 
@@ -351,6 +318,11 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
 
         // Show progress dialog
         connect(_walletModel, SIGNAL(showProgress(QString,int)), this, SLOT(showProgress(QString,int)));
+
+        // Check mintable amount
+        connect(_walletModel, SIGNAL(balanceChanged(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)),
+            this, SLOT(checkMintableAmount(CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount,CAmount)));
+
     }
 }
 
@@ -432,11 +404,6 @@ void WalletView::focusBitcoinHistoryTab(const QModelIndex &idx)
     tecracoinTransactionList->focusTransaction(idx);
 }
 
-void WalletView::gotoTnodePage()
-{
-    setCurrentWidget(tnodeListPage);
-}
-
 void WalletView::gotoMasternodePage()
 {
     setCurrentWidget(masternodeListPage);
@@ -445,25 +412,6 @@ void WalletView::gotoMasternodePage()
 void WalletView::gotoReceiveCoinsPage()
 {
     setCurrentWidget(receiveCoinsPage);
-}
-
-void WalletView::gotoZerocoinPage()
-{
-    setCurrentWidget(zerocoinPage);
-}
-
-void WalletView::gotoSigmaPage()
-{
-    setCurrentWidget(sigmaPage);
-}
-
-void WalletView::gotoZc2SigmaPage()
-{
-    if (pwalletMain->IsHDSeedAvailable()) {
-        setCurrentWidget(zc2SigmaPage);
-    } else {
-        setCurrentWidget(sigmaPage);
-    }
 }
 
 #ifdef ENABLE_ELYSIUM
@@ -623,4 +571,15 @@ void WalletView::showProgress(const QString &title, int nProgress)
 void WalletView::requestedSyncWarningInfo()
 {
     Q_EMIT outOfSyncWarningClicked();
+}
+
+bool WalletView::eventFilter(QObject *watched, QEvent *event)
+{
+    switch (event->type()) {
+    case QEvent::Type::Resize:
+    case QEvent::Type::Move:
+        break;
+    }
+
+    return QStackedWidget::eventFilter(watched, event);
 }

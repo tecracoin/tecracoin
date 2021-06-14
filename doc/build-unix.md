@@ -6,7 +6,7 @@ Some notes on how to build TecraCoin Core in Unix.
 
 Note
 ---------------------
-Always use absolute paths to configure and compile tecracoin and the dependencies,
+Always use absolute paths to configure and compile TecraCoin and the dependencies,
 for example, when specifying the path of the dependency:
 
 	../dist/configure --enable-cxx --disable-shared --with-pic --prefix=$BDB_PREFIX
@@ -205,7 +205,7 @@ If you need to build Boost yourself:
 
 Security
 --------
-To help make your tecracoin installation more secure by making certain attacks impossible to
+To help make your TecraCoin installation more secure by making certain attacks impossible to
 exploit even if a vulnerability is found, binaries are hardened by default.
 This can be disabled with:
 
@@ -238,7 +238,7 @@ Hardening enables the following features:
 
 * Non-executable Stack
     If the stack is executable then trivial stack based buffer overflow exploits are possible if
-    vulnerable buffers are found. By default, tecracoin should be built with a non-executable stack
+    vulnerable buffers are found. By default, TecraCoin should be built with a non-executable stack
     but if one of the libraries it uses asks for an executable stack or someone makes a mistake
     and uses a compiler extension which requires an executable stack, it will silently build an
     executable without the non-executable stack protection.

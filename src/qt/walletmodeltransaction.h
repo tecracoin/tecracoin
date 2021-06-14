@@ -5,6 +5,9 @@
 #ifndef BITCOIN_QT_WALLETMODELTRANSACTION_H
 #define BITCOIN_QT_WALLETMODELTRANSACTION_H
 
+#include "../hdmint/hdmint.h"
+#include "../primitives/zerocoin.h"
+
 #include "walletmodel.h"
 
 #include <QObject>
@@ -42,6 +45,7 @@ private:
     CWalletTx *walletTransaction;
     CReserveKey *keyChange;
     CAmount fee;
+
 };
 
 #endif // BITCOIN_QT_WALLETMODELTRANSACTION_H

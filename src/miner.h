@@ -170,6 +170,10 @@ private:
     CAmount nSigmaSpendAmount;
     size_t nSigmaSpendInputs;
 
+    // lelantus spend limits
+    CAmount nLelantusSpendAmount;
+    size_t nLelantusSpendInputs;
+
     // transactions we cannot include in this block
     CTxMemPool::setEntries txBlackList;
 
@@ -219,7 +223,7 @@ private:
       * of updated descendants. */
     int UpdatePackagesForAdded(const CTxMemPool::setEntries& alreadyAdded, indexed_modified_transaction_set &mapModifiedTx);
 
-    /** Zcoin: fill in founders' reward and tnode payout outputs */
+    /** TecraCoin: fill in founders' reward and tnode payout outputs */
     void FillFoundersReward(CMutableTransaction &coinbaseTx, CAmount nBlockSubsidy, bool fMTP);
 
     /** Fill txBlackList set */

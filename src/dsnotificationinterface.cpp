@@ -4,13 +4,10 @@
 
 #include "chainparams.h"
 #include "dsnotificationinterface.h"
-#include "instantx.h"
 //#include "governance.h"
 #include "masternode-payments.h"
 #include "masternode-sync.h"
-#include "tnodesync-interface.h"
 #include "validation.h"
-#include "spork.h"
 
 #include "evo/deterministicmns.h"
 #include "evo/mnauth.h"
@@ -28,7 +25,7 @@ void CDSNotificationInterface::InitializeCurrentBlockTip()
 
 void CDSNotificationInterface::AcceptedBlockHeader(const CBlockIndex *pindexNew)
 {
-    //llmq::chainLocksHandler->AcceptedBlockHeader(pindexNew);
+    llmq::chainLocksHandler->AcceptedBlockHeader(pindexNew);
     masternodeSync.AcceptedBlockHeader(pindexNew);
 }
 
@@ -45,7 +42,6 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
     deterministicMNManager->UpdatedBlockTip(pindexNew);
 
     masternodeSync.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
-    tnodeSyncInterface.UpdatedBlockTip(pindexNew, fInitialDownload, connman);
 
     // Update global DIP0001 activation status
     //fDIP0001ActiveAtTip = pindexNew->nHeight >= Params().GetConsensus().DIP0001Height;
@@ -59,7 +55,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
         return;
 
     //llmq::quorumInstantSendManager->UpdatedBlockTip(pindexNew);
-    //llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
+    llmq::chainLocksHandler->UpdatedBlockTip(pindexNew);
 
     //instantsend.UpdatedBlockTip(pindexNew);
     //governance.UpdatedBlockTip(pindexNew, connman);
@@ -70,7 +66,7 @@ void CDSNotificationInterface::UpdatedBlockTip(const CBlockIndex *pindexNew, con
 void CDSNotificationInterface::SyncTransaction(const CTransaction &tx, const CBlockIndex *pindex, int posInBlock)
 {
     //llmq::quorumInstantSendManager->SyncTransaction(tx, pindex, posInBlock);
-    //llmq::chainLocksHandler->SyncTransaction(tx, pindex, posInBlock);
+    llmq::chainLocksHandler->SyncTransaction(tx, pindex, posInBlock);
     //instantsend.SyncTransaction(tx, pindex, posInBlock);
 }
 

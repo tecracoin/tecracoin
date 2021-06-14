@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        docker { image 'zcoinofficial/zcoin-builder:latest' }
+        docker { image 'firoorg/firo-builder:latest' }
     }
     environment {
         CCACHE_DIR = '/tmp/.ccache'

@@ -61,7 +61,7 @@ static CBlock CreateGenesisBlock(const char *pszTimestamp, const CScript &genesi
  */
 static CBlock CreateGenesisBlock(uint32_t nTime, uint32_t nNonce, uint32_t nBits, int32_t nVersion, const CAmount &genesisReward,
                    std::vector<unsigned char> extraNonce, bool testnet=false) {
-    //btzc: zcoin timestamp
+    //btzc: tecracoin timestamp
     const char *pszTimestamp = !testnet? "The NY Times 2018/07/12 It Came From a Black Hole, and Landed in Antarctica":
     "The NY Times 2020/04/04 Staggered U.S. Braces for More Infections";
     const CScript genesisOutputScript = CScript();
@@ -241,6 +241,8 @@ public:
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
         consensus.nLLMQPowTargetSpacing = 5*60;
+        consensus.llmqChainLocks = Consensus::LLMQ_400_60;
+        consensus.llmqForInstantSend = Consensus::LLMQ_50_60;
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER;
         consensus.nMTPStartBlock = 192804; //TecraCoin
@@ -251,7 +253,7 @@ public:
 
         nPoolMaxTransactions = 3;
         nFulfilledRequestExpireTime = 60*60; // fulfilled requests expire in 1 hour
-        strSporkPubKey = "043e62180057b1fcbd3ca534f0a32ec83b967ae663a6fc7321ce0cf9f866ca909be062575c1aad9cd7ef0823938d0cc6b37161f9da5136731816db7e5794ec4063";
+        strTnodePaymentsPubKey = "04549ac134f694c0243f503e8c8a9a986f5de6610049c40b07816809b0d1d06a21b07be27b9bb555931773f62ba6cf35a25fd52f694d4e1106ccd237a7bb899fdd";
 
         /**
          * The message start string is designed to be unlikely to occur in normal data.
@@ -353,7 +355,10 @@ public:
         consensus.nSigmaStartBlock = ZC_SIGMA_STARTING_BLOCK;
         consensus.nSigmaPaddingBlock = ZC_SIGMA_PADDING_BLOCK;
         consensus.nDisableUnpaddedSigmaBlock = ZC_SIGMA_DISABLE_UNPADDED_BLOCK;
+        consensus.nStartSigmaBlacklist = 293790;
+        consensus.nRestartSigmaWithBlacklistCheck = 296900;
         consensus.nOldSigmaBanBlock = ZC_OLD_SIGMA_BAN_BLOCK;
+        consensus.nLelantusStartBlock = ZC_LELANTUS_STARTING_BLOCK;
         consensus.nZerocoinV2MintMempoolGracefulPeriod = ZC_V2_MINT_GRACEFUL_MEMPOOL_PERIOD;
         consensus.nZerocoinV2MintGracefulPeriod = ZC_V2_MINT_GRACEFUL_PERIOD;
         consensus.nZerocoinV2SpendMempoolGracefulPeriod = ZC_V2_SPEND_GRACEFUL_MEMPOOL_PERIOD;
@@ -362,7 +367,23 @@ public:
         consensus.nMaxValueSigmaSpendPerBlock = ZC_SIGMA_VALUE_SPEND_LIMIT_PER_BLOCK;
         consensus.nMaxSigmaInputPerTransaction = ZC_SIGMA_INPUT_LIMIT_PER_TRANSACTION;
         consensus.nMaxValueSigmaSpendPerTransaction = ZC_SIGMA_VALUE_SPEND_LIMIT_PER_TRANSACTION;
+        consensus.nMaxLelantusInputPerBlock = ZC_LELANTUS_INPUT_LIMIT_PER_BLOCK;
+        consensus.nMaxValueLelantusSpendPerBlock = ZC_LELANTUS_VALUE_SPEND_LIMIT_PER_BLOCK;
+        consensus.nMaxLelantusInputPerTransaction = ZC_LELANTUS_INPUT_LIMIT_PER_TRANSACTION;
+        consensus.nMaxValueLelantusSpendPerTransaction = ZC_LELANTUS_VALUE_SPEND_LIMIT_PER_TRANSACTION;
+        consensus.nMaxValueLelantusMint = ZC_LELANTUS_MAX_MINT;
         consensus.nZerocoinToSigmaRemintWindowSize = 50000;
+
+        consensus.evoSporkKeyID = "a78fERshquPsTv2TuKMSsxTeKom56uBwLP";
+        consensus.nEvoSporkStartBlock = ZC_LELANTUS_STARTING_BLOCK;
+        consensus.nEvoSporkStopBlock = ZC_LELANTUS_STARTING_BLOCK + 24*12*365;  // one year after lelantus
+
+        // reorg
+        consensus.nMaxReorgDepth = 5;
+        consensus.nMaxReorgDepthEnforcementBlock = 338000;
+
+        // whitelist
+        consensus.txidWhitelist.insert(uint256S("3ecea345c7b174271bbdcde8cad6097d9a3dc420259743d52cc9cf1945aaba03"));
 
         // Dandelion related values.
         consensus.nDandelionEmbargoMinimum = DANDELION_EMBARGO_MINIMUM;
@@ -388,6 +409,26 @@ public:
         consensus.rewardsStage4Start = 1680000;
         consensus.rewardsStage5Start = 2520000;
         consensus.rewardsStage6Start = 3366000;
+    }
+    virtual bool SkipUndoForBlock(int nHeight) const
+    {
+        return nHeight == 293526;
+    }
+    virtual bool ApplyUndoForTxout(int nHeight, uint256 const & txid, int n) const
+    {
+        // We only apply first 23 tx inputs UNDOs for the tx 7702 in block 293526
+        if (!SkipUndoForBlock(nHeight)) {
+            return true;
+        }
+        static std::map<uint256, int> const txs = { {uint256S("7702eaa0e042846d39d01eeb4c87f774913022e9958cfd714c5c2942af380569"), 22} };
+        std::map<uint256, int>::const_iterator const itx = txs.find(txid);
+        if (itx == txs.end()) {
+            return false;
+        }
+        if (n <= itx->second) {
+            return true;
+        }
+        return false;
     }
 };
 
@@ -476,6 +517,8 @@ public:
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
         consensus.nLLMQPowTargetSpacing = 20;
+        consensus.llmqChainLocks = Consensus::LLMQ_10_70;
+        consensus.llmqForInstantSend = Consensus::LLMQ_10_70;
 
         consensus.nMTPSwitchTime = SWITCH_TO_MTP_BLOCK_HEADER_TESTNET;
         consensus.nMTPStartBlock = 15593; // TecraCoin
@@ -484,7 +527,7 @@ public:
 
         nPoolMaxTransactions = 3;
         nFulfilledRequestExpireTime = 5*60; // fulfilled requests expire in 5 minutes
-        strSporkPubKey = "048779365ea4301c3da88204a79f202ad51fc5497727ae11a804b95091dfbd0ad3ef88456e0d09428ae97b70be75f8f49b0b52dad6900c6933717dcfe4ba9302d2";
+        strTnodePaymentsPubKey = "048779365ea4301c3da88204a79f202ad51fc5497727ae11a804b95091dfbd0ad3ef88456e0d09428ae97b70be75f8f49b0b52dad6900c6933717dcfe4ba9302d2";
 
         pchMessageStart[0] = 0x2c;
         pchMessageStart[1] = 0xc2;
@@ -567,7 +610,11 @@ public:
         consensus.nSigmaStartBlock = 1;
         consensus.nSigmaPaddingBlock = 1;
         consensus.nDisableUnpaddedSigmaBlock = 1;
+        consensus.nStartSigmaBlacklist = INT_MAX;
+        consensus.nRestartSigmaWithBlacklistCheck = INT_MAX;
         consensus.nOldSigmaBanBlock = 1;
+
+        consensus.nLelantusStartBlock = ZC_LELANTUS_TESTNET_STARTING_BLOCK;
 
         consensus.nZerocoinV2MintMempoolGracefulPeriod = ZC_V2_MINT_TESTNET_GRACEFUL_MEMPOOL_PERIOD;
         consensus.nZerocoinV2MintGracefulPeriod = ZC_V2_MINT_TESTNET_GRACEFUL_PERIOD;
@@ -577,7 +624,23 @@ public:
         consensus.nMaxValueSigmaSpendPerBlock = ZC_SIGMA_VALUE_SPEND_LIMIT_PER_BLOCK;
         consensus.nMaxSigmaInputPerTransaction = ZC_SIGMA_INPUT_LIMIT_PER_TRANSACTION;
         consensus.nMaxValueSigmaSpendPerTransaction = ZC_SIGMA_VALUE_SPEND_LIMIT_PER_TRANSACTION;
+        consensus.nMaxLelantusInputPerBlock = ZC_LELANTUS_INPUT_LIMIT_PER_BLOCK;
+        consensus.nMaxValueLelantusSpendPerBlock = 1100 * COIN;
+        consensus.nMaxLelantusInputPerTransaction = ZC_LELANTUS_INPUT_LIMIT_PER_TRANSACTION;
+        consensus.nMaxValueLelantusSpendPerTransaction = 1001 * COIN;
+        consensus.nMaxValueLelantusMint = 1001 * COIN;
         consensus.nZerocoinToSigmaRemintWindowSize = 0;
+
+        consensus.evoSporkKeyID = "TWSEa1UsZzDHywDG6CZFDNdeJU6LzhbbBL";
+        consensus.nEvoSporkStartBlock = 22000;
+        consensus.nEvoSporkStopBlock = 40000;
+
+        // reorg
+        consensus.nMaxReorgDepth = 4;
+        consensus.nMaxReorgDepthEnforcementBlock = 25150;
+
+        // whitelist
+        consensus.txidWhitelist.insert(uint256S("44b3829117bd248544c71b430d585cb88b4ce156a7d4fdb9ef3ae96efa8f09d3"));
 
         // Dandelion related values.
         consensus.nDandelionEmbargoMinimum = DANDELION_TESTNET_EMBARGO_MINIMUM;
@@ -706,6 +769,8 @@ public:
         consensus.llmqs[Consensus::LLMQ_400_60] = llmq400_60;
         consensus.llmqs[Consensus::LLMQ_400_85] = llmq400_85;
         consensus.nLLMQPowTargetSpacing = 1;
+        consensus.llmqChainLocks = Consensus::LLMQ_5_60;
+        consensus.llmqForInstantSend = Consensus::LLMQ_5_60;
 
         consensus.nMTPSwitchTime = INT_MAX;
         consensus.nMTPStartBlock = 0;
@@ -780,9 +845,12 @@ public:
 
         // Sigma related values.
         consensus.nSigmaStartBlock = 400;
-        consensus.nSigmaPaddingBlock = 550;
-        consensus.nDisableUnpaddedSigmaBlock = 510;
+        consensus.nSigmaPaddingBlock = 1;
+        consensus.nDisableUnpaddedSigmaBlock = 1;
+        consensus.nStartSigmaBlacklist = INT_MAX;
+        consensus.nRestartSigmaWithBlacklistCheck = INT_MAX;
         consensus.nOldSigmaBanBlock = 450;
+        consensus.nLelantusStartBlock = 1000;
         consensus.nZerocoinV2MintMempoolGracefulPeriod = 2;
         consensus.nZerocoinV2MintGracefulPeriod = 5;
         consensus.nZerocoinV2SpendMempoolGracefulPeriod = 10;
@@ -791,7 +859,21 @@ public:
         consensus.nMaxValueSigmaSpendPerBlock = ZC_SIGMA_VALUE_SPEND_LIMIT_PER_BLOCK;
         consensus.nMaxSigmaInputPerTransaction = ZC_SIGMA_INPUT_LIMIT_PER_TRANSACTION;
         consensus.nMaxValueSigmaSpendPerTransaction = ZC_SIGMA_VALUE_SPEND_LIMIT_PER_TRANSACTION;
+        consensus.nMaxLelantusInputPerBlock = ZC_LELANTUS_INPUT_LIMIT_PER_BLOCK;
+        consensus.nMaxValueLelantusSpendPerBlock = ZC_LELANTUS_VALUE_SPEND_LIMIT_PER_BLOCK;
+        consensus.nMaxLelantusInputPerTransaction = ZC_LELANTUS_INPUT_LIMIT_PER_TRANSACTION;
+        consensus.nMaxValueLelantusSpendPerTransaction = ZC_LELANTUS_VALUE_SPEND_LIMIT_PER_TRANSACTION;
+        consensus.nMaxValueLelantusMint = ZC_LELANTUS_MAX_MINT;
         consensus.nZerocoinToSigmaRemintWindowSize = 1000;
+
+        // evo spork
+        consensus.evoSporkKeyID = "TSpmHGzQT4KJrubWa4N2CRmpA7wKMMWDg4";  // private key is cW2YM2xaeCaebfpKguBahUAgEzLXgSserWRuD29kSyKHq1TTgwRQ
+        consensus.nEvoSporkStartBlock = 1000;
+        consensus.nEvoSporkStopBlock = 1500;
+
+        // reorg
+        consensus.nMaxReorgDepth = 4;
+        consensus.nMaxReorgDepthEnforcementBlock = 300;
 
         // Dandelion related values.
         consensus.nDandelionEmbargoMinimum = 0;

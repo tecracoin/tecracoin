@@ -20,11 +20,11 @@
 #include "rpc/server.h"
 #include "txmempool.h"
 #include "util.h"
-#include "tnodesync-interface.h"
 #include "utilstrencodings.h"
 #include "validationinterface.h"
 
 #include "masternode-payments.h"
+#include "masternode-sync.h"
 
 #include <memory>
 #include <stdint.h>
@@ -538,10 +538,10 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
         throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "TecraCoin is not connected!");
 
     if (IsInitialBlockDownload())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Tecacoin is downloading blocks...");
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "TecraCoin is downloading blocks...");
 
-    if (Params().GetConsensus().IsMain() && !tnodeSyncInterface.IsSynced())
-        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "Tecacoin Core is syncing with network...");
+    if (Params().GetConsensus().IsMain() && !masternodeSync.IsSynced())
+        throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, "TecraCoin Core is syncing with network...");
 
     static unsigned int nTransactionsUpdatedLast;
     if (!lpval.isNull())
@@ -774,42 +774,27 @@ UniValue getblocktemplate(const JSONRPCRequest& request)
     result.push_back(Pair("bits", strprintf("%08x", pblock->nBits)));
     result.push_back(Pair("height", (int64_t)(pindexPrev->nHeight+1)));
 
-    if (pindexPrev->nHeight+1 >= Params().GetConsensus().DIP0003EnforcementHeight) {
-        // Get expected MN/superblock payees. The call to GetBlockTxOuts might fail on regtest/devnet or when
-        // testnet is reset. This is fine and we ignore failure (blocks will be accepted)
-        std::vector<CTxOut> voutMasternodePayments;
-        mnpayments.GetBlockTxOuts(chainActive.Height() + 1, 0, voutMasternodePayments);
+    // Get expected MN/superblock payees. The call to GetBlockTxOuts might fail on regtest/devnet or when
+    // testnet is reset. This is fine and we ignore failure (blocks will be accepted)
+    std::vector<CTxOut> voutMasternodePayments;
+    mnpayments.GetBlockTxOuts(chainActive.Height() + 1, 0, voutMasternodePayments);
 
-        UniValue masternodeObj(UniValue::VARR);
-        for (const auto& txout : pblocktemplate->voutMasternodePayments) {
-            CTxDestination address1;
-            ExtractDestination(txout.scriptPubKey, address1);
-            CBitcoinAddress address2(address1);
+    UniValue masternodeObj(UniValue::VARR);
+    for (const auto& txout : pblocktemplate->voutMasternodePayments) {
+        CTxDestination address1;
+        ExtractDestination(txout.scriptPubKey, address1);
+        CBitcoinAddress address2(address1);
 
-            UniValue obj(UniValue::VOBJ);
-            obj.push_back(Pair("payee", address2.ToString().c_str()));
-            obj.push_back(Pair("script", HexStr(txout.scriptPubKey)));
-            obj.push_back(Pair("amount", txout.nValue));
-            masternodeObj.push_back(obj);
-        }
-
-        result.push_back(Pair("tnode", masternodeObj));
-        result.push_back(Pair("tnode_payments_started", true));
-        result.push_back(Pair("tnode_payments_enforced", true));
+        UniValue obj(UniValue::VOBJ);
+        obj.push_back(Pair("payee", address2.ToString().c_str()));
+        obj.push_back(Pair("script", HexStr(txout.scriptPubKey)));
+        obj.push_back(Pair("amount", txout.nValue));
+        masternodeObj.push_back(obj);
     }
-    else {
-        UniValue tnodeObj(UniValue::VOBJ);
-        if(pblock->txoutTnode != CTxOut()) {
-            CTxDestination address1;
-            ExtractDestination(pblock->txoutTnode.scriptPubKey, address1);
-            CBitcoinAddress address2(address1);
-            tnodeObj.push_back(Pair("payee", address2.ToString().c_str()));
-            tnodeObj.push_back(Pair("script", HexStr(pblock->txoutTnode.scriptPubKey.begin(), pblock->txoutTnode.scriptPubKey.end())));
-            tnodeObj.push_back(Pair("amount", pblock->txoutTnode.nValue));
-        }
-        result.push_back(Pair("tnode", tnodeObj));
-        result.push_back(Pair("tnode_payments_started", pindexPrev->nHeight + 1 > Params().GetConsensus().nTnodePaymentsStartBlock));
-    }
+
+    result.push_back(Pair("tnode", masternodeObj));
+    result.push_back(Pair("tnode_payments_started", true));
+    result.push_back(Pair("tnode_payments_enforced", true));
 
     if (pindexPrev->nHeight+1 >= Params().GetConsensus().DIP0003Height) {
         result.push_back(Pair("coinbase_payload", HexStr(pblock->vtx[0]->vExtraPayload)));
