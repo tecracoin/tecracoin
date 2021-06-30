@@ -7,7 +7,7 @@ class ElysiumSendMintTest(ElysiumTestFramework):
     def run_test(self):
         super().run_test()
 
-        sigma_start_block = 500
+        sigma_start_block = 260
 
         self.nodes[0].generatetoaddress(100, self.addrs[0])
         #useless as we are already passed sigma start block

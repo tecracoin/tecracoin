@@ -90,7 +90,6 @@ WalletView::WalletView(const PlatformStyle *_platformStyle, QWidget *parent):
     addWidget(transactionsPage);
     addWidget(receiveCoinsPage);
     addWidget(sendCoinsPage);
-
 #ifdef ENABLE_ELYSIUM
     addWidget(toolboxPage);
 #endif
@@ -272,14 +271,7 @@ void WalletView::setWalletModel(WalletModel *_walletModel)
     tecracoinTransactionList->setModel(_walletModel);
     overviewPage->setWalletModel(_walletModel);
     receiveCoinsPage->setModel(_walletModel);
-    // TODO: fix this
-    //sendCoinsPage->setModel(_walletModel);
-//    zerocoinPage->setModel(_walletModel->getAddressTableModel());
-    if (pwalletMain->IsHDSeedAvailable()) {
-//        sigmaView->setWalletModel(_walletModel);
-//        lelantusView->setWalletModel(_walletModel);
-    }
-//    zc2SigmaPage->createModel();
+
     usedReceivingAddressesPage->setModel(_walletModel->getAddressTableModel());
     usedSendingAddressesPage->setModel(_walletModel->getAddressTableModel());
     masternodeListPage->setWalletModel(_walletModel);

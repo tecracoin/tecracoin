@@ -20,7 +20,6 @@
 #include "httpserver.h"
 #include "httprpc.h"
 #include "key.h"
-#include "zerocoin.h"
 #include "validation.h"
 #include "miner.h"
 #include "netbase.h"
@@ -614,6 +613,9 @@ std::string HelpMessage(HelpMessageMode mode)
     strUsage += HelpMessageOpt("-elysiumuiwalletscope=<number>", "Max. transactions to show in trade and transaction history (default: 65535)");
     strUsage += HelpMessageOpt("-elysiumshowblockconsensushash=<number>", "Calculate and log the consensus hash for the specified block");
 #endif
+
+    strUsage += HelpMessageOpt("-skipmnpayoutcheck", _("Do not check for masternode payout when handling listtransactions, listsinceblock and gettransaction calls (improves performance)"));
+
     return strUsage;
 }
 
@@ -1199,8 +1201,10 @@ bool AppInitParameterInteraction()
     // Special-case: if -debug=0/-nodebug is set, turn off debugging messages
     if (fDebug) {
         const std::vector<std::string>& categories = mapMultiArgs.at("-debug");
-        if (GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), std::string("0")) != categories.end())
+        if (GetBoolArg("-nodebug", false) || find(categories.begin(), categories.end(), std::string("0")) != categories.end()) {
             fDebug = false;
+            fNoDebug = true;
+        }
     }
 
     // Check for -debugnet
@@ -1396,6 +1400,7 @@ bool AppInitParameterInteraction()
             }
         }
     }
+    fSkipMnpayoutCheck = GetBoolArg("-skipmnpayoutcheck", false);
     return true;
 }
 

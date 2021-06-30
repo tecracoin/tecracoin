@@ -231,8 +231,8 @@ CRegTestConsensusParams::CRegTestConsensusParams()
     FREEZENOTICE_FEATURE_BLOCK = 999999;
 
     // sigma related
-    SIGMA_FEATURE_BLOCK = 500;
-    SIGMA_SPENDV1_FEATURE_BLOCK = 550;
+    SIGMA_FEATURE_BLOCK = 100;
+    SIGMA_SPENDV1_FEATURE_BLOCK = 150;
 
     // Property creation fee
     PROPERTY_CREATION_FEE_BLOCK = 6000;

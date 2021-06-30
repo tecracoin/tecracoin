@@ -130,7 +130,6 @@ BOOST_AUTO_TEST_CASE(elysium_parse_normal_tx_with_spend)
 BOOST_AUTO_TEST_CASE(elysium_parse_sigma_tx_with_non_spend)
 {
     pwalletMain->SetBroadcastTransactions(true);
-    CreateAndProcessEmptyBlocks(1000, scriptPubKey);
 
     string stringError;
     sigma::CoinDenomination denomination;
@@ -179,7 +178,6 @@ BOOST_AUTO_TEST_CASE(elysium_parse_sigma_tx_with_non_spend)
 BOOST_AUTO_TEST_CASE(elysium_parse_sigma_tx_with_spend)
 {
     pwalletMain->SetBroadcastTransactions(true);
-    CreateAndProcessEmptyBlocks(1000, scriptPubKey);
 
     string stringError;
     sigma::CoinDenomination denomination;
