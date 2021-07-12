@@ -921,11 +921,12 @@ bool AcceptToMemoryPoolWorker(CTxMemPool& pool, CValidationState& state, const C
     std::set<uint256> setConflicts;
     {
     LOCK(pool.cs); // protect pool.mapNextTx
+    // TecraCoin: kill Sigma & Lelantus txes
+    if (chainActive.Height() > consensus.DIP0003Height && (tx.IsSigmaSpend() || tx.IsLelantusJoinSplit())) {
+        return state.DoS(100, error("Sigma/Lelantus transactions no more allowed in mempool"),
+            REJECT_INVALID, "bad-txns-zerocoin");
+    }
     if (!tx.IsSigmaSpend() && !tx.IsLelantusJoinSplit()) {
-        if (chainActive.Height() > consensus.DIP0003Height) {
-            return state.DoS(100, error("Zerocoin/sigma transactions no more allowed in mempool"),
-                REJECT_INVALID, "bad-txns-zerocoin");
-        }
         BOOST_FOREACH(const CTxIn &txin, tx.vin)
         {
             auto itConflicting = pool.mapNextTx.find(txin.prevout);
