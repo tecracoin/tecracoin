@@ -327,20 +327,21 @@ public:
                 (291588, uint256S("0xa7d8afb46a810bc3a53cd7f036085a4d776f86bd035bf8d64eb82e27dfcbb32b"))
                 (311766, uint256S("0x7d828dd2b55cef5dfc376177dda08a02e780d9fd5dea3f192671adadbd6632d2"))
                 (398849, uint256S("0x3b1309eb011eaab8b86aca32d2d30df3c892f7374b4cc0e2a51ed06a57c126f2"))
+                (543340, uint256S("0x2a0bc296b31e00c522477e8a15943b4ab4c104b45d6df508b3ce0298cd5e9e17"))
         };
 
         chainTxData = ChainTxData{
-                1603196462, // * UNIX timestamp of last checkpoint block
-                454351,     // * total number of transactions between genesis and last checkpoint
+                1626098501, // * UNIX timestamp of last checkpoint block
+                697372,     // * total number of transactions between genesis and last checkpoint
                             //   (the tx=... number in the SetBestChain debug.log lines)
-                0.014       // * estimated number of transactions per second after checkpoint
+                0.02        // * estimated number of transactions per second after checkpoint
         };
 
         // The best chain should have at least this much work.
-        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000001d2adb54c0eb6b1");
+        consensus.nMinimumChainWork = uint256S("0x00000000000000000000000000000000000000000000000002349bd7131038c4");
 
         // By default assume that the signatures in ancestors of this block are valid.
-        consensus.defaultAssumeValid = uint256S("0x3b1309eb011eaab8b86aca32d2d30df3c892f7374b4cc0e2a51ed06a57c126f2"); //398849
+        consensus.defaultAssumeValid = uint256S("0x2a0bc296b31e00c522477e8a15943b4ab4c104b45d6df508b3ce0298cd5e9e17"); //543340
 
         consensus.nSpendV15StartBlock = ZC_V1_5_STARTING_BLOCK;
         consensus.nSpendV2ID_1 = ZC_V2_SWITCH_ID_1;
